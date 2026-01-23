@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/sonner';
+import { Agentation } from 'agentation';
+
 import './globals.css';
 
 const _geist = Geist({ subsets: ['latin'] });
@@ -37,12 +39,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`font-sans antialiased`}>
-        {children}
-        <Toaster />
-        <Analytics />
-      </body>
-    </html>
+    <>
+      <html lang="en">
+        <body className={`font-sans antialiased`}>
+          {children}
+          <Toaster />
+          <Analytics />
+        </body>
+      </html>
+      {process.env.NODE_ENV === 'development' && <Agentation />}
+    </>
   );
 }

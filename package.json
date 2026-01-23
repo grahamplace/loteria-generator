@@ -52,6 +52,7 @@
     "@radix-ui/react-tooltip": "1.1.6",
     "@vercel/analytics": "1.3.1",
     "@vercel/blob": "^2.0.1",
+    "agentation": "^1.3.1",
     "ai": "6.0.42",
     "autoprefixer": "^10.4.20",
     "better-auth": "^1.4.17",
@@ -92,7 +93,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^4.7.0",
-    "@vitest/coverage-v8": "^1.6.1",
+    "@vitest/coverage-v8": "^4.0.0",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
@@ -108,6 +109,6 @@
     "tw-animate-css": "1.3.3",
     "typescript": "^5",
     "typescript-eslint": "^8.53.1",
-    "vitest": "^1.6.1"
+    "vitest": "^4.0.0"
   }
 }
