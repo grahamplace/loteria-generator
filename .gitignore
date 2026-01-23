@@ -26,3 +26,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+
+.claude
+.agents
+.claude-cache
+.cursor
+.opencode
+.github/skills/
+.codex
