@@ -32,10 +32,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check protected API routes
-  if (pathname.startsWith('/api/boards') || pathname.startsWith('/api/stripe')) {
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  // Note: /api/stripe/webhook must be excluded - it's called by Stripe, not authenticated users
+  const isProtectedApiRoute =
+    pathname.startsWith('/api/boards') ||
+    (pathname.startsWith('/api/stripe') && !pathname.startsWith('/api/stripe/webhook'));
+
+  if (isProtectedApiRoute && !isAuthenticated) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   return NextResponse.next();

@@ -1,16 +1,12 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-
-// Create a separate Drizzle instance for Better Auth
-// Better Auth manages its own tables (user, session, account, verification)
-const sql = neon(process.env.DATABASE_URL!);
-const authDb = drizzle(sql);
+import { db } from '@/db';
+import * as schema from '@/db/schema';
 
 export const auth = betterAuth({
-  database: drizzleAdapter(authDb, {
+  database: drizzleAdapter(db, {
     provider: 'pg',
+    schema,
   }),
   emailAndPassword: {
     enabled: true,

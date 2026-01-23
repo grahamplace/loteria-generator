@@ -56,6 +56,13 @@ function getRandomSpanishLabel(): string {
   return spanishLabels[Math.floor(Math.random() * spanishLabels.length)];
 }
 
+function createTempId() {
+  // Date.now() alone can collide when multiple cards are added quickly (same ms).
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? `temp-${crypto.randomUUID()}`
+    : `temp-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 export interface BoardCard {
   id: string;
   boardId: string;
@@ -146,7 +153,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
 
       reader.onload = async (e) => {
         const base64Image = e.target?.result as string;
-        const tempId = `temp-${Date.now()}`;
+        const tempId = createTempId();
         const nextNumber = cards.length + 1;
 
         // Optimistic update - add card immediately with local state

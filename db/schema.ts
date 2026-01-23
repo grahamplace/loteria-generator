@@ -1,34 +1,65 @@
-import {
-  pgTable,
-  text,
-  timestamp,
-  boolean,
-  integer,
-  json,
-  uuid,
-  pgSchema,
-} from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, json, uuid } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// Reference to Neon Auth schema (managed by Neon Auth)
-// We don't create this - it's created automatically when you enable Neon Auth
-export const neonAuthSchema = pgSchema('neon_auth');
-
-// Reference to the users table in neon_auth schema
-export const neonAuthUsers = neonAuthSchema.table('users_sync', {
-  id: uuid('id').primaryKey(),
-  email: text('email'),
-  name: text('name'),
+/**
+ * Better Auth core tables (required by the Drizzle adapter).
+ * See: https://www.better-auth.com/docs/concepts/database#core-schema
+ */
+export const user = pgTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
-  createdAt: timestamp('created_at'),
-  updatedAt: timestamp('updated_at'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const session = pgTable('session', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const account = pgTable('account', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
+  refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
+  scope: text('scope'),
+  idToken: text('id_token'),
+  password: text('password'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const verification = pgTable('verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 // User profiles - our extension of neon_auth users
 export const userProfiles = pgTable('user_profiles', {
-  id: uuid('id')
+  id: text('id')
     .primaryKey()
-    .references(() => neonAuthUsers.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   stripeCustomerId: text('stripe_customer_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -45,9 +76,9 @@ export interface BoardStyleOptions {
 // Boards table
 export const boards = pgTable('boards', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
-    .references(() => neonAuthUsers.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   name: text('name').notNull().default('My Loteria Board'),
   isUnlocked: boolean('is_unlocked').notNull().default(false),
   stripePaymentId: text('stripe_payment_id'),
@@ -66,9 +97,9 @@ export const cards = pgTable('cards', {
   boardId: uuid('board_id')
     .notNull()
     .references(() => boards.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
-    .references(() => neonAuthUsers.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   number: integer('number').notNull(),
   label: text('label').notNull().default(''),
   originalImageUrl: text('original_image_url'), // Vercel Blob URL - private
