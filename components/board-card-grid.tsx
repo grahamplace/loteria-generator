@@ -4,6 +4,29 @@ import { useState } from 'react';
 import { Trash2, Edit2, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardEditModal } from './card-edit-modal';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverEvent,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface DisplayCard {
   id: string;
@@ -21,125 +44,296 @@ interface BoardCardGridProps {
   onReorderCards: (startIndex: number, endIndex: number) => void;
 }
 
+interface SortableCardProps {
+  card: DisplayCard;
+  onDelete: () => void;
+  onEdit: () => void;
+  isDragging?: boolean;
+}
+
+function SortableCard({ card, onDelete, onEdit, isDragging }: SortableCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({ id: card.id, disabled: card.isProcessing });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isSortableDragging ? 50 : undefined,
+  };
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      style={style}
+      layout
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{
+        opacity: isSortableDragging ? 0.5 : 1,
+        scale: 1,
+      }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{
+        layout: { type: 'spring', stiffness: 350, damping: 25 },
+        opacity: { duration: 0.2 },
+        scale: { duration: 0.2 },
+      }}
+      className={`group relative bg-card rounded-lg overflow-hidden shadow-md hover:shadow-lg ${
+        card.isProcessing ? 'cursor-wait' : 'cursor-grab active:cursor-grabbing'
+      } ${isDragging ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+      {...attributes}
+      {...listeners}
+    >
+      <CardContent card={card} onDelete={onDelete} onEdit={onEdit} />
+    </motion.div>
+  );
+}
+
+function CardContent({
+  card,
+  onDelete,
+  onEdit,
+  isOverlay = false,
+}: {
+  card: DisplayCard;
+  onDelete?: () => void;
+  onEdit?: () => void;
+  isOverlay?: boolean;
+}) {
+  return (
+    <>
+      {/* Card number overlay */}
+      <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm z-10 shadow-md">
+        {card.number}
+      </div>
+
+      {/* Drag handle indicator */}
+      {!card.isProcessing && (
+        <div
+          className={`absolute top-2 right-2 z-20 bg-black/50 rounded-md p-1.5 transition-opacity ${
+            isOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`}
+        >
+          <GripVertical className="w-4 h-4 text-white" />
+        </div>
+      )}
+
+      {/* Image */}
+      <div className="w-full aspect-square bg-muted overflow-hidden">
+        {card.isProcessing ? (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+            <div className="text-center">
+              <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground">Processing…</p>
+            </div>
+          </div>
+        ) : card.error ? (
+          <div className="w-full h-full flex items-center justify-center bg-destructive/10">
+            <p className="text-xs text-destructive text-center px-2">{card.error}</p>
+          </div>
+        ) : card.illustration ? (
+          <img
+            src={card.illustration}
+            alt={card.label}
+            className="w-full h-full object-cover pointer-events-none"
+            draggable={false}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-muted">
+            <p className="text-xs text-muted-foreground">No image</p>
+          </div>
+        )}
+      </div>
+
+      {/* Label */}
+      <div className="p-3 bg-card">
+        <p className="text-sm font-semibold text-center text-foreground line-clamp-2 mb-2">
+          {card.label || 'No label'}
+        </p>
+
+        {/* Action buttons - only show if not overlay */}
+        {!isOverlay && onDelete && onEdit && (
+          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="flex-1 h-8 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              disabled={card.isProcessing}
+            >
+              <Edit2 className="w-3 h-3 mr-1" />
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="flex-1 h-8 text-xs text-destructive hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              disabled={card.isProcessing}
+            >
+              <Trash2 className="w-3 h-3 mr-1" />
+              Delete
+            </Button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function DragOverlayCard({ card }: { card: DisplayCard }) {
+  return (
+    <div className="bg-card rounded-lg overflow-hidden shadow-2xl ring-2 ring-primary cursor-grabbing rotate-3 scale-105">
+      <CardContent card={card} isOverlay />
+    </div>
+  );
+}
+
 export function BoardCardGrid({
   cards,
   onDeleteCard,
   onUpdateLabel,
   onReorderCards,
 }: BoardCardGridProps) {
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [editingCard, setEditingCard] = useState<DisplayCard | null>(null);
+  // Track the live-reordered cards during drag
+  const [liveCards, setLiveCards] = useState<DisplayCard[]>(cards);
 
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (dropIndex: number) => {
-    if (draggedIndex !== null && draggedIndex !== dropIndex) {
-      onReorderCards(draggedIndex, dropIndex);
+  // Sync liveCards with cards prop when not dragging
+  useState(() => {
+    if (!activeId) {
+      setLiveCards(cards);
     }
-    setDraggedIndex(null);
+  });
+
+  // Update liveCards when cards prop changes (and not actively dragging)
+  if (
+    !activeId &&
+    liveCards !== cards &&
+    JSON.stringify(liveCards.map((c) => c.id)) !== JSON.stringify(cards.map((c) => c.id))
+  ) {
+    setLiveCards(cards);
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before drag starts
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200, // 200ms delay for touch to distinguish from scroll
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const activeCard = activeId ? cards.find((c) => c.id === activeId) : null;
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+    setLiveCards(cards);
   };
 
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setLiveCards((currentCards) => {
+        const oldIndex = currentCards.findIndex((c) => c.id === active.id);
+        const newIndex = currentCards.findIndex((c) => c.id === over.id);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          return arrayMove(currentCards, oldIndex, newIndex);
+        }
+        return currentCards;
+      });
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active } = event;
+
+    // Find where the card started (in original cards array)
+    const oldIndex = cards.findIndex((c) => c.id === active.id);
+    // Find where the card ended up (in liveCards after all drag overs)
+    const newIndex = liveCards.findIndex((c) => c.id === active.id);
+
+    if (oldIndex !== newIndex) {
+      onReorderCards(oldIndex, newIndex);
+    }
+
+    setActiveId(null);
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setLiveCards(cards); // Reset to original order
   };
 
   if (cards.length === 0) {
     return null;
   }
 
+  // Use liveCards for display during drag, otherwise use cards
+  const displayCards = activeId ? liveCards : cards;
+
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {cards.map((card, index) => (
-          <div
-            key={card.id}
-            draggable={!card.isProcessing}
-            onDragStart={() => handleDragStart(index)}
-            onDragOver={handleDragOver}
-            onDrop={() => handleDrop(index)}
-            onDragEnd={handleDragEnd}
-            className={`group relative bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all ${
-              card.isProcessing ? 'cursor-wait' : 'cursor-move'
-            } ${draggedIndex === index ? 'opacity-50' : ''}`}
-          >
-            {/* Card number overlay */}
-            <div className="absolute top-2 left-2 bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm z-10">
-              {card.number}
-            </div>
-
-            {/* Drag handle */}
-            {!card.isProcessing && (
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 bg-black/40 rounded p-1">
-                <GripVertical className="w-4 h-4 text-white" />
-              </div>
-            )}
-
-            {/* Image */}
-            <div className="w-full aspect-square bg-muted overflow-hidden">
-              {card.isProcessing ? (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-                  <div className="text-center">
-                    <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground">Processing...</p>
-                  </div>
-                </div>
-              ) : card.error ? (
-                <div className="w-full h-full flex items-center justify-center bg-red-50">
-                  <p className="text-xs text-red-600 text-center px-2">{card.error}</p>
-                </div>
-              ) : card.illustration ? (
-                <img
-                  src={card.illustration}
-                  alt={card.label}
-                  className="w-full h-full object-cover"
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <SortableContext items={displayCards.map((c) => c.id)} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <AnimatePresence mode="popLayout">
+              {displayCards.map((card) => (
+                <SortableCard
+                  key={card.id}
+                  card={card}
+                  onDelete={() => onDeleteCard(card.id)}
+                  onEdit={() => setEditingCard(card)}
+                  isDragging={activeId === card.id}
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                  <p className="text-xs text-muted-foreground">No image</p>
-                </div>
-              )}
-            </div>
-
-            {/* Label */}
-            <div className="p-3 bg-white">
-              <p className="text-sm font-semibold text-center text-foreground line-clamp-2 mb-2">
-                {card.label || 'No label'}
-              </p>
-
-              {/* Action buttons */}
-              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="flex-1 h-8 text-xs"
-                  onClick={() => setEditingCard(card)}
-                  disabled={card.isProcessing}
-                >
-                  <Edit2 className="w-3 h-3 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="flex-1 h-8 text-xs text-destructive hover:text-destructive"
-                  onClick={() => onDeleteCard(card.id)}
-                  disabled={card.isProcessing}
-                >
-                  <Trash2 className="w-3 h-3 mr-1" />
-                  Delete
-                </Button>
-              </div>
-            </div>
+              ))}
+            </AnimatePresence>
           </div>
-        ))}
-      </div>
+        </SortableContext>
+
+        <DragOverlay
+          dropAnimation={{
+            sideEffects: defaultDropAnimationSideEffects({
+              styles: {
+                active: {
+                  opacity: '0.5',
+                },
+              },
+            }),
+          }}
+        >
+          {activeCard ? <DragOverlayCard card={activeCard} /> : null}
+        </DragOverlay>
+      </DndContext>
 
       {editingCard && (
         <CardEditModal
