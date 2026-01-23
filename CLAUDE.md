@@ -100,3 +100,35 @@ hooks/
 - Optimistic updates in hooks with rollback on error
 - API routes use `getAuthSession()` from `lib/auth-client.ts` for auth checks
 - Board/card limits enforced in API routes based on `board.isUnlocked`
+
+## Color Palette
+
+Loteria-inspired palette defined in `app/globals.css`. Always use Tailwind classes or CSS variables—never hardcode colors.
+
+### Light Mode Tokens
+
+| Token          | Color          | Usage                             |
+| -------------- | -------------- | --------------------------------- |
+| `--primary`    | Vermillion Red | CTAs, links, focus rings          |
+| `--secondary`  | Marigold Gold  | Highlights, badges, warnings      |
+| `--accent`     | Deep Verde     | Success states, secondary actions |
+| `--background` | Warm Cream     | Page background                   |
+| `--foreground` | Rich Brown     | Body text                         |
+| `--muted`      | Aged Paper     | Subtle backgrounds                |
+| `--border`     | Soft Tan       | Borders, dividers                 |
+
+### Dark Mode
+
+Warm brown tones with lighter versions of primary colors. Sidebar uses inverted scheme (dark bg, light text).
+
+### Usage
+
+```tsx
+// Tailwind classes
+<button className="bg-primary text-primary-foreground">
+<span className="text-accent">Success</span>
+<div className="border-border bg-muted">
+
+// CSS variables (when needed)
+style={{ color: 'var(--primary)' }}
+```

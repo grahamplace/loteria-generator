@@ -131,6 +131,17 @@ Concise rules for building accessible, fast, delightful UIs. Use MUST/SHOULD/NEV
 - SHOULD: `<meta name="theme-color">` matches page background
 - MUST: Native `<select>`: explicit `background-color` and `color` (Windows fix)
 
+## Color Palette (Loteria Theme)
+
+- MUST: Use CSS variables from `globals.css`—never hardcode hex/rgb values
+- MUST: Use Tailwind classes (`bg-primary`, `text-accent`, etc.) for colors
+- MUST: Primary (Vermillion Red) for CTAs, links, focus rings
+- MUST: Secondary (Marigold Gold) for highlights, badges, warnings
+- MUST: Accent (Deep Verde) for success states, secondary actions
+- MUST: Foreground (Rich Brown) for body text on light backgrounds
+- NEVER: Introduce new brand colors without updating `globals.css`
+- SHOULD: Maintain warm, festive aesthetic inspired by traditional Loteria cards
+
 ## Hydration
 
 - MUST: Inputs with `value` need `onChange` (or use `defaultValue`)
