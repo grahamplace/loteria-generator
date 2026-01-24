@@ -332,7 +332,15 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
   const deleteCard = useCallback(
     async (cardId: string) => {
       // Optimistic update
-      setCards((prev) => prev.filter((c) => c.id !== cardId));
+      // Optimistic update: remove card and renumber remaining cards
+      setCards((prev) => {
+        const filtered = prev.filter((c) => c.id !== cardId);
+        // Renumber cards based on their new positions
+        return filtered.map((card, index) => ({
+          ...card,
+          number: index + 1,
+        }));
+      });
 
       try {
         const response = await fetch(`/api/boards/${boardId}/cards?cardId=${cardId}`, {

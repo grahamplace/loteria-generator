@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db, boards, cards } from '@/db';
-import { eq, and, max } from 'drizzle-orm';
+import { eq, and, max, gt, sql } from 'drizzle-orm';
 import {
   uploadOriginalImage,
   uploadIllustration,
@@ -287,8 +287,19 @@ export async function DELETE(
       console.error('Error deleting card images:', blobError);
     }
 
+    const deletedCardNumber = card.number;
+
     // Delete the card
     await db.delete(cards).where(eq(cards.id, cardId));
+
+    // Renumber remaining cards: decrement all cards with number > deleted card's number
+    await db
+      .update(cards)
+      .set({
+        number: sql`${cards.number} - 1`,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(cards.boardId, boardId), gt(cards.number, deletedCardNumber)));
 
     return NextResponse.json({ success: true });
   } catch (error) {

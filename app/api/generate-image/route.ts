@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     ## Instructions
     - Restyle the provided image into the **classic Mexican Lotería card illustration style**. 
     - Keep the original subject, pose, and overall silhouette clearly recognizable, but **redraw everything as a vintage hand-painted print**. 
-    - Use **bold black ink outlines** (slightly irregular, hand-drawn), simplified shapes, and **soft airbrush/watercolor gradients** for shading. 
+    - Use **bold black ink outlines (no outline at the card edges, only around the main subject)** (slightly irregular, hand-drawn), simplified shapes, and **soft airbrush/watercolor gradients** for shading. 
     - Reduce tiny details; prioritize clean, iconic readability from a distance. 
     - Add a subtle **aged paper texture** and light **ink grain/halftone speckling**, with a touch of **ink bleed** at edges. 
     - Background should be **simple and graphic**: either a flat color field or a minimal sky/ground gradient, no complex scenery.
