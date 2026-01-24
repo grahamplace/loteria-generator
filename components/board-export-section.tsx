@@ -235,7 +235,9 @@ export function BoardExportSection({
           disabled={!canGenerateBoards || isGeneratingBoards}
           variant="outline"
           className={
-            hasUsedFreeBoardGeneration ? 'border-orange-300' : 'bg-accent hover:bg-accent/90'
+            hasUsedFreeBoardGeneration
+              ? 'border-orange-300'
+              : 'bg-accent hover:bg-accent/90 text-accent-foreground'
           }
         >
           {hasUsedFreeBoardGeneration && <Lock className="w-4 h-4 mr-2" />}

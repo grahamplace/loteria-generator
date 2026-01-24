@@ -1,0 +1,190 @@
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator.vercel.app';
+
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export function WebsiteJsonLd() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Loteria Maker',
+    alternateName: ['Loteria Generator', 'Custom Loteria Cards'],
+    url: siteUrl,
+    description:
+      'Create personalized Mexican Loteria cards from your photos using AI. The easiest custom Loteria card maker for weddings, parties, and family events.',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+export function OrganizationJsonLd() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Loteria Maker',
+    url: siteUrl,
+    logo: `${siteUrl}/logo.png`,
+    sameAs: [],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      availableLanguage: ['English', 'Spanish'],
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+export function SoftwareApplicationJsonLd() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Loteria Maker',
+    applicationCategory: 'DesignApplication',
+    operatingSystem: 'Web',
+    offers: [
+      {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+        name: 'Free Preview',
+        description: 'Create up to 16 cards and 1 board for free',
+      },
+      {
+        '@type': 'Offer',
+        price: '5',
+        priceCurrency: 'USD',
+        name: 'Unlocked Board',
+        description: 'Full access with up to 54 cards and unlimited card generations',
+      },
+    ],
+    featureList: [
+      'AI-powered photo to Loteria card conversion',
+      'Traditional Mexican Loteria style illustrations',
+      'Automatic Spanish label generation',
+      'Printable board generation',
+      'Custom card editing',
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+export function FAQJsonLd({ faqs }: { faqs: FAQItem[] }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+export function BreadcrumbJsonLd({ items }: { items: { name: string; url: string }[] }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+export function HowToJsonLd() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'How to Create Custom Loteria Cards',
+    description:
+      'Learn how to create personalized Mexican Loteria cards from your photos using AI in just a few simple steps.',
+    image: `${siteUrl}/og-image.png`,
+    totalTime: 'PT10M',
+    estimatedCost: {
+      '@type': 'MonetaryAmount',
+      currency: 'USD',
+      value: '0-5',
+    },
+    step: [
+      {
+        '@type': 'HowToStep',
+        name: 'Sign Up',
+        text: 'Create a free account to get started with your custom Loteria project.',
+        url: `${siteUrl}/sign-up`,
+      },
+      {
+        '@type': 'HowToStep',
+        name: 'Upload Photos',
+        text: 'Upload your favorite photos - people, pets, objects, or anything meaningful to you.',
+      },
+      {
+        '@type': 'HowToStep',
+        name: 'AI Transformation',
+        text: 'Our AI automatically transforms each photo into a traditional Loteria-style illustration with a Spanish label.',
+      },
+      {
+        '@type': 'HowToStep',
+        name: 'Customize Cards',
+        text: 'Edit labels and arrange your cards to your liking.',
+      },
+      {
+        '@type': 'HowToStep',
+        name: 'Generate Boards',
+        text: 'Create randomized 4x4 bingo-style boards ready for printing and playing.',
+      },
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}

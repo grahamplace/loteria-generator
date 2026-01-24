@@ -174,8 +174,8 @@ function CardContent({
             </Button>
             <Button
               size="sm"
-              variant="ghost"
-              className="flex-1 h-8 text-xs text-destructive hover:text-destructive"
+              variant="destructive"
+              className="flex-1 h-8 text-xs"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
