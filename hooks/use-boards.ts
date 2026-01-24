@@ -15,8 +15,16 @@ interface BoardSummary {
   completedCardCount: number;
 }
 
+interface BoardLimits {
+  current: number;
+  max: number;
+  unlockedCount: number;
+  canCreateBoard: boolean;
+}
+
 interface UseBoardsReturn {
   boards: BoardSummary[];
+  limits: BoardLimits | null;
   isLoading: boolean;
   error: string | null;
   createBoard: (name?: string) => Promise<Board | null>;
@@ -29,6 +37,7 @@ interface UseBoardsReturn {
  */
 export function useBoards(): UseBoardsReturn {
   const [boards, setBoards] = useState<BoardSummary[]>([]);
+  const [limits, setLimits] = useState<BoardLimits | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -50,6 +59,7 @@ export function useBoards(): UseBoardsReturn {
 
       const data = await response.json();
       setBoards(data.boards || []);
+      setLimits(data.limits || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch boards');
     } finally {
@@ -119,6 +129,7 @@ export function useBoards(): UseBoardsReturn {
 
   return {
     boards,
+    limits,
     isLoading,
     error,
     createBoard,

@@ -30,9 +30,11 @@ import { useState } from 'react';
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isLoading: sessionLoading } = useSession();
-  const { boards, isLoading: boardsLoading, createBoard, deleteBoard } = useBoards();
+  const { boards, limits, isLoading: boardsLoading, createBoard, deleteBoard } = useBoards();
   const [deletingBoardId, setDeletingBoardId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+
+  const canCreateBoard = limits?.canCreateBoard ?? true;
 
   async function handleCreateBoard() {
     setIsCreating(true);
@@ -104,10 +106,15 @@ export default function DashboardPage() {
             <h2 className="text-2xl font-bold">Your Boards</h2>
             <p className="text-muted-foreground">Create and manage your Lotería card projects</p>
           </div>
-          <Button onClick={handleCreateBoard} disabled={isCreating}>
-            <Plus className="h-4 w-4 mr-2" />
-            {isCreating ? 'Creating...' : 'New Board'}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button onClick={handleCreateBoard} disabled={isCreating || !canCreateBoard}>
+              <Plus className="h-4 w-4 mr-2" />
+              {isCreating ? 'Creating...' : 'New Board'}
+            </Button>
+            {!canCreateBoard && (
+              <p className="text-xs text-muted-foreground">Unlock a board to create another</p>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
@@ -134,7 +141,7 @@ export default function DashboardPage() {
               <p className="text-muted-foreground mb-4">
                 Create your first Lotería board to get started
               </p>
-              <Button onClick={handleCreateBoard} disabled={isCreating}>
+              <Button onClick={handleCreateBoard} disabled={isCreating || !canCreateBoard}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Your First Board
               </Button>

@@ -4,9 +4,6 @@ import { headers } from 'next/headers';
 import { db, boards, userProfiles } from '@/db';
 import { eq, desc } from 'drizzle-orm';
 
-// Constants for free tier limits
-const MAX_BOARDS_FREE = 1;
-
 /**
  * GET /api/boards - List all boards for the current user
  */
@@ -44,7 +41,21 @@ export async function GET() {
       completedCardCount: board.cards.filter((c) => c.status === 'completed').length,
     }));
 
-    return NextResponse.json({ boards: boardsWithCounts });
+    // Calculate board limits: user can have (unlockedCount + 1) boards total
+    // This means they can always have exactly ONE unpaid board at a time
+    const unlockedCount = userBoards.filter((b) => b.isUnlocked).length;
+    const maxBoards = unlockedCount + 1;
+    const canCreateBoard = userBoards.length < maxBoards;
+
+    return NextResponse.json({
+      boards: boardsWithCounts,
+      limits: {
+        current: userBoards.length,
+        max: maxBoards,
+        unlockedCount,
+        canCreateBoard,
+      },
+    });
   } catch (error) {
     console.error('Error fetching boards:', error);
     return NextResponse.json({ error: 'Failed to fetch boards' }, { status: 500 });
@@ -79,14 +90,16 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Check board limit for users without any unlocked boards
+    // Check board limit: user can have (unlockedCount + 1) boards total
+    // This means they can always have exactly ONE unpaid board at a time
     const existingBoards = await db.query.boards.findMany({
       where: eq(boards.userId, session.user.id),
     });
 
-    const hasUnlockedBoard = existingBoards.some((b) => b.isUnlocked);
+    const unlockedCount = existingBoards.filter((b) => b.isUnlocked).length;
+    const maxBoards = unlockedCount + 1;
 
-    if (!hasUnlockedBoard && existingBoards.length >= MAX_BOARDS_FREE) {
+    if (existingBoards.length >= maxBoards) {
       return NextResponse.json(
         {
           error: 'Board limit reached',
