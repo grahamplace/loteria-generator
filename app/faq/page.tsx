@@ -135,7 +135,7 @@ const faqs = [
   },
 ];
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator.vercel.app';
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-eta.vercel.app';
 
 export default function FAQPage() {
   // Flatten FAQs for JSON-LD

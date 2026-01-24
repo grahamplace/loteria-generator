@@ -10,7 +10,7 @@ import './globals.css';
 const _geist = Geist({ subsets: ['latin'] });
 const _geistMono = Geist_Mono({ subsets: ['latin'] });
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator.vercel.app';
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-eta.vercel.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
