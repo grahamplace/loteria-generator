@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { FAQJsonLd, BreadcrumbJsonLd } from '@/components/json-ld';
 
 export const metadata: Metadata = {
-  title: 'FAQ - Custom Loteria Card Questions Answered',
+  title: 'FAQ - Custom Lotería Card Questions Answered',
   description:
     'Find answers to common questions about creating custom Lotería cards. Learn how our AI Lotería generator works, pricing, printing, and more.',
   keywords: [
@@ -16,30 +16,30 @@ export const metadata: Metadata = {
     'personalized loteria guide',
   ],
   openGraph: {
-    title: 'FAQ - Custom Loteria Card Questions Answered',
+    title: 'FAQ - Custom Lotería Card Questions Answered',
     description:
-      'Find answers to common questions about creating custom Loteria cards with our AI-powered maker.',
+      'Find answers to common questions about creating custom Lotería cards with our AI-powered maker.',
   },
 };
 
 const faqs = [
   {
-    category: 'About Loteria',
+    category: 'About Lotería',
     questions: [
       {
-        question: 'What is Loteria?',
+        question: 'What is Lotería?',
         answer:
-          'Loteria is a traditional Mexican game of chance, often called "Mexican Bingo." It dates back to the 15th century and uses a deck of 54 cards with colorful illustrations. Players mark matching images on their boards (tablas) as a caller (cantor) draws and announces cards. The first to complete a pattern calls out "Loteria!" to win.',
+          'Lotería is a traditional Mexican game of chance, often called "Mexican Bingo." It dates back to the 15th century and uses a deck of 54 cards with colorful illustrations. Players mark matching images on their boards (tablas) as a caller (cantor) draws and announces cards. The first to complete a pattern calls out "Lotería!" to win.',
       },
       {
-        question: 'How do you play Loteria?',
+        question: 'How do you play Lotería?',
         answer:
-          'Each player gets a board (tabla) with a 4x4 grid of images. The caller draws cards from the deck and announces them, often using traditional rhymes or riddles. Players mark matching images on their boards using beans, chips, or coins. The first player to complete a winning pattern (full board, row, column, or diagonal) calls "Loteria!" to win.',
+          'Each player gets a board (tabla) with a 4x4 grid of images. The caller draws cards from the deck and announces them, often using traditional rhymes or riddles. Players mark matching images on their boards using beans, chips, or coins. The first player to complete a winning pattern (full board, row, column, or diagonal) calls "Lotería!" to win.',
       },
       {
-        question: 'What makes Loteria different from Bingo?',
+        question: 'What makes Lotería different from Bingo?',
         answer:
-          'While similar to Bingo, Loteria uses images instead of numbers, making it more visual and culturally rich. Traditional Loteria cards feature iconic Mexican imagery like "La Luna" (The Moon), "El Sol" (The Sun), and "La Rosa" (The Rose). The caller often uses riddles and rhymes to announce cards, adding to the entertainment.',
+          'While similar to Bingo, Lotería uses images instead of numbers, making it more visual and culturally rich. Traditional Lotería cards feature iconic Mexican imagery like "La Luna" (The Moon), "El Sol" (The Sun), and "La Rosa" (The Rose). The caller often uses riddles and rhymes to announce cards, adding to the entertainment.',
       },
     ],
   },
@@ -47,9 +47,9 @@ const faqs = [
     category: 'Creating Custom Cards',
     questions: [
       {
-        question: 'How do I create custom Loteria cards with my photos?',
+        question: 'How do I create custom Lotería cards with my photos?',
         answer:
-          'Simply sign up for a free account, create a new board, and upload your photos. Our AI automatically transforms each photo into a traditional Loteria-style illustration and generates an authentic Spanish label. You can edit labels, rearrange cards, and generate printable boards.',
+          'Simply sign up for a free account, create a new board, and upload your photos. Our AI automatically transforms each photo into a traditional Lotería-style illustration and generates an authentic Spanish label. You can edit labels, rearrange cards, and generate printable boards.',
       },
       {
         question: 'What types of photos work best?',
@@ -64,7 +64,7 @@ const faqs = [
       {
         question: 'How long does it take to process a photo?',
         answer:
-          'Each photo typically takes 10-30 seconds to process. Our AI transforms the image into a Loteria-style illustration and generates an appropriate Spanish label. You can upload multiple photos and they will process in parallel.',
+          'Each photo typically takes 10-30 seconds to process. Our AI transforms the image into a Lotería-style illustration and generates an appropriate Spanish label. You can upload multiple photos and they will process in parallel.',
       },
     ],
   },
@@ -79,12 +79,12 @@ const faqs = [
       {
         question: 'How much does it cost to unlock a board?',
         answer:
-          'Unlocking a board costs a one-time fee of $5. This gives you access to create up to 54 cards (a full traditional Loteria deck) and generate unlimited boards from those cards. There are no subscriptions or recurring fees.',
+          'Unlocking a board costs a one-time fee of $5. This gives you access to create up to 54 cards (a full traditional Lotería deck) and generate unlimited boards from those cards. There are no subscriptions or recurring fees.',
       },
       {
         question: 'What do I get when I unlock a board?',
         answer:
-          'With an unlocked board you get: up to 54 custom cards (full Loteria deck), unlimited board generations, high-quality print exports, and no watermarks. Your unlock never expires.',
+          'With an unlocked board you get: up to 54 custom cards (full Lotería deck), unlimited board generations, high-quality print exports, and no watermarks. Your unlock never expires.',
       },
       {
         question: 'Is there a subscription fee?',
@@ -99,7 +99,7 @@ const faqs = [
       {
         question: 'What file formats can I export?',
         answer:
-          'You can export your Loteria boards as high-quality PDF files, perfect for home printing or professional print services. Individual cards can also be downloaded as PNG images.',
+          'You can export your Lotería boards as high-quality PDF files, perfect for home printing or professional print services. Individual cards can also be downloaded as PNG images.',
       },
       {
         question: 'What paper size should I print on?',
@@ -119,17 +119,17 @@ const faqs = [
       {
         question: 'Can I use this for my wedding?',
         answer:
-          'Absolutely! Wedding Loteria is increasingly popular. Create cards featuring photos of the couple, wedding party, meaningful locations, and special moments. It makes for a memorable reception activity and a unique keepsake for guests.',
+          'Absolutely! Wedding Lotería is increasingly popular. Create cards featuring photos of the couple, wedding party, meaningful locations, and special moments. It makes for a memorable reception activity and a unique keepsake for guests.',
       },
       {
         question: 'Is this good for a quinceañera?',
         answer:
-          'Yes! Quinceañera Loteria is a wonderful tradition. Feature the quinceañera, her court, family members, and special moments from her life. It adds a personal touch to the celebration.',
+          'Yes! Quinceañera Lotería is a wonderful tradition. Feature the quinceañera, her court, family members, and special moments from her life. It adds a personal touch to the celebration.',
       },
       {
-        question: 'Can I make Loteria cards for a family reunion?',
+        question: 'Can I make Lotería cards for a family reunion?',
         answer:
-          'Family reunion Loteria is one of our most popular use cases. Include photos of all family members, from grandparents to the youngest kids. It becomes a treasured keepsake that celebrates your family.',
+          'Family reunion Lotería is one of our most popular use cases. Include photos of all family members, from grandparents to the youngest kids. It becomes a treasured keepsake that celebrates your family.',
       },
     ],
   },
@@ -187,7 +187,7 @@ export default function FAQPage() {
           </Link>
           <h1 className="text-4xl font-bold mb-4">Frequently Asked Questions</h1>
           <p className="text-xl text-muted-foreground">
-            Everything you need to know about creating custom Loteria cards with our AI-powered
+            Everything you need to know about creating custom Lotería cards with our AI-powered
             maker.
           </p>
         </header>
@@ -212,12 +212,12 @@ export default function FAQPage() {
         {/* CTA */}
         <section className="bg-primary/5 py-16 border-t">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Ready to Create Your Custom Loteria?</h2>
+            <h2 className="text-2xl font-bold mb-4">Ready to Create Your Custom Lotería?</h2>
             <p className="text-muted-foreground mb-6">
-              Start creating personalized Loteria cards for your next celebration.
+              Start creating personalized Lotería cards for your next celebration.
             </p>
             <Link href="/sign-up">
-              <Button size="lg">Create Your Loteria Cards Free</Button>
+              <Button size="lg">Create Your Lotería Cards Free</Button>
             </Link>
           </div>
         </section>

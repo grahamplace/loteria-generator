@@ -67,7 +67,7 @@ export default function SignInPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your Loteria Generator account</CardDescription>
+          <CardDescription>Sign in to your Lotería Generator account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button

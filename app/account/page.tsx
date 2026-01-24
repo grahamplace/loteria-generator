@@ -91,7 +91,7 @@ export default function AccountPage() {
           <Card>
             <CardHeader>
               <CardTitle>Usage</CardTitle>
-              <CardDescription>Your Loteria Generator stats</CardDescription>
+              <CardDescription>Your Lotería Generator stats</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4">

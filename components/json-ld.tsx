@@ -13,7 +13,7 @@ export function WebsiteJsonLd() {
     alternateName: ['Custom Lotería Cards', 'Lotería Card Maker'],
     url: siteUrl,
     description:
-      'Create personalized Mexican Loteria cards from your photos using AI. The easiest custom Loteria card maker for weddings, parties, and family events.',
+      'Create personalized Mexican Lotería cards from your photos using AI. The easiest custom Lotería card maker for weddings, parties, and family events.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -79,8 +79,8 @@ export function SoftwareApplicationJsonLd() {
       },
     ],
     featureList: [
-      'AI-powered photo to Loteria card conversion',
-      'Traditional Mexican Loteria style illustrations',
+      'AI-powered photo to Lotería card conversion',
+      'Traditional Mexican Lotería style illustrations',
       'Automatic Spanish label generation',
       'Printable board generation',
       'Custom card editing',
@@ -141,9 +141,9 @@ export function HowToJsonLd() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: 'How to Create Custom Loteria Cards',
+    name: 'How to Create Custom Lotería Cards',
     description:
-      'Learn how to create personalized Mexican Loteria cards from your photos using AI in just a few simple steps.',
+      'Learn how to create personalized Mexican Lotería cards from your photos using AI in just a few simple steps.',
     image: `${siteUrl}/og-image.png`,
     totalTime: 'PT10M',
     estimatedCost: {
@@ -155,7 +155,7 @@ export function HowToJsonLd() {
       {
         '@type': 'HowToStep',
         name: 'Sign Up',
-        text: 'Create a free account to get started with your custom Loteria project.',
+        text: 'Create a free account to get started with your custom Lotería project.',
         url: `${siteUrl}/sign-up`,
       },
       {
@@ -166,7 +166,7 @@ export function HowToJsonLd() {
       {
         '@type': 'HowToStep',
         name: 'AI Transformation',
-        text: 'Our AI automatically transforms each photo into a traditional Loteria-style illustration with a Spanish label.',
+        text: 'Our AI automatically transforms each photo into a traditional Lotería-style illustration with a Spanish label.',
       },
       {
         '@type': 'HowToStep',

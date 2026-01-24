@@ -16,29 +16,29 @@ import {
 
 const faqs = [
   {
-    question: 'What is Loteria and how do you play it?',
+    question: 'What is Lotería and how do you play it?',
     answer:
-      'Loteria is a traditional Mexican game of chance, similar to bingo. Players use boards (tablas) with a 4x4 grid of images. A caller (cantor) draws cards and announces them, and players mark matching images on their boards. The first to complete a pattern wins!',
+      'Lotería is a traditional Mexican game of chance, similar to bingo. Players use boards (tablas) with a 4x4 grid of images. A caller (cantor) draws cards and announces them, and players mark matching images on their boards. The first to complete a pattern wins!',
   },
   {
-    question: 'How do I create custom Loteria cards with my own photos?',
+    question: 'How do I create custom Lotería cards with my own photos?',
     answer:
       'Simply upload your photos to our Lotería generator, and our AI will automatically transform each image into a traditional Lotería-style illustration with a Spanish label. You can then edit labels, arrange cards, and generate printable bingo boards.',
   },
   {
     question: 'Can I use this for my wedding or party?',
     answer:
-      'Absolutely! Custom Loteria cards are perfect for weddings, quinceañeras, birthday parties, family reunions, and any special celebration. Create personalized cards featuring your guests, memorable moments, or themed images.',
+      'Absolutely! Custom Lotería cards are perfect for weddings, quinceañeras, birthday parties, family reunions, and any special celebration. Create personalized cards featuring your guests, memorable moments, or themed images.',
   },
   {
     question: 'How many cards can I create?',
     answer:
-      'With the free preview, you can create up to 16 cards and generate one sample board. By unlocking your board for $5, you get access to 54 cards (a full traditional Loteria deck) and unlimited board generations.',
+      'With the free preview, you can create up to 16 cards and generate one sample board. By unlocking your board for $5, you get access to 54 cards (a full traditional Lotería deck) and unlimited board generations.',
   },
   {
     question: 'What file formats can I export?',
     answer:
-      'You can export your Loteria boards as high-quality printable PDFs, perfect for home or professional printing. Individual cards can also be downloaded as images.',
+      'You can export your Lotería boards as high-quality printable PDFs, perfect for home or professional printing. Individual cards can also be downloaded as images.',
   },
   {
     question: 'Is there a subscription or recurring fee?',
@@ -123,20 +123,20 @@ export default function LandingPage() {
         <header className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-              Create Custom <span className="text-primary">Loteria</span> Cards
+              Create Custom <span className="text-primary">Lotería</span> Cards
               <br />
               <span className="text-3xl md:text-5xl">from Your Photos</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              The easiest <strong>custom Loteria card maker</strong> powered by AI. Transform your
-              photos into beautiful Mexican Loteria-style illustrations. Perfect for{' '}
+              The easiest <strong>custom Lotería card maker</strong> powered by AI. Transform your
+              photos into beautiful Mexican Lotería-style illustrations. Perfect for{' '}
               <strong>weddings</strong>, <strong>quinceañeras</strong>, <strong>parties</strong>,
               and <strong>family celebrations</strong>.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Link href="/sign-up">
                 <Button size="lg" className="text-lg px-8 w-full sm:w-auto">
-                  Create Your Loteria Cards Free
+                  Create Your Lotería Cards Free
                 </Button>
               </Link>
               <Link href="#how-it-works">
@@ -180,13 +180,13 @@ export default function LandingPage() {
               Perfect for Every Special Occasion
             </h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Create personalized Loteria cards that make your celebration truly unique and
+              Create personalized Lotería cards that make your celebration truly unique and
               memorable.
             </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 {
-                  title: 'Wedding Loteria',
+                  title: 'Wedding Lotería',
                   desc: 'Feature photos of the couple, wedding party, and special moments',
                 },
                 {
@@ -218,7 +218,7 @@ export default function LandingPage() {
         <section id="how-it-works" className="bg-white py-16 border-y scroll-mt-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-center mb-4">
-              How to Make Custom Loteria Cards
+              How to Make Custom Lotería Cards
             </h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
               Our AI-powered Lotería generator transforms your photos into authentic Mexican Lotería
@@ -241,7 +241,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">2. AI Creates Illustrations</h3>
                 <p className="text-muted-foreground">
-                  Our AI transforms each photo into a hand-drawn Loteria card style illustration and
+                  Our AI transforms each photo into a hand-drawn Lotería card style illustration and
                   generates an authentic Spanish label.
                 </p>
               </article>
@@ -283,7 +283,7 @@ export default function LandingPage() {
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-center gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                    <span>Up to 16 custom Loteria cards</span>
+                    <span>Up to 16 custom Lotería cards</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -347,7 +347,7 @@ export default function LandingPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-center mb-4">Frequently Asked Questions</h2>
             <p className="text-center text-muted-foreground mb-12">
-              Everything you need to know about creating custom Loteria cards.
+              Everything you need to know about creating custom Lotería cards.
             </p>
             <div className="space-y-6">
               {faqs.map((faq, index) => (
@@ -363,14 +363,14 @@ export default function LandingPage() {
         {/* CTA */}
         <section className="bg-primary/5 py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Create Your Custom Loteria?</h2>
+            <h2 className="text-3xl font-bold mb-4">Ready to Create Your Custom Lotería?</h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-              Join thousands of people creating personalized Loteria cards for their special
+              Join thousands of people creating personalized Lotería cards for their special
               celebrations. Start free in seconds.
             </p>
             <Link href="/sign-up">
               <Button size="lg" className="text-lg px-8">
-                Create Your Loteria Board Now
+                Create Your Lotería Board Now
               </Button>
             </Link>
           </div>
@@ -383,7 +383,7 @@ export default function LandingPage() {
               <div>
                 <h4 className="font-semibold mb-4">Lotería Generator</h4>
                 <p className="text-sm text-muted-foreground">
-                  The easiest way to create custom Mexican Loteria cards from your photos using AI.
+                  The easiest way to create custom Mexican Lotería cards from your photos using AI.
                 </p>
               </div>
               <div>
@@ -424,7 +424,7 @@ export default function LandingPage() {
               <div>
                 <h4 className="font-semibold mb-4">Use Cases</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>Wedding Loteria</li>
+                  <li>Wedding Lotería</li>
                   <li>Quinceañera Games</li>
                   <li>Family Reunions</li>
                   <li>Birthday Parties</li>
@@ -434,7 +434,7 @@ export default function LandingPage() {
             <div className="border-t pt-8 text-center text-muted-foreground text-sm">
               <p>&copy; {new Date().getFullYear()} Lotería Generator. All rights reserved.</p>
               <p className="mt-2">
-                Create custom Loteria cards, personalized Mexican bingo, and Loteria boards for any
+                Create custom Lotería cards, personalized Mexican bingo, and Lotería boards for any
                 celebration.
               </p>
             </div>

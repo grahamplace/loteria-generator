@@ -62,7 +62,7 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold">Loteria Generator</h1>
+          <h1 className="text-xl font-bold">Lotería Generator</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
@@ -102,7 +102,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl font-bold">Your Boards</h2>
-            <p className="text-muted-foreground">Create and manage your Loteria card projects</p>
+            <p className="text-muted-foreground">Create and manage your Lotería card projects</p>
           </div>
           <Button onClick={handleCreateBoard} disabled={isCreating}>
             <Plus className="h-4 w-4 mr-2" />
@@ -132,7 +132,7 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">No boards yet</h3>
               <p className="text-muted-foreground mb-4">
-                Create your first Loteria board to get started
+                Create your first Lotería board to get started
               </p>
               <Button onClick={handleCreateBoard} disabled={isCreating}>
                 <Plus className="h-4 w-4 mr-2" />

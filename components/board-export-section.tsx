@@ -68,7 +68,7 @@ export function BoardExportSection({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Tarjetas de Loteria</title>
+          <title>Tarjetas de Lotería</title>
           <style>
             body {
               margin: 0;
@@ -128,7 +128,7 @@ export function BoardExportSection({
         </head>
         <body>
           <div class="container">
-            <h1 style="text-align: center; margin-bottom: 30px;">Loteria Cards</h1>
+            <h1 style="text-align: center; margin-bottom: 30px;">Lotería Cards</h1>
             <div class="grid">
               ${printCards
                 .map(
