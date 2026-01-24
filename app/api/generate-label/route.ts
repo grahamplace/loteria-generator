@@ -23,9 +23,9 @@ export async function POST(request: Request) {
       return Response.json({ error: 'No image provided' }, { status: 400 });
     }
 
-    // Generate Spanish label for the card using GPT-4o Mini
+    // Generate Spanish label for the card using GPT-4o Mini with vision
     const result = await openai.chat.completions.create({
-      model: 'gpt-5-nano',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -34,8 +34,17 @@ export async function POST(request: Request) {
         },
         {
           role: 'user',
-          content: `Based on this image, generate a short Spanish word or phrase that would be perfect as a label for a Mexican Loteria card. 
-      
+          content: [
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageBase64,
+              },
+            },
+            {
+              type: 'text',
+              text: `Based on this image, generate a short Spanish word or phrase that would be perfect as a label for a Mexican Loteria card.
+
 The label should be:
 - 1-3 words maximum
 - A noun or simple phrase
@@ -43,9 +52,11 @@ The label should be:
 - In Spanish
 
 Return ONLY the Spanish label, nothing else. Example labels: "El Diablo", "La Luna", "El Corazón"`,
+            },
+          ],
         },
       ],
-      max_completion_tokens: 50,
+      max_tokens: 50,
     });
 
     const label = result.choices[0].message.content?.trim() || '';
