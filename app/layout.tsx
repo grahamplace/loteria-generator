@@ -15,14 +15,14 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator.ve
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Loteria Maker - Create Custom Mexican Loteria Cards with AI',
-    template: '%s | Loteria Maker',
+    default: 'Lotería Generator - Create Custom Mexican Loteria Cards with AI',
+    template: '%s | Lotería Generator',
   },
   description:
     'Create personalized Mexican Loteria cards from your photos using AI. The easiest custom Loteria card maker for weddings, parties, and family events. Transform photos into traditional Loteria-style illustrations instantly.',
   keywords: [
     'custom loteria cards',
-    'loteria maker',
+    'loteria generator',
     'personalized loteria',
     'mexican loteria generator',
     'loteria card creator',
@@ -37,9 +37,9 @@ export const metadata: Metadata = {
     'loteria con fotos',
     'loteria personalizada',
   ],
-  authors: [{ name: 'Loteria Maker' }],
-  creator: 'Loteria Maker',
-  publisher: 'Loteria Maker',
+  authors: [{ name: 'Lotería Generator' }],
+  creator: 'Lotería Generator',
+  publisher: 'Lotería Generator',
   formatDetection: {
     email: false,
     telephone: false,
@@ -49,8 +49,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     alternateLocale: 'es_MX',
     url: siteUrl,
-    siteName: 'Loteria Maker',
-    title: 'Loteria Maker - Create Custom Mexican Loteria Cards with AI',
+    siteName: 'Lotería Generator',
+    title: 'Lotería Generator - Create Custom Mexican Loteria Cards with AI',
     description:
       'Transform your photos into beautiful Mexican Loteria cards using AI. Perfect for weddings, parties, and special celebrations. Create personalized Loteria boards in minutes.',
     images: [
@@ -58,13 +58,13 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Loteria Maker - Custom Mexican Loteria Cards',
+        alt: 'Lotería Generator - Custom Mexican Loteria Cards',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Loteria Maker - Create Custom Mexican Loteria Cards with AI',
+    title: 'Lotería Generator - Create Custom Mexican Loteria Cards with AI',
     description:
       'Transform your photos into beautiful Mexican Loteria cards using AI. Perfect for weddings, parties, and special celebrations.',
     images: ['/og-image.png'],

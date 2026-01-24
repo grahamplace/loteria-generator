@@ -23,7 +23,7 @@ const faqs = [
   {
     question: 'How do I create custom Loteria cards with my own photos?',
     answer:
-      'Simply upload your photos to our Loteria maker, and our AI will automatically transform each image into a traditional Loteria-style illustration with a Spanish label. You can then edit labels, arrange cards, and generate printable bingo boards.',
+      'Simply upload your photos to our Lotería generator, and our AI will automatically transform each image into a traditional Lotería-style illustration with a Spanish label. You can then edit labels, arrange cards, and generate printable bingo boards.',
   },
   {
     question: 'Can I use this for my wedding or party?',
@@ -86,7 +86,7 @@ export default function LandingPage() {
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <Link href="/" className="text-xl font-bold text-primary">
-              Loteria Maker
+              Lotería Generator
             </Link>
             <div className="flex items-center gap-4">
               <Link
@@ -221,7 +221,7 @@ export default function LandingPage() {
               How to Make Custom Loteria Cards
             </h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Our AI-powered Loteria maker transforms your photos into authentic Mexican Loteria
+              Our AI-powered Lotería generator transforms your photos into authentic Mexican Lotería
               cards in minutes.
             </p>
             <div className="grid md:grid-cols-3 gap-8">
@@ -381,7 +381,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
               <div>
-                <h4 className="font-semibold mb-4">Loteria Maker</h4>
+                <h4 className="font-semibold mb-4">Lotería Generator</h4>
                 <p className="text-sm text-muted-foreground">
                   The easiest way to create custom Mexican Loteria cards from your photos using AI.
                 </p>
@@ -432,7 +432,7 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="border-t pt-8 text-center text-muted-foreground text-sm">
-              <p>&copy; {new Date().getFullYear()} Loteria Maker. All rights reserved.</p>
+              <p>&copy; {new Date().getFullYear()} Lotería Generator. All rights reserved.</p>
               <p className="mt-2">
                 Create custom Loteria cards, personalized Mexican bingo, and Loteria boards for any
                 celebration.

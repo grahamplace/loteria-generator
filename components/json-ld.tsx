@@ -9,8 +9,8 @@ export function WebsiteJsonLd() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Loteria Maker',
-    alternateName: ['Loteria Generator', 'Custom Loteria Cards'],
+    name: 'Lotería Generator',
+    alternateName: ['Custom Lotería Cards', 'Lotería Card Maker'],
     url: siteUrl,
     description:
       'Create personalized Mexican Loteria cards from your photos using AI. The easiest custom Loteria card maker for weddings, parties, and family events.',
@@ -36,7 +36,7 @@ export function OrganizationJsonLd() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Loteria Maker',
+    name: 'Lotería Generator',
     url: siteUrl,
     logo: `${siteUrl}/logo.png`,
     sameAs: [],
@@ -59,7 +59,7 @@ export function SoftwareApplicationJsonLd() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'Loteria Maker',
+    name: 'Lotería Generator',
     applicationCategory: 'DesignApplication',
     operatingSystem: 'Web',
     offers: [

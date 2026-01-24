@@ -7,7 +7,7 @@ import { FAQJsonLd, BreadcrumbJsonLd } from '@/components/json-ld';
 export const metadata: Metadata = {
   title: 'FAQ - Custom Loteria Card Questions Answered',
   description:
-    'Find answers to common questions about creating custom Loteria cards. Learn how our AI Loteria maker works, pricing, printing, and more.',
+    'Find answers to common questions about creating custom Lotería cards. Learn how our AI Lotería generator works, pricing, printing, and more.',
   keywords: [
     'loteria faq',
     'custom loteria questions',
@@ -161,7 +161,7 @@ export default function FAQPage() {
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <Link href="/" className="text-xl font-bold text-primary">
-              Loteria Maker
+              Lotería Generator
             </Link>
             <div className="flex items-center gap-4">
               <Link href="/sign-in">
@@ -225,7 +225,7 @@ export default function FAQPage() {
         {/* Footer */}
         <footer className="bg-white border-t py-8">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-muted-foreground text-sm">
-            <p>&copy; {new Date().getFullYear()} Loteria Maker. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Lotería Generator. All rights reserved.</p>
           </div>
         </footer>
       </main>
