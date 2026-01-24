@@ -3,6 +3,16 @@
 import { useState } from 'react';
 import { Trash2, Edit2, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { CardEditModal } from './card-edit-modal';
 import {
   DndContext,
@@ -208,8 +218,17 @@ export function BoardCardGrid({
 }: BoardCardGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingCard, setEditingCard] = useState<DisplayCard | null>(null);
+  const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   // Track the live-reordered cards during drag
   const [liveCards, setLiveCards] = useState<DisplayCard[]>(cards);
+
+  const deletingCard = deletingCardId ? cards.find((c) => c.id === deletingCardId) : null;
+
+  function handleDeleteCard() {
+    if (!deletingCardId) return;
+    onDeleteCard(deletingCardId);
+    setDeletingCardId(null);
+  }
 
   // Sync liveCards with cards prop when not dragging
   useState(() => {
@@ -311,7 +330,7 @@ export function BoardCardGrid({
                 <SortableCard
                   key={card.id}
                   card={card}
-                  onDelete={() => onDeleteCard(card.id)}
+                  onDelete={() => setDeletingCardId(card.id)}
                   onEdit={() => setEditingCard(card)}
                   isDragging={activeId === card.id}
                 />
@@ -350,6 +369,26 @@ export function BoardCardGrid({
           onClose={() => setEditingCard(null)}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingCardId} onOpenChange={() => setDeletingCardId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this card?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingCard
+                ? `This will permanently delete card #${deletingCard.number}${deletingCard.label ? ` "${deletingCard.label}"` : ''}. This action cannot be undone.`
+                : 'This will permanently delete this card. This action cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCard} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

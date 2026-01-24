@@ -65,8 +65,17 @@ export default function DashboardPage() {
           <h1 className="text-xl font-bold">Loteria Generator</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="rounded-full">
+                {user?.image ? (
+                  <img
+                    src={user.image}
+                    alt={user.name || 'User avatar'}
+                    className="h-8 w-8 rounded-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <User className="h-5 w-5" />
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
