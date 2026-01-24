@@ -222,7 +222,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
               fetch('/api/generate-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageBase64: base64Image }),
+                body: JSON.stringify({ imageBase64: base64Image, boardId }),
               }),
               fetch('/api/generate-label', {
                 method: 'POST',
@@ -237,6 +237,13 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
               illustration = imageData.illustration;
               label = labelData.label;
             } else {
+              // Check if it's a generation limit error
+              if (!imageResult.ok) {
+                const errorData = await imageResult.json();
+                if (errorData.code === 'GENERATION_LIMIT_REACHED') {
+                  throw new Error(errorData.message || 'Generation limit reached');
+                }
+              }
               throw new Error('Failed to process card with AI');
             }
           }

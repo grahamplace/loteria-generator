@@ -1,6 +1,8 @@
 import OpenAI, { toFile } from 'openai';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { db, boards, IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db';
+import { eq, and, sql } from 'drizzle-orm';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,10 +19,42 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { imageBase64 } = await request.json();
+    const { imageBase64, boardId } = await request.json();
 
     if (!imageBase64) {
       return Response.json({ error: 'No image provided' }, { status: 400 });
+    }
+
+    if (!boardId) {
+      return Response.json({ error: 'No board ID provided' }, { status: 400 });
+    }
+
+    // Get board and check ownership
+    const board = await db.query.boards.findFirst({
+      where: and(eq(boards.id, boardId), eq(boards.userId, session.user.id)),
+    });
+
+    if (!board) {
+      return Response.json({ error: 'Board not found' }, { status: 404 });
+    }
+
+    // Check generation limit
+    const limit = board.isUnlocked ? IMAGE_GENERATION_LIMIT_PAID : IMAGE_GENERATION_LIMIT_FREE;
+    const remaining = limit - board.imageGenerationsUsed;
+
+    if (remaining <= 0) {
+      return Response.json(
+        {
+          error: 'Generation limit reached',
+          message: board.isUnlocked
+            ? `You've used all ${IMAGE_GENERATION_LIMIT_PAID} image generations for this board.`
+            : `You've used all ${IMAGE_GENERATION_LIMIT_FREE} free image generations. Unlock this board for ${IMAGE_GENERATION_LIMIT_PAID} total generations.`,
+          code: 'GENERATION_LIMIT_REACHED',
+          limit,
+          used: board.imageGenerationsUsed,
+        },
+        { status: 403 }
+      );
     }
 
     // Extract base64 data (remove data URL prefix if present)
@@ -90,8 +124,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // Increment generation count
+    await db
+      .update(boards)
+      .set({
+        imageGenerationsUsed: sql`${boards.imageGenerationsUsed} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(boards.id, boardId));
+
     return Response.json({
       illustration: `data:image/png;base64,${imageBase64String}`,
+      generationsRemaining: remaining - 1,
     });
   } catch (error) {
     console.error('Image generation error:', error);

@@ -73,6 +73,10 @@ export interface BoardStyleOptions {
   labelColor?: string;
 }
 
+// Generation limits
+export const IMAGE_GENERATION_LIMIT_FREE = 20;
+export const IMAGE_GENERATION_LIMIT_PAID = 100;
+
 // Boards table
 export const boards = pgTable('boards', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -83,6 +87,7 @@ export const boards = pgTable('boards', {
   isUnlocked: boolean('is_unlocked').notNull().default(false),
   stripePaymentId: text('stripe_payment_id'),
   unlockedAt: timestamp('unlocked_at'),
+  imageGenerationsUsed: integer('image_generations_used').notNull().default(0),
   styleOptions: json('style_options').$type<BoardStyleOptions>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

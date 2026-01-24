@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { db, boards } from '@/db';
+import { db, boards, IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { deleteBoardImages } from '@/lib/blob';
 
@@ -36,7 +36,17 @@ export async function GET(
       return NextResponse.json({ error: 'Board not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ board });
+    // Include generation limit info
+    const generationLimit = board.isUnlocked
+      ? IMAGE_GENERATION_LIMIT_PAID
+      : IMAGE_GENERATION_LIMIT_FREE;
+    const generationsRemaining = Math.max(0, generationLimit - board.imageGenerationsUsed);
+
+    return NextResponse.json({
+      board,
+      generationLimit,
+      generationsRemaining,
+    });
   } catch (error) {
     console.error('Error fetching board:', error);
     return NextResponse.json({ error: 'Failed to fetch board' }, { status: 500 });

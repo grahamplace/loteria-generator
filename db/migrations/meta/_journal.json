@@ -15,6 +15,13 @@
       "when": 1769208130469,
       "tag": "0001_large_boomerang",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769232899365,
+      "tag": "0002_same_apocalypse",
+      "breakpoints": true
     }
   ]
 }

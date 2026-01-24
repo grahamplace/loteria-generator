@@ -1,0 +1,1 @@
+ALTER TABLE "boards" ADD COLUMN "image_generations_used" integer DEFAULT 0 NOT NULL;
