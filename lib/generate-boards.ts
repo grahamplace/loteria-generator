@@ -24,7 +24,15 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 /**
- * Generates 4 different boards, each with 16 randomly selected cards
+ * Creates a unique signature for a board arrangement based on card IDs in order
+ */
+function getBoardSignature(board: LotteriaCard[]): string {
+  return board.map((card) => card.id).join(',');
+}
+
+/**
+ * Generates 4 different boards, each with 16 randomly selected cards.
+ * Ensures no two boards have the same arrangement to prevent multiple winners.
  */
 export function generateBoards(cards: LotteriaCard[]): LotteriaCard[][] {
   const processedCards = cards.filter((c) => !c.isProcessing && !c.error);
@@ -34,12 +42,30 @@ export function generateBoards(cards: LotteriaCard[]): LotteriaCard[][] {
   }
 
   const boards: LotteriaCard[][] = [];
+  const usedSignatures = new Set<string>();
+  const maxAttempts = 100; // Prevent infinite loops
 
   for (let i = 0; i < 4; i++) {
-    // Shuffle cards for variety between boards
-    const shuffled = shuffleArray(processedCards);
-    // Select first 16 cards (no duplicates within board)
-    boards.push(shuffled.slice(0, 16));
+    let attempts = 0;
+    let board: LotteriaCard[];
+    let signature: string;
+
+    // Keep generating until we get a unique arrangement
+    do {
+      const shuffled = shuffleArray(processedCards);
+      board = shuffled.slice(0, 16);
+      signature = getBoardSignature(board);
+      attempts++;
+
+      if (attempts >= maxAttempts) {
+        // If we can't find a unique arrangement after many attempts,
+        // just use this one (extremely unlikely with enough cards)
+        break;
+      }
+    } while (usedSignatures.has(signature));
+
+    usedSignatures.add(signature);
+    boards.push(board);
   }
 
   return boards;
