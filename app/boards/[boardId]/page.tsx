@@ -120,7 +120,7 @@ export default function BoardEditorPage() {
           <Skeleton className="h-48 w-full mb-8" />
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="aspect-square" />
+              <Skeleton key={i} className="aspect-[2/3]" />
             ))}
           </div>
         </main>

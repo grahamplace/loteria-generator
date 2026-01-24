@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotteriaCard } from '@/hooks/use-cards';
@@ -14,6 +14,17 @@ interface CardEditModalProps {
 export function CardEditModal({ card, onSave, onClose }: CardEditModalProps) {
   const [label, setLabel] = useState(card.label);
 
+  // Handle Escape key to close modal
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const handleSave = () => {
     if (label.trim()) {
       onSave(label.trim());
@@ -22,9 +33,9 @@ export function CardEditModal({ card, onSave, onClose }: CardEditModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-6 border-b shrink-0">
           <h2 className="text-lg font-semibold">Edit card #{card.number}</h2>
           <button
             onClick={onClose}
@@ -35,14 +46,16 @@ export function CardEditModal({ card, onSave, onClose }: CardEditModalProps) {
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4">
-          {/* Image preview */}
-          <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted">
-            <img
-              src={card.illustration || '/placeholder.svg'}
-              alt={card.label}
-              className="w-full h-full object-cover"
-            />
+        <div className="p-6 space-y-4 overflow-y-auto">
+          {/* Image preview - smaller and centered */}
+          <div className="flex justify-center">
+            <div className="w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+              <img
+                src={card.illustration || '/placeholder.svg'}
+                alt={card.label}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
 
           {/* Label input */}
@@ -60,7 +73,7 @@ export function CardEditModal({ card, onSave, onClose }: CardEditModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 border-t">
+        <div className="flex gap-3 p-6 border-t shrink-0">
           <Button variant="outline" className="flex-1 bg-transparent" onClick={onClose}>
             Cancel
           </Button>

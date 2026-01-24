@@ -88,13 +88,40 @@ export async function renderBoardAsPNG(
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
 
-  // Grid layout: 4 rows × 4 columns
+  // Grid layout: 4 rows × 4 columns with portrait-oriented cards (2:3 aspect ratio)
   const rows = 4;
   const cols = 4;
   const padding = 60; // Padding around the entire board
   const cardSpacing = 20; // Spacing between cards
-  const cardWidth = (width - padding * 2 - cardSpacing * (cols - 1)) / cols;
-  const cardHeight = (height - padding * 2 - cardSpacing * (rows - 1)) / rows;
+
+  // Calculate card dimensions to fit portrait cards (2:3 aspect ratio) in the grid
+  // Available space for cards
+  const availableWidth = width - padding * 2 - cardSpacing * (cols - 1);
+  const availableHeight = height - padding * 2 - cardSpacing * (rows - 1);
+
+  // Calculate card size based on portrait aspect ratio (2:3)
+  const cardAspectRatio = 2 / 3;
+  const maxCardWidth = availableWidth / cols;
+  const maxCardHeight = availableHeight / rows;
+
+  // Determine which dimension is the constraint
+  let cardWidth: number;
+  let cardHeight: number;
+  if (maxCardWidth / maxCardHeight < cardAspectRatio) {
+    // Width is the constraint
+    cardWidth = maxCardWidth;
+    cardHeight = cardWidth / cardAspectRatio;
+  } else {
+    // Height is the constraint
+    cardHeight = maxCardHeight;
+    cardWidth = cardHeight * cardAspectRatio;
+  }
+
+  // Center the grid on the page
+  const gridWidth = cardWidth * cols + cardSpacing * (cols - 1);
+  const gridHeight = cardHeight * rows + cardSpacing * (rows - 1);
+  const offsetX = (width - gridWidth) / 2;
+  const offsetY = (height - gridHeight) / 2;
 
   // Load all card images first
   const cardImages = await Promise.all(board.map((card) => loadImage(card.illustration)));
@@ -106,25 +133,44 @@ export async function renderBoardAsPNG(
       const card = board[cardIndex];
       const img = cardImages[cardIndex];
 
-      const x = padding + col * (cardWidth + cardSpacing);
-      const y = padding + row * (cardHeight + cardSpacing);
+      const x = offsetX + col * (cardWidth + cardSpacing);
+      const y = offsetY + row * (cardHeight + cardSpacing);
 
       // Draw card background/border
       ctx.strokeStyle = cardBorderColor;
       ctx.lineWidth = 2;
       ctx.strokeRect(x, y, cardWidth, cardHeight);
 
-      // Draw card illustration (centered, scaled to fit with padding)
+      // Draw card illustration (portrait orientation, centered with padding)
       const imagePadding = 15;
-      const imageSize = Math.min(cardWidth - imagePadding * 2, cardHeight - imagePadding * 2 - 60);
-      const imageX = x + (cardWidth - imageSize) / 2;
-      const imageY = y + imagePadding + 40; // Leave room for number badge
+      const badgeSpace = 50; // Space for the number badge at top
+      const labelSpace = 50; // Space for the label at bottom
+
+      // Available space for the image (portrait aspect ratio 2:3)
+      const availableImageWidth = cardWidth - imagePadding * 2;
+      const availableImageHeight = cardHeight - imagePadding * 2 - badgeSpace - labelSpace;
+
+      // Calculate image dimensions maintaining 2:3 aspect ratio
+      const imageAspectRatio = 2 / 3;
+      let imageWidth: number;
+      let imageHeight: number;
+
+      if (availableImageWidth / availableImageHeight < imageAspectRatio) {
+        imageWidth = availableImageWidth;
+        imageHeight = imageWidth / imageAspectRatio;
+      } else {
+        imageHeight = availableImageHeight;
+        imageWidth = imageHeight * imageAspectRatio;
+      }
+
+      const imageX = x + (cardWidth - imageWidth) / 2;
+      const imageY = y + badgeSpace + (availableImageHeight - imageHeight) / 2 + imagePadding;
 
       ctx.save();
       ctx.beginPath();
-      ctx.rect(imageX, imageY, imageSize, imageSize);
+      ctx.rect(imageX, imageY, imageWidth, imageHeight);
       ctx.clip();
-      ctx.drawImage(img, imageX, imageY, imageSize, imageSize);
+      ctx.drawImage(img, imageX, imageY, imageWidth, imageHeight);
       ctx.restore();
 
       // Draw number badge (top-left corner)

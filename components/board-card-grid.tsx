@@ -133,8 +133,8 @@ function CardContent({
         </div>
       )}
 
-      {/* Image */}
-      <div className="w-full aspect-square bg-muted overflow-hidden">
+      {/* Image - portrait aspect ratio matching traditional Lotería cards (2:3) */}
+      <div className="w-full aspect-[2/3] bg-muted overflow-hidden">
         {card.isProcessing ? (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
             <div className="text-center">

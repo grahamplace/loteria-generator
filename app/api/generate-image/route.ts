@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       model: 'gpt-image-1.5',
       image: imageFile,
       prompt: prompt,
-      size: '1024x1024',
+      size: '1024x1536', // Portrait orientation to match traditional Lotería cards
     });
 
     // GPT image models always return base64-encoded images
