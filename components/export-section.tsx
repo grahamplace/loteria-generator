@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Download, Grid3x3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotteriaCard } from '@/hooks/use-cards';
-import { generateBoardsZip, BoardStyleOptions } from '@/lib/generate-boards';
+import { generateLoteriaSetZip, BoardStyleOptions } from '@/lib/generate-boards';
 
 interface ExportSectionProps {
   cards: LotteriaCard[];
@@ -142,7 +142,7 @@ export function ExportSection({ cards }: ExportSectionProps) {
     setIsGeneratingBoards(true);
 
     try {
-      const zipBlob = await generateBoardsZip(cards, boardStyleOptions);
+      const zipBlob = await generateLoteriaSetZip(cards, boardStyleOptions);
 
       // Download the zip file
       const url = URL.createObjectURL(zipBlob);
