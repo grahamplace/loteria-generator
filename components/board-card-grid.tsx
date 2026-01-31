@@ -75,6 +75,7 @@ function SortableCard({ card, onDelete, onEdit, isDragging }: SortableCardProps)
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isSortableDragging ? 50 : undefined,
+    borderRadius: '2px',
   };
 
   return (
@@ -93,7 +94,7 @@ function SortableCard({ card, onDelete, onEdit, isDragging }: SortableCardProps)
         opacity: { duration: 0.2 },
         scale: { duration: 0.2 },
       }}
-      className={`group relative bg-card rounded-lg overflow-hidden shadow-md hover:shadow-lg ${
+      className={`group relative bg-[#f5f0e1] overflow-hidden shadow-md hover:shadow-lg border-2 border-black/80 ${
         card.isProcessing ? 'cursor-wait' : 'cursor-grab active:cursor-grabbing'
       } ${isDragging ? 'ring-2 ring-primary ring-offset-2' : ''}`}
       {...attributes}
@@ -118,14 +119,14 @@ function CardContent({
   return (
     <>
       {/* Card number overlay */}
-      <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm z-10 shadow-md">
+      <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full w-9 h-9 flex items-center justify-center font-bold text-lg z-[1] shadow-md font-caveat">
         {card.number}
       </div>
 
       {/* Drag handle indicator */}
       {!card.isProcessing && (
         <div
-          className={`absolute top-2 right-2 z-20 bg-black/50 rounded-md p-1.5 transition-opacity ${
+          className={`absolute top-2 right-2 z-[2] bg-black/50 rounded-md p-1.5 transition-opacity ${
             isOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
         >
@@ -161,8 +162,8 @@ function CardContent({
       </div>
 
       {/* Label */}
-      <div className="p-3 bg-card">
-        <p className="text-sm font-semibold text-center text-foreground line-clamp-2 mb-2">
+      <div className="p-3 bg-[#f5f0e1]">
+        <p className="text-sm font-semibold text-center text-foreground line-clamp-2 mb-2 uppercase tracking-wide">
           {card.label || 'No label'}
         </p>
 
@@ -204,7 +205,10 @@ function CardContent({
 
 function DragOverlayCard({ card }: { card: DisplayCard }) {
   return (
-    <div className="bg-card rounded-lg overflow-hidden shadow-2xl ring-2 ring-primary cursor-grabbing rotate-3 scale-105">
+    <div
+      className="bg-[#f5f0e1] overflow-hidden shadow-2xl ring-2 ring-primary cursor-grabbing rotate-3 scale-105 border-2 border-black/80"
+      style={{ borderRadius: '2px' }}
+    >
       <CardContent card={card} isOverlay />
     </div>
   );

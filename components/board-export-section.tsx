@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, Grid3x3, Lock } from 'lucide-react';
+import { Download, Eye, Grid3x3, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { generateBoardsZip, BoardStyleOptions } from '@/lib/generate-boards';
+import { generateBoardsZip, renderBoardAsPNG, BoardStyleOptions } from '@/lib/generate-boards';
+import { BoardPreviewModal } from '@/components/board-preview-modal';
 import { toast } from 'sonner';
 
 interface DisplayCard {
@@ -28,10 +29,13 @@ export function BoardExportSection({
 }: BoardExportSectionProps) {
   const [isGeneratingBoards, setIsGeneratingBoards] = useState(false);
   const [generatedBoardsCount, setGeneratedBoardsCount] = useState(0);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
   // Hardcoded board styling options
   const boardStyleOptions: BoardStyleOptions = {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f5f0e1',
     cardBorderColor: '#fffddc',
     badgeColor: '#eb865a',
     labelColor: '#000000',
@@ -152,6 +156,33 @@ export function BoardExportSection({
     printWindow.print();
   };
 
+  const handlePreviewBoard = async () => {
+    const processedCards = cards.filter((c) => !c.isProcessing && !c.error);
+    const first16 = processedCards.slice(0, 16);
+
+    if (first16.length < 16) return;
+
+    setIsGeneratingPreview(true);
+    try {
+      const lotteriaCards = first16.map((c) => ({
+        id: c.id,
+        number: c.number,
+        label: c.label,
+        illustration: c.illustration,
+      }));
+
+      const blob = await renderBoardAsPNG(lotteriaCards, 1, boardStyleOptions);
+      const url = URL.createObjectURL(blob);
+      setPreviewImageUrl(url);
+      setPreviewOpen(true);
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      toast.error('Failed to generate preview');
+    } finally {
+      setIsGeneratingPreview(false);
+    }
+  };
+
   const handleGenerateBoards = async () => {
     const processedCards = cards.filter((c) => !c.isProcessing && !c.error);
 
@@ -248,7 +279,24 @@ export function BoardExportSection({
               ? 'Unlock for More Boards'
               : 'Generate Boards'}
         </Button>
+        <Button
+          onClick={handlePreviewBoard}
+          disabled={!canGenerateBoards || isGeneratingPreview}
+          variant="outline"
+        >
+          <Eye className="w-4 h-4 mr-2" />
+          {isGeneratingPreview ? 'Generating...' : 'Preview Board'}
+        </Button>
       </div>
+
+      <BoardPreviewModal
+        open={previewOpen}
+        onOpenChange={(open) => {
+          setPreviewOpen(open);
+          if (!open) setPreviewImageUrl(null);
+        }}
+        imageUrl={previewImageUrl}
+      />
 
       {!canGenerateBoards && processedCards.length > 0 && (
         <p className="text-sm text-muted-foreground mt-4">

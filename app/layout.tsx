@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Caveat } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/sonner';
 import { Agentation } from 'agentation';
@@ -9,6 +9,7 @@ import './globals.css';
 
 const _geist = Geist({ subsets: ['latin'] });
 const _geistMono = Geist_Mono({ subsets: ['latin'] });
+const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' });
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-eta.vercel.app';
 
@@ -99,7 +100,7 @@ export default function RootLayout({
   return (
     <>
       <html lang="en">
-        <body className={`font-sans antialiased`}>
+        <body className={`font-sans antialiased ${caveat.variable}`}>
           {children}
           <Toaster />
           <Analytics />

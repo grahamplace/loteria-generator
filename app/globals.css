@@ -5,9 +5,9 @@
 
 :root {
   /* Loteria-inspired palette */
-  --background: oklch(0.97 0.015 85); /* Warm Cream */
+  --background: #f5f0e1; /* Aged Paper */
   --foreground: oklch(0.25 0.04 50); /* Rich Brown */
-  --card: oklch(0.99 0.01 85); /* Light Cream */
+  --card: #f5f0e1; /* Aged Paper - matches background */
   --card-foreground: oklch(0.25 0.04 50); /* Rich Brown */
   --popover: oklch(0.99 0.01 85);
   --popover-foreground: oklch(0.25 0.04 50);
@@ -79,6 +79,7 @@
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --font-caveat: var(--font-caveat), 'cursive';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

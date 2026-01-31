@@ -74,6 +74,55 @@ export function generateBoards(cards: LotteriaCard[]): LotteriaCard[][] {
 /**
  * Loads an image from a data URL and returns a Promise<HTMLImageElement>
  */
+/**
+ * Loads a Google Font for canvas rendering via FontFace API
+ */
+async function loadGoogleFont(family: string, url: string): Promise<void> {
+  const font = new FontFace(family, `url(${url})`);
+  const loaded = await font.load();
+  document.fonts.add(loaded);
+}
+
+/**
+ * Draws a wobbly/hand-drawn rectangle on the canvas
+ */
+function drawHandDrawnRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  jitter: number = 3
+) {
+  const segments = 12; // segments per side
+  const corners = [
+    [x, y],
+    [x + w, y],
+    [x + w, y + h],
+    [x, y + h],
+  ];
+
+  ctx.beginPath();
+  for (let side = 0; side < 4; side++) {
+    const [sx, sy] = corners[side];
+    const [ex, ey] = corners[(side + 1) % 4];
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments;
+      const px =
+        sx + (ex - sx) * t + (i > 0 && i < segments ? (Math.random() - 0.5) * jitter * 2 : 0);
+      const py =
+        sy + (ey - sy) * t + (i > 0 && i < segments ? (Math.random() - 0.5) * jitter * 2 : 0);
+      if (side === 0 && i === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+  }
+  ctx.closePath();
+  ctx.stroke();
+}
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -149,6 +198,12 @@ export async function renderBoardAsPNG(
   const offsetX = (width - gridWidth) / 2;
   const offsetY = (height - gridHeight) / 2;
 
+  // Load handwritten font for number badges
+  await loadGoogleFont(
+    'Caveat',
+    'https://fonts.gstatic.com/s/caveat/v18/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9eIWpYQ.woff2'
+  );
+
   // Load all card images first
   const cardImages = await Promise.all(board.map((card) => loadImage(card.illustration)));
 
@@ -162,15 +217,15 @@ export async function renderBoardAsPNG(
       const x = offsetX + col * (cardWidth + cardSpacing);
       const y = offsetY + row * (cardHeight + cardSpacing);
 
-      // Draw card background/border
-      ctx.strokeStyle = cardBorderColor;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, cardWidth, cardHeight);
+      // Draw hand-drawn card border
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      drawHandDrawnRect(ctx, x, y, cardWidth, cardHeight, 2);
 
       // Draw card illustration (portrait orientation, centered with padding)
-      const imagePadding = 15;
-      const badgeSpace = 50; // Space for the number badge at top
-      const labelSpace = 50; // Space for the label at bottom
+      const imagePadding = 5;
+      const badgeSpace = 30; // Space for the number badge at top
+      const labelSpace = 40; // Space for the label at bottom
 
       // Available space for the image (portrait aspect ratio 2:3)
       const availableImageWidth = cardWidth - imagePadding * 2;
@@ -192,15 +247,64 @@ export async function renderBoardAsPNG(
       const imageX = x + (cardWidth - imageWidth) / 2;
       const imageY = y + badgeSpace + (availableImageHeight - imageHeight) / 2 + imagePadding;
 
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(imageX, imageY, imageWidth, imageHeight);
-      ctx.clip();
-      ctx.drawImage(img, imageX, imageY, imageWidth, imageHeight);
-      ctx.restore();
+      // Draw image with feathered edges using an offscreen canvas + alpha mask
+      const feather = 35;
+
+      // Build alpha mask on a separate canvas
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = imageWidth;
+      maskCanvas.height = imageHeight;
+      const maskCtx = maskCanvas.getContext('2d')!;
+
+      // Start fully opaque
+      maskCtx.fillStyle = '#fff';
+      maskCtx.fillRect(0, 0, imageWidth, imageHeight);
+
+      // Multiply each edge fade using 'destination-in' wouldn't work per-edge,
+      // so instead use 'destination-out' with inverted gradients (opaque at edge, transparent inside)
+      maskCtx.globalCompositeOperation = 'destination-out';
+
+      // Left edge
+      const gradL = maskCtx.createLinearGradient(0, 0, feather, 0);
+      gradL.addColorStop(0, 'rgba(0,0,0,1)');
+      gradL.addColorStop(1, 'rgba(0,0,0,0)');
+      maskCtx.fillStyle = gradL;
+      maskCtx.fillRect(0, 0, feather, imageHeight);
+
+      // Right edge
+      const gradR = maskCtx.createLinearGradient(imageWidth, 0, imageWidth - feather, 0);
+      gradR.addColorStop(0, 'rgba(0,0,0,1)');
+      gradR.addColorStop(1, 'rgba(0,0,0,0)');
+      maskCtx.fillStyle = gradR;
+      maskCtx.fillRect(imageWidth - feather, 0, feather, imageHeight);
+
+      // Top edge
+      const gradT = maskCtx.createLinearGradient(0, 0, 0, feather);
+      gradT.addColorStop(0, 'rgba(0,0,0,1)');
+      gradT.addColorStop(1, 'rgba(0,0,0,0)');
+      maskCtx.fillStyle = gradT;
+      maskCtx.fillRect(0, 0, imageWidth, feather);
+
+      // Bottom edge
+      const gradB = maskCtx.createLinearGradient(0, imageHeight, 0, imageHeight - feather);
+      gradB.addColorStop(0, 'rgba(0,0,0,1)');
+      gradB.addColorStop(1, 'rgba(0,0,0,0)');
+      maskCtx.fillStyle = gradB;
+      maskCtx.fillRect(0, imageHeight - feather, imageWidth, feather);
+
+      // Now draw image masked by the alpha mask
+      const offscreen = document.createElement('canvas');
+      offscreen.width = imageWidth;
+      offscreen.height = imageHeight;
+      const offCtx = offscreen.getContext('2d')!;
+      offCtx.drawImage(img, 0, 0, imageWidth, imageHeight);
+      offCtx.globalCompositeOperation = 'destination-in';
+      offCtx.drawImage(maskCanvas, 0, 0);
+
+      ctx.drawImage(offscreen, imageX, imageY);
 
       // Draw number badge (top-left corner)
-      const badgeSize = 50;
+      const badgeSize = 70;
       const badgeX = x + 10;
       const badgeY = y + 10;
 
@@ -210,7 +314,7 @@ export async function renderBoardAsPNG(
       ctx.fill();
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'normal 24px Arial, Helvetica, sans-serif';
+      ctx.font = 'bold 42px Caveat, cursive';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(card.number.toString(), badgeX + badgeSize / 2, badgeY + badgeSize / 2);
@@ -221,7 +325,7 @@ export async function renderBoardAsPNG(
       // Use a regular to semi-bold uppercase sans-serif font matching Loteria card style
       // Arial or Helvetica with normal weight for a cleaner, less thick look
       const labelText = card.label.toUpperCase();
-      const baseFontSize = 28;
+      const baseFontSize = 32;
       ctx.font = `normal ${baseFontSize}px Arial, Helvetica, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
