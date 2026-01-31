@@ -62,100 +62,6 @@ export function BoardExportSection({
     URL.revokeObjectURL(url);
   };
 
-  const handlePrintCards = () => {
-    const printCards = cards.filter((c) => !c.isProcessing && !c.error);
-
-    const printWindow = window.open('', '', 'width=800,height=600');
-    if (!printWindow) return;
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Tarjetas de Lotería</title>
-          <style>
-            body {
-              margin: 0;
-              padding: 20px;
-              background: #f5f5f5;
-              font-family: Arial, sans-serif;
-            }
-            .container {
-              max-width: 1200px;
-              margin: 0 auto;
-            }
-            .grid {
-              display: grid;
-              grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-              gap: 20px;
-            }
-            .card {
-              background: white;
-              border-radius: 8px;
-              overflow: hidden;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-              page-break-inside: avoid;
-            }
-            .card-image {
-              width: 100%;
-              aspect-ratio: 1;
-              object-fit: cover;
-            }
-            .card-number {
-              position: relative;
-              top: -35px;
-              left: 10px;
-              display: inline-block;
-              background: #ff6b35;
-              color: white;
-              width: 30px;
-              height: 30px;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-weight: bold;
-              font-size: 12px;
-            }
-            .card-label {
-              padding: 10px;
-              text-align: center;
-              font-weight: 600;
-              font-size: 14px;
-              color: #333;
-            }
-            @media print {
-              body { background: white; }
-              .card { page-break-inside: avoid; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1 style="text-align: center; margin-bottom: 30px;">Lotería Cards</h1>
-            <div class="grid">
-              ${printCards
-                .map(
-                  (card) => `
-                <div class="card">
-                  <img src="${card.illustration}" alt="${card.label}" class="card-image">
-                  <div class="card-number">${card.number}</div>
-                  <div class="card-label">${card.label}</div>
-                </div>
-              `
-                )
-                .join('')}
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.print();
-  };
-
   const handlePreviewBoard = async () => {
     const processedCards = cards.filter((c) => !c.isProcessing && !c.error);
     const first16 = processedCards.slice(0, 16);
@@ -256,10 +162,6 @@ export function BoardExportSection({
         >
           <Download className="w-4 h-4 mr-2" />
           Download JSON
-        </Button>
-        <Button onClick={handlePrintCards} disabled={!isReady} variant="outline">
-          <Download className="w-4 h-4 mr-2" />
-          Print
         </Button>
         <Button
           onClick={handleGenerateBoards}
