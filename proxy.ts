@@ -11,8 +11,10 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Get the session token from cookies
-  // Better Auth stores session in a cookie named 'better-auth.session_token'
-  const sessionToken = request.cookies.get('better-auth.session_token')?.value;
+  // Better Auth uses '__Secure-' prefix in production (HTTPS)
+  const sessionToken =
+    request.cookies.get('better-auth.session_token')?.value ||
+    request.cookies.get('__Secure-better-auth.session_token')?.value;
   const isAuthenticated = !!sessionToken;
 
   // Check if trying to access protected route without auth
