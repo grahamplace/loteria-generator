@@ -1,4 +1,6 @@
-import { put, del, list } from '@vercel/blob';
+import { put, del, list, get } from '@vercel/blob';
+
+const PRIVATE_BLOB_TOKEN = process.env.PRIVATE_READ_WRITE_TOKEN;
 
 /**
  * Upload an image to Vercel Blob with private access
@@ -10,12 +12,20 @@ export async function uploadImage(
   contentType: string = 'image/png'
 ): Promise<string> {
   const blob = await put(path, file, {
-    access: 'public', // We'll handle auth via API proxy
+    access: 'private',
     contentType,
     addRandomSuffix: false, // Use exact path for predictable URLs
+    token: PRIVATE_BLOB_TOKEN,
   });
 
   return blob.url;
+}
+
+/**
+ * Get a private blob by URL, streaming its contents server-side
+ */
+export async function getPrivateBlob(url: string) {
+  return get(url, { access: 'private', token: PRIVATE_BLOB_TOKEN });
 }
 
 /**

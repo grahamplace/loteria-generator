@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db, cards, boards } from '@/db';
 import { eq, and } from 'drizzle-orm';
+import { getPrivateBlob } from '@/lib/blob';
 
 /**
  * Private image proxy - serves images from Vercel Blob with auth check
@@ -59,19 +60,36 @@ export async function GET(
       return new NextResponse('Image not found', { status: 404 });
     }
 
-    // Fetch the image from Vercel Blob and proxy it
+    const isPrivateBlob = imageUrl.includes('.private.blob.vercel-storage.com');
+
+    if (isPrivateBlob) {
+      // Fetch private blob using the SDK (authenticates with PRIVATE_BLOB_READ_WRITE_TOKEN)
+      const result = await getPrivateBlob(imageUrl);
+
+      if (result?.statusCode !== 200) {
+        return new NextResponse('Failed to fetch image', { status: 500 });
+      }
+
+      return new NextResponse(result.stream, {
+        headers: {
+          'Content-Type': result.blob.contentType,
+          'X-Content-Type-Options': 'nosniff',
+          'Cache-Control': 'private, no-cache',
+          ETag: result.blob.etag,
+        },
+      });
+    }
+
+    // Legacy public blob — fetch directly (migration period)
     const imageResponse = await fetch(imageUrl);
 
     if (!imageResponse.ok) {
       return new NextResponse('Failed to fetch image', { status: 500 });
     }
 
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const contentType = imageResponse.headers.get('content-type') || 'image/png';
-
-    return new NextResponse(imageBuffer, {
+    return new NextResponse(imageResponse.body, {
       headers: {
-        'Content-Type': contentType,
+        'Content-Type': imageResponse.headers.get('content-type') || 'image/png',
         'Cache-Control': 'private, max-age=3600',
       },
     });
