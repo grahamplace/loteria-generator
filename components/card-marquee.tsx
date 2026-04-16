@@ -1,12 +1,8 @@
-'use client';
-
-import { useState } from 'react';
 import type { HeroCard as HeroCardData } from '@/lib/hero-cards';
 import { HeroCard } from './hero-card';
 import { HeroCardArtSprite } from './hero-card-art';
 
 export function CardMarquee({ cards }: { cards: HeroCardData[] }) {
-  const [paused, setPaused] = useState(false);
   const mid = Math.ceil(cards.length / 2);
   const rowA = cards.slice(0, mid);
   const rowB = cards.slice(mid);
@@ -16,11 +12,6 @@ export function CardMarquee({ cards }: { cards: HeroCardData[] }) {
       role="region"
       aria-label="Example Lotería cards produced by the generator"
       className="hero-marquee relative mt-2"
-      data-paused={paused ? 'true' : 'false'}
-      onPointerEnter={() => setPaused(true)}
-      onPointerLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
     >
       <HeroCardArtSprite />
       <div

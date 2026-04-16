@@ -161,10 +161,6 @@
   animation: hero-marquee-scroll-right 45s linear infinite;
 }
 
-.hero-marquee[data-paused='true'] .hero-marquee-row {
-  animation-play-state: paused;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .hero-marquee-row {
     animation: none !important;

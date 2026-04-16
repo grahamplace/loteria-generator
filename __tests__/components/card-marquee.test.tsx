@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { CardMarquee } from '@/components/card-marquee';
 import { heroCards } from '@/lib/hero-cards';
 
@@ -29,15 +29,5 @@ describe('CardMarquee', () => {
     const leftRow = container.querySelector('.hero-marquee-row--left')!;
     // 9 cards + 9 duplicates = 18 cards in the left row
     expect(leftRow.children.length).toBe(18);
-  });
-
-  it('sets data-paused=true when the marquee receives pointer enter', () => {
-    const { container } = render(<CardMarquee cards={heroCards} />);
-    const marquee = container.querySelector('.hero-marquee') as HTMLElement;
-    expect(marquee.dataset.paused).toBe('false');
-    fireEvent.pointerEnter(marquee);
-    expect(marquee.dataset.paused).toBe('true');
-    fireEvent.pointerLeave(marquee);
-    expect(marquee.dataset.paused).toBe('false');
   });
 });
