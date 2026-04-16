@@ -26,14 +26,14 @@ export function CardMarquee({ cards }: { cards: HeroCardData[] }) {
       <div
         className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[60px]"
         style={{
-          background: 'linear-gradient(90deg, #f5f0e1 0%, transparent 100%)',
+          background: 'linear-gradient(90deg, var(--background) 0%, transparent 100%)',
         }}
         aria-hidden="true"
       />
       <div
         className="pointer-events-none absolute inset-y-0 right-0 z-10 w-[60px]"
         style={{
-          background: 'linear-gradient(270deg, #f5f0e1 0%, transparent 100%)',
+          background: 'linear-gradient(270deg, var(--background) 0%, transparent 100%)',
         }}
         aria-hidden="true"
       />
