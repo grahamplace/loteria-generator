@@ -43,7 +43,7 @@ const featurePills = [
     ),
   },
   {
-    title: 'No subscription',
+    title: '$5 one-time, no subscription',
     icon: (
       <svg
         viewBox="0 0 24 24"
