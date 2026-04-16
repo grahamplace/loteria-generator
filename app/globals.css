@@ -126,3 +126,60 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hero card marquee animation */
+@keyframes hero-marquee-scroll-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes hero-marquee-scroll-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.hero-marquee-row {
+  display: flex;
+  gap: 14px;
+  width: max-content;
+  will-change: transform;
+}
+
+.hero-marquee-row--left {
+  animation: hero-marquee-scroll-left 40s linear infinite;
+}
+
+.hero-marquee-row--right {
+  animation: hero-marquee-scroll-right 45s linear infinite;
+}
+
+.hero-marquee[data-paused='true'] .hero-marquee-row {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-marquee-row {
+    animation: none !important;
+    transform: translateX(0) !important;
+  }
+  .hero-marquee {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-marquee-row--right {
+    display: none;
+  }
+  .hero-marquee-row--left {
+    animation-duration: 60s;
+  }
+}
