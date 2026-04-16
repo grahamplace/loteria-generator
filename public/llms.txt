@@ -1,0 +1,40 @@
+# Lotería Generator
+
+> The easiest way to create custom Mexican Lotería cards from your own photos using AI. Turn photos of people, pets, places, or objects into traditional Lotería-style illustrations with automatically generated Spanish labels, and print randomized 4x4 bingo-style boards for weddings, quinceañeras, family reunions, and birthday parties.
+
+Lotería Generator is a web application that transforms user-uploaded photos into hand-drawn-style illustrations matching the aesthetic of traditional Mexican Lotería cards (a 15th-century card game similar to Bingo). The AI also generates an authentic Spanish label for each card. Users can then generate unlimited randomized 4x4 bingo boards (tablas) ready to print as high-quality PDFs.
+
+Pricing is simple: a free preview (up to 16 cards + 1 sample board), and a one-time $5 unlock per board project that grants a full 54-card deck, unlimited board generations, high-quality print exports, and no watermarks. There are no subscriptions.
+
+## Key pages
+
+- [Home](/): Landing page with overview, use cases, how-it-works, pricing, and FAQ.
+- [FAQ](/faq): 30+ categorized questions covering gameplay, custom card creation, pricing, printing, and use cases.
+- [Sign up](/sign-up): Create a free account (email/password or Google).
+- [Sign in](/sign-in): Sign in to an existing account.
+
+## How it works
+
+1. Sign up for a free account.
+2. Create a new board and upload photos (people, pets, objects — JPG/PNG).
+3. AI transforms each photo into a Lotería-style illustration and generates a Spanish label (editable).
+4. Generate a randomized 4x4 bingo board.
+5. Unlock the board ($5, one-time) to access the full 54-card deck, unlimited boards, and high-quality PDF export for printing.
+
+## Common use cases
+
+- Wedding Lotería: cards featuring the couple, wedding party, and memorable moments.
+- Quinceañera: feature the quinceañera and her court.
+- Family reunion: include every family member for a treasured keepsake.
+- Birthday party: themed cards around the birthday person.
+
+## Traditional Lotería context
+
+Lotería is a traditional Mexican game of chance, often called "Mexican Bingo", dating back to the 15th century. Players use 4x4 image boards (tablas); a caller (cantor) announces cards, often with rhymes or riddles; players mark matches and the first to complete a pattern calls "¡Lotería!". A full traditional deck has 54 cards with iconic imagery like "La Luna", "El Sol", and "La Rosa".
+
+## Technical notes for agents
+
+- Structured data (JSON-LD) on the landing page includes: WebSite, Organization, SoftwareApplication (with pricing offers), FAQPage, and HowTo schemas.
+- Sitemap: /sitemap.xml
+- Robots: /robots.txt
+- Bilingual content: English (en_US) + Spanish (es_MX alternate locale).

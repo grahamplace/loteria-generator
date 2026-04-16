@@ -1,11 +1,9 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Check, Sparkles, Upload, Grid3x3, Star, Heart, Users } from 'lucide-react';
+import { Check, Sparkles, Upload, Grid3x3, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useSession } from '@/hooks/use-session';
+import { auth } from '@/lib/auth';
 import {
   WebsiteJsonLd,
   OrganizationJsonLd,
@@ -13,6 +11,12 @@ import {
   FAQJsonLd,
   HowToJsonLd,
 } from '@/components/json-ld';
+
+export const metadata = {
+  alternates: {
+    canonical: '/',
+  },
+};
 
 const faqs = [
   {
@@ -47,29 +51,11 @@ const faqs = [
   },
 ];
 
-export default function LandingPage() {
-  const router = useRouter();
-  const { isAuthenticated, isLoading } = useSession();
+export default async function LandingPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
 
-  // Redirect authenticated users to dashboard
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  // Show nothing while checking auth to prevent flash
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-orange-50 to-white">
-        <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Don't render landing page if authenticated (will redirect)
-  if (isAuthenticated) {
-    return null;
+  if (session?.user) {
+    redirect('/dashboard');
   }
 
   return (
@@ -151,23 +137,15 @@ export default function LandingPage() {
           </div>
         </header>
 
-        {/* Social Proof */}
+        {/* Tagline */}
         <section className="bg-white py-8 border-y">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 text-center">
               <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                <span className="font-semibold">1,000+</span>
-                <span className="text-muted-foreground">Boards Created</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                <span className="font-semibold">4.8/5</span>
-                <span className="text-muted-foreground">User Rating</span>
-              </div>
-              <div className="flex items-center gap-2">
                 <Heart className="w-5 h-5 text-red-500" />
-                <span className="text-muted-foreground">Perfect for Celebrations</span>
+                <span className="text-muted-foreground">
+                  Perfect for Weddings, Parties &amp; Family Celebrations
+                </span>
               </div>
             </div>
           </div>

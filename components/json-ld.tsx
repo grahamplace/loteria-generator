@@ -38,7 +38,7 @@ export function OrganizationJsonLd() {
     '@type': 'Organization',
     name: 'Lotería Generator',
     url: siteUrl,
-    logo: `${siteUrl}/logo.png`,
+    logo: `${siteUrl}/icon.ico`,
     sameAs: [],
     contactPoint: {
       '@type': 'ContactPoint',
@@ -144,7 +144,7 @@ export function HowToJsonLd() {
     name: 'How to Create Custom Lotería Cards',
     description:
       'Learn how to create personalized Mexican Lotería cards from your photos using AI in just a few simple steps.',
-    image: `${siteUrl}/og-image.png`,
+    image: `${siteUrl}/opengraph-image`,
     totalTime: 'PT10M',
     estimatedCost: {
       '@type': 'MonetaryAmount',

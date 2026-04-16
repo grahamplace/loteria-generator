@@ -54,21 +54,12 @@ export const metadata: Metadata = {
     title: 'Lotería Generator - Create Custom Mexican Lotería Cards with AI',
     description:
       'Transform your photos into beautiful Mexican Lotería cards using AI. Perfect for weddings, parties, and special celebrations. Create personalized Lotería boards in minutes.',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Lotería Generator - Custom Mexican Lotería Cards',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Lotería Generator - Create Custom Mexican Lotería Cards with AI',
     description:
       'Transform your photos into beautiful Mexican Lotería cards using AI. Perfect for weddings, parties, and special celebrations.',
-    images: ['/og-image.png'],
   },
   robots: {
     index: true,
@@ -85,9 +76,8 @@ export const metadata: Metadata = {
     icon: '/icon.ico',
   },
   verification: {
-    // Add your verification codes here when you have them
-    // google: 'your-google-verification-code',
-    // yandex: 'your-yandex-verification-code',
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    yandex: process.env.YANDEX_VERIFICATION,
   },
   category: 'technology',
 };
@@ -98,15 +88,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
-      <html lang="en">
-        <body className={`font-sans antialiased ${caveat.variable}`}>
-          {children}
-          <Toaster />
-          <Analytics />
-        </body>
-      </html>
-      {process.env.NODE_ENV === 'development' && <Agentation />}
-    </>
+    <html lang="en">
+      <body className={`font-sans antialiased ${caveat.variable}`}>
+        {children}
+        <Toaster />
+        <Analytics />
+        {process.env.NODE_ENV === 'development' && <Agentation />}
+      </body>
+    </html>
   );
 }

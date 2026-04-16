@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     'loteria card maker help',
     'personalized loteria guide',
   ],
+  alternates: { canonical: '/faq' },
   openGraph: {
     title: 'FAQ - Custom Lotería Card Questions Answered',
     description:
