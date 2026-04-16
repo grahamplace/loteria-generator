@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LotteriaCard } from '@/hooks/use-cards';
+import { LotteriaCard } from '@/lib/generate-boards';
 
 interface CardEditModalProps {
   card: LotteriaCard;

@@ -25,7 +25,7 @@ export default function BoardEditorPage() {
   const {
     cards,
     isLoading: cardsLoading,
-    addCard,
+    addCards,
     updateCardLabel,
     deleteCard,
     reorderCards,
@@ -70,15 +70,17 @@ export default function BoardEditorPage() {
   }
 
   function handleFilesSelected(files: File[]) {
-    files.forEach((file, index) => {
-      // Check if adding would exceed limit
-      if (cards.length + index >= cardLimit && !board?.isUnlocked) {
-        setUnlockTrigger('card_limit');
-        setUnlockPromptOpen(true);
-        return;
-      }
-      addCard(file);
-    });
+    const slotsAvailable = cardLimit - cards.length;
+    const filesToAdd = files.slice(0, slotsAvailable);
+
+    if (files.length > slotsAvailable && !board?.isUnlocked) {
+      setUnlockTrigger('card_limit');
+      setUnlockPromptOpen(true);
+    }
+
+    if (filesToAdd.length > 0) {
+      addCards(filesToAdd);
+    }
   }
 
   function handleExportLimitReached() {

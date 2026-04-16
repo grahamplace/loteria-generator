@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { db, boards, IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { deleteBoardImages } from '@/lib/blob';
+import { updateBoardSchema } from '@/lib/validations';
 
 /**
  * GET /api/boards/[boardId] - Get a single board with its cards
@@ -71,7 +72,14 @@ export async function PATCH(
 
     const { boardId } = await params;
     const body = await request.json();
-    const { name, styleOptions } = body;
+    const parsed = updateBoardSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { name, styleOptions } = parsed.data;
 
     // Verify ownership
     const existingBoard = await db.query.boards.findFirst({

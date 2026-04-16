@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db, boards, userProfiles } from '@/db';
 import { eq, desc } from 'drizzle-orm';
+import { createBoardSchema } from '@/lib/validations';
 
 /**
  * GET /api/boards - List all boards for the current user
@@ -76,7 +77,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name } = body;
+    const parsed = createBoardSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { name } = parsed.data;
 
     // Ensure user profile exists
     const existingProfile = await db.query.userProfiles.findFirst({

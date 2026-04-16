@@ -1,12 +1,19 @@
-import { LotteriaCard } from '@/hooks/use-cards';
 import JSZip from 'jszip';
+
+export interface LotteriaCard {
+  id: string;
+  label: string;
+  illustration: string;
+  number: number;
+  isProcessing?: boolean;
+  error?: string;
+}
 
 /**
  * Styling options for board generation
  */
 export interface BoardStyleOptions {
   backgroundColor?: string;
-  cardBorderColor?: string;
   badgeColor?: string;
   labelColor?: string;
 }
@@ -211,7 +218,26 @@ function drawCard(
   offscreen.width = imageWidth;
   offscreen.height = imageHeight;
   const offCtx = offscreen.getContext('2d')!;
-  offCtx.drawImage(img, 0, 0, imageWidth, imageHeight);
+
+  // Draw image with "object-fit: cover" behavior — crop to fill, centered
+  const targetAspect = imageWidth / imageHeight;
+  const srcAspect = img.naturalWidth / img.naturalHeight;
+  let sx: number, sy: number, sw: number, sh: number;
+  if (srcAspect > targetAspect) {
+    // Source is wider — crop sides
+    sh = img.naturalHeight;
+    sw = sh * targetAspect;
+    sx = (img.naturalWidth - sw) / 2;
+    sy = 0;
+  } else {
+    // Source is taller — crop top/bottom
+    sw = img.naturalWidth;
+    sh = sw / targetAspect;
+    sx = 0;
+    sy = (img.naturalHeight - sh) / 2;
+  }
+  offCtx.drawImage(img, sx, sy, sw, sh, 0, 0, imageWidth, imageHeight);
+
   offCtx.globalCompositeOperation = 'destination-in';
   offCtx.drawImage(maskCanvas, 0, 0);
 

@@ -80,13 +80,17 @@ describe('BoardCardGrid', () => {
     expect(screen.getByText('Failed to process card')).toBeInTheDocument();
   });
 
-  it('should call onDeleteCard when delete button is clicked', () => {
+  it('should call onDeleteCard when delete button is clicked and confirmed', () => {
     const onDeleteCard = vi.fn();
     render(<BoardCardGrid {...defaultProps} onDeleteCard={onDeleteCard} />);
 
-    // Find and click the delete button for the first card
+    // Click the delete button on the card to open the confirmation dialog
     const deleteButtons = screen.getAllByText('Delete');
     fireEvent.click(deleteButtons[0]);
+
+    // Confirm deletion in the AlertDialog
+    const confirmButton = screen.getByRole('button', { name: /delete/i });
+    fireEvent.click(confirmButton);
 
     expect(onDeleteCard).toHaveBeenCalledWith('card-1');
   });

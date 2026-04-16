@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db, boards, IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db';
 import { eq, and, sql } from 'drizzle-orm';
+import { generateImageSchema } from '@/lib/validations';
+import { rateLimit } from '@/lib/rate-limit';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -19,15 +21,33 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { imageBase64, boardId } = await request.json();
+    // Rate limit: 10 image generations per minute per user
+    const rateLimitResult = rateLimit(`generate-image:${session.user.id}`, {
+      limit: 10,
+      windowMs: 60_000,
+    });
 
-    if (!imageBase64) {
-      return Response.json({ error: 'No image provided' }, { status: 400 });
+    if (!rateLimitResult.success) {
+      return Response.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)),
+          },
+        }
+      );
     }
 
-    if (!boardId) {
-      return Response.json({ error: 'No board ID provided' }, { status: 400 });
+    const body = await request.json();
+    const parsed = generateImageSchema.safeParse(body);
+    if (!parsed.success) {
+      return Response.json(
+        { error: 'Invalid request', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { imageBase64, boardId } = parsed.data;
 
     // Get board and check ownership
     const board = await db.query.boards.findFirst({

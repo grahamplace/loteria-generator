@@ -56,6 +56,15 @@ function getRandomSpanishLabel(): string {
   return spanishLabels[Math.floor(Math.random() * spanishLabels.length)];
 }
 
+function readFileAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target?.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function createTempId() {
   // Date.now() alone can collide when multiple cards are added quickly (same ms).
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -83,6 +92,7 @@ interface UseBoardCardsReturn {
   isLoading: boolean;
   error: string | null;
   addCard: (file: File) => Promise<void>;
+  addCards: (files: File[]) => Promise<void>;
   updateCardLabel: (cardId: string, newLabel: string) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   reorderCards: (startIndex: number, endIndex: number) => void;
@@ -140,169 +150,332 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
 
   const addCard = useCallback(
     async (file: File) => {
-      if (cards.length >= cardLimit) {
-        toast.error('Card limit reached', {
-          description: isUnlocked
-            ? `Maximum of ${cardLimit} cards allowed`
-            : `Unlock this board to add more than ${cardLimit} cards`,
+      const base64Image = await readFileAsDataURL(file);
+      const tempId = createTempId();
+
+      // Optimistic update — derive number from current state to avoid stale closure
+      setCards((prev) => [
+        ...prev,
+        {
+          id: tempId,
+          boardId,
+          number: prev.length + 1,
+          label: 'Processing…',
+          originalImageUrl: null,
+          illustrationUrl: null,
+          status: 'processing' as CardStatus,
+          errorMessage: null,
+          localOriginalImage: base64Image,
+          isProcessing: true,
+        },
+      ]);
+
+      try {
+        // Create card in database (server assigns the canonical number)
+        const createResponse = await fetch(`/api/boards/${boardId}/cards`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            originalImageBase64: base64Image,
+            label: '',
+          }),
         });
-        return;
+
+        if (!createResponse.ok) {
+          const data = await createResponse.json();
+          if (data.code === 'CARD_LIMIT_REACHED') {
+            setCards((prev) => prev.filter((c) => c.id !== tempId));
+            toast.error('Card limit reached', { description: data.message });
+            return;
+          }
+          throw new Error('Failed to create card');
+        }
+
+        const { card: createdCard } = await createResponse.json();
+
+        // Update card with real ID and server-assigned number
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === tempId
+              ? {
+                  ...c,
+                  id: createdCard.id,
+                  number: createdCard.number,
+                  originalImageUrl: createdCard.originalImageUrl,
+                  status: 'processing' as CardStatus,
+                }
+              : c
+          )
+        );
+
+        // Check if AI processing should be skipped
+        const skipAIProcessing = process.env.NEXT_PUBLIC_SKIP_AI_PROCESSING === 'true';
+
+        let illustration = base64Image;
+        let label = getRandomSpanishLabel();
+
+        if (!skipAIProcessing) {
+          // Generate both image and label in parallel
+          const [imageResult, labelResult] = await Promise.all([
+            fetch('/api/generate-image', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageBase64: base64Image, boardId }),
+            }),
+            fetch('/api/generate-label', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageBase64: base64Image }),
+            }),
+          ]);
+
+          if (imageResult.ok && labelResult.ok) {
+            const imageData = await imageResult.json();
+            const labelData = await labelResult.json();
+            illustration = imageData.illustration;
+            label = labelData.label;
+          } else {
+            // Check if it's a generation limit error
+            if (!imageResult.ok) {
+              const errorData = await imageResult.json();
+              if (errorData.code === 'GENERATION_LIMIT_REACHED') {
+                throw new Error(errorData.message || 'Generation limit reached');
+              }
+            }
+            throw new Error('Failed to process card with AI');
+          }
+        }
+
+        // Update card in database with generated content
+        const updateResponse = await fetch(`/api/boards/${boardId}/cards`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cardId: createdCard.id,
+            label,
+            illustrationBase64: illustration,
+            status: 'completed',
+          }),
+        });
+
+        if (!updateResponse.ok) {
+          throw new Error('Failed to save generated content');
+        }
+
+        const { card: updatedCard } = await updateResponse.json();
+
+        // Update local state
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === createdCard.id
+              ? {
+                  ...c,
+                  label: updatedCard.label,
+                  illustrationUrl: updatedCard.illustrationUrl,
+                  localIllustration: illustration,
+                  status: 'completed' as CardStatus,
+                  isProcessing: false,
+                }
+              : c
+          )
+        );
+      } catch (err) {
+        console.error('Error processing card:', err);
+        // Update card with error state
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === tempId || c.localOriginalImage === base64Image
+              ? {
+                  ...c,
+                  status: 'error' as CardStatus,
+                  errorMessage: 'Failed to process card',
+                  isProcessing: false,
+                }
+              : c
+          )
+        );
+        toast.error('Failed to process card');
       }
+    },
+    [boardId, cardLimit, isUnlocked]
+  );
 
-      const reader = new FileReader();
+  const processCardAI = useCallback(
+    async (serverId: string, base64Image: string) => {
+      try {
+        const skipAIProcessing = process.env.NEXT_PUBLIC_SKIP_AI_PROCESSING === 'true';
+        let illustration = base64Image;
+        let label = getRandomSpanishLabel();
 
-      reader.onload = async (e) => {
-        const base64Image = e.target?.result as string;
-        const tempId = createTempId();
-        const nextNumber = cards.length + 1;
+        if (!skipAIProcessing) {
+          const [imageResult, labelResult] = await Promise.all([
+            fetch('/api/generate-image', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageBase64: base64Image, boardId }),
+            }),
+            fetch('/api/generate-label', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageBase64: base64Image }),
+            }),
+          ]);
 
-        // Optimistic update - add card immediately with local state
-        setCards((prev) => [
-          ...prev,
-          {
-            id: tempId,
-            boardId,
-            number: nextNumber,
-            label: 'Processing...',
-            originalImageUrl: null,
-            illustrationUrl: null,
-            status: 'processing' as CardStatus,
-            errorMessage: null,
-            localOriginalImage: base64Image,
-            isProcessing: true,
-          },
-        ]);
+          if (imageResult.ok && labelResult.ok) {
+            const imageData = await imageResult.json();
+            const labelData = await labelResult.json();
+            illustration = imageData.illustration;
+            label = labelData.label;
+          } else {
+            if (!imageResult.ok) {
+              const errorData = await imageResult.json();
+              if (errorData.code === 'GENERATION_LIMIT_REACHED') {
+                throw new Error(errorData.message || 'Generation limit reached');
+              }
+            }
+            throw new Error('Failed to process card with AI');
+          }
+        }
 
+        const updateResponse = await fetch(`/api/boards/${boardId}/cards`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cardId: serverId,
+            label,
+            illustrationBase64: illustration,
+            status: 'completed',
+          }),
+        });
+
+        if (!updateResponse.ok) {
+          throw new Error('Failed to save generated content');
+        }
+
+        const { card: updatedCard } = await updateResponse.json();
+
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === serverId
+              ? {
+                  ...c,
+                  label: updatedCard.label,
+                  illustrationUrl: updatedCard.illustrationUrl,
+                  localIllustration: illustration,
+                  status: 'completed' as CardStatus,
+                  isProcessing: false,
+                }
+              : c
+          )
+        );
+      } catch (err) {
+        console.error('Error processing card:', err);
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === serverId
+              ? {
+                  ...c,
+                  status: 'error' as CardStatus,
+                  errorMessage: 'Failed to process card',
+                  isProcessing: false,
+                }
+              : c
+          )
+        );
+        toast.error('Failed to process card');
+      }
+    },
+    [boardId]
+  );
+
+  const addCards = useCallback(
+    async (files: File[]) => {
+      // Read all files upfront
+      const fileData = await Promise.all(
+        files.map(async (file) => ({
+          base64: await readFileAsDataURL(file),
+          tempId: createTempId(),
+        }))
+      );
+
+      // Add all optimistic cards at once
+      setCards((prev) => {
+        const newCards = fileData.map((fd, i) => ({
+          id: fd.tempId,
+          boardId,
+          number: prev.length + i + 1,
+          label: 'Processing…',
+          originalImageUrl: null,
+          illustrationUrl: null,
+          status: 'processing' as CardStatus,
+          errorMessage: null,
+          localOriginalImage: fd.base64,
+          isProcessing: true,
+        }));
+        return [...prev, ...newCards];
+      });
+
+      // Create cards on server SEQUENTIALLY to avoid number race condition
+      const created: Array<{ serverId: string; base64: string }> = [];
+
+      for (const fd of fileData) {
         try {
-          // Create card in database
-          const createResponse = await fetch(`/api/boards/${boardId}/cards`, {
+          const res = await fetch(`/api/boards/${boardId}/cards`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              originalImageBase64: base64Image,
-              label: '',
-            }),
+            body: JSON.stringify({ originalImageBase64: fd.base64, label: '' }),
           });
 
-          if (!createResponse.ok) {
-            const data = await createResponse.json();
+          if (!res.ok) {
+            const data = await res.json();
             if (data.code === 'CARD_LIMIT_REACHED') {
-              setCards((prev) => prev.filter((c) => c.id !== tempId));
+              setCards((prev) => prev.filter((c) => c.id !== fd.tempId));
               toast.error('Card limit reached', { description: data.message });
-              return;
+              continue;
             }
             throw new Error('Failed to create card');
           }
 
-          const { card: createdCard } = await createResponse.json();
+          const { card: serverCard } = await res.json();
 
-          // Update card with real ID
           setCards((prev) =>
             prev.map((c) =>
-              c.id === tempId
+              c.id === fd.tempId
                 ? {
                     ...c,
-                    id: createdCard.id,
-                    originalImageUrl: createdCard.originalImageUrl,
-                    status: 'processing' as CardStatus,
+                    id: serverCard.id,
+                    number: serverCard.number,
+                    originalImageUrl: serverCard.originalImageUrl,
                   }
                 : c
             )
           );
 
-          // Check if AI processing should be skipped
-          const skipAIProcessing = process.env.NEXT_PUBLIC_SKIP_AI_PROCESSING === 'true';
-
-          let illustration = base64Image;
-          let label = getRandomSpanishLabel();
-
-          if (!skipAIProcessing) {
-            // Generate both image and label in parallel
-            const [imageResult, labelResult] = await Promise.all([
-              fetch('/api/generate-image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageBase64: base64Image, boardId }),
-              }),
-              fetch('/api/generate-label', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageBase64: base64Image }),
-              }),
-            ]);
-
-            if (imageResult.ok && labelResult.ok) {
-              const imageData = await imageResult.json();
-              const labelData = await labelResult.json();
-              illustration = imageData.illustration;
-              label = labelData.label;
-            } else {
-              // Check if it's a generation limit error
-              if (!imageResult.ok) {
-                const errorData = await imageResult.json();
-                if (errorData.code === 'GENERATION_LIMIT_REACHED') {
-                  throw new Error(errorData.message || 'Generation limit reached');
-                }
-              }
-              throw new Error('Failed to process card with AI');
-            }
-          }
-
-          // Update card in database with generated content
-          const updateResponse = await fetch(`/api/boards/${boardId}/cards`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              cardId: createdCard.id,
-              label,
-              illustrationBase64: illustration,
-              status: 'completed',
-            }),
-          });
-
-          if (!updateResponse.ok) {
-            throw new Error('Failed to save generated content');
-          }
-
-          const { card: updatedCard } = await updateResponse.json();
-
-          // Update local state
-          setCards((prev) =>
-            prev.map((c) =>
-              c.id === createdCard.id
-                ? {
-                    ...c,
-                    label: updatedCard.label,
-                    illustrationUrl: updatedCard.illustrationUrl,
-                    localIllustration: illustration,
-                    status: 'completed' as CardStatus,
-                    isProcessing: false,
-                  }
-                : c
-            )
-          );
+          created.push({ serverId: serverCard.id, base64: fd.base64 });
         } catch (err) {
-          console.error('Error processing card:', err);
-          // Update card with error state
+          console.error('Error creating card:', err);
           setCards((prev) =>
             prev.map((c) =>
-              c.id === tempId || c.localOriginalImage === base64Image
+              c.id === fd.tempId
                 ? {
                     ...c,
                     status: 'error' as CardStatus,
-                    errorMessage: 'Failed to process card',
+                    errorMessage: 'Failed to create card',
                     isProcessing: false,
                   }
                 : c
             )
           );
-          toast.error('Failed to process card');
+          toast.error('Failed to create card');
         }
-      };
+      }
 
-      reader.readAsDataURL(file);
+      // Process AI for all created cards IN PARALLEL (the slow part)
+      await Promise.allSettled(
+        created.map(({ serverId, base64 }) => processCardAI(serverId, base64))
+      );
     },
-    [boardId, cards.length, cardLimit, isUnlocked]
+    [boardId, processCardAI]
   );
 
   const updateCardLabel = useCallback(
@@ -382,6 +555,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
     isLoading,
     error,
     addCard,
+    addCards,
     updateCardLabel,
     deleteCard,
     reorderCards,

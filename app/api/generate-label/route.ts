@@ -1,6 +1,8 @@
 import OpenAI from 'openai';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { generateLabelSchema } from '@/lib/validations';
+import { rateLimit } from '@/lib/rate-limit';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,11 +19,33 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { imageBase64 } = await request.json();
+    // Rate limit: 20 label generations per minute per user
+    const rateLimitResult = rateLimit(`generate-label:${session.user.id}`, {
+      limit: 20,
+      windowMs: 60_000,
+    });
 
-    if (!imageBase64) {
-      return Response.json({ error: 'No image provided' }, { status: 400 });
+    if (!rateLimitResult.success) {
+      return Response.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)),
+          },
+        }
+      );
     }
+
+    const body = await request.json();
+    const parsed = generateLabelSchema.safeParse(body);
+    if (!parsed.success) {
+      return Response.json(
+        { error: 'Invalid request', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { imageBase64 } = parsed.data;
 
     // Generate Spanish label for the card using GPT-4o Mini with vision
     const result = await openai.chat.completions.create({

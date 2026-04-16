@@ -68,7 +68,6 @@ export const userProfiles = pgTable('user_profiles', {
 // Board style options type
 export interface BoardStyleOptions {
   backgroundColor?: string;
-  cardBorderColor?: string;
   badgeColor?: string;
   labelColor?: string;
 }

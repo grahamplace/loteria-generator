@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/stripe';
 import { db, boards } from '@/db';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import Stripe from 'stripe';
 
 /**
@@ -82,7 +82,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       unlockedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(boards.id, boardId));
+    .where(and(eq(boards.id, boardId), eq(boards.userId, userId)));
 
   console.log(`Board ${boardId} unlocked for user ${userId}`);
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Trash2, Edit2, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -235,20 +235,11 @@ export function BoardCardGrid({
   }
 
   // Sync liveCards with cards prop when not dragging
-  useState(() => {
+  useEffect(() => {
     if (!activeId) {
       setLiveCards(cards);
     }
-  });
-
-  // Update liveCards when cards prop changes (and not actively dragging)
-  if (
-    !activeId &&
-    liveCards !== cards &&
-    JSON.stringify(liveCards.map((c) => c.id)) !== JSON.stringify(cards.map((c) => c.id))
-  ) {
-    setLiveCards(cards);
-  }
+  }, [cards, activeId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

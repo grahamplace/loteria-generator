@@ -37,6 +37,8 @@ export async function proxy(request: NextRequest) {
   // Note: /api/stripe/webhook must be excluded - it's called by Stripe, not authenticated users
   const isProtectedApiRoute =
     pathname.startsWith('/api/boards') ||
+    pathname.startsWith('/api/generate-image') ||
+    pathname.startsWith('/api/generate-label') ||
     (pathname.startsWith('/api/stripe') && !pathname.startsWith('/api/stripe/webhook'));
 
   if (isProtectedApiRoute && !isAuthenticated) {

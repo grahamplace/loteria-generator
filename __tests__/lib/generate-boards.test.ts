@@ -12,11 +12,11 @@ const createMockCards = (count: number) => {
 };
 
 describe('generateBoards', () => {
-  it('should generate 4 boards when given enough cards', () => {
+  it('should generate 50 boards by default when given enough cards', () => {
     const cards = createMockCards(20);
     const boards = generateBoards(cards);
 
-    expect(boards).toHaveLength(4);
+    expect(boards).toHaveLength(50);
   });
 
   it('should generate boards with 16 cards each', () => {
@@ -66,7 +66,7 @@ describe('generateBoards', () => {
     const cards = createMockCards(16);
     const boards = generateBoards(cards);
 
-    expect(boards).toHaveLength(4);
+    expect(boards).toHaveLength(50);
     boards.forEach((board) => {
       expect(board).toHaveLength(16);
     });

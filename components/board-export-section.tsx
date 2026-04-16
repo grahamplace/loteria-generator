@@ -32,7 +32,6 @@ export function BoardExportSection({
 
   const boardStyleOptions: BoardStyleOptions = {
     backgroundColor: '#f5f0e1',
-    cardBorderColor: '#fffddc',
     badgeColor: '#eb865a',
     labelColor: '#000000',
   };

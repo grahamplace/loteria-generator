@@ -56,6 +56,22 @@ export async function uploadIllustration(
 }
 
 /**
+ * List all blobs with a given prefix, handling pagination
+ */
+async function listAllBlobs(prefix: string) {
+  const allBlobs: Awaited<ReturnType<typeof list>>['blobs'] = [];
+  let cursor: string | undefined;
+
+  do {
+    const result = await list({ prefix, cursor });
+    allBlobs.push(...result.blobs);
+    cursor = result.hasMore ? result.cursor : undefined;
+  } while (cursor);
+
+  return allBlobs;
+}
+
+/**
  * Delete all images for a card
  */
 export async function deleteCardImages(
@@ -64,11 +80,7 @@ export async function deleteCardImages(
   cardId: string
 ): Promise<void> {
   const prefix = `users/${userId}/boards/${boardId}/cards/${cardId}/`;
-
-  // List all blobs with this prefix
-  const { blobs } = await list({ prefix });
-
-  // Delete each blob
+  const blobs = await listAllBlobs(prefix);
   await Promise.all(blobs.map((blob) => del(blob.url)));
 }
 
@@ -77,8 +89,7 @@ export async function deleteCardImages(
  */
 export async function deleteBoardImages(userId: string, boardId: string): Promise<void> {
   const prefix = `users/${userId}/boards/${boardId}/`;
-
-  const { blobs } = await list({ prefix });
+  const blobs = await listAllBlobs(prefix);
   await Promise.all(blobs.map((blob) => del(blob.url)));
 }
 

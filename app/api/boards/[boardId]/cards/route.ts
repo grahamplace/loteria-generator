@@ -10,6 +10,7 @@ import {
   base64ToBuffer,
   getContentTypeFromDataUrl,
 } from '@/lib/blob';
+import { createCardSchema, updateCardSchema } from '@/lib/validations';
 
 // Constants for limits
 const MAX_CARDS_FREE = 16;
@@ -72,7 +73,14 @@ export async function POST(
 
     const { boardId } = await params;
     const body = await request.json();
-    const { originalImageBase64, label } = body;
+    const parsed = createCardSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { originalImageBase64, label } = parsed.data;
 
     // Verify board ownership
     const board = await db.query.boards.findFirst({
@@ -103,25 +111,27 @@ export async function POST(
       );
     }
 
-    // Get next card number
-    const maxNumberResult = await db
-      .select({ maxNumber: max(cards.number) })
-      .from(cards)
-      .where(eq(cards.boardId, boardId));
+    // Create card with next number in a transaction to avoid race conditions
+    // during multi-file uploads where concurrent POSTs could read the same max
+    const [newCard] = await db.transaction(async (tx) => {
+      const maxNumberResult = await tx
+        .select({ maxNumber: max(cards.number) })
+        .from(cards)
+        .where(eq(cards.boardId, boardId));
 
-    const nextNumber = (maxNumberResult[0]?.maxNumber || 0) + 1;
+      const nextNumber = (maxNumberResult[0]?.maxNumber || 0) + 1;
 
-    // Create the card first to get an ID
-    const [newCard] = await db
-      .insert(cards)
-      .values({
-        boardId,
-        userId: session.user.id,
-        number: nextNumber,
-        label: label || '',
-        status: 'pending',
-      })
-      .returning();
+      return tx
+        .insert(cards)
+        .values({
+          boardId,
+          userId: session.user.id,
+          number: nextNumber,
+          label: label || '',
+          status: 'pending',
+        })
+        .returning();
+    });
 
     // Upload original image to blob storage if provided
     if (originalImageBase64) {
@@ -180,11 +190,14 @@ export async function PATCH(
 
     const { boardId } = await params;
     const body = await request.json();
-    const { cardId, label, illustrationBase64, status, errorMessage } = body;
-
-    if (!cardId) {
-      return NextResponse.json({ error: 'Card ID required' }, { status: 400 });
+    const parsed = updateCardSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { cardId, label, illustrationBase64, status, errorMessage } = parsed.data;
 
     // Verify ownership
     const card = await db.query.cards.findFirst({
