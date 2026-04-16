@@ -1,9 +1,10 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Check, Sparkles, Upload, Grid3x3, Heart } from 'lucide-react';
+import { Check, Sparkles, Upload, Grid3x3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { auth } from '@/lib/auth';
+import { LandingHero } from '@/components/landing-hero';
 import {
   WebsiteJsonLd,
   OrganizationJsonLd,
@@ -105,51 +106,7 @@ export default async function LandingPage() {
           </div>
         </nav>
 
-        {/* Hero Section */}
-        <header className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-              Create Custom <span className="text-primary">Lotería</span> Cards
-              <br />
-              <span className="text-3xl md:text-5xl">from Your Photos</span>
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              The easiest <strong>custom Lotería card maker</strong> powered by AI. Transform your
-              photos into beautiful Mexican Lotería-style illustrations. Perfect for{' '}
-              <strong>weddings</strong>, <strong>quinceañeras</strong>, <strong>parties</strong>,
-              and <strong>family celebrations</strong>.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Link href="/sign-up">
-                <Button size="lg" className="text-lg px-8 w-full sm:w-auto">
-                  Create Your Lotería Cards Free
-                </Button>
-              </Link>
-              <Link href="#how-it-works">
-                <Button size="lg" variant="outline" className="text-lg px-8 w-full sm:w-auto">
-                  See How It Works
-                </Button>
-              </Link>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              No credit card required. Start creating in seconds.
-            </p>
-          </div>
-        </header>
-
-        {/* Tagline */}
-        <section className="bg-white py-8 border-y">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 text-center">
-              <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-red-500" />
-                <span className="text-muted-foreground">
-                  Perfect for Weddings, Parties &amp; Family Celebrations
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
+        <LandingHero />
 
         {/* Use Cases */}
         <section className="py-16">
