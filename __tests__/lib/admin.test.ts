@@ -33,8 +33,9 @@ describe('isAdminEmail', () => {
 });
 
 describe('requireAdmin', () => {
-  const mockGetSession = auth.api.getSession as ReturnType<typeof vi.fn>;
-  const mockNotFound = notFound as ReturnType<typeof vi.fn>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mockGetSession = vi.mocked(auth.api.getSession) as any;
+  const mockNotFound = vi.mocked(notFound);
 
   beforeEach(() => {
     vi.clearAllMocks();
