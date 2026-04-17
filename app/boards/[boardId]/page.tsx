@@ -96,6 +96,7 @@ export default function BoardEditorPage() {
   // Convert BoardCard to format expected by components
   const displayCards = cards.map((card) => ({
     id: card.id,
+    clientKey: card.clientKey,
     number: card.number,
     label: card.label,
     // Use local images for immediate display, fall back to URL-based proxy

@@ -1,7 +1,15 @@
 import OpenAI, { toFile } from 'openai';
 import { eq, sql } from 'drizzle-orm';
 import { db, boards, cards } from '@/db';
-import { uploadIllustration, fetchBlobBuffer } from '@/lib/blob';
+import { uploadIllustration, fetchBlob } from '@/lib/blob';
+
+const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/jpg': 'jpg',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
 import { inngest } from '../client';
 import { cardGenerateRequested } from '../events';
 import { cardChannel } from '../channels';
@@ -90,7 +98,8 @@ export const generateCardArtwork = inngest.createFunction(
     // a large base64 PNG would exceed that.
     const labelPromise = (async () => {
       const label = await step.run('generate-label', async () => {
-        const buffer = await fetchBlobBuffer(originalImageUrl);
+        const { buffer, contentType } = await fetchBlob(originalImageUrl);
+        const mime = OPENAI_IMAGE_MIME_TO_EXT[contentType] ? contentType : 'image/png';
         const base64 = buffer.toString('base64');
         const result = await openai.chat.completions.create({
           model: 'gpt-5-nano-2025-08-07',
@@ -101,13 +110,14 @@ export const generateCardArtwork = inngest.createFunction(
               content: [
                 {
                   type: 'image_url',
-                  image_url: { url: `data:image/png;base64,${base64}` },
+                  image_url: { url: `data:${mime};base64,${base64}` },
                 },
                 { type: 'text', text: LABEL_USER_PROMPT },
               ],
             },
           ],
-          max_tokens: 50,
+          max_completion_tokens: 500,
+          reasoning_effort: 'minimal',
         });
         return result.choices[0].message.content?.trim() || '';
       });
@@ -117,10 +127,16 @@ export const generateCardArtwork = inngest.createFunction(
 
     const illustrationPromise = (async () => {
       const illustrationUrl = await step.run('generate-and-upload-illustration', async () => {
-        const buffer = await fetchBlobBuffer(originalImageUrl);
-        const imageFile = await toFile(buffer, 'image.png', { type: 'image/png' });
+        const { buffer, contentType } = await fetchBlob(originalImageUrl);
+        const ext = OPENAI_IMAGE_MIME_TO_EXT[contentType];
+        if (!ext) {
+          throw new Error(
+            `Unsupported image format "${contentType}". Please upload PNG, JPEG, WebP, or GIF.`
+          );
+        }
+        const imageFile = await toFile(buffer, `image.${ext}`, { type: contentType });
         const result = await openai.images.edit({
-          model: 'gpt-image-1.5',
+          model: process.env.NODE_ENV === 'production' ? 'gpt-image-1.5' : 'gpt-image-1-mini',
           image: imageFile,
           prompt: ILLUSTRATION_PROMPT,
           size: '1024x1536',

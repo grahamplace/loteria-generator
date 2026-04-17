@@ -32,6 +32,15 @@ export async function getPrivateBlob(url: string) {
  * Fetch a private blob's bytes as a Buffer.
  */
 export async function fetchBlobBuffer(url: string): Promise<Buffer> {
+  const { buffer } = await fetchBlob(url);
+  return buffer;
+}
+
+/**
+ * Fetch a private blob with its content type. Use when downstream consumers
+ * (e.g. OpenAI's image endpoints) require an accurate MIME label for the bytes.
+ */
+export async function fetchBlob(url: string): Promise<{ buffer: Buffer; contentType: string }> {
   const result = await getPrivateBlob(url);
   if (!result || result.statusCode !== 200 || !result.stream) {
     throw new Error(`Failed to fetch blob at ${url}`);
@@ -43,7 +52,10 @@ export async function fetchBlobBuffer(url: string): Promise<Buffer> {
     if (done) break;
     if (value) chunks.push(value);
   }
-  return Buffer.concat(chunks);
+  return {
+    buffer: Buffer.concat(chunks),
+    contentType: result.blob?.contentType || 'image/png',
+  };
 }
 
 /**

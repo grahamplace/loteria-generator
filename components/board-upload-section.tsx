@@ -82,7 +82,7 @@ export function BoardUploadSection({
           ref={inputRef}
           type="file"
           multiple
-          accept="image/*"
+          accept="image/png,image/jpeg,image/webp,image/gif"
           onChange={handleChange}
           className="hidden"
           disabled={isMaxReached}

@@ -6,6 +6,7 @@ describe('BoardCardGrid', () => {
   const mockCards = [
     {
       id: 'card-1',
+      clientKey: 'card-1',
       number: 1,
       label: 'El Sol',
       illustration: 'data:image/png;base64,mock1',
@@ -13,6 +14,7 @@ describe('BoardCardGrid', () => {
     },
     {
       id: 'card-2',
+      clientKey: 'card-2',
       number: 2,
       label: 'La Luna',
       illustration: 'data:image/png;base64,mock2',
@@ -56,15 +58,16 @@ describe('BoardCardGrid', () => {
       {
         ...mockCards[0],
         isProcessing: true,
-        label: 'Processing...',
+        label: '',
       },
     ];
 
-    render(<BoardCardGrid {...defaultProps} cards={processingCards} />);
+    const { container } = render(<BoardCardGrid {...defaultProps} cards={processingCards} />);
 
-    // Should find multiple "Processing..." texts - one in the spinner and one in the label
-    const processingTexts = screen.getAllByText('Processing...');
-    expect(processingTexts.length).toBeGreaterThanOrEqual(1);
+    // Processing state renders a pulsing skeleton where the label would go.
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
+    // And a spinner where the card buttons would go.
+    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
   it('should show error state', () => {
@@ -77,7 +80,9 @@ describe('BoardCardGrid', () => {
 
     render(<BoardCardGrid {...defaultProps} cards={errorCards} />);
 
-    expect(screen.getByText('Failed to process card')).toBeInTheDocument();
+    // Error card renders a generic "Generation failed" heading; the specific
+    // message is surfaced via tooltip/toast rather than inline text.
+    expect(screen.getByText('Generation failed')).toBeInTheDocument();
   });
 
   it('should call onDeleteCard when delete button is clicked and confirmed', () => {
@@ -107,7 +112,7 @@ describe('BoardCardGrid', () => {
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
   });
 
-  it('should disable buttons when card is processing', () => {
+  it('should hide action buttons when card is processing', () => {
     const processingCards = [
       {
         ...mockCards[0],
@@ -117,10 +122,9 @@ describe('BoardCardGrid', () => {
 
     render(<BoardCardGrid {...defaultProps} cards={processingCards} />);
 
-    const editButton = screen.getByText('Edit');
-    const deleteButton = screen.getByText('Delete');
-
-    expect(editButton).toBeDisabled();
-    expect(deleteButton).toBeDisabled();
+    // Processing cards omit Edit/Delete entirely to avoid interacting with a
+    // card that's still being generated.
+    expect(screen.queryByText('Edit')).not.toBeInTheDocument();
+    expect(screen.queryByText('Delete')).not.toBeInTheDocument();
   });
 });

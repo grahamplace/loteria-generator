@@ -40,6 +40,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface DisplayCard {
   id: string;
+  /**
+   * Stable React/dnd-kit identifier that survives the optimistic `temp-xxx` →
+   * server UUID swap. Prevents AnimatePresence from replaying the enter
+   * animation when the server response arrives.
+   */
+  clientKey: string;
   number: number;
   label: string;
   illustration: string;
@@ -69,7 +75,7 @@ function SortableCard({ card, onDelete, onEdit, isDragging }: SortableCardProps)
     transform,
     transition,
     isDragging: isSortableDragging,
-  } = useSortable({ id: card.id, disabled: card.isProcessing });
+  } = useSortable({ id: card.clientKey, disabled: card.isProcessing });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -266,7 +272,7 @@ export function BoardCardGrid({
     })
   );
 
-  const activeCard = activeId ? cards.find((c) => c.id === activeId) : null;
+  const activeCard = activeId ? cards.find((c) => c.clientKey === activeId) : null;
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -278,8 +284,8 @@ export function BoardCardGrid({
 
     if (over && active.id !== over.id) {
       setLiveCards((currentCards) => {
-        const oldIndex = currentCards.findIndex((c) => c.id === active.id);
-        const newIndex = currentCards.findIndex((c) => c.id === over.id);
+        const oldIndex = currentCards.findIndex((c) => c.clientKey === active.id);
+        const newIndex = currentCards.findIndex((c) => c.clientKey === over.id);
 
         if (oldIndex !== -1 && newIndex !== -1) {
           return arrayMove(currentCards, oldIndex, newIndex);
@@ -293,9 +299,9 @@ export function BoardCardGrid({
     const { active } = event;
 
     // Find where the card started (in original cards array)
-    const oldIndex = cards.findIndex((c) => c.id === active.id);
+    const oldIndex = cards.findIndex((c) => c.clientKey === active.id);
     // Find where the card ended up (in liveCards after all drag overs)
-    const newIndex = liveCards.findIndex((c) => c.id === active.id);
+    const newIndex = liveCards.findIndex((c) => c.clientKey === active.id);
 
     if (oldIndex !== newIndex) {
       onReorderCards(oldIndex, newIndex);
@@ -326,16 +332,19 @@ export function BoardCardGrid({
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <SortableContext items={displayCards.map((c) => c.id)} strategy={rectSortingStrategy}>
+        <SortableContext
+          items={displayCards.map((c) => c.clientKey)}
+          strategy={rectSortingStrategy}
+        >
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             <AnimatePresence mode="popLayout">
               {displayCards.map((card) => (
                 <SortableCard
-                  key={card.id}
+                  key={card.clientKey}
                   card={card}
                   onDelete={() => setDeletingCardId(card.id)}
                   onEdit={() => setEditingCard(card)}
-                  isDragging={activeId === card.id}
+                  isDragging={activeId === card.clientKey}
                 />
               ))}
             </AnimatePresence>

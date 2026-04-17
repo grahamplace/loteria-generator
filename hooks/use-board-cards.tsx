@@ -6,6 +6,16 @@ import { toast } from 'sonner';
 import type { Card, CardStatus } from '@/db/schema';
 import { useCardStream } from '@/hooks/use-card-stream';
 
+function preloadImage(src: string): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve(); // Fail open — UI falls back on regular <img> behavior.
+    img.src = src;
+  });
+}
+
 function readFileAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -24,6 +34,12 @@ function createTempId() {
 
 export interface BoardCard {
   id: string;
+  /**
+   * Stable React key that persists across the optimistic `temp-xxx` → server
+   * UUID swap. Use this for list `key` props so cards don't unmount/remount
+   * (and replay enter animations) when the server response arrives.
+   */
+  clientKey: string;
   boardId: string;
   number: number;
   label: string;
@@ -89,6 +105,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
       setCards(
         (data.cards || []).map((card: Card) => ({
           ...card,
+          clientKey: card.id,
           isProcessing: card.status === 'processing',
         }))
       );
@@ -102,6 +119,63 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
   useEffect(() => {
     fetchCards();
   }, [fetchCards]);
+
+  // Safety net: Realtime messages published before the client subscribes are
+  // lost (live-only WebSocket, no replay). Poll while any card is processing
+  // so the UI recovers even if the terminal 'completed' message is missed.
+  // This poll is silent: it does not toggle isLoading and merges server state
+  // into existing cards (preserving optimistic local previews).
+  const pollProcessingCards = useCallback(async () => {
+    if (!boardId) return;
+    try {
+      const response = await fetch(`/api/boards/${boardId}/cards`);
+      if (!response.ok) return;
+      const data = await response.json();
+      const serverById = new Map<string, Card>((data.cards || []).map((c: Card) => [c.id, c]));
+
+      // For any card the poll discovers as newly completed, preload the
+      // illustration first so the UI doesn't flash the original photo + new
+      // label when we flip processing → completed.
+      await Promise.all(
+        Array.from(serverById.values())
+          .filter((s) => s.status === 'completed' && s.illustrationUrl)
+          .map((s) => preloadImage(`/api/images/${boardId}/${s.id}/illustration`))
+      );
+
+      setCards((prev) =>
+        prev.map((local) => {
+          if (local.id.startsWith('temp-')) return local;
+          const server = serverById.get(local.id);
+          if (!server) return local;
+          const completing = local.isProcessing && server.status === 'completed';
+          return {
+            ...local,
+            number: server.number,
+            label: server.label || local.label,
+            originalImageUrl: server.originalImageUrl,
+            illustrationUrl: server.illustrationUrl,
+            status: server.status,
+            errorMessage: server.errorMessage,
+            isProcessing: server.status === 'processing',
+            // Drop the base64 preview once the server's illustration is cached
+            // so the URL-backed image wins the display-precedence chain.
+            ...(completing
+              ? { localOriginalImage: undefined, localIllustration: undefined }
+              : null),
+          };
+        })
+      );
+    } catch {
+      // Ignore transient poll errors — next tick will retry.
+    }
+  }, [boardId]);
+
+  const hasProcessing = cards.some((c) => c.isProcessing);
+  useEffect(() => {
+    if (!hasProcessing) return;
+    const id = setInterval(pollProcessingCards, 10_000);
+    return () => clearInterval(id);
+  }, [hasProcessing, pollProcessingCards]);
 
   /**
    * Merge server-returned card state into local state, preserving the
@@ -138,6 +212,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
         ...prev,
         {
           id: tempId,
+          clientKey: tempId,
           boardId,
           number: prev.reduce((max, c) => (c.number > max ? c.number : max), 0) + 1,
           label: '',
@@ -207,6 +282,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
         const maxNumber = prev.reduce((max, c) => (c.number > max ? c.number : max), 0);
         const newCards = fileData.map((fd, i) => ({
           id: fd.tempId,
+          clientKey: fd.tempId,
           boardId,
           number: maxNumber + i + 1,
           label: '',
@@ -333,7 +409,13 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
   }, []);
 
   const applyStreamCompletion = useCallback(
-    (cardId: string, data: { label: string; illustrationUrl: string }) => {
+    async (cardId: string, data: { label: string; illustrationUrl: string }) => {
+      // Preload the final illustration so the card doesn't flash the original
+      // photo + new label while the image URL is still in flight. We keep the
+      // card in the processing state until the browser has the image cached,
+      // then flip atomically to completed (clearing the localOriginalImage
+      // preview so the illustration URL wins the display-precedence chain).
+      await preloadImage(`/api/images/${boardId}/${cardId}/illustration`);
       setCards((prev) =>
         prev.map((c) =>
           c.id === cardId
@@ -344,12 +426,14 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
                 status: 'completed' as CardStatus,
                 errorMessage: null,
                 isProcessing: false,
+                localOriginalImage: undefined,
+                localIllustration: undefined,
               }
             : c
         )
       );
     },
-    []
+    [boardId]
   );
 
   const applyStreamError = useCallback((cardId: string, message: string) => {
