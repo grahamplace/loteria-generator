@@ -1,5 +1,5 @@
 import { db, user, boards, cards } from '@/db';
-import { count, eq, desc } from 'drizzle-orm';
+import { count, eq, desc, sql } from 'drizzle-orm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -12,17 +12,15 @@ import {
 import Link from 'next/link';
 
 async function getStats() {
-  const [userCount] = await db.select({ count: count() }).from(user);
-  const [boardCount] = await db.select({ count: count() }).from(boards);
-  const [unlockedCount] = await db
-    .select({ count: count() })
-    .from(boards)
-    .where(eq(boards.isUnlocked, true));
-  const [cardCount] = await db.select({ count: count() }).from(cards);
-  const [errorCount] = await db
-    .select({ count: count() })
-    .from(cards)
-    .where(eq(cards.status, 'error'));
+  const [[userCount], [boardCount], [unlockedCount], [cardCount], [errorCount]] = await Promise.all(
+    [
+      db.select({ count: count() }).from(user),
+      db.select({ count: count() }).from(boards),
+      db.select({ count: count() }).from(boards).where(eq(boards.isUnlocked, true)),
+      db.select({ count: count() }).from(cards),
+      db.select({ count: count() }).from(cards).where(eq(cards.status, 'error')),
+    ]
+  );
 
   return {
     users: userCount.count,
@@ -53,16 +51,21 @@ async function getRecentErrors() {
 }
 
 async function getRecentSignups() {
-  return db
+  const result = await db
     .select({
       id: user.id,
       email: user.email,
       name: user.name,
       createdAt: user.createdAt,
+      boardCount: sql<number>`(select count(*) from boards where boards.user_id = ${user.id})`.as(
+        'board_count'
+      ),
     })
     .from(user)
     .orderBy(desc(user.createdAt))
     .limit(10);
+
+  return result.map((u) => ({ ...u, boardCount: Number(u.boardCount) }));
 }
 
 export default async function AdminOverview() {
@@ -180,6 +183,7 @@ export default async function AdminOverview() {
                 <TableRow>
                   <TableHead>Email</TableHead>
                   <TableHead>Name</TableHead>
+                  <TableHead>Boards</TableHead>
                   <TableHead>Joined</TableHead>
                 </TableRow>
               </TableHeader>
@@ -192,6 +196,7 @@ export default async function AdminOverview() {
                       </Link>
                     </TableCell>
                     <TableCell className="text-xs">{u.name}</TableCell>
+                    <TableCell className="text-xs">{u.boardCount}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {u.createdAt.toLocaleDateString()}
                     </TableCell>

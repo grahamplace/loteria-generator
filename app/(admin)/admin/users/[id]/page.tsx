@@ -1,4 +1,4 @@
-import { db, user, boards, cards, account } from '@/db';
+import { db, user, boards, account } from '@/db';
 import { eq, desc, sql } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

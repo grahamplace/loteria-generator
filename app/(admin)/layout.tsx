@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/admin';
 import { AdminSidebar } from './admin/components/admin-sidebar';
 
 export const metadata = {
+  title: 'Admin',
   robots: { index: false, follow: false },
 };
 
