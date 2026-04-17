@@ -30,6 +30,7 @@ export default function BoardEditorPage() {
     deleteCard,
     reorderCards,
     cardLimit,
+    CardStreamSubscriptions,
   } = useBoardCards(boardId, board?.isUnlocked);
 
   const [isEditingName, setIsEditingName] = useState(false);
@@ -292,6 +293,8 @@ export default function BoardEditorPage() {
         open={unlockPromptOpen}
         onOpenChange={setUnlockPromptOpen}
       />
+
+      {CardStreamSubscriptions}
     </div>
   );
 }

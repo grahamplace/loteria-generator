@@ -34,11 +34,11 @@ export async function proxy(request: NextRequest) {
   }
 
   // Check protected API routes
-  // Note: /api/stripe/webhook must be excluded - it's called by Stripe, not authenticated users
+  // Note: /api/stripe/webhook and /api/inngest must be excluded — they're
+  // called by third parties (Stripe / Inngest Cloud) and authenticate via
+  // their own signature headers.
   const isProtectedApiRoute =
     pathname.startsWith('/api/boards') ||
-    pathname.startsWith('/api/generate-image') ||
-    pathname.startsWith('/api/generate-label') ||
     (pathname.startsWith('/api/stripe') && !pathname.startsWith('/api/stripe/webhook'));
 
   if (isProtectedApiRoute && !isAuthenticated) {

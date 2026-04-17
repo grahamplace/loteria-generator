@@ -36,14 +36,3 @@ export const updateCardSchema = z.object({
   status: z.enum(['pending', 'processing', 'completed', 'error']).optional(),
   errorMessage: z.string().max(1000).optional(),
 });
-
-// POST /api/generate-image
-export const generateImageSchema = z.object({
-  imageBase64: base64ImageString,
-  boardId: z.string().uuid(),
-});
-
-// POST /api/generate-label
-export const generateLabelSchema = z.object({
-  imageBase64: base64ImageString,
-});

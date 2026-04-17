@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trash2, Edit2, GripVertical } from 'lucide-react';
+import { Trash2, Edit2, GripVertical, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -144,8 +144,12 @@ function CardContent({
             </div>
           </div>
         ) : card.error ? (
-          <div className="w-full h-full flex items-center justify-center bg-destructive/10">
-            <p className="text-xs text-destructive text-center px-2">{card.error}</p>
+          <div className="w-full h-full flex flex-col items-center justify-center bg-destructive/10 gap-2 px-4">
+            <AlertTriangle className="w-8 h-8 text-destructive/60" />
+            <p className="text-xs font-medium text-destructive">Generation failed</p>
+            <p className="text-[10px] text-destructive/60 text-center line-clamp-2">
+              Delete card &amp; retry
+            </p>
           </div>
         ) : card.illustration ? (
           <img
@@ -163,35 +167,39 @@ function CardContent({
 
       {/* Label */}
       <div className="p-3 bg-[#f5f0e1]">
-        <p className="text-sm font-semibold text-center text-foreground line-clamp-2 mb-2 uppercase tracking-wide">
-          {card.label || 'No label'}
-        </p>
+        {card.isProcessing ? (
+          <div className="h-5 mb-2 bg-muted-foreground/15 rounded animate-pulse" />
+        ) : (
+          <p className="text-sm font-semibold text-center text-foreground line-clamp-2 mb-2 uppercase tracking-wide">
+            {card.label || 'No label'}
+          </p>
+        )}
 
-        {/* Action buttons - only show if not overlay */}
-        {!isOverlay && onDelete && onEdit && (
+        {/* Action buttons - hidden while processing; reserve height so the
+            card doesn't jump when generation finishes */}
+        {!isOverlay && card.isProcessing && <div className="h-8" />}
+        {!isOverlay && !card.isProcessing && onDelete && onEdit && (
           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button
               size="sm"
-              variant="ghost"
+              variant="outline"
               className="flex-1 h-8 text-xs"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
               }}
-              disabled={card.isProcessing}
             >
               <Edit2 className="w-3 h-3 mr-1" />
               Edit
             </Button>
             <Button
               size="sm"
-              variant="destructive"
-              className="flex-1 h-8 text-xs"
+              variant="outline"
+              className="flex-1 h-8 text-xs text-destructive border-destructive/30 hover:bg-destructive hover:text-white hover:border-destructive"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
               }}
-              disabled={card.isProcessing}
             >
               <Trash2 className="w-3 h-3 mr-1" />
               Delete

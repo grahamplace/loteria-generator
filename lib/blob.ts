@@ -29,6 +29,24 @@ export async function getPrivateBlob(url: string) {
 }
 
 /**
+ * Fetch a private blob's bytes as a Buffer.
+ */
+export async function fetchBlobBuffer(url: string): Promise<Buffer> {
+  const result = await getPrivateBlob(url);
+  if (!result || result.statusCode !== 200 || !result.stream) {
+    throw new Error(`Failed to fetch blob at ${url}`);
+  }
+  const reader = result.stream.getReader();
+  const chunks: Uint8Array[] = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
+  }
+  return Buffer.concat(chunks);
+}
+
+/**
  * Upload original user photo
  */
 export async function uploadOriginalImage(

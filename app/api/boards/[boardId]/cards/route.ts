@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { db, boards, cards } from '@/db';
-import { eq, and, max, gt, sql } from 'drizzle-orm';
+import { db, boards, cards, IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db';
+import { eq, and, gt, sql } from 'drizzle-orm';
 import {
   uploadOriginalImage,
   uploadIllustration,
@@ -11,6 +11,8 @@ import {
   getContentTypeFromDataUrl,
 } from '@/lib/blob';
 import { createCardSchema, updateCardSchema } from '@/lib/validations';
+import { inngest } from '@/lib/inngest/client';
+import { cardGenerateRequested } from '@/lib/inngest/events';
 
 // Constants for limits
 const MAX_CARDS_FREE = 16;
@@ -111,27 +113,43 @@ export async function POST(
       );
     }
 
-    // Create card with next number in a transaction to avoid race conditions
-    // during multi-file uploads where concurrent POSTs could read the same max
-    const [newCard] = await db.transaction(async (tx) => {
-      const maxNumberResult = await tx
-        .select({ maxNumber: max(cards.number) })
-        .from(cards)
-        .where(eq(cards.boardId, boardId));
+    // Check AI generation limit before creating the card so over-limit uploads
+    // are rejected up front (the Inngest job increments the counter on success).
+    const skipAIProcessing = process.env.NEXT_PUBLIC_SKIP_AI_PROCESSING === 'true';
+    if (originalImageBase64 && !skipAIProcessing) {
+      const generationLimit = board.isUnlocked
+        ? IMAGE_GENERATION_LIMIT_PAID
+        : IMAGE_GENERATION_LIMIT_FREE;
+      if (board.imageGenerationsUsed >= generationLimit) {
+        return NextResponse.json(
+          {
+            error: 'Generation limit reached',
+            message: board.isUnlocked
+              ? `You've used all ${IMAGE_GENERATION_LIMIT_PAID} image generations for this board.`
+              : `You've used all ${IMAGE_GENERATION_LIMIT_FREE} free image generations. Unlock this board for ${IMAGE_GENERATION_LIMIT_PAID} total generations.`,
+            code: 'GENERATION_LIMIT_REACHED',
+            limit: generationLimit,
+            used: board.imageGenerationsUsed,
+          },
+          { status: 403 }
+        );
+      }
+    }
 
-      const nextNumber = (maxNumberResult[0]?.maxNumber || 0) + 1;
-
-      return tx
-        .insert(cards)
-        .values({
-          boardId,
-          userId: session.user.id,
-          number: nextNumber,
-          label: label || '',
-          status: 'pending',
-        })
-        .returning();
-    });
+    // Compute next number inline in a single INSERT. neon-http has no
+    // transaction support, so we rely on the subquery being evaluated as part
+    // of the same statement.
+    const initialStatus = originalImageBase64 && !skipAIProcessing ? 'processing' : 'pending';
+    const [newCard] = await db
+      .insert(cards)
+      .values({
+        boardId,
+        userId: session.user.id,
+        number: sql`COALESCE((SELECT MAX(${cards.number}) FROM ${cards} WHERE ${cards.boardId} = ${boardId}), 0) + 1`,
+        label: label || '',
+        status: initialStatus,
+      })
+      .returning();
 
     // Upload original image to blob storage if provided
     if (originalImageBase64) {
@@ -154,6 +172,30 @@ export async function POST(
           .where(eq(cards.id, newCard.id));
 
         newCard.originalImageUrl = originalUrl;
+
+        if (skipAIProcessing) {
+          // Dev mode: skip AI, mark completed with the original as illustration.
+          await db
+            .update(cards)
+            .set({
+              illustrationUrl: originalUrl,
+              status: 'completed',
+              updatedAt: new Date(),
+            })
+            .where(eq(cards.id, newCard.id));
+          newCard.illustrationUrl = originalUrl;
+          newCard.status = 'completed';
+        } else {
+          // Hand off AI generation to the Inngest background job.
+          await inngest.send(
+            cardGenerateRequested.create({
+              cardId: newCard.id,
+              boardId,
+              userId: session.user.id,
+              originalImageUrl: originalUrl,
+            })
+          );
+        }
       } catch (uploadError) {
         console.error('Error uploading image:', uploadError);
         // Card was created, but image upload failed
@@ -161,6 +203,7 @@ export async function POST(
           .update(cards)
           .set({ status: 'error', errorMessage: 'Failed to upload image' })
           .where(eq(cards.id, newCard.id));
+        newCard.status = 'error';
       }
     }
 
