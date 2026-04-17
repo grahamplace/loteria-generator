@@ -39,4 +39,5 @@ next-env.d.ts
 local-data/
 .DS_Store
 .superpowers/
+.worktrees/
 docs/
