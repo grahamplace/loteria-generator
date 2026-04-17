@@ -39,21 +39,40 @@ export async function GET(
       return new NextResponse('Not found', { status: 404 });
     }
 
-    const result = await getPrivateBlob(imageUrl);
+    const isPrivateBlob = imageUrl.includes('.private.blob.vercel-storage.com');
 
-    if (result?.statusCode !== 200) {
+    if (isPrivateBlob) {
+      const result = await getPrivateBlob(imageUrl);
+
+      if (result?.statusCode !== 200) {
+        return new NextResponse('Not found', { status: 404 });
+      }
+
+      return new NextResponse(result.stream, {
+        headers: {
+          'Content-Type': result.blob.contentType,
+          'X-Content-Type-Options': 'nosniff',
+          'Cache-Control': 'private, no-cache',
+          ETag: result.blob.etag,
+        },
+      });
+    }
+
+    // Legacy public blob — fetch directly
+    const imageResponse = await fetch(imageUrl);
+
+    if (!imageResponse.ok) {
       return new NextResponse('Not found', { status: 404 });
     }
 
-    return new NextResponse(result.stream, {
+    return new NextResponse(imageResponse.body, {
       headers: {
-        'Content-Type': result.blob.contentType,
-        'X-Content-Type-Options': 'nosniff',
+        'Content-Type': imageResponse.headers.get('content-type') || 'image/png',
         'Cache-Control': 'private, no-cache',
-        ETag: result.blob.etag,
       },
     });
-  } catch {
+  } catch (error) {
+    console.error('Admin image proxy error:', error);
     return new NextResponse('Not found', { status: 404 });
   }
 }

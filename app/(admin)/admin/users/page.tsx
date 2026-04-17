@@ -10,10 +10,10 @@ async function getUsers() {
       email: user.email,
       name: user.name,
       createdAt: user.createdAt,
-      boardCount: sql<number>`(select count(*) from boards where boards.user_id = ${user.id})`.as(
+      boardCount: sql<number>`(select count(*) from boards where boards.user_id = "user"."id")`.as(
         'board_count'
       ),
-      cardCount: sql<number>`(select count(*) from cards where cards.user_id = ${user.id})`.as(
+      cardCount: sql<number>`(select count(*) from cards where cards.user_id = "user"."id")`.as(
         'card_count'
       ),
     })

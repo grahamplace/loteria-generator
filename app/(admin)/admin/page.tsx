@@ -57,7 +57,7 @@ async function getRecentSignups() {
       email: user.email,
       name: user.name,
       createdAt: user.createdAt,
-      boardCount: sql<number>`(select count(*) from boards where boards.user_id = ${user.id})`.as(
+      boardCount: sql<number>`(select count(*) from boards where boards.user_id = "user"."id")`.as(
         'board_count'
       ),
     })

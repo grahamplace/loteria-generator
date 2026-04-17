@@ -39,7 +39,7 @@ async function getUserBoards(userId: string) {
       imageGenerationsUsed: boards.imageGenerationsUsed,
       createdAt: boards.createdAt,
       updatedAt: boards.updatedAt,
-      cardCount: sql<number>`(select count(*) from cards where cards.board_id = ${boards.id})`.as(
+      cardCount: sql<number>`(select count(*) from cards where cards.board_id = "boards"."id")`.as(
         'card_count'
       ),
     })
