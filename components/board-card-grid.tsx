@@ -26,7 +26,6 @@ import {
   DragStartEvent,
   DragOverEvent,
   DragOverlay,
-  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -68,19 +67,15 @@ interface SortableCardProps {
 }
 
 function SortableCard({ card, onDelete, onEdit, isDragging }: SortableCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging: isSortableDragging,
-  } = useSortable({ id: card.clientKey, disabled: card.isProcessing });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: card.clientKey,
+    disabled: card.isProcessing,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isSortableDragging ? 50 : undefined,
+    zIndex: isDragging ? 50 : undefined,
     borderRadius: '2px',
   };
 
@@ -88,15 +83,10 @@ function SortableCard({ card, onDelete, onEdit, isDragging }: SortableCardProps)
     <motion.div
       ref={setNodeRef}
       style={style}
-      layout
       initial={{ opacity: 0, scale: 0.8 }}
-      animate={{
-        opacity: isSortableDragging ? 0.5 : 1,
-        scale: 1,
-      }}
+      animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{
-        layout: { type: 'spring', stiffness: 350, damping: 25 },
         opacity: { duration: 0.2 },
         scale: { duration: 0.2 },
       }}
@@ -337,7 +327,7 @@ export function BoardCardGrid({
           strategy={rectSortingStrategy}
         >
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence>
               {displayCards.map((card) => (
                 <SortableCard
                   key={card.clientKey}
@@ -351,19 +341,7 @@ export function BoardCardGrid({
           </div>
         </SortableContext>
 
-        <DragOverlay
-          dropAnimation={{
-            sideEffects: defaultDropAnimationSideEffects({
-              styles: {
-                active: {
-                  opacity: '0.5',
-                },
-              },
-            }),
-          }}
-        >
-          {activeCard ? <DragOverlayCard card={activeCard} /> : null}
-        </DragOverlay>
+        <DragOverlay>{activeCard ? <DragOverlayCard card={activeCard} /> : null}</DragOverlay>
       </DndContext>
 
       {editingCard && (

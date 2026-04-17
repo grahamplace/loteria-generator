@@ -9,3 +9,12 @@ export const cardGenerateRequested = eventType('card/generate.requested', {
     originalImageUrl: z.string().url(),
   }),
 });
+
+export const illustrationRegenerateRequested = eventType('card/illustration.regenerate', {
+  schema: z.object({
+    cardId: z.string().uuid(),
+    boardId: z.string().uuid(),
+    userId: z.string(),
+    originalImageUrl: z.string().url(),
+  }),
+});

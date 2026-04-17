@@ -3,7 +3,7 @@ import { eq, sql } from 'drizzle-orm';
 import { db, boards, cards } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
 
-const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
+export const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/jpg': 'jpg',
@@ -18,7 +18,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const ILLUSTRATION_PROMPT = `
+export const ILLUSTRATION_PROMPT = `
     ## Instructions
     - Restyle the provided image into the **classic Mexican Lotería card illustration style**.
     - Keep the original subject, pose, and overall silhouette clearly recognizable, but **redraw everything as a vintage hand-painted print**.

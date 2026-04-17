@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import Link from 'next/link';
+import { RegenerateButton } from '../../components/regenerate-button';
 
 async function getCardWithContext(cardId: string) {
   const result = await db
@@ -58,7 +59,10 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
             <CardTitle className="text-sm font-medium">
               Card #{card.number} — {card.label || 'Unlabeled'}
             </CardTitle>
-            <StatusBadge status={card.status} />
+            <div className="flex items-center gap-2">
+              {card.originalImageUrl && <RegenerateButton cardId={card.id} />}
+              <StatusBadge status={card.status} />
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
