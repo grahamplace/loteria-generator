@@ -402,27 +402,13 @@ export async function renderDeckPageAsPNG(
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
 
-  const rows = 2;
-  const cols = 2;
-  const padding = 100;
-  const cardSpacing = 60;
+  const rows = 3;
+  const cols = 3;
+  const cardSpacing = 40;
 
-  const availableWidth = width - padding * 2 - cardSpacing * (cols - 1);
-  const availableHeight = height - padding * 2 - cardSpacing * (rows - 1);
-
-  const cardAspectRatio = 2 / 3;
-  const maxCardWidth = availableWidth / cols;
-  const maxCardHeight = availableHeight / rows;
-
-  let cardWidth: number;
-  let cardHeight: number;
-  if (maxCardWidth / maxCardHeight < cardAspectRatio) {
-    cardWidth = maxCardWidth;
-    cardHeight = cardWidth / cardAspectRatio;
-  } else {
-    cardHeight = maxCardHeight;
-    cardWidth = cardHeight * cardAspectRatio;
-  }
+  // Standard playing card size: 2.5" × 3.5" at 300 DPI
+  const cardWidth = 750;
+  const cardHeight = 1050;
 
   const gridWidth = cardWidth * cols + cardSpacing * (cols - 1);
   const gridHeight = cardHeight * rows + cardSpacing * (rows - 1);
@@ -488,11 +474,12 @@ export async function generateLoteriaSetZip(
     .filter((c) => !c.isProcessing && !c.error)
     .sort((a, b) => a.number - b.number);
 
-  const totalPages = Math.ceil(processedCards.length / 4);
+  const cardsPerPage = 9;
+  const totalPages = Math.ceil(processedCards.length / cardsPerPage);
 
   for (let i = 0; i < totalPages; i++) {
     onProgress?.(`Generating deck page ${i + 1} of ${totalPages}...`);
-    const pageCards = processedCards.slice(i * 4, (i + 1) * 4);
+    const pageCards = processedCards.slice(i * cardsPerPage, (i + 1) * cardsPerPage);
     const pagePNG = await renderDeckPageAsPNG(pageCards, styleOptions);
     deckFolder.file(`page-${i + 1}.png`, pagePNG);
   }

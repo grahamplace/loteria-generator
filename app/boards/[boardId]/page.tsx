@@ -206,7 +206,7 @@ export default function BoardEditorPage() {
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Payment Success Banner */}
         {board.isUnlocked && board.unlockedAt && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
+          <div className="mx-auto max-w-4xl bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
             <CheckCircle className="h-5 w-5 text-green-600" />
             <div>
               <p className="font-medium text-green-800">Board Unlocked</p>
@@ -218,7 +218,7 @@ export default function BoardEditorPage() {
         )}
 
         {/* Step 1: Upload */}
-        <section>
+        <section className="mx-auto max-w-4xl">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">
               1
@@ -236,7 +236,7 @@ export default function BoardEditorPage() {
         {/* Step 2: Manage Cards */}
         {cards.length > 0 && (
           <section>
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <h2 className="mx-auto max-w-4xl text-xl font-bold mb-4 flex items-center gap-2">
               <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">
                 2
               </span>
@@ -244,18 +244,18 @@ export default function BoardEditorPage() {
             </h2>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-white rounded-lg p-4 shadow-sm border">
-                <p className="text-2xl font-bold">{cards.length}</p>
-                <p className="text-sm text-muted-foreground">Total cards</p>
+            <div className="flex justify-center gap-4 mb-6">
+              <div className="bg-white rounded-lg px-5 py-3 shadow-sm border flex items-baseline gap-2">
+                <p className="text-lg font-bold tabular-nums">{cards.length}</p>
+                <p className="text-xs text-muted-foreground">total</p>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border">
-                <p className="text-2xl font-bold">{processedCards.length}</p>
-                <p className="text-sm text-muted-foreground">Ready</p>
+              <div className="bg-white rounded-lg px-5 py-3 shadow-sm border flex items-baseline gap-2">
+                <p className="text-lg font-bold tabular-nums">{processedCards.length}</p>
+                <p className="text-xs text-muted-foreground">ready</p>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border">
-                <p className="text-2xl font-bold">{processingCards.length}</p>
-                <p className="text-sm text-muted-foreground">Processing</p>
+              <div className="bg-white rounded-lg px-5 py-3 shadow-sm border flex items-baseline gap-2">
+                <p className="text-lg font-bold tabular-nums">{processingCards.length}</p>
+                <p className="text-xs text-muted-foreground">processing</p>
               </div>
             </div>
 
@@ -270,7 +270,7 @@ export default function BoardEditorPage() {
 
         {/* Step 3: Export */}
         {cards.length > 0 && (
-          <section>
+          <section className="mx-auto max-w-4xl">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">
                 3
