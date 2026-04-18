@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import { jsPDF } from 'jspdf';
 
 export interface LotteriaCard {
   id: string;
@@ -284,14 +284,13 @@ function drawCard(
 }
 
 /**
- * Renders a single board as a PNG image
+ * Renders a single board onto a canvas.
  * Board dimensions: 8.5" × 11" (US Letter) at 300 DPI = 2550 × 3300 pixels
  */
-export async function renderBoardAsPNG(
+async function renderBoardToCanvas(
   board: LotteriaCard[],
-  _boardNumber: number,
   styleOptions: BoardStyleOptions = {}
-): Promise<Blob> {
+): Promise<HTMLCanvasElement> {
   const {
     backgroundColor = '#ffffff',
     badgeColor = '#ff6b35',
@@ -359,29 +358,17 @@ export async function renderBoardAsPNG(
     }
   }
 
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error('Failed to create blob from canvas'));
-        }
-      },
-      'image/png',
-      1.0
-    );
-  });
+  return canvas;
 }
 
 /**
- * Renders a deck page with 4 cards in a 2x2 grid.
+ * Renders a deck page with cards in a 3×3 grid onto a canvas.
  * Page dimensions: 8.5" × 11" (US Letter) at 300 DPI = 2550 × 3300 pixels
  */
-export async function renderDeckPageAsPNG(
+async function renderDeckPageToCanvas(
   cards: LotteriaCard[],
   styleOptions: BoardStyleOptions = {}
-): Promise<Blob> {
+): Promise<HTMLCanvasElement> {
   const {
     backgroundColor = '#ffffff',
     badgeColor = '#ff6b35',
@@ -434,42 +421,30 @@ export async function renderDeckPageAsPNG(
     drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor });
   }
 
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error('Failed to create blob from canvas'));
-        }
-      },
-      'image/png',
-      1.0
-    );
-  });
+  return canvas;
 }
 
 /**
- * Generates a complete Loteria set (50 boards + deck pages) as a zip file
+ * Generates a complete Loteria set (50 boards + deck pages) as a single multi-page PDF
  */
-export async function generateLoteriaSetZip(
+export async function generateLoteriaSetPdf(
   cards: LotteriaCard[],
   styleOptions: BoardStyleOptions = {},
   onProgress?: (message: string) => void
 ): Promise<Blob> {
   const boards = generateBoards(cards, 50);
-  const zip = new JSZip();
-  const boardsFolder = zip.folder('boards')!;
-  const deckFolder = zip.folder('deck')!;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'in', format: 'letter' });
 
-  // Generate 50 board PNGs
+  // Generate 50 board pages
   for (let i = 0; i < boards.length; i++) {
-    onProgress?.(`Generating board ${i + 1} of ${boards.length}...`);
-    const boardPNG = await renderBoardAsPNG(boards[i], i + 1, styleOptions);
-    boardsFolder.file(`board-${i + 1}.png`, boardPNG);
+    onProgress?.(`Generating board ${i + 1} of ${boards.length}…`);
+    if (i > 0) pdf.addPage('letter', 'portrait');
+    const canvas = await renderBoardToCanvas(boards[i], styleOptions);
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
   }
 
-  // Generate deck pages (4 cards per page, ordered by card number)
+  // Generate deck pages (9 cards per page, ordered by card number)
   const processedCards = cards
     .filter((c) => !c.isProcessing && !c.error)
     .sort((a, b) => a.number - b.number);
@@ -478,13 +453,15 @@ export async function generateLoteriaSetZip(
   const totalPages = Math.ceil(processedCards.length / cardsPerPage);
 
   for (let i = 0; i < totalPages; i++) {
-    onProgress?.(`Generating deck page ${i + 1} of ${totalPages}...`);
+    onProgress?.(`Generating deck page ${i + 1} of ${totalPages}…`);
+    pdf.addPage('letter', 'portrait');
     const pageCards = processedCards.slice(i * cardsPerPage, (i + 1) * cardsPerPage);
-    const pagePNG = await renderDeckPageAsPNG(pageCards, styleOptions);
-    deckFolder.file(`page-${i + 1}.png`, pagePNG);
+    const canvas = await renderDeckPageToCanvas(pageCards, styleOptions);
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
   }
 
-  onProgress?.('Creating zip file...');
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
-  return zipBlob;
+  onProgress?.('Creating PDF…');
+  const pdfBlob = pdf.output('blob');
+  return pdfBlob;
 }

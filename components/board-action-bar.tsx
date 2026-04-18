@@ -2,7 +2,7 @@
 
 import { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { Upload, Package, Plus, Unlock, Sparkles } from 'lucide-react';
-import { generateLoteriaSetZip, BoardStyleOptions } from '@/lib/generate-boards';
+import { generateLoteriaSetPdf, BoardStyleOptions } from '@/lib/generate-boards';
 import { toast } from 'sonner';
 
 interface DisplayCard {
@@ -127,20 +127,20 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
             illustration: c.illustration,
           }));
 
-        const zipBlob = await generateLoteriaSetZip(
+        const pdfBlob = await generateLoteriaSetPdf(
           exportCards,
           boardStyleOptions,
           setExportProgress
         );
 
-        const url = URL.createObjectURL(zipBlob);
+        const url = URL.createObjectURL(pdfBlob);
         const a = document.createElement('a');
         a.href = url;
         const slug = boardName
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/(^-|-$)/g, '');
-        a.download = `${slug}-loteria-set.zip`;
+        a.download = `${slug}-loteria-set.pdf`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -148,7 +148,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
 
         setGeneratedCount((prev) => prev + 1);
         toast.success('Loteria set exported!', {
-          description: '50 unique boards and card deck downloaded as a ZIP file.',
+          description: '50 unique boards and card deck downloaded as a PDF.',
         });
       } catch (error) {
         console.error('Error exporting Loteria set:', error);
@@ -260,7 +260,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                 <span className="text-[11px] text-muted-foreground mt-0.5 block">
                   {hasUsedFreeExport
                     ? 'Unlock to export again'
-                    : '50 unique boards + card deck · ZIP'}
+                    : '50 unique boards + card deck · PDF'}
                 </span>
               </div>
               <button
