@@ -108,6 +108,9 @@ export default function BoardEditorPage() {
         : card.originalImageUrl
           ? `/api/images/${boardId}/${card.id}/original`
           : ''),
+    originalImage:
+      card.localOriginalImage ||
+      (card.originalImageUrl ? `/api/images/${boardId}/${card.id}/original` : undefined),
     isProcessing: card.isProcessing || card.status === 'processing',
     error: card.status === 'error' ? card.errorMessage || 'Error processing card' : undefined,
   }));

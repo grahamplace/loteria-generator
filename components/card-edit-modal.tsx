@@ -7,11 +7,12 @@ import { LotteriaCard } from '@/lib/generate-boards';
 
 interface CardEditModalProps {
   card: LotteriaCard;
+  originalImage?: string;
   onSave: (newLabel: string) => void;
   onClose: () => void;
 }
 
-export function CardEditModal({ card, onSave, onClose }: CardEditModalProps) {
+export function CardEditModal({ card, originalImage, onSave, onClose }: CardEditModalProps) {
   const [label, setLabel] = useState(card.label);
 
   // Handle Escape key to close modal
@@ -47,14 +48,27 @@ export function CardEditModal({ card, onSave, onClose }: CardEditModalProps) {
 
         {/* Body */}
         <div className="p-6 space-y-4 overflow-y-auto">
-          {/* Image preview - smaller and centered */}
-          <div className="flex justify-center">
-            <div className="w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
-              <img
-                src={card.illustration || '/placeholder.svg'}
-                alt={card.label}
-                className="w-full h-full object-cover"
-              />
+          {/* Image preview */}
+          <div className="flex justify-center gap-3">
+            {originalImage && (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground text-center">Original</p>
+                <div className="w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                  <img src={originalImage} alt="Original" className="w-full h-full object-cover" />
+                </div>
+              </div>
+            )}
+            <div className="space-y-1">
+              {originalImage && (
+                <p className="text-xs text-muted-foreground text-center">Illustration</p>
+              )}
+              <div className="w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                <img
+                  src={card.illustration || '/placeholder.svg'}
+                  alt={card.label}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
           </div>
 

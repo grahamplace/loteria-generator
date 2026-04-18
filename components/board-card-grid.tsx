@@ -48,6 +48,7 @@ interface DisplayCard {
   number: number;
   label: string;
   illustration: string;
+  originalImage?: string;
   isProcessing?: boolean;
   error?: string;
 }
@@ -352,6 +353,7 @@ export function BoardCardGrid({
             illustration: editingCard.illustration,
             number: editingCard.number,
           }}
+          originalImage={editingCard.originalImage}
           onSave={(newLabel) => {
             onUpdateLabel(editingCard.id, newLabel);
             setEditingCard(null);
