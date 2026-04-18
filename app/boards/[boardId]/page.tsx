@@ -282,6 +282,7 @@ export default function BoardEditorPage() {
             </h2>
             <BoardExportSection
               cards={displayCards}
+              boardName={board.name}
               isUnlocked={board.isUnlocked}
               onUnlockRequired={handleExportLimitReached}
             />

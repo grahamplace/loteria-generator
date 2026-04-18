@@ -17,12 +17,14 @@ interface DisplayCard {
 
 interface BoardExportSectionProps {
   cards: DisplayCard[];
+  boardName: string;
   isUnlocked: boolean;
   onUnlockRequired: () => void;
 }
 
 export function BoardExportSection({
   cards,
+  boardName,
   isUnlocked,
   onUnlockRequired,
 }: BoardExportSectionProps) {
@@ -71,7 +73,11 @@ export function BoardExportSection({
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `loteria-set-${new Date().toISOString().split('T')[0]}.zip`;
+      const slug = boardName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      a.download = `${slug}-loteria-set.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
