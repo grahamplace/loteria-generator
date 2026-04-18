@@ -25,22 +25,32 @@ export async function GET() {
         cards: {
           columns: {
             id: true,
+            number: true,
             status: true,
+            illustrationUrl: true,
           },
         },
       },
     });
 
-    // Transform to include card counts
-    const boardsWithCounts = userBoards.map((board) => ({
-      id: board.id,
-      name: board.name,
-      isUnlocked: board.isUnlocked,
-      createdAt: board.createdAt,
-      updatedAt: board.updatedAt,
-      cardCount: board.cards.length,
-      completedCardCount: board.cards.filter((c) => c.status === 'completed').length,
-    }));
+    const boardsWithCounts = userBoards.map((board) => {
+      const sortedCards = [...board.cards].sort((a, b) => a.number - b.number);
+      const previewCards = sortedCards
+        .filter((c) => c.status === 'completed' && c.illustrationUrl)
+        .slice(0, 16)
+        .map((c) => ({ id: c.id, number: c.number }));
+
+      return {
+        id: board.id,
+        name: board.name,
+        isUnlocked: board.isUnlocked,
+        createdAt: board.createdAt,
+        updatedAt: board.updatedAt,
+        cardCount: board.cards.length,
+        completedCardCount: board.cards.filter((c) => c.status === 'completed').length,
+        previewCards,
+      };
+    });
 
     // Calculate board limits: user can have (unlockedCount + 1) boards total
     // This means they can always have exactly ONE unpaid board at a time

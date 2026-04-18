@@ -13,6 +13,7 @@ interface BoardSummary {
   updatedAt: Date;
   cardCount: number;
   completedCardCount: number;
+  previewCards: Array<{ id: string; number: number }>;
 }
 
 interface BoardLimits {

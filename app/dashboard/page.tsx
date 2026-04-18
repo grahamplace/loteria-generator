@@ -5,7 +5,7 @@ import { useBoards } from '@/hooks/use-boards';
 import { useSession } from '@/hooks/use-session';
 import { signOut } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
@@ -118,7 +118,7 @@ export default function DashboardPage() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[1, 2, 3].map((i) => (
               <Card key={i}>
                 <CardHeader>
@@ -148,56 +148,85 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {boards.map((board) => (
-              <Card
-                key={board.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => router.push(`/boards/${board.id}`)}
-              >
-                <CardHeader className="flex flex-row items-start justify-between space-y-0">
-                  <div className="space-y-1">
-                    <CardTitle className="flex items-center gap-2">
-                      {board.name}
-                      {board.isUnlocked ? (
-                        <Unlock className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Lock className="h-4 w-4 text-muted-foreground" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {boards.map((board) => {
+              const previewSlots = Array.from({ length: 16 }, (_, i) => board.previewCards[i]);
+              return (
+                <Card
+                  key={board.id}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => router.push(`/boards/${board.id}`)}
+                >
+                  <div className="flex items-stretch gap-2">
+                    <div
+                      className="grid grid-cols-4 gap-0.5 shrink-0 w-44 px-5 py-1 self-center"
+                      aria-hidden="true"
+                    >
+                      {previewSlots.map((card, i) =>
+                        card ? (
+                          <div
+                            key={card.id}
+                            className="aspect-[2/3] bg-muted overflow-hidden rounded-[1px]"
+                          >
+                            <img
+                              src={`/api/images/${board.id}/${card.id}/illustration`}
+                              alt=""
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              draggable={false}
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            key={`empty-${i}`}
+                            className="aspect-[2/3] bg-muted/40 rounded-[1px]"
+                          />
+                        )
                       )}
-                    </CardTitle>
-                    <CardDescription>
-                      {board.completedCardCount} of {board.cardCount} cards ready
-                    </CardDescription>
+                    </div>
+                    <div className="flex-1 min-w-0 flex items-start justify-between gap-2 py-6 pr-6">
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2 font-semibold">
+                          <span className="truncate">{board.name}</span>
+                          {board.isUnlocked ? (
+                            <Unlock className="h-4 w-4 text-green-600 shrink-0" />
+                          ) : (
+                            <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {board.completedCardCount} of {board.cardCount} cards ready
+                        </p>
+                        <p className="text-xs text-muted-foreground pt-2">
+                          {board.isUnlocked
+                            ? 'Full access - up to 54 cards'
+                            : 'Free preview - up to 16 cards'}
+                        </p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingBoardId(board.id);
+                            }}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeletingBoardId(board.id);
-                        }}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-muted-foreground">
-                    {board.isUnlocked
-                      ? 'Full access - up to 54 cards'
-                      : 'Free preview - up to 16 cards'}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>
