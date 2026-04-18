@@ -309,7 +309,7 @@ export function BoardCardGrid({
           items={displayCards.map((c) => c.clientKey)}
           strategy={rectSortingStrategy}
         >
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+          <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
             <AnimatePresence>
               {displayCards.map((card) => (
                 <SortableCard
@@ -324,26 +324,26 @@ export function BoardCardGrid({
             {/* Inline unlock tile (Treatment C) when locked at card limit */}
             {isLocked && atCardLimit && onUnlockRequired ? (
               <div
-                className="col-span-2 sm:col-span-3 md:col-span-3 lg:col-span-4 xl:col-span-5 row-span-2 rounded-sm border-2 border-dashed border-primary/40 p-5 flex items-center gap-5"
+                className="col-span-3 md:col-span-3 lg:col-span-4 xl:col-span-5 md:row-span-2 rounded-sm border-2 border-dashed border-primary/40 p-3 md:p-5 flex items-center gap-3 md:gap-5"
                 style={{
                   background: 'linear-gradient(135deg, #faf5e6 0%, #f2e6c8 100%)',
                 }}
               >
                 <div className="shrink-0 relative">
-                  <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg">
-                    <Unlock className="w-6 h-6" />
+                  <div className="w-11 h-11 md:w-14 md:h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg">
+                    <Unlock className="w-5 h-5 md:w-6 md:h-6" />
                   </div>
                   <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-secondary text-foreground flex items-center justify-center text-[10px] font-bold shadow">
                     $5
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-primary mb-0.5">
+                  <div className="text-[9px] md:text-[10px] font-mono uppercase tracking-wider text-primary mb-0.5">
                     You&apos;ve reached the free limit
                   </div>
-                  <div className="font-bold text-[14px] leading-tight">
+                  <div className="font-bold text-[13px] md:text-[14px] leading-tight">
                     Keep building &mdash;{' '}
-                    <span className="font-caveat text-xl text-primary">
+                    <span className="font-caveat text-[18px] md:text-xl text-primary">
                       {maxCards - cards.length} more cards
                     </span>{' '}
                     await

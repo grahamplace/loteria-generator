@@ -26,14 +26,13 @@ export function BoardWelcome({ onStartFreePreview, onUnlock }: BoardWelcomeProps
         </div>
 
         {/* Fanned card preview */}
-        <div className="relative mb-8 flex items-center justify-center">
+        <div className="relative mb-7 md:mb-8 flex items-center justify-center">
           {previewCards.map((card, i) => (
             <div
               key={i}
-              className="bg-background border-2 border-black/80 mx-[-14px] shadow-md"
+              className="bg-background border-2 border-black/80 mx-[-14px] shadow-md w-[96px] md:w-[130px]"
               style={{
-                width: 130,
-                transform: `rotate(${(i - 1) * 7}deg)`,
+                transform: `rotate(${(i - 1) * 9}deg)`,
                 borderRadius: '2px',
               }}
             >
@@ -60,33 +59,34 @@ export function BoardWelcome({ onStartFreePreview, onUnlock }: BoardWelcomeProps
           ))}
         </div>
 
-        <h1 className="text-4xl font-bold leading-tight">
+        <h1 className="text-[28px] md:text-4xl font-bold leading-tight tracking-tight md:tracking-normal px-2 md:px-0">
           Make a Loter&iacute;a set{' '}
-          <span className="font-caveat text-primary text-5xl">from your photos</span>
+          <span className="font-caveat text-primary text-[36px] md:text-5xl leading-none">
+            from your photos
+          </span>
         </h1>
-        <p className="text-sm text-muted-foreground mt-3 max-w-md mx-auto">
-          Start free with 16 cards and 1 export. Unlock for $5 to fill all 54 cards and export
-          unlimited printable boards.
+        <p className="text-[13px] md:text-sm text-muted-foreground mt-3 max-w-[280px] md:max-w-md mx-auto">
+          Start free with 16 cards and one export. Unlock for $5 to fill the full 54-card deck.
         </p>
 
-        <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
+        <div className="mt-6 md:mt-8 w-full md:w-auto flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
           <button
             onClick={onStartFreePreview}
-            className="px-5 py-3 rounded-lg bg-white border border-border text-sm font-semibold flex items-center gap-2 hover:border-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="w-full md:w-auto h-12 md:h-auto px-5 md:py-3 rounded-xl md:rounded-lg bg-primary md:bg-white text-white md:text-foreground border-0 md:border md:border-border text-[15px] md:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm md:shadow-none md:hover:border-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <Upload className="w-4 h-4" />
-            Start with free preview
+            Start free preview
           </button>
           <button
             onClick={onUnlock}
-            className="px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="w-full md:w-auto h-12 md:h-auto px-5 md:py-3 rounded-xl md:rounded-lg bg-white md:bg-primary text-foreground md:text-white border border-border md:border-0 text-[15px] md:text-sm font-semibold flex items-center justify-center gap-2 md:shadow-sm md:hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <Unlock className="w-4 h-4" />
-            Unlock full board &mdash; $5
+            Unlock full deck &mdash; $5
           </button>
         </div>
 
-        <div className="mt-5 flex items-center justify-center gap-5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+        <div className="mt-5 flex items-center justify-center gap-3 md:gap-5 text-[9px] md:text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
           <span className="flex items-center gap-1">
             <Check className="w-3 h-3 text-emerald-600" />
             One-time

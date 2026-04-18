@@ -43,7 +43,7 @@ export function CardEditModal({
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b shrink-0">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b shrink-0">
           <h2 className="text-lg font-semibold">Edit card #{card.number}</h2>
           <button
             onClick={onClose}
@@ -54,13 +54,13 @@ export function CardEditModal({
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4 overflow-y-auto">
+        <div className="p-4 md:p-6 space-y-4 overflow-y-auto">
           {/* Image preview */}
           <div className="flex justify-center gap-3">
             {originalImage && (
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground text-center">Original</p>
-                <div className="w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                <div className="w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                   <img src={originalImage} alt="Original" className="w-full h-full object-cover" />
                 </div>
               </div>
@@ -69,7 +69,7 @@ export function CardEditModal({
               {originalImage && (
                 <p className="text-xs text-muted-foreground text-center">Illustration</p>
               )}
-              <div className="w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+              <div className="w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                 <img
                   src={card.illustration || '/placeholder.svg'}
                   alt={card.label}
@@ -86,7 +86,7 @@ export function CardEditModal({
               type="text"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 border rounded-md text-[16px] md:text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Enter the label"
             />
             <p className="text-xs text-muted-foreground mt-1">1-3 Spanish words</p>
@@ -94,7 +94,7 @@ export function CardEditModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 p-6 border-t shrink-0">
+        <div className="flex items-center gap-3 p-4 md:p-6 border-t shrink-0">
           {onDelete && (
             <Button
               variant="outline"

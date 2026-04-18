@@ -131,11 +131,11 @@ export default function BoardEditorPage() {
             <Skeleton className="h-6 w-48" />
           </div>
         </header>
-        <div className="max-w-[1400px] mx-auto px-6 pt-5 pb-4">
+        <div className="max-w-[1400px] mx-auto px-3 md:px-6 pt-5 pb-4 hidden md:block">
           <Skeleton className="h-20 w-full rounded-lg" />
         </div>
-        <main className="max-w-[1400px] mx-auto px-6 pb-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+        <main className="max-w-[1400px] mx-auto px-3 md:px-6 pb-6">
+          <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
             {[1, 2, 3, 4, 5, 6, 7].map((i) => (
               <Skeleton key={i} className="aspect-[2/3]" />
             ))}
@@ -161,62 +161,72 @@ export default function BoardEditorPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b border-black/5 bg-white/70 backdrop-blur-sm sticky top-0 z-30">
-        <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-30">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/dashboard"
               aria-label="Back to dashboard"
-              className="w-8 h-8 rounded-md hover:bg-black/5 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="w-9 h-9 md:w-8 md:h-8 rounded-full md:rounded-md hover:bg-black/5 flex items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
-            <div className="flex items-center gap-2">
-              {isEditingName ? (
-                <Input
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  onBlur={handleSaveName}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveName();
-                    if (e.key === 'Escape') setIsEditingName(false);
-                  }}
-                  className="max-w-[200px] h-8"
-                  autoFocus
-                />
-              ) : (
-                <button
-                  onClick={() => setIsEditingName(true)}
-                  aria-label={`Edit board name: ${board.name}`}
-                  className="font-bold text-[15px] hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
-                >
-                  {board.name}
-                </button>
-              )}
-              {board.isUnlocked ? (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <Unlock className="w-2.5 h-2.5" />
-                  Unlocked
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
-                  <Lock className="w-2.5 h-2.5" />
-                  Free preview
-                </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                {isEditingName ? (
+                  <Input
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    onBlur={handleSaveName}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveName();
+                      if (e.key === 'Escape') setIsEditingName(false);
+                    }}
+                    className="max-w-[200px] h-8"
+                    autoFocus
+                  />
+                ) : (
+                  <button
+                    onClick={() => setIsEditingName(true)}
+                    aria-label={`Edit board name: ${board.name}`}
+                    className="font-semibold text-[17px] md:text-[15px] md:font-bold tracking-tight truncate hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
+                  >
+                    {board.name}
+                  </button>
+                )}
+                {board.isUnlocked ? (
+                  <span className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <Unlock className="w-2.5 h-2.5" />
+                    Unlocked
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] md:text-[10px] font-mono uppercase tracking-wider md:tracking-normal md:font-medium bg-primary/10 text-primary border border-primary/20">
+                    <Lock className="w-2.5 h-2.5" />
+                    Free
+                  </span>
+                )}
+              </div>
+              {/* Mobile subtitle */}
+              {!isEditingName && (
+                <div className="md:hidden text-[11px] text-muted-foreground truncate">
+                  {cards.length > 0
+                    ? `${cards.length} card${cards.length !== 1 ? 's' : ''} · Updated just now`
+                    : 'Free preview'}
+                </div>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {!board.isUnlocked && (
               <button
                 onClick={() => {
                   setUnlockTrigger('card_limit');
                   setUnlockPromptOpen(true);
                 }}
-                className="px-3 py-1.5 rounded-md text-xs font-semibold bg-primary text-white hover:bg-primary/90 flex items-center gap-1.5 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                className="px-3 h-8 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary/90 flex items-center gap-1 md:gap-1.5 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 <Unlock className="w-3.5 h-3.5" />
-                Unlock for $5
+                <span className="hidden md:inline">Unlock for</span> $5
               </button>
             )}
           </div>
@@ -235,8 +245,8 @@ export default function BoardEditorPage() {
           />
         ) : (
           <>
-            {/* Action bar */}
-            <div className="max-w-[1400px] mx-auto w-full px-6 pt-5 pb-4">
+            {/* Action bar — desktop: top of content; mobile: fixed bottom bar */}
+            <div className="max-w-[1400px] mx-auto w-full px-3 md:px-6 pt-3 md:pt-5 pb-3 md:pb-4">
               <BoardActionBar
                 ref={actionBarRef}
                 onFilesSelected={handleFilesSelected}
@@ -253,12 +263,12 @@ export default function BoardEditorPage() {
 
             {/* Cards */}
             {cards.length > 0 ? (
-              <div className="flex-1 max-w-[1400px] w-full mx-auto px-6 pb-6">
+              <div className="flex-1 max-w-[1400px] w-full mx-auto px-3 md:px-6 pb-28 md:pb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                     Your cards
                   </h2>
-                  <span className="text-[11px] font-mono text-muted-foreground">
+                  <span className="text-[11px] font-mono text-muted-foreground hidden md:block">
                     Drag to reorder
                   </span>
                 </div>
@@ -306,6 +316,8 @@ export default function BoardEditorPage() {
         trigger={unlockTrigger}
         open={unlockPromptOpen}
         onOpenChange={setUnlockPromptOpen}
+        currentCardCount={cards.length}
+        maxCards={cardLimit}
       />
 
       {CardStreamSubscriptions}
