@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Trash2, Edit2, GripVertical, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useRef } from 'react';
+import { GripVertical, AlertTriangle, Plus, Unlock, Check } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,16 +57,20 @@ interface BoardCardGridProps {
   onDeleteCard: (id: string) => void;
   onUpdateLabel: (id: string, label: string) => void;
   onReorderCards: (startIndex: number, endIndex: number) => void;
+  onAddMore?: () => void;
+  isLocked?: boolean;
+  atCardLimit?: boolean;
+  maxCards?: number;
+  onUnlockRequired?: () => void;
 }
 
 interface SortableCardProps {
   card: DisplayCard;
-  onDelete: () => void;
-  onEdit: () => void;
+  onCardClick: () => void;
   isDragging?: boolean;
 }
 
-function SortableCard({ card, onDelete, onEdit, isDragging }: SortableCardProps) {
+function SortableCard({ card, onCardClick, isDragging }: SortableCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: card.clientKey,
     disabled: card.isProcessing,
@@ -92,27 +95,18 @@ function SortableCard({ card, onDelete, onEdit, isDragging }: SortableCardProps)
         scale: { duration: 0.2 },
       }}
       className={`group relative bg-[#f5f0e1] overflow-hidden shadow-md hover:shadow-lg border-2 border-black/80 ${
-        card.isProcessing ? 'cursor-wait' : 'cursor-grab active:cursor-grabbing'
+        card.isProcessing ? 'cursor-wait' : 'cursor-pointer active:cursor-grabbing'
       } ${isDragging ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+      onClick={onCardClick}
       {...attributes}
       {...listeners}
     >
-      <CardContent card={card} onDelete={onDelete} onEdit={onEdit} />
+      <CardContent card={card} />
     </motion.div>
   );
 }
 
-function CardContent({
-  card,
-  onDelete,
-  onEdit,
-  isOverlay = false,
-}: {
-  card: DisplayCard;
-  onDelete?: () => void;
-  onEdit?: () => void;
-  isOverlay?: boolean;
-}) {
+function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay?: boolean }) {
   return (
     <>
       {/* Card number overlay */}
@@ -165,43 +159,11 @@ function CardContent({
       {/* Label */}
       <div className="p-3 bg-[#f5f0e1]">
         {card.isProcessing ? (
-          <div className="h-5 mb-2 bg-muted-foreground/15 rounded animate-pulse" />
+          <div className="h-5 bg-muted-foreground/15 rounded animate-pulse" />
         ) : (
-          <p className="text-sm font-semibold text-center text-foreground line-clamp-2 mb-2 uppercase tracking-wide">
+          <p className="text-sm font-semibold text-center text-foreground line-clamp-2 uppercase tracking-wide">
             {card.label || 'No label'}
           </p>
-        )}
-
-        {/* Action buttons - hidden while processing; reserve height so the
-            card doesn't jump when generation finishes */}
-        {!isOverlay && card.isProcessing && <div className="h-8" />}
-        {!isOverlay && !card.isProcessing && onDelete && onEdit && (
-          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 h-8 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-            >
-              <Edit2 className="w-3 h-3 mr-1" />
-              Edit
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 h-8 text-xs text-destructive border-destructive/30 hover:bg-destructive hover:text-white hover:border-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              <Trash2 className="w-3 h-3 mr-1" />
-              Delete
-            </Button>
-          </div>
         )}
       </div>
     </>
@@ -224,6 +186,11 @@ export function BoardCardGrid({
   onDeleteCard,
   onUpdateLabel,
   onReorderCards,
+  onAddMore,
+  isLocked = false,
+  atCardLimit = false,
+  maxCards = 54,
+  onUnlockRequired,
 }: BoardCardGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingCard, setEditingCard] = useState<DisplayCard | null>(null);
@@ -232,6 +199,13 @@ export function BoardCardGrid({
   const [liveCards, setLiveCards] = useState<DisplayCard[]>(cards);
 
   const deletingCard = deletingCardId ? cards.find((c) => c.id === deletingCardId) : null;
+  const justDragged = useRef(false);
+
+  function handleCardClick(card: DisplayCard) {
+    if (justDragged.current) return;
+    if (card.isProcessing) return;
+    setEditingCard(card);
+  }
 
   function handleDeleteCard() {
     if (!deletingCardId) return;
@@ -298,12 +272,20 @@ export function BoardCardGrid({
       onReorderCards(oldIndex, newIndex);
     }
 
+    justDragged.current = true;
     setActiveId(null);
+    setTimeout(() => {
+      justDragged.current = false;
+    }, 0);
   };
 
   const handleDragCancel = () => {
+    justDragged.current = true;
     setActiveId(null);
-    setLiveCards(cards); // Reset to original order
+    setLiveCards(cards);
+    setTimeout(() => {
+      justDragged.current = false;
+    }, 0);
   };
 
   if (cards.length === 0) {
@@ -327,18 +309,91 @@ export function BoardCardGrid({
           items={displayCards.map((c) => c.clientKey)}
           strategy={rectSortingStrategy}
         >
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
             <AnimatePresence>
               {displayCards.map((card) => (
                 <SortableCard
                   key={card.clientKey}
                   card={card}
-                  onDelete={() => setDeletingCardId(card.id)}
-                  onEdit={() => setEditingCard(card)}
+                  onCardClick={() => handleCardClick(card)}
                   isDragging={activeId === card.clientKey}
                 />
               ))}
             </AnimatePresence>
+
+            {/* Inline unlock tile (Treatment C) when locked at card limit */}
+            {isLocked && atCardLimit && onUnlockRequired ? (
+              <div
+                className="col-span-2 sm:col-span-3 md:col-span-3 lg:col-span-4 xl:col-span-5 row-span-2 rounded-sm border-2 border-dashed border-primary/40 p-5 flex items-center gap-5"
+                style={{
+                  background: 'linear-gradient(135deg, #faf5e6 0%, #f2e6c8 100%)',
+                }}
+              >
+                <div className="shrink-0 relative">
+                  <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg">
+                    <Unlock className="w-6 h-6" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-secondary text-foreground flex items-center justify-center text-[10px] font-bold shadow">
+                    $5
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-primary mb-0.5">
+                    You&apos;ve reached the free limit
+                  </div>
+                  <div className="font-bold text-[14px] leading-tight">
+                    Keep building &mdash;{' '}
+                    <span className="font-caveat text-xl text-primary">
+                      {maxCards - cards.length} more cards
+                    </span>{' '}
+                    await
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-foreground/70">
+                    <span className="flex items-center gap-1">
+                      <Check className="w-3 h-3 text-emerald-600" />
+                      Up to 54 cards
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Check className="w-3 h-3 text-emerald-600" />
+                      Unlimited exports
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Check className="w-3 h-3 text-emerald-600" />
+                      No watermarks
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={onUnlockRequired}
+                  className="px-3.5 py-2 rounded-lg bg-primary text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm whitespace-nowrap hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <Unlock className="w-3.5 h-3.5" />
+                  Unlock
+                </button>
+              </div>
+            ) : onAddMore ? (
+              /* Add more tile - matches card dimensions */
+              <button
+                onClick={onAddMore}
+                className="rounded-sm flex flex-col text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                style={{ border: '1.5px dashed rgba(0,0,0,0.2)' }}
+              >
+                <div className="aspect-[2/3] flex flex-col items-center justify-center gap-1.5">
+                  <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">
+                    Add more
+                  </span>
+                </div>
+                <div className="p-3">
+                  {/* Invisible spacer to match card label height */}
+                  <p className="text-sm font-semibold text-center uppercase tracking-wide opacity-0 select-none">
+                    &nbsp;
+                  </p>
+                </div>
+              </button>
+            ) : null}
           </div>
         </SortableContext>
 
@@ -356,6 +411,10 @@ export function BoardCardGrid({
           originalImage={editingCard.originalImage}
           onSave={(newLabel) => {
             onUpdateLabel(editingCard.id, newLabel);
+            setEditingCard(null);
+          }}
+          onDelete={() => {
+            setDeletingCardId(editingCard.id);
             setEditingCard(null);
           }}
           onClose={() => setEditingCard(null)}

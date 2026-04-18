@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotteriaCard } from '@/lib/generate-boards';
 
@@ -9,10 +9,17 @@ interface CardEditModalProps {
   card: LotteriaCard;
   originalImage?: string;
   onSave: (newLabel: string) => void;
+  onDelete?: () => void;
   onClose: () => void;
 }
 
-export function CardEditModal({ card, originalImage, onSave, onClose }: CardEditModalProps) {
+export function CardEditModal({
+  card,
+  originalImage,
+  onSave,
+  onDelete,
+  onClose,
+}: CardEditModalProps) {
   const [label, setLabel] = useState(card.label);
 
   // Handle Escape key to close modal
@@ -87,12 +94,24 @@ export function CardEditModal({ card, originalImage, onSave, onClose }: CardEdit
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 border-t shrink-0">
-          <Button variant="outline" className="flex-1 bg-transparent" onClick={onClose}>
+        <div className="flex items-center gap-3 p-6 border-t shrink-0">
+          {onDelete && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive border-destructive/30 hover:bg-destructive hover:text-white hover:border-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
+              onClick={onDelete}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              Delete
+            </Button>
+          )}
+          <div className="flex-1" />
+          <Button variant="outline" className="bg-transparent" onClick={onClose}>
             Cancel
           </Button>
           <Button
-            className="flex-1 bg-primary hover:bg-primary/90"
+            className="bg-primary hover:bg-primary/90"
             onClick={handleSave}
             disabled={!label.trim()}
           >

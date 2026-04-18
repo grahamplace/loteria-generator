@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Lock, Unlock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Lock, Unlock, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBoard } from '@/hooks/use-boards';
 import { useBoardCards } from '@/hooks/use-board-cards';
-import { BoardUploadSection } from '@/components/board-upload-section';
+import { BoardActionBar, BoardActionBarRef } from '@/components/board-action-bar';
 import { BoardCardGrid } from '@/components/board-card-grid';
-import { BoardExportSection } from '@/components/board-export-section';
+import { BoardWelcome } from '@/components/board-welcome';
 import { UnlockPrompt } from '@/components/unlock-prompt';
 import { toast } from 'sonner';
 
@@ -20,6 +20,7 @@ export default function BoardEditorPage() {
   const boardId = params.boardId as string;
   const router = useRouter();
   const searchParams = useSearchParams();
+  const actionBarRef = useRef<BoardActionBarRef>(null);
 
   const { board, isLoading: boardLoading, updateBoard, refreshBoard } = useBoard(boardId);
   const {
@@ -48,7 +49,6 @@ export default function BoardEditorPage() {
         description: 'You now have full access to this board.',
       });
       refreshBoard();
-      // Clear the query param
       router.replace(`/boards/${boardId}`);
     } else if (payment === 'cancelled') {
       toast.info('Payment cancelled');
@@ -89,9 +89,15 @@ export default function BoardEditorPage() {
     setUnlockPromptOpen(true);
   }
 
+  function handleCardLimitReached() {
+    setUnlockTrigger('card_limit');
+    setUnlockPromptOpen(true);
+  }
+
   const isLoading = boardLoading || cardsLoading;
   const processedCards = cards.filter((c) => c.status === 'completed');
   const processingCards = cards.filter((c) => c.status === 'processing' || c.isProcessing);
+  const atCardLimit = !board?.isUnlocked && cards.length >= cardLimit;
 
   // Convert BoardCard to format expected by components
   const displayCards = cards.map((card) => ({
@@ -99,7 +105,6 @@ export default function BoardEditorPage() {
     clientKey: card.clientKey,
     number: card.number,
     label: card.label,
-    // Use local images for immediate display, fall back to URL-based proxy
     illustration:
       card.localIllustration ||
       card.localOriginalImage ||
@@ -115,18 +120,23 @@ export default function BoardEditorPage() {
     error: card.status === 'error' ? card.errorMessage || 'Error processing card' : undefined,
   }));
 
+  // Show welcome state for new locked boards with no cards
+  const showWelcome = !isLoading && board && cards.length === 0 && !board.isUnlocked;
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
-        <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-          <div className="container mx-auto px-4 py-4">
-            <Skeleton className="h-8 w-48" />
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-black/5 bg-white/70 backdrop-blur-sm sticky top-0 z-30">
+          <div className="max-w-[1400px] mx-auto px-6 py-3">
+            <Skeleton className="h-6 w-48" />
           </div>
         </header>
-        <main className="container mx-auto px-4 py-8">
-          <Skeleton className="h-48 w-full mb-8" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
+        <div className="max-w-[1400px] mx-auto px-6 pt-5 pb-4">
+          <Skeleton className="h-20 w-full rounded-lg" />
+        </div>
+        <main className="max-w-[1400px] mx-auto px-6 pb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
               <Skeleton key={i} className="aspect-[2/3]" />
             ))}
           </div>
@@ -149,144 +159,143 @@ export default function BoardEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
+      <header className="border-b border-black/5 bg-white/70 backdrop-blur-sm sticky top-0 z-30">
+        <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              aria-label="Back to dashboard"
+              className="w-8 h-8 rounded-md hover:bg-black/5 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
             </Link>
-
-            {isEditingName ? (
-              <Input
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                onBlur={handleSaveName}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveName();
-                  if (e.key === 'Escape') setIsEditingName(false);
-                }}
-                className="max-w-[200px]"
-                autoFocus
-              />
-            ) : (
-              <button
-                onClick={() => setIsEditingName(true)}
-                className="text-xl font-bold hover:text-primary transition-colors flex items-center gap-2"
-              >
-                {board.name}
-                {board.isUnlocked ? (
-                  <Unlock className="h-4 w-4 text-green-600" />
-                ) : (
-                  <Lock className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {isEditingName ? (
+                <Input
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onBlur={handleSaveName}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') setIsEditingName(false);
+                  }}
+                  className="max-w-[200px] h-8"
+                  autoFocus
+                />
+              ) : (
+                <button
+                  onClick={() => setIsEditingName(true)}
+                  aria-label={`Edit board name: ${board.name}`}
+                  className="font-bold text-[15px] hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
+                >
+                  {board.name}
+                </button>
+              )}
+              {board.isUnlocked ? (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <Unlock className="w-2.5 h-2.5" />
+                  Unlocked
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
+                  <Lock className="w-2.5 h-2.5" />
+                  Free preview
+                </span>
+              )}
+            </div>
           </div>
-
           <div className="flex items-center gap-2">
             {!board.isUnlocked && (
-              <Button
-                variant="outline"
+              <button
                 onClick={() => {
                   setUnlockTrigger('card_limit');
                   setUnlockPromptOpen(true);
                 }}
-                className="border-orange-300 text-orange-600 hover:bg-orange-50"
+                className="px-3 py-1.5 rounded-md text-xs font-semibold bg-primary text-white hover:bg-primary/90 flex items-center gap-1.5 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
-                <Unlock className="h-4 w-4 mr-2" />
+                <Unlock className="w-3.5 h-3.5" />
                 Unlock for $5
-              </Button>
+              </button>
             )}
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Payment Success Banner */}
-        {board.isUnlocked && board.unlockedAt && (
-          <div className="mx-auto max-w-4xl bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <div>
-              <p className="font-medium text-green-800">Board Unlocked</p>
-              <p className="text-sm text-green-600">
-                You have full access to all features for this board.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Step 1: Upload */}
-        <section className="mx-auto max-w-4xl">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">
-              1
-            </span>
-            Upload Your Photos
-          </h2>
-          <BoardUploadSection
-            onFilesSelected={handleFilesSelected}
-            cardCount={cards.length}
-            maxCards={cardLimit}
-            isUnlocked={board.isUnlocked}
+      <main className="flex-1 flex flex-col">
+        {showWelcome ? (
+          /* Welcome state for new locked boards */
+          <BoardWelcome
+            onStartFreePreview={() => actionBarRef.current?.triggerFileSelect()}
+            onUnlock={() => {
+              setUnlockTrigger('card_limit');
+              setUnlockPromptOpen(true);
+            }}
           />
-        </section>
-
-        {/* Step 2: Manage Cards */}
-        {cards.length > 0 && (
-          <section>
-            <h2 className="mx-auto max-w-4xl text-xl font-bold mb-4 flex items-center gap-2">
-              <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">
-                2
-              </span>
-              Manage Your Cards
-            </h2>
-
-            {/* Stats */}
-            <div className="flex justify-center gap-4 mb-6">
-              <div className="bg-white rounded-lg px-5 py-3 shadow-sm border flex items-baseline gap-2">
-                <p className="text-lg font-bold tabular-nums">{cards.length}</p>
-                <p className="text-xs text-muted-foreground">total</p>
-              </div>
-              <div className="bg-white rounded-lg px-5 py-3 shadow-sm border flex items-baseline gap-2">
-                <p className="text-lg font-bold tabular-nums">{processedCards.length}</p>
-                <p className="text-xs text-muted-foreground">ready</p>
-              </div>
-              <div className="bg-white rounded-lg px-5 py-3 shadow-sm border flex items-baseline gap-2">
-                <p className="text-lg font-bold tabular-nums">{processingCards.length}</p>
-                <p className="text-xs text-muted-foreground">processing</p>
-              </div>
+        ) : (
+          <>
+            {/* Action bar */}
+            <div className="max-w-[1400px] mx-auto w-full px-6 pt-5 pb-4">
+              <BoardActionBar
+                ref={actionBarRef}
+                onFilesSelected={handleFilesSelected}
+                cardCount={cards.length}
+                maxCards={cardLimit}
+                processedCount={processedCards.length}
+                processingCount={processingCards.length}
+                isUnlocked={board.isUnlocked}
+                cards={displayCards}
+                boardName={board.name}
+                onUnlockRequired={handleExportLimitReached}
+              />
             </div>
 
-            <BoardCardGrid
-              cards={displayCards}
-              onDeleteCard={deleteCard}
-              onUpdateLabel={updateCardLabel}
-              onReorderCards={reorderCards}
-            />
-          </section>
-        )}
-
-        {/* Step 3: Export */}
-        {cards.length > 0 && (
-          <section className="mx-auto max-w-4xl">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">
-                3
-              </span>
-              Export & Generate Boards
-            </h2>
-            <BoardExportSection
-              cards={displayCards}
-              boardName={board.name}
-              isUnlocked={board.isUnlocked}
-              onUnlockRequired={handleExportLimitReached}
-            />
-          </section>
+            {/* Cards */}
+            {cards.length > 0 ? (
+              <div className="flex-1 max-w-[1400px] w-full mx-auto px-6 pb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Your cards
+                  </h2>
+                  <span className="text-[11px] font-mono text-muted-foreground">
+                    Drag to reorder
+                  </span>
+                </div>
+                <BoardCardGrid
+                  cards={displayCards}
+                  onDeleteCard={deleteCard}
+                  onUpdateLabel={updateCardLabel}
+                  onReorderCards={reorderCards}
+                  onAddMore={() => actionBarRef.current?.triggerFileSelect()}
+                  isLocked={!board.isUnlocked}
+                  atCardLimit={atCardLimit}
+                  maxCards={cardLimit}
+                  onUnlockRequired={handleCardLimitReached}
+                />
+              </div>
+            ) : (
+              /* Empty state for unlocked boards with no cards */
+              <div className="flex-1 flex items-center justify-center px-6 py-10">
+                <div className="text-center max-w-sm">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <Upload className="w-8 h-8 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-bold mb-2">Upload your first photos</h2>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Drag photos onto the upload area above, or click Select to get started.
+                  </p>
+                  <button
+                    onClick={() => actionBarRef.current?.triggerFileSelect()}
+                    className="px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 mx-auto shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Select photos
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </main>
 
