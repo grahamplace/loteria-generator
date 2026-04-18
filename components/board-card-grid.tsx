@@ -94,7 +94,7 @@ function SortableCard({ card, onCardClick, isDragging }: SortableCardProps) {
         opacity: { duration: 0.2 },
         scale: { duration: 0.2 },
       }}
-      className={`group relative bg-[#f5f0e1] overflow-hidden shadow-md hover:shadow-lg border-2 border-black/80 ${
+      className={`group relative bg-[#f5f0e1] overflow-hidden shadow-md hover:shadow-lg border-2 border-black/80 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
         card.isProcessing ? 'cursor-wait' : 'cursor-pointer active:cursor-grabbing'
       } ${isDragging ? 'ring-2 ring-primary ring-offset-2' : ''}`}
       onClick={onCardClick}
