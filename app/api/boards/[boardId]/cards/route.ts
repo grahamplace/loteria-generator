@@ -13,6 +13,7 @@ import {
 import { createCardSchema, updateCardSchema } from '@/lib/validations';
 import { inngest } from '@/lib/inngest/client';
 import { cardGenerateRequested } from '@/lib/inngest/events';
+import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 
 // Constants for limits
 const MAX_CARDS_FREE = 16;
@@ -207,6 +208,8 @@ export async function POST(
       }
     }
 
+    await invalidateBoardPreview(boardId, session.user.id);
+
     return NextResponse.json({ card: newCard }, { status: 201 });
   } catch (error) {
     console.error('Error creating card:', error);
@@ -291,6 +294,8 @@ export async function PATCH(
       .where(eq(cards.id, cardId))
       .returning();
 
+    await invalidateBoardPreview(boardId, session.user.id);
+
     return NextResponse.json({ card: updatedCard });
   } catch (error) {
     console.error('Error updating card:', error);
@@ -356,6 +361,8 @@ export async function DELETE(
         updatedAt: new Date(),
       })
       .where(and(eq(cards.boardId, boardId), gt(cards.number, deletedCardNumber)));
+
+    await invalidateBoardPreview(boardId, session.user.id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

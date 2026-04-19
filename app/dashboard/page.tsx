@@ -153,7 +153,6 @@ export default function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {boards.map((board) => {
-              const previewSlots = Array.from({ length: 16 }, (_, i) => board.previewCards[i]);
               return (
                 <Card
                   key={board.id}
@@ -161,30 +160,21 @@ export default function DashboardPage() {
                   onClick={() => router.push(`/boards/${board.id}`)}
                 >
                   <div className="flex items-stretch gap-2">
-                    <div
-                      className="grid grid-cols-4 gap-0.5 shrink-0 w-44 px-5 py-1 self-center"
-                      aria-hidden="true"
-                    >
-                      {previewSlots.map((card, i) =>
-                        card ? (
-                          <div
-                            key={card.id}
-                            className="aspect-[2/3] bg-muted overflow-hidden rounded-[1px]"
-                          >
-                            <img
-                              src={`/api/images/${board.id}/${card.id}/illustration`}
-                              alt=""
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                              draggable={false}
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            key={`empty-${i}`}
-                            className="aspect-[2/3] bg-muted/40 rounded-[1px]"
-                          />
-                        )
+                    <div className="shrink-0 w-44 px-5 py-4 self-center" aria-hidden="true">
+                      {board.completedCardCount > 0 ? (
+                        <img
+                          src={`/api/boards/${board.id}/preview?v=${board.updatedAt}`}
+                          alt=""
+                          className="w-full rounded-sm"
+                          loading="lazy"
+                          draggable={false}
+                        />
+                      ) : (
+                        <div className="grid grid-cols-4 gap-0.5">
+                          {Array.from({ length: 16 }, (_, i) => (
+                            <div key={i} className="aspect-[2/3] bg-muted/40 rounded-[1px]" />
+                          ))}
+                        </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0 flex items-start justify-between gap-2 py-6 pr-6">

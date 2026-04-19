@@ -6,6 +6,7 @@ import { inngest } from '../client';
 import { illustrationRegenerateRequested } from '../events';
 import { cardChannel } from '../channels';
 import { ILLUSTRATION_PROMPT, OPENAI_IMAGE_MIME_TO_EXT } from './generate-card-artwork';
+import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -74,6 +75,10 @@ export const regenerateIllustration = inngest.createFunction(
           updatedAt: new Date(),
         })
         .where(eq(cards.id, cardId));
+    });
+
+    await step.run('invalidate-preview', async () => {
+      await invalidateBoardPreview(boardId, userId);
     });
 
     await step.realtime.publish('publish-illustration', ch.illustration, { illustrationUrl });

@@ -87,6 +87,7 @@ export const boards = pgTable('boards', {
   stripePaymentId: text('stripe_payment_id'),
   unlockedAt: timestamp('unlocked_at'),
   imageGenerationsUsed: integer('image_generations_used').notNull().default(0),
+  previewUrl: text('preview_url'),
   styleOptions: json('style_options').$type<BoardStyleOptions>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

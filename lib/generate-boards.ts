@@ -397,10 +397,18 @@ async function renderDeckPageToCanvas(
   const cardWidth = 750;
   const cardHeight = 1050;
 
+  const headerHeight = 120;
   const gridWidth = cardWidth * cols + cardSpacing * (cols - 1);
   const gridHeight = cardHeight * rows + cardSpacing * (rows - 1);
   const offsetX = (width - gridWidth) / 2;
-  const offsetY = (height - gridHeight) / 2;
+  const offsetY = headerHeight + (height - headerHeight - gridHeight) / 2;
+
+  // Draw header label
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '500 48px Arial, Helvetica, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('✂  Cut along lines to make individual cards', width / 2, headerHeight / 2);
 
   await loadGoogleFont(
     'Caveat',
@@ -420,6 +428,31 @@ async function renderDeckPageToCanvas(
 
     drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor });
   }
+
+  // Draw dashed cut lines between cards
+  ctx.strokeStyle = '#d1d5db';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([16, 12]);
+
+  // Vertical cut lines between columns
+  for (let col = 1; col < cols; col++) {
+    const lineX = offsetX + col * (cardWidth + cardSpacing) - cardSpacing / 2;
+    ctx.beginPath();
+    ctx.moveTo(lineX, offsetY - 10);
+    ctx.lineTo(lineX, offsetY + gridHeight + 10);
+    ctx.stroke();
+  }
+
+  // Horizontal cut lines between rows
+  for (let row = 1; row < rows; row++) {
+    const lineY = offsetY + row * (cardHeight + cardSpacing) - cardSpacing / 2;
+    ctx.beginPath();
+    ctx.moveTo(offsetX - 10, lineY);
+    ctx.lineTo(offsetX + gridWidth + 10, lineY);
+    ctx.stroke();
+  }
+
+  ctx.setLineDash([]);
 
   return canvas;
 }

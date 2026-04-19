@@ -13,6 +13,7 @@ export const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
 import { inngest } from '../client';
 import { cardGenerateRequested } from '../events';
 import { cardChannel } from '../channels';
+import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -178,6 +179,10 @@ export const generateCardArtwork = inngest.createFunction(
           updatedAt: new Date(),
         })
         .where(eq(boards.id, boardId));
+    });
+
+    await step.run('invalidate-preview', async () => {
+      await invalidateBoardPreview(boardId, userId);
     });
 
     await step.realtime.publish('completed', ch.completed, { label, illustrationUrl });

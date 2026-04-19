@@ -124,6 +124,27 @@ export async function deleteBoardImages(userId: string, boardId: string): Promis
 }
 
 /**
+ * Upload a board preview composite image
+ */
+export async function uploadBoardPreview(
+  userId: string,
+  boardId: string,
+  file: Buffer
+): Promise<string> {
+  const path = `users/${userId}/boards/${boardId}/preview.png`;
+  return uploadImage(file, path, 'image/png');
+}
+
+/**
+ * Delete the cached board preview image
+ */
+export async function deleteBoardPreview(userId: string, boardId: string): Promise<void> {
+  const prefix = `users/${userId}/boards/${boardId}/preview.png`;
+  const blobs = await listAllBlobs(prefix);
+  await Promise.all(blobs.map((blob) => del(blob.url)));
+}
+
+/**
  * Convert base64 data URL to Buffer
  */
 export function base64ToBuffer(base64DataUrl: string): Buffer {
