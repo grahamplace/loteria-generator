@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotteriaCard } from '@/lib/generate-boards';
@@ -60,8 +61,8 @@ export function CardEditModal({
             {originalImage && (
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground text-center">Original</p>
-                <div className="w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
-                  <img src={originalImage} alt="Original" className="w-full h-full object-cover" />
+                <div className="relative w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                  <Image src={originalImage} alt="Original" fill className="object-cover" />
                 </div>
               </div>
             )}
@@ -69,11 +70,12 @@ export function CardEditModal({
               {originalImage && (
                 <p className="text-xs text-muted-foreground text-center">Illustration</p>
               )}
-              <div className="w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
-                <img
+              <div className="relative w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                <Image
                   src={card.illustration || '/placeholder.svg'}
                   alt={card.label}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             </div>

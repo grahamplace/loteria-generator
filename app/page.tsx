@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Check, Sparkles, Upload, Grid3x3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { auth } from '@/lib/auth';
@@ -73,7 +74,7 @@ export default async function LandingPage() {
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <Link href="/" className="text-xl font-bold text-primary flex items-center gap-2">
-              <img src="/loteria-star.png" alt="" className="h-7 w-7" />
+              <Image src="/loteria-star.png" alt="" width={28} height={28} className="h-7 w-7" />
               Lotería Generator
             </Link>
             <div className="flex items-center gap-4">

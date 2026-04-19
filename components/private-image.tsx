@@ -66,7 +66,7 @@ export function PrivateImage({
           setLoading(false);
           setError(true);
         }}
-        unoptimized // Bypass Next.js image optimization for proxied images
+        quality={50}
       />
     </div>
   );

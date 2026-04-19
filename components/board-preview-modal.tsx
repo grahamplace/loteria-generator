@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface BoardPreviewModalProps {
@@ -23,7 +24,14 @@ export function BoardPreviewModal({ open, onOpenChange, imageUrl }: BoardPreview
           <DialogTitle>Board Preview</DialogTitle>
         </DialogHeader>
         {imageUrl && (
-          <img src={imageUrl} alt="Lotería board preview" className="w-full h-auto rounded-md" />
+          <Image
+            src={imageUrl}
+            alt="Lotería board preview"
+            width={2550}
+            height={3300}
+            className="w-full h-auto rounded-md"
+            unoptimized
+          />
         )}
       </DialogContent>
     </Dialog>

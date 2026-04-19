@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { db, cards, boards, user } from '@/db';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
@@ -105,11 +106,12 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
           <CardContent>
             {card.originalImageUrl ? (
               <div className="space-y-2">
-                <div className="overflow-hidden rounded border border-border bg-muted">
-                  <img
+                <div className="relative aspect-[2/3] overflow-hidden rounded border border-border bg-muted">
+                  <Image
                     src={`/api/admin/images/${card.id}/original`}
                     alt="Original upload"
-                    className="w-full"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <p className="break-all font-mono text-[10px] text-muted-foreground">
@@ -132,11 +134,12 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
           <CardContent>
             {card.illustrationUrl ? (
               <div className="space-y-2">
-                <div className="overflow-hidden rounded border border-border bg-muted">
-                  <img
+                <div className="relative aspect-[2/3] overflow-hidden rounded border border-border bg-muted">
+                  <Image
                     src={`/api/admin/images/${card.id}/illustration`}
                     alt="AI illustration"
-                    className="w-full"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <p className="break-all font-mono text-[10px] text-muted-foreground">

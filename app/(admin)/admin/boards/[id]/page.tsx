@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { db, boards, cards, user } from '@/db';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
@@ -124,10 +125,11 @@ export default async function AdminBoardDetailPage({
               >
                 <div className="relative mb-2 aspect-[2/3] overflow-hidden rounded bg-muted">
                   {card.illustrationUrl || card.originalImageUrl ? (
-                    <img
+                    <Image
                       src={`/api/admin/images/${card.id}/${card.illustrationUrl ? 'illustration' : 'original'}`}
                       alt={card.label || `Card ${card.number}`}
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-xs text-muted-foreground">

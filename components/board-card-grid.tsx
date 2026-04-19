@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { GripVertical, AlertTriangle, Plus, Unlock, Check } from 'lucide-react';
 import {
   AlertDialog,
@@ -126,7 +127,7 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
       )}
 
       {/* Image - portrait aspect ratio matching traditional Lotería cards (2:3) */}
-      <div className="w-full aspect-[2/3] bg-muted overflow-hidden">
+      <div className="relative w-full aspect-[2/3] bg-muted overflow-hidden">
         {card.isProcessing ? (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
             <div className="text-center">
@@ -143,10 +144,13 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
             </p>
           </div>
         ) : card.illustration ? (
-          <img
+          <Image
             src={card.illustration}
             alt={card.label}
-            className="w-full h-full object-cover pointer-events-none"
+            fill
+            sizes="(max-width: 768px) 30vw, 180px"
+            quality={30}
+            className="object-cover pointer-events-none"
             draggable={false}
           />
         ) : (

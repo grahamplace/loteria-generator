@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { db, user, boards, account } from '@/db';
 import { eq, desc, sql } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
@@ -78,7 +79,13 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
         <CardContent className="space-y-2 text-sm">
           <div className="flex items-center gap-3">
             {userData.image && (
-              <img src={userData.image} alt="" className="h-10 w-10 rounded-full" />
+              <Image
+                src={userData.image}
+                alt=""
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-full"
+              />
             )}
             <div>
               <p className="font-medium">{userData.name}</p>

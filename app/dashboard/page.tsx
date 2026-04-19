@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useBoards } from '@/hooks/use-boards';
 import { useSession } from '@/hooks/use-session';
 import { signOut } from '@/lib/auth-client';
@@ -65,16 +66,18 @@ export default function DashboardPage() {
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold flex items-center gap-2">
-            <img src="/loteria-star.png" alt="" className="h-7 w-7" />
+            <Image src="/loteria-star.png" alt="" width={28} height={28} className="h-7 w-7" />
             Lotería Generator
           </h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 {user?.image ? (
-                  <img
+                  <Image
                     src={user.image}
                     alt={user.name || 'User avatar'}
+                    width={32}
+                    height={32}
                     className="h-8 w-8 rounded-full object-cover"
                     referrerPolicy="no-referrer"
                   />
@@ -162,11 +165,13 @@ export default function DashboardPage() {
                   <div className="flex items-stretch gap-2">
                     <div className="shrink-0 w-44 px-5 py-4 self-center" aria-hidden="true">
                       {board.completedCardCount > 0 ? (
-                        <img
+                        <Image
                           src={`/api/boards/${board.id}/preview?v=${board.updatedAt}`}
                           alt=""
+                          width={492}
+                          height={732}
+                          quality={50}
                           className="w-full rounded-sm"
-                          loading="lazy"
                           draggable={false}
                         />
                       ) : (
