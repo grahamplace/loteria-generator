@@ -145,7 +145,7 @@ export async function GET(
 
     return new NextResponse(new Uint8Array(compositeBuffer), {
       headers: {
-        'Content-Type': 'image/png',
+        'Content-Type': 'image/jpeg',
         'Cache-Control': 'private, max-age=3600',
         'X-Content-Type-Options': 'nosniff',
       },
