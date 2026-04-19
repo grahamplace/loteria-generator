@@ -20,7 +20,7 @@ export async function GET() {
 
     const userBoards = await db.query.boards.findMany({
       where: eq(boards.userId, session.user.id),
-      orderBy: [desc(boards.updatedAt)],
+      orderBy: [desc(boards.createdAt)],
       with: {
         cards: {
           columns: {
