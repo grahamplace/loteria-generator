@@ -73,7 +73,7 @@ export interface BoardStyleOptions {
 }
 
 // Generation limits
-export const IMAGE_GENERATION_LIMIT_FREE = 20;
+export const IMAGE_GENERATION_LIMIT_FREE = 4;
 export const IMAGE_GENERATION_LIMIT_PAID = 100;
 
 // Boards table

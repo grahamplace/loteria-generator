@@ -193,7 +193,7 @@ export default function DashboardPage() {
                         <p className="text-xs text-muted-foreground pt-2">
                           {board.isUnlocked
                             ? 'Full access - up to 54 cards'
-                            : 'Free preview - up to 16 cards'}
+                            : 'Free preview - up to 4 cards'}
                         </p>
                       </div>
                       <DropdownMenu>

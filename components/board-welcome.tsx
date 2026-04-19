@@ -66,7 +66,7 @@ export function BoardWelcome({ onStartFreePreview, onUnlock }: BoardWelcomeProps
           </span>
         </h1>
         <p className="text-[13px] md:text-sm text-muted-foreground mt-3 max-w-[280px] md:max-w-md mx-auto">
-          Start free with 16 cards and one export. Unlock for $5 to fill the full 54-card deck.
+          Start free with 4 cards and one export. Unlock for $5 to fill the full 54-card deck.
         </p>
 
         <div className="mt-6 md:mt-8 w-full md:w-auto flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">

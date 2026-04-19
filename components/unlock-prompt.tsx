@@ -110,7 +110,7 @@ export function UnlockPrompt({
   trigger,
   open,
   onOpenChange,
-  currentCardCount = 16,
+  currentCardCount = 4,
   maxCards = 54,
 }: UnlockPromptProps) {
   const [isLoading, setIsLoading] = useState(false);

@@ -38,7 +38,7 @@ const faqs = [
   {
     question: 'How many cards can I create?',
     answer:
-      'With the free preview, you can create up to 16 cards and generate one sample board. By unlocking your board for $5, you get access to 54 cards (a full traditional Lotería deck) and unlimited board generations.',
+      'With the free preview, you can create up to 4 cards and generate one sample board. By unlocking your board for $5, you get access to 54 cards (a full traditional Lotería deck) and unlimited board generations.',
   },
   {
     question: 'What file formats can I export?',
@@ -219,7 +219,7 @@ export default async function LandingPage() {
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-center gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                    <span>Up to 16 custom Lotería cards</span>
+                    <span>Up to 4 custom Lotería cards</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0" />

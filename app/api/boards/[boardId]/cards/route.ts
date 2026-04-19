@@ -16,7 +16,7 @@ import { cardGenerateRequested } from '@/lib/inngest/events';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 
 // Constants for limits
-const MAX_CARDS_FREE = 16;
+const MAX_CARDS_FREE = 4;
 const MAX_CARDS_UNLOCKED = 54;
 
 /**

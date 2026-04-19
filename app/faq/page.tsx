@@ -75,7 +75,7 @@ const faqs = [
       {
         question: 'Is there a free option?',
         answer:
-          'Yes! Our Free Preview lets you create up to 16 cards and generate one sample board at no cost. This lets you try the service before committing to a purchase.',
+          'Yes! Our Free Preview lets you create up to 4 cards and generate one sample board at no cost. This lets you try the service before committing to a purchase.',
       },
       {
         question: 'How much does it cost to unlock a board?',

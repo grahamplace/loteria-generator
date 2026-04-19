@@ -82,7 +82,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const cardLimit = isUnlocked ? 54 : 16;
+  const cardLimit = isUnlocked ? 54 : 4;
 
   const fetchCards = useCallback(async () => {
     if (!boardId) return;

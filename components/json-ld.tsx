@@ -68,7 +68,7 @@ export function SoftwareApplicationJsonLd() {
         price: '0',
         priceCurrency: 'USD',
         name: 'Free Preview',
-        description: 'Create up to 16 cards and 1 board for free',
+        description: 'Create up to 4 cards and 1 board for free',
       },
       {
         '@type': 'Offer',
