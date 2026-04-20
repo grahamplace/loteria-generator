@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { useBoards } from '@/hooks/use-boards';
 import { useSession } from '@/hooks/use-session';
@@ -157,72 +158,70 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {boards.map((board) => {
               return (
-                <Card
-                  key={board.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => router.push(`/boards/${board.id}`)}
-                >
-                  <div className="flex items-stretch gap-2">
-                    <div className="shrink-0 w-44 px-5 py-4 self-center" aria-hidden="true">
-                      {board.completedCardCount > 0 ? (
-                        <Image
-                          src={`/api/boards/${board.id}/preview?v=${board.updatedAt}`}
-                          alt=""
-                          width={492}
-                          height={732}
-                          unoptimized
-                          className="w-full rounded-sm"
-                          draggable={false}
-                        />
-                      ) : (
-                        <div className="grid grid-cols-4 gap-0.5">
-                          {Array.from({ length: 16 }, (_, i) => (
-                            <div key={i} className="aspect-[2/3] bg-muted/40 rounded-[1px]" />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0 flex items-start justify-between gap-2 py-6 pr-6">
-                      <div className="space-y-1 min-w-0">
-                        <div className="flex items-center gap-2 font-semibold">
-                          <span className="truncate">{board.name}</span>
-                          {board.isUnlocked ? (
-                            <Unlock className="h-4 w-4 text-green-600 shrink-0" />
-                          ) : (
-                            <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {board.completedCardCount} of {board.cardCount} cards ready
-                        </p>
-                        <p className="text-xs text-muted-foreground pt-2">
-                          {board.isUnlocked
-                            ? 'Full access - up to 54 cards'
-                            : 'Free preview - up to 4 cards'}
-                        </p>
+                <Link key={board.id} href={`/boards/${board.id}`} prefetch>
+                  <Card className="hover:shadow-md transition-shadow">
+                    <div className="flex items-stretch gap-2">
+                      <div className="shrink-0 w-44 px-5 py-4 self-center" aria-hidden="true">
+                        {board.completedCardCount > 0 ? (
+                          <Image
+                            src={`/api/boards/${board.id}/preview?v=${board.updatedAt}`}
+                            alt=""
+                            width={492}
+                            height={732}
+                            unoptimized
+                            className="w-full rounded-sm"
+                            draggable={false}
+                          />
+                        ) : (
+                          <div className="grid grid-cols-4 gap-0.5">
+                            {Array.from({ length: 16 }, (_, i) => (
+                              <div key={i} className="aspect-[2/3] bg-muted/40 rounded-[1px]" />
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeletingBoardId(board.id);
-                            }}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex-1 min-w-0 flex items-start justify-between gap-2 py-6 pr-6">
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex items-center gap-2 font-semibold">
+                            <span className="truncate">{board.name}</span>
+                            {board.isUnlocked ? (
+                              <Unlock className="h-4 w-4 text-green-600 shrink-0" />
+                            ) : (
+                              <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {board.completedCardCount} of {board.cardCount} cards ready
+                          </p>
+                          <p className="text-xs text-muted-foreground pt-2">
+                            {board.isUnlocked
+                              ? 'Full access - up to 54 cards'
+                              : 'Free preview - up to 4 cards'}
+                          </p>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setDeletingBoardId(board.id);
+                              }}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
-                  </div>
-                </Card>
+                  </Card>
+                </Link>
               );
             })}
           </div>
