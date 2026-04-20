@@ -2,6 +2,7 @@
 const nextConfig = {
   images: {
     formats: ['image/webp'],
+    qualities: [30, 50, 75],
     localPatterns: [
       { pathname: '/api/**' },
       { pathname: '/**' },

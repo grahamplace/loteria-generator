@@ -170,7 +170,7 @@ export default function DashboardPage() {
                           alt=""
                           width={492}
                           height={732}
-                          quality={50}
+                          unoptimized
                           className="w-full rounded-sm"
                           draggable={false}
                         />

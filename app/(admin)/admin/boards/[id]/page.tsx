@@ -129,6 +129,7 @@ export default async function AdminBoardDetailPage({
                       src={`/api/admin/images/${card.id}/${card.illustrationUrl ? 'illustration' : 'original'}`}
                       alt={card.label || `Card ${card.number}`}
                       fill
+                      unoptimized
                       className="object-cover"
                     />
                   ) : (

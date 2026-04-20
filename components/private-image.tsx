@@ -66,7 +66,7 @@ export function PrivateImage({
           setLoading(false);
           setError(true);
         }}
-        quality={50}
+        unoptimized
       />
     </div>
   );

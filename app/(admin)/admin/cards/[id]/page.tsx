@@ -111,6 +111,7 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
                     src={`/api/admin/images/${card.id}/original`}
                     alt="Original upload"
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                 </div>
@@ -139,6 +140,7 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
                     src={`/api/admin/images/${card.id}/illustration`}
                     alt="AI illustration"
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                 </div>

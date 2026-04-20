@@ -149,7 +149,7 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
             alt={card.label}
             fill
             sizes="(max-width: 768px) 30vw, 180px"
-            quality={30}
+            unoptimized
             className="object-cover pointer-events-none"
             draggable={false}
           />
