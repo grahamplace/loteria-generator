@@ -15,7 +15,7 @@ AI-powered Loteria board generator. Upload photos, get traditional Loteria-style
 ## Prerequisites
 
 - Node.js 20.17+
-- npm, pnpm, or yarn
+- pnpm 9+
 - A [Neon](https://neon.tech) database (free tier works)
 - A [Stripe](https://stripe.com) account
 - A [Vercel](https://vercel.com) account (for Blob storage)
@@ -28,7 +28,7 @@ AI-powered Loteria board generator. Upload photos, get traditional Loteria-style
 ```bash
 git clone <repo-url>
 cd loteria-generator-app
-npm install
+pnpm install
 ```
 
 ### 2. Environment Variables
@@ -78,19 +78,19 @@ NEXT_PUBLIC_SKIP_AI_PROCESSING="true"
 Push the schema to your Neon database:
 
 ```bash
-npm run db:push
+pnpm db:push
 ```
 
 To explore your data:
 
 ```bash
-npm run db:studio
+pnpm db:studio
 ```
 
 ### 4. Run Development Server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
@@ -114,7 +114,7 @@ Don't set up webhooks. After a test payment:
 1. The checkout completes but the board won't auto-unlock
 2. Manually unlock in Drizzle Studio:
    ```bash
-   npm run db:studio
+   pnpm db:studio
    ```
 3. Find your board and set `isUnlocked` to `true`
 
@@ -173,37 +173,37 @@ To complete a test payment:
 Run all tests:
 
 ```bash
-npm run test
+pnpm test
 ```
 
 Watch mode:
 
 ```bash
-npm run test:watch
+pnpm test:watch
 ```
 
 Run a single test file:
 
 ```bash
-npx vitest run __tests__/lib/utils.test.ts
+pnpm exec vitest run __tests__/lib/utils.test.ts
 ```
 
 ## Available Commands
 
-| Command               | Description              |
-| --------------------- | ------------------------ |
-| `npm run dev`         | Start development server |
-| `npm run build`       | Production build         |
-| `npm run start`       | Start production server  |
-| `npm run lint`        | Run ESLint               |
-| `npm run lint:fix`    | Fix ESLint issues        |
-| `npm run typecheck`   | TypeScript type checking |
-| `npm run test`        | Run tests                |
-| `npm run test:watch`  | Run tests in watch mode  |
-| `npm run db:push`     | Push schema to database  |
-| `npm run db:studio`   | Open Drizzle Studio      |
-| `npm run db:generate` | Generate migrations      |
-| `npm run db:migrate`  | Run migrations           |
+| Command            | Description              |
+| ------------------ | ------------------------ |
+| `pnpm dev`         | Start development server |
+| `pnpm build`       | Production build         |
+| `pnpm start`       | Start production server  |
+| `pnpm lint`        | Run ESLint               |
+| `pnpm lint:fix`    | Fix ESLint issues        |
+| `pnpm typecheck`   | TypeScript type checking |
+| `pnpm test`        | Run tests                |
+| `pnpm test:watch`  | Run tests in watch mode  |
+| `pnpm db:push`     | Push schema to database  |
+| `pnpm db:studio`   | Open Drizzle Studio      |
+| `pnpm db:generate` | Generate migrations      |
+| `pnpm db:migrate`  | Run migrations           |
 
 ## Project Structure
 

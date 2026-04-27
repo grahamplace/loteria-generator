@@ -2,9 +2,10 @@
   "name": "loteria-generator",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "build": "next build",
-    "dev": "npm run secrets:pull && concurrently --names next,inngest --prefix-colors cyan,magenta \"next dev --port 3006\" \"inngest-cli dev --no-discovery --port 8288 -u http://localhost:3006/api/inngest\"",
+    "dev": "pnpm secrets:pull && concurrently --names next,inngest --prefix-colors cyan,magenta \"next dev --port 3006\" \"inngest-cli dev --no-discovery --port 8288 -u http://localhost:3006/api/inngest\"",
     "dev:next": "next dev --port 3006",
     "dev:inngest": "inngest-cli dev --no-discovery --port 8288 -u http://localhost:3006/api/inngest",
     "start": "next start",
