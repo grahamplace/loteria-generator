@@ -88,14 +88,16 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   console.log(`Board ${boardId} unlocked for user ${userId}`);
 
   const posthog = getPostHogClient();
-  posthog.capture({
-    distinctId: userId,
-    event: 'board_unlocked',
-    properties: {
-      board_id: boardId,
-      stripe_session_id: session.id,
-      amount_total: session.amount_total,
-    },
-  });
-  await posthog.shutdown();
+  if (posthog) {
+    posthog.capture({
+      distinctId: userId,
+      event: 'board_unlocked',
+      properties: {
+        board_id: boardId,
+        stripe_session_id: session.id,
+        amount_total: session.amount_total,
+      },
+    });
+    await posthog.shutdown();
+  }
 }

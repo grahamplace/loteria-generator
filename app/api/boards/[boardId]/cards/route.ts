@@ -198,16 +198,18 @@ export async function POST(
             })
           );
           const posthog = getPostHogClient();
-          posthog.capture({
-            distinctId: session.user.id,
-            event: 'card_upload_started',
-            properties: {
-              board_id: boardId,
-              card_id: newCard.id,
-              board_is_unlocked: board.isUnlocked,
-            },
-          });
-          await posthog.shutdown();
+          if (posthog) {
+            posthog.capture({
+              distinctId: session.user.id,
+              event: 'card_upload_started',
+              properties: {
+                board_id: boardId,
+                card_id: newCard.id,
+                board_is_unlocked: board.isUnlocked,
+              },
+            });
+            await posthog.shutdown();
+          }
         }
       } catch (uploadError) {
         console.error('Error uploading image:', uploadError);

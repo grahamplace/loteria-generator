@@ -53,16 +53,18 @@ export async function POST(request: NextRequest) {
     });
 
     const posthog = getPostHogClient();
-    posthog.capture({
-      distinctId: session.user.id,
-      event: 'checkout_session_created',
-      properties: {
-        board_id: board.id,
-        board_name: board.name,
-        $set: { email: session.user.email, name: session.user.name },
-      },
-    });
-    await posthog.shutdown();
+    if (posthog) {
+      posthog.capture({
+        distinctId: session.user.id,
+        event: 'checkout_session_created',
+        properties: {
+          board_id: board.id,
+          board_name: board.name,
+          $set: { email: session.user.email, name: session.user.name },
+        },
+      });
+      await posthog.shutdown();
+    }
 
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {

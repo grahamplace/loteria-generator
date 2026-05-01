@@ -2,7 +2,13 @@ import { PostHog } from 'posthog-node';
 
 let posthogClient: PostHog | null = null;
 
-export function getPostHogClient() {
+export function getPostHogClient(): PostHog | null {
+  const isDev = process.env.NODE_ENV === 'development';
+  const enabledInDev = process.env.NEXT_PUBLIC_POSTHOG_ENABLED_IN_DEV === 'true';
+  if (isDev && !enabledInDev) {
+    return null;
+  }
+
   if (!posthogClient) {
     posthogClient = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN!, {
       host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
