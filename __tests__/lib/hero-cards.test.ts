@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { heroCards, type HeroCard, type ArtKey, type Tone } from '@/lib/hero-cards';
+import { heroCards, type HeroCard } from '@/lib/hero-cards';
 
 describe('heroCards', () => {
   it('exports 18 cards', () => {
@@ -17,36 +17,29 @@ describe('heroCards', () => {
     expect(numbers).toEqual(expected);
   });
 
-  it('every card has a non-empty Spanish label', () => {
-    for (const card of heroCards) {
-      expect(card.label.length).toBeGreaterThan(0);
-    }
-  });
-
-  it('every card uses a valid tone', () => {
-    const tones: Tone[] = ['marigold', 'verde', 'rose'];
-    for (const card of heroCards) {
-      expect(tones).toContain(card.tone);
-    }
-  });
-
-  it('includes both classic and event-themed cards', () => {
+  it('every card has a unique non-empty Spanish label', () => {
     const labels = heroCards.map((c) => c.label);
-    expect(labels).toContain('La Rosa');
-    expect(labels).toContain('El Sol');
-    expect(labels).toContain('La Luna');
-    expect(labels).toContain('La Novia');
-    expect(labels).toContain('La Quinceañera');
+    for (const label of labels) expect(label.length).toBeGreaterThan(0);
+    expect(new Set(labels).size).toBe(labels.length);
   });
 
-  it('HeroCard and ArtKey types are exported', () => {
-    const sample: HeroCard = {
-      id: 'test',
-      number: '01',
-      label: 'Test',
-      artKey: 'rose' as ArtKey,
-      tone: 'marigold',
-    };
-    expect(sample).toBeDefined();
+  it('every card has an image asset', () => {
+    for (const card of heroCards) {
+      expect(card.image).toBeTruthy();
+    }
+  });
+
+  it('covers the marketing categories: weddings, quinceañeras, family, pets, hobbies', () => {
+    const labels = heroCards.map((c) => c.label);
+    expect(labels).toContain('La Boda');
+    expect(labels).toContain('La Quinceañera');
+    expect(labels).toContain('La Familia');
+    expect(labels).toContain('El Perro');
+    expect(labels).toContain('La Guitarra');
+  });
+
+  it('HeroCard type carries an image field', () => {
+    const sample: HeroCard = heroCards[0];
+    expect(sample.image).toBeDefined();
   });
 });

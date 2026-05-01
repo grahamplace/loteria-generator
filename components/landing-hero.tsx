@@ -68,20 +68,21 @@ export function LandingHero() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="mb-6 text-4xl font-bold text-foreground md:text-6xl">
-            Create Custom <span className="text-primary">Lotería</span> Cards
+            Create Your Custom <span className="text-primary">Lotería</span> Set
             <br />
             <span className="text-3xl md:text-5xl">from Your Photos</span>
           </h1>
           <p className="mx-auto mb-8 max-w-2xl text-xl text-muted-foreground">
-            The easiest <strong>custom Lotería card maker</strong> powered by AI. Transform your
-            photos into beautiful Mexican Lotería-style illustrations. Perfect for{' '}
+            The easiest <strong>custom Lotería maker</strong> powered by AI. Turn your photos into a
+            complete Mexican Lotería set &mdash; <strong>illustrated cards</strong>,{' '}
+            <strong>printable tablas</strong>, and everything you need to play. Perfect for{' '}
             <strong>weddings</strong>, <strong>quinceañeras</strong>, <strong>parties</strong>, and{' '}
             <strong>family celebrations</strong>.
           </p>
           <div className="mb-6 flex flex-col justify-center gap-4 sm:flex-row">
             <Link href="/sign-up">
               <Button size="lg" className="w-full px-8 text-lg sm:w-auto">
-                Create Your Lotería Cards Free
+                Create Your Lotería Set Free
               </Button>
             </Link>
             <Link href="#how-it-works">
@@ -101,7 +102,7 @@ export function LandingHero() {
         </div>
       </div>
 
-      <div className="mx-auto mt-10 max-w-[1400px] md:mt-14">
+      <div className="mt-10 md:mt-14">
         <CardMarquee cards={heroCards} />
       </div>
     </header>

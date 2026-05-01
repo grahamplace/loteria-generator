@@ -24,10 +24,12 @@ describe('CardMarquee', () => {
     expect(container.querySelector('.hero-marquee-row--right')).not.toBeNull();
   });
 
-  it('duplicates each row for seamless looping (doubles the card count per row)', () => {
+  it('puts every card in both rows and duplicates each row for seamless looping', () => {
     const { container } = render(<CardMarquee cards={heroCards} />);
     const leftRow = container.querySelector('.hero-marquee-row--left')!;
-    // 9 cards + 9 duplicates = 18 cards in the left row
-    expect(leftRow.children.length).toBe(18);
+    const rightRow = container.querySelector('.hero-marquee-row--right')!;
+    // Each row contains all 18 cards plus a duplicate set for the loop.
+    expect(leftRow.children.length).toBe(heroCards.length * 2);
+    expect(rightRow.children.length).toBe(heroCards.length * 2);
   });
 });
