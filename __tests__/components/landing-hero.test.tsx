@@ -13,7 +13,7 @@ describe('LandingHero', () => {
 
   it('renders the primary CTA linking to /sign-up', () => {
     render(<LandingHero />);
-    const cta = screen.getByRole('link', { name: /create your lotería cards free/i });
+    const cta = screen.getByRole('link', { name: /create your lotería set free/i });
     expect(cta).toHaveAttribute('href', '/sign-up');
   });
 

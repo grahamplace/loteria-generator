@@ -1,52 +1,48 @@
-export type ArtKey =
-  | 'rose'
-  | 'sun'
-  | 'moon'
-  | 'heart'
-  | 'star'
-  | 'rooster'
-  | 'mermaid'
-  | 'skull'
-  | 'cactus'
-  | 'guitar'
-  | 'crown'
-  | 'dame'
-  | 'bride'
-  | 'groom'
-  | 'quince'
-  | 'grandpa'
-  | 'grandma'
-  | 'baby';
+import type { StaticImageData } from 'next/image';
 
-export type Tone = 'marigold' | 'verde' | 'rose';
+import weddingCouple from './hero-cards-illustrations/01-wedding-couple.webp';
+import weddingBouquet from './hero-cards-illustrations/02-wedding-bouquet.webp';
+import weddingRings from './hero-cards-illustrations/03-wedding-rings.webp';
+import quinceanera from './hero-cards-illustrations/04-quinceanera.webp';
+import birthdayCandles from './hero-cards-illustrations/05-birthday-candles.webp';
+import birthdayCake from './hero-cards-illustrations/06-birthday-cake.webp';
+import family from './hero-cards-illustrations/07-family-portrait.webp';
+import baby from './hero-cards-illustrations/08-baby.webp';
+import grandpa from './hero-cards-illustrations/09-grandpa.webp';
+import grandma from './hero-cards-illustrations/10-grandma.webp';
+import dog from './hero-cards-illustrations/11-dog.webp';
+import cat from './hero-cards-illustrations/12-cat.webp';
+import house from './hero-cards-illustrations/13-house.webp';
+import car from './hero-cards-illustrations/14-car.webp';
+import guitar from './hero-cards-illustrations/15-guitar.webp';
+import soccerBall from './hero-cards-illustrations/16-soccer-ball.webp';
+import camera from './hero-cards-illustrations/17-camera.webp';
+import tacos from './hero-cards-illustrations/18-tacos.webp';
 
 export type HeroCard = {
   id: string;
   number: string;
   label: string;
-  artKey: ArtKey;
-  tone: Tone;
+  image: StaticImageData;
 };
 
 export const heroCards: HeroCard[] = [
-  // Classic Loteria (12)
-  { id: 'la-rosa', number: '01', label: 'La Rosa', artKey: 'rose', tone: 'marigold' },
-  { id: 'el-sol', number: '02', label: 'El Sol', artKey: 'sun', tone: 'verde' },
-  { id: 'la-luna', number: '03', label: 'La Luna', artKey: 'moon', tone: 'rose' },
-  { id: 'el-corazon', number: '04', label: 'El Corazón', artKey: 'heart', tone: 'rose' },
-  { id: 'la-estrella', number: '05', label: 'La Estrella', artKey: 'star', tone: 'marigold' },
-  { id: 'el-gallo', number: '06', label: 'El Gallo', artKey: 'rooster', tone: 'verde' },
-  { id: 'la-sirena', number: '07', label: 'La Sirena', artKey: 'mermaid', tone: 'verde' },
-  { id: 'la-calavera', number: '08', label: 'La Calavera', artKey: 'skull', tone: 'rose' },
-  { id: 'el-nopal', number: '09', label: 'El Nopal', artKey: 'cactus', tone: 'verde' },
-  { id: 'el-musico', number: '10', label: 'El Músico', artKey: 'guitar', tone: 'marigold' },
-  { id: 'el-catrin', number: '11', label: 'El Catrín', artKey: 'crown', tone: 'marigold' },
-  { id: 'la-dama', number: '12', label: 'La Dama', artKey: 'dame', tone: 'rose' },
-  // Event-themed (6)
-  { id: 'la-novia', number: '13', label: 'La Novia', artKey: 'bride', tone: 'marigold' },
-  { id: 'el-novio', number: '14', label: 'El Novio', artKey: 'groom', tone: 'verde' },
-  { id: 'la-quinceanera', number: '15', label: 'La Quinceañera', artKey: 'quince', tone: 'rose' },
-  { id: 'el-abuelo', number: '16', label: 'El Abuelo', artKey: 'grandpa', tone: 'marigold' },
-  { id: 'la-abuela', number: '17', label: 'La Abuela', artKey: 'grandma', tone: 'verde' },
-  { id: 'el-bebe', number: '18', label: 'El Bebé', artKey: 'baby', tone: 'rose' },
+  { id: 'la-boda', number: '01', label: 'La Boda', image: weddingCouple },
+  { id: 'el-ramo', number: '02', label: 'El Ramo', image: weddingBouquet },
+  { id: 'la-sortija', number: '03', label: 'La Sortija', image: weddingRings },
+  { id: 'la-quinceanera', number: '04', label: 'La Quinceañera', image: quinceanera },
+  { id: 'la-fiesta', number: '05', label: 'La Fiesta', image: birthdayCandles },
+  { id: 'las-velitas', number: '06', label: 'Las Velitas', image: birthdayCake },
+  { id: 'la-familia', number: '07', label: 'La Familia', image: family },
+  { id: 'el-bebe', number: '08', label: 'El Bebé', image: baby },
+  { id: 'el-abuelo', number: '09', label: 'El Abuelo', image: grandpa },
+  { id: 'la-abuela', number: '10', label: 'La Abuela', image: grandma },
+  { id: 'el-perro', number: '11', label: 'El Perro', image: dog },
+  { id: 'el-gato', number: '12', label: 'El Gato', image: cat },
+  { id: 'la-casa', number: '13', label: 'La Casa', image: house },
+  { id: 'el-bochito', number: '14', label: 'El Bochito', image: car },
+  { id: 'la-guitarra', number: '15', label: 'La Guitarra', image: guitar },
+  { id: 'la-pelota', number: '16', label: 'La Pelota', image: soccerBall },
+  { id: 'la-camara', number: '17', label: 'La Cámara', image: camera },
+  { id: 'el-taco', number: '18', label: 'El Taco', image: tacos },
 ];

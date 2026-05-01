@@ -42,3 +42,8 @@ local-data/
 .worktrees/
 docs/
 
+# example illustration outputs — full-resolution PNGs and run manifest from
+# the generator script. Optimized webp copies live in
+# lib/hero-cards-illustrations/ and ARE checked in. Regenerate with
+# `pnpm generate:examples`.
+/scripts/example-images/illustrations/

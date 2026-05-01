@@ -6,6 +6,8 @@ import { Check, Sparkles, Upload, Grid3x3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { auth } from '@/lib/auth';
 import { LandingHero } from '@/components/landing-hero';
+import { HeroCard } from '@/components/hero-card';
+import { heroCards } from '@/lib/hero-cards';
 import {
   WebsiteJsonLd,
   OrganizationJsonLd,
@@ -27,14 +29,14 @@ const faqs = [
       'Lotería is a traditional Mexican game of chance, similar to bingo. Players use boards (tablas) with a 4x4 grid of images. A caller (cantor) draws cards and announces them, and players mark matching images on their boards. The first to complete a pattern wins!',
   },
   {
-    question: 'How do I create custom Lotería cards with my own photos?',
+    question: 'How do I create a custom Lotería set with my own photos?',
     answer:
-      'Simply upload your photos to our Lotería generator, and our AI will automatically transform each image into a traditional Lotería-style illustration with a Spanish label. You can then edit labels, arrange cards, and generate printable bingo boards.',
+      'Upload your photos and our AI restyles each one into a traditional Lotería-style illustration with a Spanish label. You then arrange your cards, edit labels, and generate printable tablas (boards) so you have a complete Lotería set ready to play.',
   },
   {
     question: 'Can I use this for my wedding or party?',
     answer:
-      'Absolutely! Custom Lotería cards are perfect for weddings, quinceañeras, birthday parties, family reunions, and any special celebration. Create personalized cards featuring your guests, memorable moments, or themed images.',
+      'Absolutely! A custom Lotería set is perfect for weddings, quinceañeras, birthday parties, family reunions, and any special celebration. Personalize the cards with your guests, memorable moments, or themed photos &mdash; and print tablas for everyone at the party.',
   },
   {
     question: 'How many cards can I create?',
@@ -117,36 +119,48 @@ export default async function LandingPage() {
               Perfect for Every Special Occasion
             </h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Create personalized Lotería cards that make your celebration truly unique and
-              memorable.
+              Create a personalized Lotería set &mdash; cards and printable tablas &mdash; that
+              makes your celebration truly unique and memorable.
             </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 {
                   title: 'Wedding Lotería',
-                  desc: 'Feature photos of the couple, wedding party, and special moments',
+                  desc: 'Feature photos of the couple, wedding party, and special moments.',
+                  cardId: 'la-boda',
                 },
                 {
                   title: 'Quinceañera',
-                  desc: 'Celebrate with cards featuring the quinceañera and her court',
+                  desc: 'Celebrate with cards featuring the quinceañera and her court.',
+                  cardId: 'la-quinceanera',
                 },
                 {
                   title: 'Family Reunion',
-                  desc: 'Include all family members for a game everyone will treasure',
+                  desc: 'Include all family members for a game everyone will treasure.',
+                  cardId: 'la-familia',
                 },
                 {
                   title: 'Birthday Party',
-                  desc: 'Create themed cards with the birthday person and their favorites',
+                  desc: 'Themed cards with the birthday person, the cake, and their favorites.',
+                  cardId: 'las-velitas',
                 },
-              ].map((useCase) => (
-                <article
-                  key={useCase.title}
-                  className="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition-shadow"
-                >
-                  <h3 className="font-semibold text-lg mb-2">{useCase.title}</h3>
-                  <p className="text-muted-foreground text-sm">{useCase.desc}</p>
-                </article>
-              ))}
+              ].map((useCase) => {
+                const card = heroCards.find((c) => c.id === useCase.cardId);
+                return (
+                  <article
+                    key={useCase.title}
+                    className="bg-white rounded-xl p-6 pt-8 shadow-sm border hover:shadow-md transition-shadow flex flex-col items-center text-center"
+                  >
+                    {card && (
+                      <div className="mb-5">
+                        <HeroCard card={card} />
+                      </div>
+                    )}
+                    <h3 className="font-semibold text-lg mb-2">{useCase.title}</h3>
+                    <p className="text-muted-foreground text-sm">{useCase.desc}</p>
+                  </article>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -155,7 +169,7 @@ export default async function LandingPage() {
         <section id="how-it-works" className="bg-white py-16 border-y scroll-mt-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-center mb-4">
-              How to Make Custom Lotería Cards
+              How to Make a Custom Lotería Set
             </h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
               Our AI-powered Lotería generator transforms your photos into authentic Mexican Lotería
@@ -186,10 +200,10 @@ export default async function LandingPage() {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Grid3x3 className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">3. Generate & Print Boards</h3>
+                <h3 className="text-xl font-semibold mb-2">3. Generate &amp; Print Tablas</h3>
                 <p className="text-muted-foreground">
-                  Create randomized 4x4 bingo-style boards, each unique. Export high-quality PDFs
-                  ready for printing at home or professionally.
+                  Generate as many unique 4x4 tablas as you need &mdash; one per player. Export
+                  high-quality PDFs ready for printing at home or professionally.
                 </p>
               </article>
             </div>
@@ -224,7 +238,7 @@ export default async function LandingPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                    <span>1 board generation</span>
+                    <span>1 printable tabla</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -247,7 +261,7 @@ export default async function LandingPage() {
                 <div className="absolute top-4 right-4 bg-white/20 text-white text-xs px-2 py-1 rounded">
                   Most Popular
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Unlocked Board</h3>
+                <h3 className="text-xl font-semibold mb-2">Unlocked Set</h3>
                 <p className="text-4xl font-bold mb-4">
                   $5 <span className="text-lg font-normal">one-time</span>
                 </p>
@@ -258,7 +272,7 @@ export default async function LandingPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-5 h-5 flex-shrink-0" />
-                    <span>Unlimited board generations</span>
+                    <span>Unlimited printable tablas</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-5 h-5 flex-shrink-0" />
@@ -284,7 +298,7 @@ export default async function LandingPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-center mb-4">Frequently Asked Questions</h2>
             <p className="text-center text-muted-foreground mb-12">
-              Everything you need to know about creating custom Lotería cards.
+              Everything you need to know about creating a custom Lotería set.
             </p>
             <div className="space-y-6">
               {faqs.map((faq, index) => (
@@ -300,14 +314,14 @@ export default async function LandingPage() {
         {/* CTA */}
         <section className="bg-primary/5 py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Create Your Custom Lotería?</h2>
+            <h2 className="text-3xl font-bold mb-4">Ready to Create Your Custom Lotería Set?</h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-              Join thousands of people creating personalized Lotería cards for their special
-              celebrations. Start free in seconds.
+              Join thousands of people creating personalized Lotería sets &mdash; cards and tablas
+              &mdash; for their special celebrations. Start free in seconds.
             </p>
             <Link href="/sign-up">
               <Button size="lg" className="text-lg px-8">
-                Create Your Lotería Board Now
+                Create Your Lotería Set Now
               </Button>
             </Link>
           </div>
@@ -320,7 +334,8 @@ export default async function LandingPage() {
               <div>
                 <h4 className="font-semibold mb-4">Lotería Generator</h4>
                 <p className="text-sm text-muted-foreground">
-                  The easiest way to create custom Mexican Lotería cards from your photos using AI.
+                  The easiest way to create a custom Mexican Lotería set &mdash; cards and tablas
+                  &mdash; from your photos using AI.
                 </p>
               </div>
               <div>
@@ -371,8 +386,8 @@ export default async function LandingPage() {
             <div className="border-t pt-8 text-center text-muted-foreground text-sm">
               <p>&copy; {new Date().getFullYear()} Lotería Generator. All rights reserved.</p>
               <p className="mt-2">
-                Create custom Lotería cards, personalized Mexican bingo, and Lotería boards for any
-                celebration.
+                Create custom Lotería sets &mdash; personalized cards and printable tablas &mdash;
+                for any celebration.
               </p>
             </div>
           </div>
