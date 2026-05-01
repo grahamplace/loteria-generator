@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BoardCardGrid } from '@/components/board-card-grid';
 
@@ -64,9 +64,7 @@ describe('BoardCardGrid', () => {
 
     const { container } = render(<BoardCardGrid {...defaultProps} cards={processingCards} />);
 
-    // Processing state renders a pulsing skeleton where the label would go.
     expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
-    // And a spinner where the card buttons would go.
     expect(container.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
@@ -80,39 +78,38 @@ describe('BoardCardGrid', () => {
 
     render(<BoardCardGrid {...defaultProps} cards={errorCards} />);
 
-    // Error card renders a generic "Generation failed" heading; the specific
-    // message is surfaced via tooltip/toast rather than inline text.
     expect(screen.getByText('Generation failed')).toBeInTheDocument();
   });
 
-  it('should call onDeleteCard when delete button is clicked and confirmed', () => {
+  it('should open the edit modal when a card is clicked', () => {
+    render(<BoardCardGrid {...defaultProps} />);
+
+    // The whole card is the click target — there's no separate edit button.
+    fireEvent.click(screen.getByText('El Sol'));
+
+    expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
+  });
+
+  it('should call onDeleteCard after the modal delete + confirmation flow', () => {
     const onDeleteCard = vi.fn();
     render(<BoardCardGrid {...defaultProps} onDeleteCard={onDeleteCard} />);
 
-    // Click the delete button on the card to open the confirmation dialog
-    const deleteButtons = screen.getAllByText('Delete');
-    fireEvent.click(deleteButtons[0]);
+    // Open the edit modal for the first card.
+    fireEvent.click(screen.getByText('El Sol'));
 
-    // Confirm deletion in the AlertDialog
-    const confirmButton = screen.getByRole('button', { name: /delete/i });
-    fireEvent.click(confirmButton);
+    // Hit Delete inside the modal — opens the confirmation AlertDialog.
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+
+    // Confirm in the AlertDialog. Two "Delete" affordances exist now (the
+    // modal's button, which still mounts behind the dialog, plus the alert's
+    // confirm button); pick the one inside the alertdialog.
+    const confirm = screen.getAllByRole('button', { name: /delete/i }).at(-1)!;
+    fireEvent.click(confirm);
 
     expect(onDeleteCard).toHaveBeenCalledWith('card-1');
   });
 
-  it('should open edit modal when edit button is clicked', () => {
-    render(<BoardCardGrid {...defaultProps} />);
-
-    // Find and click the edit button for the first card
-    const editButtons = screen.getAllByText('Edit');
-    fireEvent.click(editButtons[0]);
-
-    // The CardEditModal should be shown
-    // We can check for the save button which is part of the modal
-    expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
-  });
-
-  it('should hide action buttons when card is processing', () => {
+  it('should hide the drag handle when a card is processing', () => {
     const processingCards = [
       {
         ...mockCards[0],
@@ -120,11 +117,10 @@ describe('BoardCardGrid', () => {
       },
     ];
 
-    render(<BoardCardGrid {...defaultProps} cards={processingCards} />);
+    const { container } = render(<BoardCardGrid {...defaultProps} cards={processingCards} />);
 
-    // Processing cards omit Edit/Delete entirely to avoid interacting with a
-    // card that's still being generated.
-    expect(screen.queryByText('Edit')).not.toBeInTheDocument();
-    expect(screen.queryByText('Delete')).not.toBeInTheDocument();
+    // Processing cards omit the drag-handle indicator entirely so users can't
+    // try to interact with a card that isn't ready.
+    expect(container.querySelector('[data-icon="grip-vertical"]')).toBeNull();
   });
 });
