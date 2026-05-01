@@ -73,8 +73,8 @@ export function LandingHero() {
             <span className="text-3xl md:text-5xl">from Your Photos</span>
           </h1>
           <p className="mx-auto mb-8 max-w-2xl text-xl text-muted-foreground">
-            The easiest <strong>custom Lotería maker</strong> powered by AI. Turn your photos into a
-            complete Mexican Lotería set &mdash; <strong>illustrated cards</strong>,{' '}
+            The easiest <strong>custom Lotería maker</strong>&nbsp;powered by AI. Turn your photos
+            into a complete Mexican Lotería set &mdash; <strong>illustrated cards</strong>,{' '}
             <strong>printable tablas</strong>, and everything you need to play. Perfect for{' '}
             <strong>weddings</strong>, <strong>quinceañeras</strong>, <strong>parties</strong>, and{' '}
             <strong>family celebrations</strong>.
