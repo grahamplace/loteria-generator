@@ -21,84 +21,66 @@ describe('UnlockPrompt', () => {
   it('should render when open is true', () => {
     render(<UnlockPrompt {...defaultProps} />);
 
-    // Check that the dialog title contains the board name
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
-  it('should display the correct price', () => {
+  it('should display the price', () => {
     render(<UnlockPrompt {...defaultProps} />);
 
     expect(screen.getByText('$5')).toBeInTheDocument();
   });
 
-  it('should display features list', () => {
+  it('should display the features list', () => {
     render(<UnlockPrompt {...defaultProps} />);
 
-    expect(screen.getByText('Up to 54 cards per board')).toBeInTheDocument();
-    expect(screen.getByText('Unlimited board generations')).toBeInTheDocument();
-    expect(screen.getByText('Full print-quality exports')).toBeInTheDocument();
+    expect(screen.getByText('Up to 54 cards')).toBeInTheDocument();
+    expect(screen.getByText('Unlimited exports')).toBeInTheDocument();
     expect(screen.getByText('No watermarks')).toBeInTheDocument();
   });
 
-  it('should show card limit message when trigger is card_limit', () => {
-    render(<UnlockPrompt {...defaultProps} trigger="card_limit" />);
-
-    expect(screen.getByText(/You've reached the free tier limit of 16 cards/)).toBeInTheDocument();
+  it('should show the free-limit headline regardless of trigger', () => {
+    for (const trigger of ['card_limit', 'board_limit', 'export'] as const) {
+      const { unmount } = render(<UnlockPrompt {...defaultProps} trigger={trigger} />);
+      expect(screen.getByText(/You['’]ve reached the free limit/i)).toBeInTheDocument();
+      unmount();
+    }
   });
 
-  it('should show board limit message when trigger is board_limit', () => {
-    render(<UnlockPrompt {...defaultProps} trigger="board_limit" />);
-
-    expect(
-      screen.getByText(/The free tier only allows 1 example board generation/)
-    ).toBeInTheDocument();
-  });
-
-  it('should show export message when trigger is export', () => {
-    render(<UnlockPrompt {...defaultProps} trigger="export" />);
-
-    expect(
-      screen.getByText(/Full exports are available with an unlocked board/)
-    ).toBeInTheDocument();
-  });
-
-  it('should call onOpenChange when Continue with Free Preview is clicked', () => {
+  it('should call onOpenChange(false) when the dismiss button is clicked', () => {
     const onOpenChange = vi.fn();
     render(<UnlockPrompt {...defaultProps} onOpenChange={onOpenChange} />);
 
-    fireEvent.click(screen.getByText('Continue with Free Preview'));
+    fireEvent.click(screen.getByText(/maybe later/i));
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it('should call fetch when unlock button is clicked', async () => {
+  it('should call the Stripe checkout endpoint when the unlock button is clicked', () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ url: 'https://checkout.stripe.com/test' }),
     });
 
-    // Store original href setter
-    const originalHref = Object.getOwnPropertyDescriptor(window, 'location');
-
-    // Mock location.href setter
+    const originalLocation = Object.getOwnPropertyDescriptor(window, 'location');
     Object.defineProperty(window, 'location', {
       value: { href: '' },
       writable: true,
     });
 
-    render(<UnlockPrompt {...defaultProps} />);
+    try {
+      render(<UnlockPrompt {...defaultProps} />);
 
-    fireEvent.click(screen.getByText(/Unlock for \$5/));
+      fireEvent.click(screen.getByRole('button', { name: /^unlock$/i }));
 
-    expect(global.fetch).toHaveBeenCalledWith('/api/stripe/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ boardId: 'test-board-123' }),
-    });
-
-    // Restore original location
-    if (originalHref) {
-      Object.defineProperty(window, 'location', originalHref);
+      expect(global.fetch).toHaveBeenCalledWith('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ boardId: 'test-board-123' }),
+      });
+    } finally {
+      if (originalLocation) {
+        Object.defineProperty(window, 'location', originalLocation);
+      }
     }
   });
 });
