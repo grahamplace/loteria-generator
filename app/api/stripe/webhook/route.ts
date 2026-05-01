@@ -3,6 +3,7 @@ import { verifyWebhookSignature } from '@/lib/stripe';
 import { db, boards } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import Stripe from 'stripe';
+import { getPostHogClient } from '@/lib/posthog-server';
 
 /**
  * POST /api/stripe/webhook - Handle Stripe webhook events
@@ -85,4 +86,18 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     .where(and(eq(boards.id, boardId), eq(boards.userId, userId)));
 
   console.log(`Board ${boardId} unlocked for user ${userId}`);
+
+  const posthog = getPostHogClient();
+  if (posthog) {
+    posthog.capture({
+      distinctId: userId,
+      event: 'board_unlocked',
+      properties: {
+        board_id: boardId,
+        stripe_session_id: session.id,
+        amount_total: session.amount_total,
+      },
+    });
+    await posthog.shutdown();
+  }
 }

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotteriaCard } from '@/lib/generate-boards';
+import posthog from 'posthog-js';
 
 interface CardEditModalProps {
   card: LotteriaCard;
@@ -36,6 +37,7 @@ export function CardEditModal({
 
   const handleSave = () => {
     if (label.trim()) {
+      posthog.capture('card_label_edited', { card_number: card.number });
       onSave(label.trim());
     }
   };

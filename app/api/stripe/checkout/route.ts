@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { db, boards } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { createBoardUnlockCheckout } from '@/lib/stripe';
+import { getPostHogClient } from '@/lib/posthog-server';
 
 /**
  * POST /api/stripe/checkout - Create a checkout session for board unlock
@@ -50,6 +51,20 @@ export async function POST(request: NextRequest) {
       successUrl: `${baseUrl}/boards/${boardId}?payment=success`,
       cancelUrl: `${baseUrl}/boards/${boardId}?payment=cancelled`,
     });
+
+    const posthog = getPostHogClient();
+    if (posthog) {
+      posthog.capture({
+        distinctId: session.user.id,
+        event: 'checkout_session_created',
+        properties: {
+          board_id: board.id,
+          board_name: board.name,
+          $set: { email: session.user.email, name: session.user.name },
+        },
+      });
+      await posthog.shutdown();
+    }
 
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
