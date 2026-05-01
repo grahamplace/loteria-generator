@@ -2,6 +2,7 @@ import OpenAI, { toFile } from 'openai';
 import { eq, sql } from 'drizzle-orm';
 import { db, boards, cards } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
+import { normalizeImageForOpenAI } from '@/lib/image-normalize';
 
 export const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
   'image/png': 'png',
@@ -136,13 +137,13 @@ export const generateCardArtwork = inngest.createFunction(
     const illustrationPromise = (async () => {
       const illustrationUrl = await step.run('generate-and-upload-illustration', async () => {
         const { buffer, contentType } = await fetchBlob(originalImageUrl);
-        const ext = OPENAI_IMAGE_MIME_TO_EXT[contentType];
-        if (!ext) {
+        if (!OPENAI_IMAGE_MIME_TO_EXT[contentType]) {
           throw new Error(
             `Unsupported image format "${contentType}". Please upload PNG, JPEG, WebP, or GIF.`
           );
         }
-        const imageFile = await toFile(buffer, `image.${ext}`, { type: contentType });
+        const normalized = await normalizeImageForOpenAI(buffer);
+        const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
         const illustrationModel =
           process.env.NODE_ENV === 'production' ? 'gpt-image-1.5' : 'gpt-image-1-mini';
         const result = await withAITrace(
