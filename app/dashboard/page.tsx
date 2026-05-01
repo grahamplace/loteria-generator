@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Plus, MoreVertical, Trash2, Lock, Unlock, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
+import posthog from 'posthog-js';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function DashboardPage() {
     setIsCreating(false);
 
     if (board) {
+      posthog.capture('board_created', { board_id: board.id });
       router.push(`/boards/${board.id}`);
     }
   }
@@ -51,6 +53,7 @@ export default function DashboardPage() {
   async function handleDeleteBoard() {
     if (!deletingBoardId) return;
     await deleteBoard(deletingBoardId);
+    posthog.capture('board_deleted', { board_id: deletingBoardId });
     setDeletingBoardId(null);
   }
 

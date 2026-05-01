@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/drawer';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import posthog from 'posthog-js';
 
 interface UnlockPromptProps {
   boardId: string;
@@ -120,6 +121,7 @@ export function UnlockPrompt({
 
   async function handleUnlock() {
     setIsLoading(true);
+    posthog.capture('checkout_initiated', { board_id: boardId, trigger });
 
     try {
       const response = await fetch('/api/stripe/checkout', {
@@ -136,6 +138,7 @@ export function UnlockPrompt({
       window.location.href = url;
     } catch (error) {
       console.error('Checkout error:', error);
+      posthog.captureException(error);
       toast.error('Failed to start checkout. Please try again.');
       setIsLoading(false);
     }

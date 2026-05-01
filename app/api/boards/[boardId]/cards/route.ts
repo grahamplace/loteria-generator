@@ -14,6 +14,7 @@ import { createCardSchema, updateCardSchema } from '@/lib/validations';
 import { inngest } from '@/lib/inngest/client';
 import { cardGenerateRequested } from '@/lib/inngest/events';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
+import { getPostHogClient } from '@/lib/posthog-server';
 
 // Constants for limits
 const MAX_CARDS_FREE = 4;
@@ -196,6 +197,17 @@ export async function POST(
               originalImageUrl: originalUrl,
             })
           );
+          const posthog = getPostHogClient();
+          posthog.capture({
+            distinctId: session.user.id,
+            event: 'card_upload_started',
+            properties: {
+              board_id: boardId,
+              card_id: newCard.id,
+              board_is_unlocked: board.isUnlocked,
+            },
+          });
+          await posthog.shutdown();
         }
       } catch (uploadError) {
         console.error('Error uploading image:', uploadError);
