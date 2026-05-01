@@ -5,7 +5,8 @@ import { uploadIllustration, fetchBlob } from '@/lib/blob';
 import { inngest } from '../client';
 import { illustrationRegenerateRequested } from '../events';
 import { cardChannel } from '../channels';
-import { ILLUSTRATION_PROMPT, OPENAI_IMAGE_MIME_TO_EXT } from './generate-card-artwork';
+import { OPENAI_IMAGE_MIME_TO_EXT } from './generate-card-artwork';
+import { ILLUSTRATION_PROMPT } from '@/lib/illustration-prompt';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 
 const openai = new OpenAI({

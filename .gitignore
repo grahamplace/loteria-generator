@@ -41,3 +41,8 @@ local-data/
 .superpowers/
 .worktrees/
 docs/
+
+# example illustration originals — full-resolution PNGs from the generator
+# script. Optimized webp copies live in lib/hero-cards-illustrations/ and ARE
+# checked in. Regenerate originals with `pnpm generate:examples`.
+/scripts/example-images/illustrations/*.png
