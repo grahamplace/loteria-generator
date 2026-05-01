@@ -8,6 +8,7 @@ import { illustrationRegenerateRequested } from '../events';
 import { cardChannel } from '../channels';
 import { ILLUSTRATION_PROMPT, OPENAI_IMAGE_MIME_TO_EXT } from './generate-card-artwork';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
+import { withAITrace } from '@/lib/ai-tracing';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -54,12 +55,19 @@ export const regenerateIllustration = inngest.createFunction(
       }
       const normalized = await normalizeImageForOpenAI(buffer);
       const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
-      const result = await openai.images.edit({
-        model: process.env.NODE_ENV === 'production' ? 'gpt-image-1.5' : 'gpt-image-1-mini',
-        image: imageFile,
-        prompt: ILLUSTRATION_PROMPT,
-        size: '1024x1536',
-      });
+      const illustrationModel =
+        process.env.NODE_ENV === 'production' ? 'gpt-image-1.5' : 'gpt-image-1-mini';
+      const result = await withAITrace(
+        'regenerate-illustration',
+        { userId, boardId, cardId, model: illustrationModel },
+        () =>
+          openai.images.edit({
+            model: illustrationModel,
+            image: imageFile,
+            prompt: ILLUSTRATION_PROMPT,
+            size: '1024x1536',
+          })
+      );
       const b64 = result.data?.[0]?.b64_json;
       if (!b64) throw new Error('Failed to generate illustration');
       const illustrationBuffer = Buffer.from(b64, 'base64');

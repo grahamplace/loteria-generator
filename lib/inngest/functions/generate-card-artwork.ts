@@ -15,6 +15,7 @@ import { inngest } from '../client';
 import { cardGenerateRequested } from '../events';
 import { cardChannel } from '../channels';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
+import { withAITrace } from '@/lib/ai-tracing';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -103,24 +104,30 @@ export const generateCardArtwork = inngest.createFunction(
         const { buffer, contentType } = await fetchBlob(originalImageUrl);
         const mime = OPENAI_IMAGE_MIME_TO_EXT[contentType] ? contentType : 'image/png';
         const base64 = buffer.toString('base64');
-        const result = await openai.chat.completions.create({
-          model: 'gpt-5-nano-2025-08-07',
-          messages: [
-            { role: 'system', content: LABEL_SYSTEM_PROMPT },
-            {
-              role: 'user',
-              content: [
+        const labelModel = 'gpt-5-nano-2025-08-07';
+        const result = await withAITrace(
+          'generate-label',
+          { userId, boardId, cardId, model: labelModel },
+          () =>
+            openai.chat.completions.create({
+              model: labelModel,
+              messages: [
+                { role: 'system', content: LABEL_SYSTEM_PROMPT },
                 {
-                  type: 'image_url',
-                  image_url: { url: `data:${mime};base64,${base64}` },
+                  role: 'user',
+                  content: [
+                    {
+                      type: 'image_url',
+                      image_url: { url: `data:${mime};base64,${base64}` },
+                    },
+                    { type: 'text', text: LABEL_USER_PROMPT },
+                  ],
                 },
-                { type: 'text', text: LABEL_USER_PROMPT },
               ],
-            },
-          ],
-          max_completion_tokens: 500,
-          reasoning_effort: 'minimal',
-        });
+              max_completion_tokens: 500,
+              reasoning_effort: 'minimal',
+            })
+        );
         return result.choices[0].message.content?.trim() || '';
       });
       await step.realtime.publish('publish-label', ch.label, { label });
@@ -137,12 +144,19 @@ export const generateCardArtwork = inngest.createFunction(
         }
         const normalized = await normalizeImageForOpenAI(buffer);
         const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
-        const result = await openai.images.edit({
-          model: process.env.NODE_ENV === 'production' ? 'gpt-image-1.5' : 'gpt-image-1-mini',
-          image: imageFile,
-          prompt: ILLUSTRATION_PROMPT,
-          size: '1024x1536',
-        });
+        const illustrationModel =
+          process.env.NODE_ENV === 'production' ? 'gpt-image-1.5' : 'gpt-image-1-mini';
+        const result = await withAITrace(
+          'generate-illustration',
+          { userId, boardId, cardId, model: illustrationModel },
+          () =>
+            openai.images.edit({
+              model: illustrationModel,
+              image: imageFile,
+              prompt: ILLUSTRATION_PROMPT,
+              size: '1024x1536',
+            })
+        );
         const b64 = result.data?.[0]?.b64_json;
         if (!b64) throw new Error('Failed to generate illustration');
         const illustrationBuffer = Buffer.from(b64, 'base64');

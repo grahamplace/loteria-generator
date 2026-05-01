@@ -4,6 +4,7 @@ import { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { Upload, Package, Plus, Unlock, Sparkles } from 'lucide-react';
 import { generateLoteriaSetPdf, BoardStyleOptions } from '@/lib/generate-boards';
 import { toast } from 'sonner';
+import posthog from 'posthog-js';
 
 interface DisplayCard {
   id: string;
@@ -83,6 +84,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
         const remaining = maxCards - cardCount;
         const validFiles = imageFiles.slice(0, remaining);
         if (validFiles.length > 0) {
+          posthog.capture('photos_uploaded', { count: validFiles.length, method: 'drop' });
           onFilesSelected(validFiles);
         }
       }
@@ -94,6 +96,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
         const remaining = maxCards - cardCount;
         const validFiles = imageFiles.slice(0, remaining);
         if (validFiles.length > 0) {
+          posthog.capture('photos_uploaded', { count: validFiles.length, method: 'picker' });
           onFilesSelected(validFiles);
         }
       }
@@ -147,11 +150,17 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
         URL.revokeObjectURL(url);
 
         setGeneratedCount((prev) => prev + 1);
+        posthog.capture('board_exported', {
+          card_count: exportCards.length,
+          board_name: boardName,
+          is_unlocked: isUnlocked,
+        });
         toast.success('Loteria set exported!', {
           description: '50 unique boards and card deck downloaded as a PDF.',
         });
       } catch (error) {
         console.error('Error exporting Loteria set:', error);
+        posthog.captureException(error);
         toast.error('Failed to export Loteria set', {
           description: 'Please try again.',
         });

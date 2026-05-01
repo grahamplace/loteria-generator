@@ -14,6 +14,7 @@ import { BoardCardGrid } from '@/components/board-card-grid';
 import { BoardWelcome } from '@/components/board-welcome';
 import { UnlockPrompt } from '@/components/unlock-prompt';
 import { toast } from 'sonner';
+import posthog from 'posthog-js';
 
 export default function BoardEditorPage() {
   const params = useParams();
@@ -70,13 +71,18 @@ export default function BoardEditorPage() {
     setIsEditingName(false);
   }
 
+  function openUnlockPrompt(trigger: 'card_limit' | 'board_limit' | 'export') {
+    setUnlockTrigger(trigger);
+    setUnlockPromptOpen(true);
+    posthog.capture('unlock_prompt_shown', { trigger, board_id: boardId });
+  }
+
   function handleFilesSelected(files: File[]) {
     const slotsAvailable = cardLimit - cards.length;
     const filesToAdd = files.slice(0, slotsAvailable);
 
     if (files.length > slotsAvailable && !board?.isUnlocked) {
-      setUnlockTrigger('card_limit');
-      setUnlockPromptOpen(true);
+      openUnlockPrompt('card_limit');
     }
 
     if (filesToAdd.length > 0) {
@@ -85,13 +91,11 @@ export default function BoardEditorPage() {
   }
 
   function handleExportLimitReached() {
-    setUnlockTrigger('export');
-    setUnlockPromptOpen(true);
+    openUnlockPrompt('export');
   }
 
   function handleCardLimitReached() {
-    setUnlockTrigger('card_limit');
-    setUnlockPromptOpen(true);
+    openUnlockPrompt('card_limit');
   }
 
   const isLoading = boardLoading || cardsLoading;
@@ -219,10 +223,7 @@ export default function BoardEditorPage() {
           <div className="flex items-center gap-2 shrink-0">
             {!board.isUnlocked && (
               <button
-                onClick={() => {
-                  setUnlockTrigger('card_limit');
-                  setUnlockPromptOpen(true);
-                }}
+                onClick={() => openUnlockPrompt('card_limit')}
                 className="px-3 h-8 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary/90 flex items-center gap-1 md:gap-1.5 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 <Unlock className="w-3.5 h-3.5" />
@@ -238,10 +239,7 @@ export default function BoardEditorPage() {
           /* Welcome state for new locked boards */
           <BoardWelcome
             onStartFreePreview={() => actionBarRef.current?.triggerFileSelect()}
-            onUnlock={() => {
-              setUnlockTrigger('card_limit');
-              setUnlockPromptOpen(true);
-            }}
+            onUnlock={() => openUnlockPrompt('card_limit')}
           />
         ) : (
           <>

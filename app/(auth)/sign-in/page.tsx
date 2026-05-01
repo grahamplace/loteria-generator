@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import posthog from 'posthog-js';
 import { signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,13 @@ export default function SignInPage() {
       if (result.error) {
         setError(result.error.message || 'Failed to sign in');
       } else {
+        if (result.data?.user) {
+          posthog.identify(result.data.user.id, {
+            email: result.data.user.email,
+            name: result.data.user.name,
+          });
+        }
+        posthog.capture('signed_in', { method: 'email' });
         router.push('/dashboard');
       }
     } catch (_err) {
