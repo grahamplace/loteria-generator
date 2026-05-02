@@ -1,334 +1,338 @@
 {
   "Marketing": {
     "Nav": {
-      "howItWorks": "How it works",
-      "occasions": "Occasions",
-      "pricing": "Pricing",
-      "faq": "FAQ",
-      "signIn": "Sign in",
-      "startFree": "Start free"
+      "howItWorks": "Cómo funciona",
+      "occasions": "Ocasiones",
+      "pricing": "Precios",
+      "faq": "Preguntas frecuentes",
+      "signIn": "Iniciar sesión",
+      "startFree": "Empieza gratis"
     },
     "Hero": {
-      "headlineLine1": "Turn your photos into",
-      "headlineLine2Prefix": "a custom",
-      "headlineLine2Suffix": "set.",
-      "subtitle": "Upload photos of your <strong>family, friends, even pets</strong> — we instantly illustrate them in classic Mexican Lotería style and generate a full Lotería set you can print and play at home.",
-      "ctaTry": "Try it for free →",
-      "ctaSeeHow": "See how it works",
-      "trustItems": ["Ready in minutes", "Print at home", "No subscription"]
+      "headlineLine1": "Convierte tus fotos en",
+      "headlineLine2Prefix": "una",
+      "headlineLine2Suffix": "personalizada.",
+      "subtitle": "Sube fotos de tu <strong>familia, amigos e incluso mascotas</strong> — al instante las ilustramos al estilo clásico de la Lotería Mexicana y generamos una Lotería completa que puedes imprimir y jugar en casa.",
+      "ctaTry": "Pruébalo gratis →",
+      "ctaSeeHow": "Ver cómo funciona",
+      "trustItems": ["Lista en minutos", "Imprime en casa", "Sin suscripción"]
     },
     "UseCases": {},
     "HowItWorks": {
-      "tagline": "Custom Lotería sets · Made from your photos",
-      "headlineLine1": "Three simple steps.",
-      "headlineLine2": "Get a custom Lotería set in minutes.",
-      "subtitle": "Upload your favorite photos and we handle the rest.",
-      "step1Title": "Upload your photos",
-      "step1Desc": "Upload photos of family, friends, or pets. We can illustrate anything or anyone you want to feature on a card.",
-      "step2Title": "We illustrate each card",
-      "step2Desc": "We instantly draw each photo in classic Lotería style and add Spanish labels — El Abuelo, La Novia, El Niño.",
-      "step3Title": "Print and play at home",
-      "step3Desc": "Download print-ready PDFs of every card and tabla. Print at home or at a local print shop. You're ready to play Lotería!",
-      "ctaGetStarted": "Get started for free →",
-      "step2GrandpaPhotoAlt": "Original photo of a grandfather"
+      "tagline": "Loterías personalizadas · Hechas con tus fotos",
+      "headlineLine1": "Tres pasos sencillos.",
+      "headlineLine2": "Recibe tu Lotería personalizada en minutos.",
+      "subtitle": "Sube tus fotos favoritas y nosotros nos encargamos de lo demás.",
+      "step1Title": "Sube tus fotos",
+      "step1Desc": "Sube fotos de tu familia, amigos o mascotas. Podemos ilustrar a cualquier persona o cosa que quieras incluir en una carta.",
+      "step2Title": "Ilustramos cada carta",
+      "step2Desc": "Al instante dibujamos cada foto al estilo clásico de la Lotería y agregamos los nombres en español — El Abuelo, La Novia, El Niño.",
+      "step3Title": "Imprime y juega en casa",
+      "step3Desc": "Descarga PDFs listos para imprimir de cada carta y tabla. Imprime en casa o en una imprenta local. ¡Listo para jugar Lotería!",
+      "ctaGetStarted": "Empieza gratis →",
+      "step2GrandpaPhotoAlt": "Foto original de un abuelo"
     },
     "Occasions": {
-      "tagline": "For all the moments that matter",
-      "headlineLine1": "Make your next family gathering",
-      "headlineLine2": "even more memorable.",
-      "subtitle": "Surprise your friends and family with a custom Lotería set they'll love.",
+      "tagline": "Para todos los momentos que importan",
+      "headlineLine1": "Haz que tu próxima reunión familiar",
+      "headlineLine2": "sea aún más memorable.",
+      "subtitle": "Sorprende a tus amigos y familia con una Lotería personalizada que les va a encantar.",
       "items": [
-        { "tag": "Wedding", "title": "For the bride & groom", "copy": "Photos of the couple, the wedding party, both families. A celebration of two families coming together." },
-        { "tag": "Quinceañera", "title": "Made for her court", "copy": "The quinceañera, her chambelanes, damas, and padrinos — everyone gets their card." },
-        { "tag": "Reunion", "title": "Every primo & tía", "copy": "Celebrate the whole familia. From abuela to the new baby — everyone will love playing custom Lotería featuring their loved ones." },
-        { "tag": "Birthday", "title": "Make their birthday memorable", "copy": "Cake, candles, and the people who showed up to celebrate — a custom Lotería deck the birthday star will treasure." }
+        { "tag": "Boda", "title": "Para los novios", "copy": "Fotos de la pareja, los padrinos y ambas familias. Una celebración de dos familias que se unen." },
+        { "tag": "Quinceañera", "title": "Para su corte de honor", "copy": "La quinceañera, sus chambelanes, damas y padrinos — todos tienen su propia carta." },
+        {
+          "tag": "Reunión familiar",
+          "title": "Cada primo y tía",
+          "copy": "Celebra a toda la familia. Desde la abuela hasta el bebé recién nacido — a todos les va a encantar jugar una Lotería personalizada con sus seres queridos."
+        },
+        { "tag": "Cumpleaños", "title": "Haz su cumpleaños inolvidable", "copy": "Pastel, velitas y la gente que llegó a celebrar — una Lotería personalizada que el cumpleañero atesorará." }
       ]
     },
     "Pricing": {
-      "tagline": "Pay once · No subscriptions",
-      "headline": "Simple pricing.",
-      "subtitle": "Start free with a sample set. Unlock the full 54-card deck when you're ready.",
+      "tagline": "Pago único · Sin suscripciones",
+      "headline": "Precios sencillos.",
+      "subtitle": "Empieza gratis con una Lotería de muestra. Desbloquea las 54 cartas completas cuando estés listo.",
       "free": {
-        "name": "Free Preview",
+        "name": "Vista previa gratis",
         "price": "$0",
-        "priceLabel": "/ forever",
-        "features": ["Up to 4 custom cards", "1 printable tabla", "Custom Lotería illustrations", "Spanish label generation"],
-        "cta": "Start free"
+        "priceLabel": "/ para siempre",
+        "features": ["Hasta 4 cartas personalizadas", "1 tabla imprimible", "Ilustraciones de Lotería personalizadas", "Generación de nombres en español"],
+        "cta": "Empieza gratis"
       },
       "unlocked": {
-        "name": "Full Lotería Set",
+        "name": "Lotería completa",
         "price": "$5",
-        "priceLabel": "one-time",
-        "badge": "Most popular",
-        "features": ["Full 54-card custom deck", "Unlimited printable tablas", "High-resolution print PDFs", "No watermarks"],
-        "cta": "Get unlocked set"
+        "priceLabel": "pago único",
+        "badge": "La más popular",
+        "features": ["Lotería personalizada de 54 cartas", "Tablas imprimibles ilimitadas", "PDFs de alta resolución para imprimir", "Sin marcas de agua"],
+        "cta": "Obtén la Lotería completa"
       }
     },
     "Faq": {
-      "tagline": "FAQ",
-      "headline": "Frequently Asked Questions",
-      "pageSubtitle": "Everything you need to know about creating a custom Lotería set from your photos.",
+      "tagline": "Preguntas frecuentes",
+      "headline": "Preguntas frecuentes",
+      "pageSubtitle": "Todo lo que necesitas saber para crear una Lotería personalizada con tus fotos.",
       "items": [
         {
-          "question": "What is Lotería and how do you play it?",
-          "answer": "Lotería is a traditional Mexican game of chance, similar to bingo. Players use boards (tablas) with a 4x4 grid of images. A caller (cantor) draws cards and announces them, and players mark matching images on their boards. The first to complete a pattern wins!"
+          "question": "¿Qué es la Lotería y cómo se juega?",
+          "answer": "La Lotería es un juego tradicional mexicano de azar, parecido al bingo. Los jugadores usan tablas con una cuadrícula de 4x4 imágenes. Un cantor saca cartas y las anuncia, y los jugadores marcan las imágenes que coinciden en sus tablas. ¡El primero en completar un patrón gana!"
         },
         {
-          "question": "How do I create a custom Lotería set with my own photos?",
-          "answer": "Upload your photos and we restyle each one into a traditional Lotería-style illustration with a Spanish label. You then arrange your cards, edit labels, and generate printable tablas (boards) so you have a complete Lotería set ready to play."
+          "question": "¿Cómo creo una Lotería personalizada con mis propias fotos?",
+          "answer": "Sube tus fotos y nosotros transformamos cada una en una ilustración al estilo tradicional de la Lotería con su nombre en español. Después acomodas tus cartas, editas los nombres y generas tablas imprimibles para que tengas una Lotería completa lista para jugar."
         },
         {
-          "question": "Can I use this for my wedding or party?",
-          "answer": "Absolutely! A custom Lotería set is perfect for weddings, quinceañeras, birthday parties, family reunions, and any special celebration. Personalize the cards with your guests, memorable moments, or themed photos — and print tablas for everyone at the party."
+          "question": "¿Puedo usar esto para mi boda o fiesta?",
+          "answer": "¡Por supuesto! Una Lotería personalizada es perfecta para bodas, quinceañeras, fiestas de cumpleaños, reuniones familiares y cualquier celebración especial. Personaliza las cartas con tus invitados, momentos memorables o fotos temáticas — y manda imprimir tablas para todos en la fiesta."
         },
         {
-          "question": "How many cards can I create?",
-          "answer": "With the free preview, you can create up to 4 cards and generate one sample board. By unlocking your board for $5, you get access to 54 cards (a full traditional Lotería deck) and unlimited board generations."
+          "question": "¿Cuántas cartas puedo crear?",
+          "answer": "Con la vista previa gratis puedes crear hasta 4 cartas y generar una tabla de muestra. Al desbloquear tu tabla por $5, obtienes acceso a 54 cartas (una Lotería tradicional completa) y generación ilimitada de tablas."
         },
         {
-          "question": "What file formats can I export?",
-          "answer": "You can export your Lotería boards as high-quality printable PDFs, perfect for home or professional printing. Individual cards can also be downloaded as images."
+          "question": "¿En qué formatos puedo exportar?",
+          "answer": "Puedes exportar tus tablas de Lotería como PDFs imprimibles de alta calidad, perfectos para imprimir en casa o en una imprenta profesional. Las cartas individuales también se pueden descargar como imágenes."
         },
         {
-          "question": "Is there a subscription or recurring fee?",
-          "answer": "No subscriptions! Our pricing is simple — try for free, and when you're ready, pay a one-time $5 fee to unlock your board. That purchase gives you permanent access to that project."
+          "question": "¿Hay alguna suscripción o cobro recurrente?",
+          "answer": "¡Sin suscripciones! Nuestros precios son sencillos — pruébalo gratis y, cuando estés listo, paga una sola vez $5 para desbloquear tu tabla. Esa compra te da acceso permanente a ese proyecto."
         }
       ]
     },
     "FinalCta": {
       "tagline": "¿Listo?",
-      "headline": "Try it for free",
-      "subtitle": "No credit card required to try. Just upload a photo and watch your first Lotería card come to life in under a minute.",
-      "cta": "Create your set →"
+      "headline": "Pruébalo gratis",
+      "subtitle": "No necesitas tarjeta de crédito para probar. Solo sube una foto y mira cómo tu primera carta de Lotería cobra vida en menos de un minuto.",
+      "cta": "Crea tu Lotería →"
     },
     "Footer": {
-      "getStarted": "Get started",
-      "signIn": "Sign in",
-      "faq": "FAQ",
-      "pricing": "Pricing",
+      "getStarted": "Empieza ahora",
+      "signIn": "Iniciar sesión",
+      "faq": "Preguntas frecuentes",
+      "pricing": "Precios",
       "tagline": "Hecho con cariño"
     }
   },
   "Auth": {
     "SignIn": {
-      "cardTitle": "Welcome Back",
-      "cardDescription": "Sign in to your Lotería Generator account",
-      "googleButton": "Continue with Google",
-      "separator": "or",
-      "emailLabel": "Email",
-      "emailPlaceholder": "you@example.com",
-      "passwordLabel": "Password",
-      "passwordPlaceholder": "Enter your password",
-      "submitButton": "Sign In",
-      "submitButtonLoading": "Signing in...",
-      "noAccountPrompt": "Don't have an account?",
-      "noAccountCta": "Sign up",
+      "cardTitle": "Bienvenido de nuevo",
+      "cardDescription": "Inicia sesión en tu cuenta de Lotería Generator",
+      "googleButton": "Continuar con Google",
+      "separator": "o",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Ingresa tu contraseña",
+      "submitButton": "Iniciar sesión",
+      "submitButtonLoading": "Iniciando sesión…",
+      "noAccountPrompt": "¿No tienes cuenta?",
+      "noAccountCta": "Regístrate",
       "errors": {
-        "unexpectedError": "An unexpected error occurred",
-        "googleSignInFailed": "Failed to sign in with Google"
+        "unexpectedError": "Ocurrió un error inesperado",
+        "googleSignInFailed": "No se pudo iniciar sesión con Google"
       }
     },
     "SignUp": {
-      "cardTitle": "Create Account",
-      "cardDescription": "Start creating custom Lotería cards from your photos",
-      "googleButton": "Continue with Google",
-      "separator": "or",
-      "nameLabel": "Name",
-      "namePlaceholder": "Your name",
-      "emailLabel": "Email",
-      "emailPlaceholder": "you@example.com",
-      "passwordLabel": "Password",
-      "passwordPlaceholder": "At least 8 characters",
-      "submitButton": "Create Account",
-      "submitButtonLoading": "Creating account...",
-      "haveAccountPrompt": "Already have an account?",
-      "haveAccountCta": "Sign in",
+      "cardTitle": "Crear cuenta",
+      "cardDescription": "Empieza a crear cartas de Lotería personalizadas con tus fotos",
+      "googleButton": "Continuar con Google",
+      "separator": "o",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Tu nombre",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Mínimo 8 caracteres",
+      "submitButton": "Crear cuenta",
+      "submitButtonLoading": "Creando cuenta…",
+      "haveAccountPrompt": "¿Ya tienes cuenta?",
+      "haveAccountCta": "Inicia sesión",
       "errors": {
-        "weakPassword": "Password must be at least 8 characters",
-        "unexpectedError": "An unexpected error occurred",
-        "googleSignUpFailed": "Failed to sign up with Google"
+        "weakPassword": "La contraseña debe tener al menos 8 caracteres",
+        "unexpectedError": "Ocurrió un error inesperado",
+        "googleSignUpFailed": "No se pudo registrar con Google"
       }
     }
   },
   "Dashboard": {
-    "title": "Your Boards",
-    "subtitle": "Create and manage your Lotería card projects",
-    "newBoardButton": "New Board",
-    "newBoardButtonLoading": "Creating…",
-    "lockedHint": "Unlock a board to create another",
-    "userFallbackName": "User",
-    "userAvatarAlt": "User avatar",
+    "title": "Tus tablas",
+    "subtitle": "Crea y administra tus proyectos de Lotería",
+    "newBoardButton": "Nueva tabla",
+    "newBoardButtonLoading": "Creando…",
+    "lockedHint": "Desbloquea una tabla para crear otra",
+    "userFallbackName": "Usuario",
+    "userAvatarAlt": "Foto de perfil",
     "userMenu": {
-      "accountSettings": "Account Settings",
-      "signOut": "Sign Out"
+      "accountSettings": "Ajustes de la cuenta",
+      "signOut": "Cerrar sesión"
     },
     "boardCard": {
-      "cardsReady": "{completed} of {total} cards ready",
-      "unlockedAccess": "Full access - up to 54 cards",
-      "lockedAccess": "Free preview - up to 4 cards",
-      "deleteMenuItem": "Delete"
+      "cardsReady": "{completed} de {total} cartas listas",
+      "unlockedAccess": "Acceso completo - hasta 54 cartas",
+      "lockedAccess": "Vista previa gratis - hasta 4 cartas",
+      "deleteMenuItem": "Eliminar"
     },
     "deleteDialog": {
-      "title": "Delete this board?",
-      "description": "This will permanently delete the board and all its cards. This action cannot be undone.",
-      "cancel": "Cancel",
-      "confirm": "Delete"
+      "title": "¿Eliminar esta tabla?",
+      "description": "Esto eliminará la tabla y todas sus cartas de forma permanente. Esta acción no se puede deshacer.",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar"
     },
     "emptyState": {
-      "title": "No boards yet",
-      "description": "Create your first Lotería board to get started",
-      "cta": "Create Your First Board"
+      "title": "Aún no tienes tablas",
+      "description": "Crea tu primera tabla de Lotería para empezar",
+      "cta": "Crea tu primera tabla"
     }
   },
   "BoardEditor": {
     "Page": {
-      "backToDashboardAriaLabel": "Back to dashboard",
-      "editBoardNameAriaLabel": "Edit board name: {name}",
-      "unlockedBadge": "Unlocked",
-      "freeBadge": "Free",
-      "mobileSubtitleCards": "{count} {count, plural, one {card} other {cards}} · Updated just now",
-      "mobileSubtitleEmpty": "Free preview",
+      "backToDashboardAriaLabel": "Volver al panel",
+      "editBoardNameAriaLabel": "Editar el nombre de la tabla: {name}",
+      "unlockedBadge": "Desbloqueada",
+      "freeBadge": "Gratis",
+      "mobileSubtitleCards": "{count} {count, plural, one {carta} other {cartas}} · Actualizado hace un momento",
+      "mobileSubtitleEmpty": "Vista previa gratis",
       "unlockButtonShort": "$5",
-      "unlockButtonPrefix": "Unlock for",
-      "yourCards": "Your cards",
-      "dragToReorder": "Drag to reorder",
-      "emptyStateTitle": "Upload your first photos",
-      "emptyStateDesc": "Drag photos onto the upload area above, or click Select to get started.",
-      "emptyStateCta": "Select photos",
-      "boardNotFoundTitle": "Board not found",
-      "boardNotFoundCta": "Back to Dashboard",
+      "unlockButtonPrefix": "Desbloquear por",
+      "yourCards": "Tus cartas",
+      "dragToReorder": "Arrastra para reordenar",
+      "emptyStateTitle": "Sube tus primeras fotos",
+      "emptyStateDesc": "Arrastra fotos al área de subida de arriba, o haz clic en Seleccionar para empezar.",
+      "emptyStateCta": "Seleccionar fotos",
+      "boardNotFoundTitle": "Tabla no encontrada",
+      "boardNotFoundCta": "Volver al panel",
       "toasts": {
-        "boardUnlockedTitle": "Board unlocked!",
-        "boardUnlockedDesc": "You now have full access to this board.",
-        "paymentCancelled": "Payment cancelled",
-        "errorProcessingCard": "Error processing card"
+        "boardUnlockedTitle": "¡Tabla desbloqueada!",
+        "boardUnlockedDesc": "Ya tienes acceso completo a esta tabla.",
+        "paymentCancelled": "Pago cancelado",
+        "errorProcessingCard": "Error al procesar la carta"
       }
     },
     "ActionBar": {
-      "dropPhotos": "Drop photos to add cards",
-      "ready": "ready",
-      "processing": "processing",
-      "acceptedFormats": "PNG · JPG · WebP up to 10MB",
-      "select": "Select",
-      "exportTitle": "Export Loteria set",
-      "exportSubtitleDefault": "50 unique boards + card deck · PDF",
-      "exportSubtitleUsed": "Unlock to export again",
-      "freeExportUsed": "Free export used",
-      "exportButton": "Export",
-      "exportingButton": "Exporting…",
-      "unlockExport": "Unlock · $5",
-      "moreNeeded": "{count} more",
-      "bannerTitle": "Loved your first export?",
-      "bannerDesc": "Unlock for unlimited exports and the full 54-card deck.",
-      "bannerCta": "Unlock now →",
-      "mobileCardsStatus": "{processed}/{max} cards",
-      "mobileSaved": "Saved",
-      "mobileUpload": "Upload",
+      "dropPhotos": "Suelta fotos para agregar cartas",
+      "ready": "listas",
+      "processing": "procesando",
+      "acceptedFormats": "PNG · JPG · WebP hasta 10MB",
+      "select": "Seleccionar",
+      "exportTitle": "Exportar Lotería",
+      "exportSubtitleDefault": "50 tablas únicas + mazo de cartas · PDF",
+      "exportSubtitleUsed": "Desbloquea para exportar de nuevo",
+      "freeExportUsed": "Exportación gratis usada",
+      "exportButton": "Exportar",
+      "exportingButton": "Exportando…",
+      "unlockExport": "Desbloquear · $5",
+      "moreNeeded": "{count} más",
+      "bannerTitle": "¿Te encantó tu primera exportación?",
+      "bannerDesc": "Desbloquea para tener exportaciones ilimitadas y las 54 cartas completas.",
+      "bannerCta": "Desbloquear ahora →",
+      "mobileCardsStatus": "{processed}/{max} cartas",
+      "mobileSaved": "Guardado",
+      "mobileUpload": "Subir",
       "toasts": {
-        "exportSuccessTitle": "Loteria set exported!",
-        "exportSuccessDesc": "50 unique boards and card deck downloaded as a PDF.",
-        "exportFailedTitle": "Failed to export Loteria set",
-        "exportFailedDesc": "Please try again.",
-        "startingExport": "Starting export…"
+        "exportSuccessTitle": "¡Lotería exportada!",
+        "exportSuccessDesc": "50 tablas únicas y el mazo de cartas se descargaron como PDF.",
+        "exportFailedTitle": "No se pudo exportar la Lotería",
+        "exportFailedDesc": "Por favor, inténtalo de nuevo.",
+        "startingExport": "Iniciando exportación…"
       }
     },
     "CardGrid": {
-      "processing": "Processing…",
-      "generationFailed": "Generation failed",
-      "deleteAndRetry": "Delete card & retry",
-      "noImage": "No image",
-      "noLabel": "No label",
-      "freeLimitReached": "You've reached the free limit",
-      "keepBuildingPrefix": "Keep building —",
-      "keepBuildingSuffix": "await",
-      "moreCards": "{count} more cards",
-      "featureCards": "Up to 54 cards",
-      "featureExports": "Unlimited exports",
-      "featureWatermarks": "No watermarks",
-      "unlockButton": "Unlock",
-      "addMore": "Add more",
-      "deleteDialogTitle": "Delete this card?",
-      "deleteDialogDescWithLabel": "This will permanently delete card #{number} \"{label}\". This action cannot be undone.",
-      "deleteDialogDescNoLabel": "This will permanently delete this card. This action cannot be undone.",
-      "deleteDialogCancel": "Cancel",
-      "deleteDialogConfirm": "Delete"
+      "processing": "Procesando…",
+      "generationFailed": "Falló la generación",
+      "deleteAndRetry": "Eliminar carta y reintentar",
+      "noImage": "Sin imagen",
+      "noLabel": "Sin nombre",
+      "freeLimitReached": "Llegaste al límite gratis",
+      "keepBuildingPrefix": "Sigue creando —",
+      "keepBuildingSuffix": "te esperan",
+      "moreCards": "{count} cartas más",
+      "featureCards": "Hasta 54 cartas",
+      "featureExports": "Exportaciones ilimitadas",
+      "featureWatermarks": "Sin marcas de agua",
+      "unlockButton": "Desbloquear",
+      "addMore": "Agregar más",
+      "deleteDialogTitle": "¿Eliminar esta carta?",
+      "deleteDialogDescWithLabel": "Esto eliminará permanentemente la carta #{number} \"{label}\". Esta acción no se puede deshacer.",
+      "deleteDialogDescNoLabel": "Esto eliminará esta carta permanentemente. Esta acción no se puede deshacer.",
+      "deleteDialogCancel": "Cancelar",
+      "deleteDialogConfirm": "Eliminar"
     },
     "PreviewModal": {
-      "title": "Board Preview",
-      "imageAlt": "Lotería board preview"
+      "title": "Vista previa de la tabla",
+      "imageAlt": "Vista previa de la tabla de Lotería"
     },
     "Welcome": {
-      "freePreviewBadge": "Free preview",
-      "headline": "Make a Lotería set",
-      "headlineEmphasis": "from your photos",
-      "subtitle": "Start free with 4 cards and one export. Unlock for $5 to fill the full 54-card deck.",
-      "startFree": "Start free preview",
-      "unlockFull": "Unlock full deck — $5",
-      "trustOneTime": "One-time",
-      "trustPerBoard": "Per board",
-      "trustNoSubscription": "No subscription"
+      "freePreviewBadge": "Vista previa gratis",
+      "headline": "Crea una Lotería",
+      "headlineEmphasis": "con tus fotos",
+      "subtitle": "Empieza gratis con 4 cartas y una exportación. Desbloquea por $5 para llenar las 54 cartas completas.",
+      "startFree": "Empieza la vista previa gratis",
+      "unlockFull": "Desbloquear las 54 cartas — $5",
+      "trustOneTime": "Pago único",
+      "trustPerBoard": "Por tabla",
+      "trustNoSubscription": "Sin suscripción"
     },
     "CardEditModal": {
-      "titleWithNumber": "Edit card #{number}",
-      "closeAriaLabel": "Close",
+      "titleWithNumber": "Editar carta #{number}",
+      "closeAriaLabel": "Cerrar",
       "originalLabel": "Original",
-      "illustrationLabel": "Illustration",
-      "labelField": "Label (in Spanish)",
-      "labelPlaceholder": "Enter the label",
-      "labelHint": "1-3 Spanish words",
-      "deleteButton": "Delete",
-      "cancelButton": "Cancel",
-      "saveButton": "Save"
+      "illustrationLabel": "Ilustración",
+      "labelField": "Nombre (en español)",
+      "labelPlaceholder": "Ingresa el nombre",
+      "labelHint": "1-3 palabras en español",
+      "deleteButton": "Eliminar",
+      "cancelButton": "Cancelar",
+      "saveButton": "Guardar"
     },
     "UnlockPrompt": {
-      "drawerTitleSrOnly": "Unlock \"{name}\"",
-      "drawerDescSrOnly": "Unlock this board for full access to all features.",
-      "dialogTitleSrOnly": "Unlock \"{name}\"",
-      "dialogDescSrOnly": "Unlock this board for full access to all features.",
-      "freeLimitReached": "You've reached the free limit",
-      "keepBuildingPrefix": "Keep building —",
-      "keepBuildingSuffix": "await",
-      "moreCards": "{count} more cards",
-      "featureCards": "Up to 54 cards",
-      "featureExports": "Unlimited exports",
-      "featureWatermarks": "No watermarks",
-      "unlockButton": "Unlock",
-      "redirectingButton": "Redirecting…",
-      "maybeLater": "Maybe later",
+      "drawerTitleSrOnly": "Desbloquear \"{name}\"",
+      "drawerDescSrOnly": "Desbloquea esta tabla para tener acceso completo a todas las funciones.",
+      "dialogTitleSrOnly": "Desbloquear \"{name}\"",
+      "dialogDescSrOnly": "Desbloquea esta tabla para tener acceso completo a todas las funciones.",
+      "freeLimitReached": "Llegaste al límite gratis",
+      "keepBuildingPrefix": "Sigue creando —",
+      "keepBuildingSuffix": "te esperan",
+      "moreCards": "{count} cartas más",
+      "featureCards": "Hasta 54 cartas",
+      "featureExports": "Exportaciones ilimitadas",
+      "featureWatermarks": "Sin marcas de agua",
+      "unlockButton": "Desbloquear",
+      "redirectingButton": "Redirigiendo…",
+      "maybeLater": "Tal vez después",
       "toasts": {
-        "checkoutFailed": "Failed to start checkout. Please try again."
+        "checkoutFailed": "No se pudo iniciar el pago. Por favor, inténtalo de nuevo."
       }
     }
   },
   "CardMarquee": {
-    "ariaLabel": "Example Lotería cards produced by the generator"
+    "ariaLabel": "Cartas de Lotería de ejemplo creadas con el generador"
   },
   "Account": {
-    "pageTitle": "Account Settings",
+    "pageTitle": "Ajustes de la cuenta",
     "profile": {
-      "title": "Profile",
-      "description": "Your account information",
-      "imageAlt": "Profile",
-      "userFallback": "User"
+      "title": "Perfil",
+      "description": "La información de tu cuenta",
+      "imageAlt": "Perfil",
+      "userFallback": "Usuario"
     },
     "usage": {
-      "title": "Usage",
-      "description": "Your Lotería Generator stats",
-      "totalBoards": "Total Boards",
-      "unlocked": "Unlocked",
-      "cardsCreated": "Cards Created"
+      "title": "Uso",
+      "description": "Tus estadísticas de Lotería Generator",
+      "totalBoards": "Tablas totales",
+      "unlocked": "Desbloqueadas",
+      "cardsCreated": "Cartas creadas"
     },
     "purchases": {
-      "title": "Purchases",
-      "description": "Your unlocked boards",
-      "cardCount": "{count} cards"
+      "title": "Compras",
+      "description": "Tus tablas desbloqueadas",
+      "cardCount": "{count} cartas"
     },
-    "signOut": "Sign Out"
+    "signOut": "Cerrar sesión"
   },
   "Common": {
     "Buttons": {
-      "close": "Close",
-      "changeLanguage": "Change language"
+      "close": "Cerrar",
+      "changeLanguage": "Cambiar idioma"
     },
     "Errors": {},
     "Toasts": {}
