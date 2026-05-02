@@ -1,10 +1,11 @@
-import Image from 'next/image';
 import { db, boards, cards, user } from '@/db';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
+import { RetryFailedButton } from '../../components/retry-failed-button';
+import { AdminBoardCardsGrid } from '../../components/admin-board-cards-grid';
 import Link from 'next/link';
 import { IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db/schema';
 
@@ -41,6 +42,7 @@ export default async function AdminBoardDetailPage({
 
   const { board, ownerEmail, ownerId } = data;
   const genLimit = board.isUnlocked ? IMAGE_GENERATION_LIMIT_PAID : IMAGE_GENERATION_LIMIT_FREE;
+  const errorCount = boardCards.filter((c) => c.status === 'error').length;
 
   return (
     <div className="space-y-6">
@@ -57,11 +59,14 @@ export default async function AdminBoardDetailPage({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium">Board Info</CardTitle>
-            {board.isUnlocked ? (
-              <Badge variant="default">Unlocked</Badge>
-            ) : (
-              <Badge variant="secondary">Free</Badge>
-            )}
+            <div className="flex items-center gap-2">
+              <RetryFailedButton boardId={id} errorCount={errorCount} />
+              {board.isUnlocked ? (
+                <Badge variant="default">Unlocked</Badge>
+              ) : (
+                <Badge variant="secondary">Free</Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
@@ -110,52 +115,8 @@ export default async function AdminBoardDetailPage({
         </CardContent>
       </Card>
 
-      {/* Cards grid */}
-      <div>
-        <h3 className="mb-3 text-sm font-semibold">Cards ({boardCards.length})</h3>
-        {boardCards.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No cards</p>
-        ) : (
-          <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8">
-            {boardCards.map((card) => (
-              <Link
-                key={card.id}
-                href={`/admin/cards/${card.id}`}
-                className="group rounded-lg border border-border p-2 transition-colors hover:border-primary"
-              >
-                <div className="relative mb-2 aspect-[2/3] overflow-hidden rounded bg-muted">
-                  {card.illustrationUrl || card.originalImageUrl ? (
-                    <Image
-                      src={`/api/admin/images/${card.id}/${card.illustrationUrl ? 'illustration' : 'original'}`}
-                      alt={card.label || `Card ${card.number}`}
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                      No image
-                    </div>
-                  )}
-                  {card.status === 'error' && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-destructive/20">
-                      <Badge variant="destructive" className="text-[10px]">
-                        Error
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-                <div className="text-center">
-                  <p className="text-xs font-medium">#{card.number}</p>
-                  <p className="truncate text-[10px] text-muted-foreground">
-                    {card.label || 'Unlabeled'}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Cards grid (client component with realtime subscription) */}
+      <AdminBoardCardsGrid boardId={id} initialCards={boardCards} />
     </div>
   );
 }
