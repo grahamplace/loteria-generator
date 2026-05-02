@@ -5,7 +5,7 @@ import { uploadIllustration, fetchBlob } from '@/lib/blob';
 import { normalizeImageForOpenAI } from '@/lib/image-normalize';
 import { inngest } from '../client';
 import { illustrationRegenerateRequested } from '../events';
-import { cardChannel } from '../channels';
+import { cardChannel, boardChannel } from '../channels';
 import { OPENAI_IMAGE_MIME_TO_EXT } from './generate-card-artwork';
 import { ILLUSTRATION_PROMPT } from '@/lib/illustration-prompt';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
@@ -22,7 +22,7 @@ export const regenerateIllustration = inngest.createFunction(
     concurrency: { key: 'event.data.userId', limit: 1 },
     retries: 2,
     onFailure: async ({ event, error, step }) => {
-      const { cardId } = event.data.event.data as { cardId: string };
+      const { cardId, boardId } = event.data.event.data as { cardId: string; boardId: string };
       const message = error.message || 'Failed to regenerate illustration';
 
       await step.run('persist-error', async () => {
@@ -34,6 +34,11 @@ export const regenerateIllustration = inngest.createFunction(
 
       const ch = cardChannel({ cardId });
       await step.realtime.publish('error', ch.error, { message });
+      await step.realtime.publish('publish-board-error', boardChannel({ boardId }).cardUpdated, {
+        cardId,
+        status: 'error',
+        errorMessage: message,
+      });
     },
   },
   async ({ event, step }) => {
@@ -45,6 +50,11 @@ export const regenerateIllustration = inngest.createFunction(
         .update(cards)
         .set({ status: 'processing', errorMessage: null, updatedAt: new Date() })
         .where(eq(cards.id, cardId));
+    });
+
+    await step.realtime.publish('publish-board-processing', boardChannel({ boardId }).cardUpdated, {
+      cardId,
+      status: 'processing',
     });
 
     const illustrationUrl = await step.run('generate-and-upload-illustration', async () => {
@@ -92,6 +102,11 @@ export const regenerateIllustration = inngest.createFunction(
     });
 
     await step.realtime.publish('publish-illustration', ch.illustration, { illustrationUrl });
+    await step.realtime.publish('publish-board-completed', boardChannel({ boardId }).cardUpdated, {
+      cardId,
+      status: 'completed',
+      illustrationUrl,
+    });
 
     return { cardId, illustrationUrl };
   }
