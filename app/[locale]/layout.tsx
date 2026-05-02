@@ -4,10 +4,15 @@ import { Caveat, Bricolage_Grotesque, JetBrains_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/sonner';
 import { Agentation } from 'agentation';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { cookies, headers } from 'next/headers';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { routing, htmlLang, type Locale } from '@/i18n/routing';
+import { eq } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { db } from '@/db';
+import { userProfiles } from '@/db/schema';
 
 const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' });
 const bricolage = Bricolage_Grotesque({
@@ -112,6 +117,35 @@ export default async function LocaleLayout({
   }
 
   setRequestLocale(locale);
+
+  // DB→cookie sync: on first authenticated page load without a LOCALE cookie,
+  // read the user's saved locale from user_profiles and redirect if needed.
+  const cookieStore = await cookies();
+  const cookieLocale = cookieStore.get('LOCALE')?.value;
+  if (!cookieLocale) {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (session?.user) {
+      const [profile] = await db
+        .select({ locale: userProfiles.locale })
+        .from(userProfiles)
+        .where(eq(userProfiles.id, session.user.id))
+        .limit(1);
+
+      const dbLocale = profile?.locale;
+      if (dbLocale === 'es' || dbLocale === 'en') {
+        cookieStore.set('LOCALE', dbLocale, {
+          maxAge: 60 * 60 * 24 * 365,
+          path: '/',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+        });
+        if (dbLocale !== locale) {
+          const target = dbLocale === 'en' ? '/' : `/${dbLocale}`;
+          redirect(target);
+        }
+      }
+    }
+  }
 
   const messages = await getMessages();
 

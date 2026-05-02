@@ -60,6 +60,7 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith('/api/')) {
     const isProtectedApiRoute =
       pathname.startsWith('/api/boards') ||
+      pathname.startsWith('/api/account') ||
       (pathname.startsWith('/api/stripe') && !pathname.startsWith('/api/stripe/webhook'));
     if (isProtectedApiRoute && !getSessionToken(request)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
