@@ -14,7 +14,7 @@ export const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
 };
 import { inngest } from '../client';
 import { cardGenerateRequested } from '../events';
-import { cardChannel } from '../channels';
+import { cardChannel, boardChannel } from '../channels';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
 
@@ -44,7 +44,7 @@ export const generateCardArtwork = inngest.createFunction(
     retries: 2,
     optimizeParallelism: true,
     onFailure: async ({ event, error, step }) => {
-      const { cardId } = event.data.event.data as { cardId: string };
+      const { cardId, boardId } = event.data.event.data as { cardId: string; boardId: string };
       const message = error.message || 'Failed to generate card artwork';
 
       await step.run('persist-error', async () => {
@@ -56,6 +56,11 @@ export const generateCardArtwork = inngest.createFunction(
 
       const ch = cardChannel({ cardId });
       await step.realtime.publish('error', ch.error, { message });
+      await step.realtime.publish('publish-board-error', boardChannel({ boardId }).cardUpdated, {
+        cardId,
+        status: 'error',
+        errorMessage: message,
+      });
     },
   },
   async ({ event, step }) => {
@@ -129,6 +134,11 @@ export const generateCardArtwork = inngest.createFunction(
         return uploadIllustration(userId, boardId, cardId, illustrationBuffer);
       });
       await step.realtime.publish('publish-illustration', ch.illustration, { illustrationUrl });
+      await step.realtime.publish(
+        'publish-board-illustration',
+        boardChannel({ boardId }).cardUpdated,
+        { cardId, status: 'processing', illustrationUrl }
+      );
       return illustrationUrl;
     })();
 
@@ -167,6 +177,11 @@ export const generateCardArtwork = inngest.createFunction(
     });
 
     await step.realtime.publish('completed', ch.completed, { label, illustrationUrl });
+    await step.realtime.publish('publish-board-completed', boardChannel({ boardId }).cardUpdated, {
+      cardId,
+      status: 'completed',
+      illustrationUrl,
+    });
 
     return { cardId, label, illustrationUrl };
   }
