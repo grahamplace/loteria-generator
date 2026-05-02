@@ -29,6 +29,30 @@ function stripLocale(pathname: string): string {
   return pathname;
 }
 
+/**
+ * Detect the active locale from the URL pathname.
+ * Returns the default locale when no explicit prefix is present
+ * (consistent with `localePrefix: 'as-needed'`).
+ */
+function getLocale(pathname: string): (typeof routing.locales)[number] {
+  for (const locale of routing.locales) {
+    if (locale === routing.defaultLocale) continue;
+    if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) {
+      return locale;
+    }
+  }
+  return routing.defaultLocale;
+}
+
+/**
+ * Prepend a locale prefix to a path, unless the locale is the default
+ * (no prefix needed when `localePrefix: 'as-needed'`).
+ */
+function withLocale(path: string, locale: (typeof routing.locales)[number]): string {
+  if (locale === routing.defaultLocale) return path;
+  return `/${locale}${path === '/' ? '' : path}`;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -44,6 +68,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // --- Auth guard (runs before intl so redirects go to clean paths) ---
+  const locale = getLocale(pathname);
   const canonicalPath = stripLocale(pathname);
   const isAuthenticated = !!getSessionToken(request);
 
@@ -51,13 +76,13 @@ export async function proxy(request: NextRequest) {
   const isAuthRoute = authRoutes.some((route) => canonicalPath.startsWith(route));
 
   if (isProtectedRoute && !isAuthenticated) {
-    const signInUrl = new URL('/sign-in', request.url);
-    signInUrl.searchParams.set('callbackUrl', pathname);
+    const signInUrl = new URL(withLocale('/sign-in', locale), request.url);
+    signInUrl.searchParams.set('callbackUrl', withLocale(canonicalPath, locale));
     return NextResponse.redirect(signInUrl);
   }
 
   if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL(withLocale('/dashboard', locale), request.url));
   }
 
   // --- next-intl locale routing ---
