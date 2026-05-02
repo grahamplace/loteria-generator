@@ -42,7 +42,9 @@ export default async function AdminBoardDetailPage({
 
   const { board, ownerEmail, ownerId } = data;
   const genLimit = board.isUnlocked ? IMAGE_GENERATION_LIMIT_PAID : IMAGE_GENERATION_LIMIT_FREE;
-  const errorCount = boardCards.filter((c) => c.status === 'error').length;
+  const errorCount = boardCards.filter(
+    (c) => c.status === 'error' && c.originalImageUrl !== null
+  ).length;
 
   return (
     <div className="space-y-6">
