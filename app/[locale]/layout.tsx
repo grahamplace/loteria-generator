@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono, Caveat, Bricolage_Grotesque, JetBrains_Mono } from 'next/font/google';
+import { Caveat, Bricolage_Grotesque, JetBrains_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/sonner';
 import { Agentation } from 'agentation';
@@ -9,8 +9,6 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { routing, htmlLang, type Locale } from '@/i18n/routing';
 
-const _geist = Geist({ subsets: ['latin'] });
-const _geistMono = Geist_Mono({ subsets: ['latin'] });
 const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' });
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
