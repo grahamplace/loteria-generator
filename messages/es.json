@@ -67,6 +67,7 @@
     "Faq": {
       "tagline": "FAQ",
       "headline": "Frequently Asked Questions",
+      "pageSubtitle": "Everything you need to know about creating a custom Lotería set from your photos.",
       "items": [
         {
           "question": "What is Lotería and how do you play it?",

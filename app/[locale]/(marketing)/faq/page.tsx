@@ -54,7 +54,7 @@ export default async function FAQPage({ params }: { params: Promise<{ locale: st
             {tFaq('headline')}
           </h1>
           <p className="mx-auto mt-4 max-w-[580px] text-center text-[17px] leading-relaxed text-muted-foreground">
-            Everything you need to know about creating a custom Lotería set from your photos.
+            {tFaq('pageSubtitle')}
           </p>
           <LandingFaq faqs={faqs} />
         </div>
