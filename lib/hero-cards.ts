@@ -5,7 +5,7 @@ import weddingBouquet from './hero-cards-illustrations/02-wedding-bouquet.webp';
 import weddingRings from './hero-cards-illustrations/03-wedding-rings.webp';
 import quinceanera from './hero-cards-illustrations/04-quinceanera.webp';
 import birthdayCandles from './hero-cards-illustrations/05-birthday-candles.webp';
-import birthdayCake from './hero-cards-illustrations/06-birthday-cake.webp';
+import christmasTree from './hero-cards-illustrations/06-christmas-tree.webp';
 import family from './hero-cards-illustrations/07-family-portrait.webp';
 import baby from './hero-cards-illustrations/08-baby.webp';
 import grandpa from './hero-cards-illustrations/09-grandpa.webp';
@@ -32,7 +32,7 @@ export const heroCards: HeroCard[] = [
   { id: 'la-sortija', number: '03', label: 'La Sortija', image: weddingRings },
   { id: 'la-quinceanera', number: '04', label: 'La Quinceañera', image: quinceanera },
   { id: 'la-fiesta', number: '05', label: 'La Fiesta', image: birthdayCandles },
-  { id: 'las-velitas', number: '06', label: 'Las Velitas', image: birthdayCake },
+  { id: 'el-pino', number: '06', label: 'El Pino', image: christmasTree },
   { id: 'la-familia', number: '07', label: 'La Familia', image: family },
   { id: 'el-bebe', number: '08', label: 'El Bebé', image: baby },
   { id: 'el-abuelo', number: '09', label: 'El Abuelo', image: grandpa },

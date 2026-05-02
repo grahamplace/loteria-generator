@@ -86,8 +86,8 @@ const occasions = [
   },
   {
     tag: 'Birthday',
-    title: 'The whole crew',
-    copy: 'Friends, inside jokes, and the birthday star front-and-center.',
+    title: 'Make their birthday memorable',
+    copy: 'Cake, candles, and the people who showed up to celebrate — a custom Lotería deck the birthday star will treasure.',
     front: 'la-fiesta',
     back: 'la-guitarra',
   },
@@ -369,7 +369,7 @@ export default async function LandingPage() {
                   {[
                     'Up to 4 custom cards',
                     '1 printable tabla',
-                    'AI-generated illustrations',
+                    'Custom Lotería illustrations',
                     'Spanish label generation',
                   ].map((f) => (
                     <li
@@ -399,7 +399,7 @@ export default async function LandingPage() {
                   Most popular
                 </span>
                 <h3 className="font-display text-[18px] font-bold text-white md:text-[20px]">
-                  Unlocked Set
+                  Full Lotería Set
                 </h3>
                 <div className="mt-3 flex items-baseline gap-1.5 md:mt-4">
                   <span className="font-display text-[40px] font-bold leading-none tracking-[-0.03em] text-white md:text-[64px]">
@@ -412,7 +412,7 @@ export default async function LandingPage() {
                     'Full 54-card custom deck',
                     'Unlimited printable tablas',
                     'High-resolution print PDFs',
-                    'No watermarks · personal use',
+                    'No watermarks',
                   ].map((f) => (
                     <li
                       key={f}
