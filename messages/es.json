@@ -1,0 +1,24 @@
+{
+  "Marketing": {
+    "Nav": {},
+    "Hero": {},
+    "UseCases": {},
+    "HowItWorks": {},
+    "Pricing": {},
+    "Faq": {},
+    "Footer": {}
+  },
+  "Auth": {
+    "SignIn": {},
+    "SignUp": {}
+  },
+  "Dashboard": {},
+  "BoardEditor": {},
+  "Account": {},
+  "Common": {
+    "buttons": {},
+    "errors": {},
+    "toasts": {}
+  },
+  "Banner": {}
+}
