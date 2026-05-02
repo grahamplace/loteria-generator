@@ -150,7 +150,36 @@
       }
     }
   },
-  "Dashboard": {},
+  "Dashboard": {
+    "title": "Your Boards",
+    "subtitle": "Create and manage your Lotería card projects",
+    "newBoardButton": "New Board",
+    "newBoardButtonLoading": "Creating…",
+    "lockedHint": "Unlock a board to create another",
+    "userFallbackName": "User",
+    "userAvatarAlt": "User avatar",
+    "userMenu": {
+      "accountSettings": "Account Settings",
+      "signOut": "Sign Out"
+    },
+    "boardCard": {
+      "cardsReady": "{completed} of {total} cards ready",
+      "unlockedAccess": "Full access - up to 54 cards",
+      "lockedAccess": "Free preview - up to 4 cards",
+      "deleteMenuItem": "Delete"
+    },
+    "deleteDialog": {
+      "title": "Delete this board?",
+      "description": "This will permanently delete the board and all its cards. This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "emptyState": {
+      "title": "No boards yet",
+      "description": "Create your first Lotería board to get started",
+      "cta": "Create Your First Board"
+    }
+  },
   "BoardEditor": {},
   "Account": {},
   "Common": {

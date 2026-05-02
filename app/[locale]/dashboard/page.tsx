@@ -30,8 +30,10 @@ import { Plus, MoreVertical, Trash2, Lock, Unlock, User, LogOut } from 'lucide-r
 import { useState } from 'react';
 import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
+import { useTranslations } from 'next-intl';
 
 export default function DashboardPage() {
+  const t = useTranslations('Dashboard');
   const router = useRouter();
   const { user, isLoading: sessionLoading } = useSession();
   const { boards, limits, isLoading: boardsLoading, createBoard, deleteBoard } = useBoards();
@@ -82,7 +84,7 @@ export default function DashboardPage() {
                   {user?.image ? (
                     <Image
                       src={user.image}
-                      alt={user.name || 'User avatar'}
+                      alt={user.name || t('userAvatarAlt')}
                       width={32}
                       height={32}
                       className="h-8 w-8 rounded-full object-cover"
@@ -95,17 +97,17 @@ export default function DashboardPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                  <p className="text-sm font-medium">{user?.name || t('userFallbackName')}</p>
                   <p className="text-xs text-muted-foreground">{user?.email}</p>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push('/account')}>
-                  Account Settings
+                  {t('userMenu.accountSettings')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                  {t('userMenu.signOut')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -117,17 +119,15 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold">Your Boards</h2>
-            <p className="text-muted-foreground">Create and manage your Lotería card projects</p>
+            <h2 className="text-2xl font-bold">{t('title')}</h2>
+            <p className="text-muted-foreground">{t('subtitle')}</p>
           </div>
           <div className="flex flex-col items-end gap-1">
             <Button onClick={handleCreateBoard} disabled={isCreating || !canCreateBoard}>
               <Plus className="h-4 w-4 mr-2" />
-              {isCreating ? 'Creating...' : 'New Board'}
+              {isCreating ? t('newBoardButtonLoading') : t('newBoardButton')}
             </Button>
-            {!canCreateBoard && (
-              <p className="text-xs text-muted-foreground">Unlock a board to create another</p>
-            )}
+            {!canCreateBoard && <p className="text-xs text-muted-foreground">{t('lockedHint')}</p>}
           </div>
         </div>
 
@@ -151,13 +151,11 @@ export default function DashboardPage() {
               <div className="mx-auto w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mb-4">
                 <Plus className="h-6 w-6 text-orange-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">No boards yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Create your first Lotería board to get started
-              </p>
+              <h3 className="text-lg font-semibold mb-2">{t('emptyState.title')}</h3>
+              <p className="text-muted-foreground mb-4">{t('emptyState.description')}</p>
               <Button onClick={handleCreateBoard} disabled={isCreating || !canCreateBoard}>
                 <Plus className="h-4 w-4 mr-2" />
-                Create Your First Board
+                {t('emptyState.cta')}
               </Button>
             </CardContent>
           </Card>
@@ -198,12 +196,15 @@ export default function DashboardPage() {
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            {board.completedCardCount} of {board.cardCount} cards ready
+                            {t('boardCard.cardsReady', {
+                              completed: board.completedCardCount,
+                              total: board.cardCount,
+                            })}
                           </p>
                           <p className="text-xs text-muted-foreground pt-2">
                             {board.isUnlocked
-                              ? 'Full access - up to 54 cards'
-                              : 'Free preview - up to 4 cards'}
+                              ? t('boardCard.unlockedAccess')
+                              : t('boardCard.lockedAccess')}
                           </p>
                         </div>
                         <DropdownMenu>
@@ -221,7 +222,7 @@ export default function DashboardPage() {
                               className="text-red-600"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                              {t('boardCard.deleteMenuItem')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -239,16 +240,13 @@ export default function DashboardPage() {
       <AlertDialog open={!!deletingBoardId} onOpenChange={() => setDeletingBoardId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this board?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the board and all its cards. This action cannot be
-              undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('deleteDialog.description')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('deleteDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteBoard} className="bg-red-600 hover:bg-red-700">
-              Delete
+              {t('deleteDialog.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
