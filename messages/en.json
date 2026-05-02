@@ -136,6 +136,32 @@
       "faq": "FAQ",
       "pricing": "Pricing",
       "tagline": "Hecho con cariño"
+    },
+    "JsonLd": {
+      "siteName": "Lotería Generator",
+      "siteAlternateNames": ["Custom Lotería Cards", "Lotería Card Maker"],
+      "siteDescription": "Create personalized Mexican Lotería cards from your photos. The easiest custom Lotería card maker for weddings, parties, and family events.",
+      "softwareName": "Lotería Generator",
+      "softwareFreeOfferName": "Free Preview",
+      "softwareFreeOfferDescription": "Create up to 4 cards and 1 board for free",
+      "softwareUnlockedOfferName": "Unlocked Board",
+      "softwareUnlockedOfferDescription": "Full access with up to 54 cards and unlimited card generations",
+      "softwareFeatures": [
+        "Photo to Lotería card conversion",
+        "Traditional Mexican Lotería style illustrations",
+        "Automatic Spanish label generation",
+        "Printable board generation",
+        "Custom card editing"
+      ],
+      "howToName": "How to Create Custom Lotería Cards",
+      "howToDescription": "Learn how to create personalized Mexican Lotería cards from your photos in just a few simple steps.",
+      "howToSteps": [
+        { "name": "Sign Up", "text": "Create a free account to get started with your custom Lotería project.", "url": "/sign-up" },
+        { "name": "Upload Photos", "text": "Upload your favorite photos — people, pets, objects, or anything meaningful to you." },
+        { "name": "Illustration", "text": "Each photo is automatically transformed into a traditional Lotería-style illustration with a Spanish label." },
+        { "name": "Customize Cards", "text": "Edit labels and arrange your cards to your liking." },
+        { "name": "Generate Boards", "text": "Create randomized 4x4 bingo-style boards ready for printing and playing." }
+      ]
     }
   },
   "Auth": {

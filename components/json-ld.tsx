@@ -5,15 +5,22 @@ interface FAQItem {
   answer: string;
 }
 
-export function WebsiteJsonLd() {
+export function WebsiteJsonLd({
+  name,
+  alternateName,
+  description,
+}: {
+  name: string;
+  alternateName: string[];
+  description: string;
+}) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Lotería Generator',
-    alternateName: ['Custom Lotería Cards', 'Lotería Card Maker'],
+    name,
+    alternateName,
     url: siteUrl,
-    description:
-      'Create personalized Mexican Lotería cards from your photos. The easiest custom Lotería card maker for weddings, parties, and family events.',
+    description,
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -32,11 +39,11 @@ export function WebsiteJsonLd() {
   );
 }
 
-export function OrganizationJsonLd() {
+export function OrganizationJsonLd({ name }: { name: string }) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Lotería Generator',
+    name,
     url: siteUrl,
     logo: `${siteUrl}/icon.ico`,
     sameAs: [],
@@ -55,36 +62,29 @@ export function OrganizationJsonLd() {
   );
 }
 
-export function SoftwareApplicationJsonLd() {
+export function SoftwareApplicationJsonLd({
+  name,
+  offers,
+  featureList,
+}: {
+  name: string;
+  offers: Array<{ price: string; name: string; description: string }>;
+  featureList: string[];
+}) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'Lotería Generator',
+    name,
     applicationCategory: 'DesignApplication',
     operatingSystem: 'Web',
-    offers: [
-      {
-        '@type': 'Offer',
-        price: '0',
-        priceCurrency: 'USD',
-        name: 'Free Preview',
-        description: 'Create up to 4 cards and 1 board for free',
-      },
-      {
-        '@type': 'Offer',
-        price: '5',
-        priceCurrency: 'USD',
-        name: 'Unlocked Board',
-        description: 'Full access with up to 54 cards and unlimited card generations',
-      },
-    ],
-    featureList: [
-      'Photo to Lotería card conversion',
-      'Traditional Mexican Lotería style illustrations',
-      'Automatic Spanish label generation',
-      'Printable board generation',
-      'Custom card editing',
-    ],
+    offers: offers.map((offer) => ({
+      '@type': 'Offer',
+      price: offer.price,
+      priceCurrency: 'USD',
+      name: offer.name,
+      description: offer.description,
+    })),
+    featureList,
   };
 
   return (
@@ -137,13 +137,20 @@ export function BreadcrumbJsonLd({ items }: { items: { name: string; url: string
   );
 }
 
-export function HowToJsonLd() {
+export function HowToJsonLd({
+  name,
+  description,
+  steps,
+}: {
+  name: string;
+  description: string;
+  steps: Array<{ name: string; text: string; url?: string }>;
+}) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: 'How to Create Custom Lotería Cards',
-    description:
-      'Learn how to create personalized Mexican Lotería cards from your photos in just a few simple steps.',
+    name,
+    description,
     image: `${siteUrl}/opengraph-image`,
     totalTime: 'PT10M',
     estimatedCost: {
@@ -151,34 +158,12 @@ export function HowToJsonLd() {
       currency: 'USD',
       value: '0-5',
     },
-    step: [
-      {
-        '@type': 'HowToStep',
-        name: 'Sign Up',
-        text: 'Create a free account to get started with your custom Lotería project.',
-        url: `${siteUrl}/sign-up`,
-      },
-      {
-        '@type': 'HowToStep',
-        name: 'Upload Photos',
-        text: 'Upload your favorite photos - people, pets, objects, or anything meaningful to you.',
-      },
-      {
-        '@type': 'HowToStep',
-        name: 'Lotería Transformation',
-        text: 'We automatically transform each photo into a traditional Lotería-style illustration with a Spanish label.',
-      },
-      {
-        '@type': 'HowToStep',
-        name: 'Customize Cards',
-        text: 'Edit labels and arrange your cards to your liking.',
-      },
-      {
-        '@type': 'HowToStep',
-        name: 'Generate Boards',
-        text: 'Create randomized 4x4 bingo-style boards ready for printing and playing.',
-      },
-    ],
+    step: steps.map((s) => ({
+      '@type': 'HowToStep',
+      name: s.name,
+      text: s.text,
+      ...(s.url ? { url: s.url } : {}),
+    })),
   };
 
   return (

@@ -89,6 +89,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   const tPricing = await getTranslations('Marketing.Pricing');
   const tFaq = await getTranslations('Marketing.Faq');
   const tCta = await getTranslations('Marketing.FinalCta');
+  const tJsonLd = await getTranslations('Marketing.JsonLd');
 
   const occasionStrings = tOccasions.raw('items') as Array<{
     tag: string;
@@ -110,11 +111,34 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   return (
     <>
       <LocaleBanner currentLocale={locale} />
-      <WebsiteJsonLd />
-      <OrganizationJsonLd />
-      <SoftwareApplicationJsonLd />
+      <WebsiteJsonLd
+        name={tJsonLd('siteName')}
+        alternateName={tJsonLd.raw('siteAlternateNames') as string[]}
+        description={tJsonLd('siteDescription')}
+      />
+      <OrganizationJsonLd name={tJsonLd('siteName')} />
+      <SoftwareApplicationJsonLd
+        name={tJsonLd('softwareName')}
+        offers={[
+          {
+            price: '0',
+            name: tJsonLd('softwareFreeOfferName'),
+            description: tJsonLd('softwareFreeOfferDescription'),
+          },
+          {
+            price: '5',
+            name: tJsonLd('softwareUnlockedOfferName'),
+            description: tJsonLd('softwareUnlockedOfferDescription'),
+          },
+        ]}
+        featureList={tJsonLd.raw('softwareFeatures') as string[]}
+      />
       <FAQJsonLd faqs={faqs} />
-      <HowToJsonLd />
+      <HowToJsonLd
+        name={tJsonLd('howToName')}
+        description={tJsonLd('howToDescription')}
+        steps={tJsonLd.raw('howToSteps') as Array<{ name: string; text: string; url?: string }>}
+      />
 
       <LandingHero />
 
