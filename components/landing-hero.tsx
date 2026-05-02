@@ -13,7 +13,7 @@ import birthdayCandlesPhoto from '@/scripts/example-images/source-photos/05-birt
 
 const trustItems = ['Ready in minutes', 'Print at home', 'No subscription'];
 
-const fannedCardIds = ['la-boda', 'la-quinceanera', 'la-familia', 'la-fiesta'];
+const fannedCardIds = ['la-boda', 'la-quinceanera', 'la-familia', 'el-cumpleanos'];
 const fannedRotations = ['-rotate-[12deg]', '-rotate-[4deg]', 'rotate-[4deg]', 'rotate-[12deg]'];
 const fannedOffsets = ['translate-y-0', '-translate-y-3', '-translate-y-3', 'translate-y-0'];
 

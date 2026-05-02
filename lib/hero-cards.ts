@@ -29,10 +29,10 @@ export type HeroCard = {
 export const heroCards: HeroCard[] = [
   { id: 'la-boda', number: '01', label: 'La Boda', image: weddingCouple },
   { id: 'el-ramo', number: '02', label: 'El Ramo', image: weddingBouquet },
-  { id: 'la-sortija', number: '03', label: 'La Sortija', image: weddingRings },
+  { id: 'los-anillos', number: '03', label: 'Los Anillos', image: weddingRings },
   { id: 'la-quinceanera', number: '04', label: 'La Quinceañera', image: quinceanera },
-  { id: 'la-fiesta', number: '05', label: 'La Fiesta', image: birthdayCandles },
-  { id: 'el-pino', number: '06', label: 'El Pino', image: christmasTree },
+  { id: 'el-cumpleanos', number: '05', label: 'El Cumpleaños', image: birthdayCandles },
+  { id: 'arbol-navideno', number: '06', label: 'Árbol navideño', image: christmasTree },
   { id: 'la-familia', number: '07', label: 'La Familia', image: family },
   { id: 'el-bebe', number: '08', label: 'El Bebé', image: baby },
   { id: 'el-abuelo', number: '09', label: 'El Abuelo', image: grandpa },
@@ -42,7 +42,7 @@ export const heroCards: HeroCard[] = [
   { id: 'la-casa', number: '13', label: 'La Casa', image: house },
   { id: 'el-bochito', number: '14', label: 'El Bochito', image: car },
   { id: 'la-guitarra', number: '15', label: 'La Guitarra', image: guitar },
-  { id: 'la-pelota', number: '16', label: 'La Pelota', image: soccerBall },
+  { id: 'el-futbolista', number: '16', label: 'El Futbolista', image: soccerBall },
   { id: 'la-camara', number: '17', label: 'La Cámara', image: camera },
   { id: 'el-taco', number: '18', label: 'El Taco', image: tacos },
 ];

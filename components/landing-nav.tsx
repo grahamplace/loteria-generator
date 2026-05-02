@@ -14,25 +14,25 @@ export function LandingNav() {
         </Link>
         <div className="flex items-center gap-7">
           <Link
-            href="#how-it-works"
+            href="/#how-it-works"
             className="hidden text-sm font-medium text-foreground hover:text-primary md:inline"
           >
             How it works
           </Link>
           <Link
-            href="#occasions"
+            href="/#occasions"
             className="hidden text-sm font-medium text-foreground hover:text-primary md:inline"
           >
             Occasions
           </Link>
           <Link
-            href="#pricing"
+            href="/#pricing"
             className="hidden text-sm font-medium text-foreground hover:text-primary md:inline"
           >
             Pricing
           </Link>
           <Link
-            href="#faq"
+            href="/faq"
             className="hidden text-sm font-medium text-foreground hover:text-primary md:inline"
           >
             FAQ

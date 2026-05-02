@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Lotería Generator - Custom Mexican Lotería Cards',
     short_name: 'Lotería Generator',
     description:
-      'Create personalized Mexican Lotería cards from your photos using AI. Perfect for weddings, quinceañeras, and family celebrations.',
+      'Create personalized Mexican Lotería cards from your photos. Perfect for weddings, quinceañeras, and family celebrations.',
     start_url: '/',
     display: 'standalone',
     background_color: '#f5f0e1',
