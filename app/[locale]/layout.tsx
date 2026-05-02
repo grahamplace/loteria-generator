@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Caveat, Bricolage_Grotesque, JetBrains_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Caveat, Bricolage_Grotesque, JetBrains_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/sonner';
 import { Agentation } from 'agentation';
@@ -14,6 +14,8 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { userProfiles } from '@/db/schema';
 
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
+const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-mono' });
 const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' });
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -146,7 +148,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body
-        className={`font-sans antialiased ${caveat.variable} ${bricolage.variable} ${jetbrains.variable}`}
+        className={`font-sans antialiased ${geist.variable} ${geistMono.variable} ${caveat.variable} ${bricolage.variable} ${jetbrains.variable}`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
