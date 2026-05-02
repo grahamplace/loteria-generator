@@ -65,11 +65,11 @@
         "priceLabel": "pago único",
         "badge": "La más popular",
         "features": ["Lotería personalizada de 54 cartas", "Tablas imprimibles ilimitadas", "PDFs de alta resolución para imprimir", "Sin marcas de agua"],
-        "cta": "Obtén la Lotería completa"
+        "cta": "Desbloquea la Lotería completa"
       }
     },
     "Faq": {
-      "tagline": "Preguntas frecuentes",
+      "tagline": "FAQ",
       "headline": "Preguntas frecuentes",
       "pageSubtitle": "Todo lo que necesitas saber para crear una Lotería personalizada con tus fotos.",
       "items": [
