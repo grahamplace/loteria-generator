@@ -50,6 +50,22 @@ vi.mock('next-intl/server', () => ({
   setRequestLocale: vi.fn(),
 }));
 
+// Mock next-intl (client) for CardMarquee which uses useTranslations
+vi.mock('next-intl', () => ({
+  useTranslations: (namespace: string) => {
+    const messages: Record<string, Record<string, string>> = {
+      CardMarquee: {
+        ariaLabel: 'Example Lotería cards produced by the generator',
+      },
+    };
+    const ns = messages[namespace] ?? {};
+    const t = (key: string) => ns[key] ?? key;
+    t.raw = (key: string) => ns[key];
+    t.rich = (key: string) => ns[key] ?? key;
+    return t;
+  },
+}));
+
 // Import AFTER mocks are set up
 import { LandingHero } from '@/components/landing-hero';
 

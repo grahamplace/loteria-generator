@@ -1,6 +1,7 @@
 'use client';
 
 import { Upload, Unlock, Check } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface BoardWelcomeProps {
   onStartFreePreview: () => void;
@@ -8,10 +9,12 @@ interface BoardWelcomeProps {
 }
 
 export function BoardWelcome({ onStartFreePreview, onUnlock }: BoardWelcomeProps) {
+  const t = useTranslations('BoardEditor.Welcome');
+
   const previewCards = [
     { hue: 18, glyph: '\u{1F339}', label: 'La Rosa', number: 1 },
-    { hue: 85, glyph: '\u2600\uFE0F', label: 'El Sol', number: 2 },
-    { hue: 195, glyph: '\u2764\uFE0F', label: 'El Coraz\u00F3n', number: 3 },
+    { hue: 85, glyph: '☀️', label: 'El Sol', number: 2 },
+    { hue: 195, glyph: '❤️', label: 'El Corazón', number: 3 },
   ];
 
   return (
@@ -22,7 +25,7 @@ export function BoardWelcome({ onStartFreePreview, onUnlock }: BoardWelcomeProps
           className="inline-block px-3 py-1 border-2 border-primary text-primary rounded-md font-mono text-[10px] uppercase tracking-[0.18em] mb-6"
           style={{ transform: 'rotate(-3deg)' }}
         >
-          Free preview
+          {t('freePreviewBadge')}
         </div>
 
         {/* Fanned card preview */}
@@ -60,13 +63,13 @@ export function BoardWelcome({ onStartFreePreview, onUnlock }: BoardWelcomeProps
         </div>
 
         <h1 className="text-[28px] md:text-4xl font-bold leading-tight tracking-tight md:tracking-normal px-2 md:px-0">
-          Make a Loter&iacute;a set{' '}
+          {t('headline')}{' '}
           <span className="font-caveat text-primary text-[36px] md:text-5xl leading-none">
-            from your photos
+            {t('headlineEmphasis')}
           </span>
         </h1>
         <p className="text-[13px] md:text-sm text-muted-foreground mt-3 max-w-[280px] md:max-w-md mx-auto">
-          Start free with 4 cards and one export. Unlock for $5 to fill the full 54-card deck.
+          {t('subtitle')}
         </p>
 
         <div className="mt-6 md:mt-8 w-full md:w-auto flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
@@ -75,29 +78,29 @@ export function BoardWelcome({ onStartFreePreview, onUnlock }: BoardWelcomeProps
             className="w-full md:w-auto h-12 md:h-auto px-5 md:py-3 rounded-xl md:rounded-lg bg-primary md:bg-white text-white md:text-foreground border-0 md:border md:border-border text-[15px] md:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm md:shadow-none md:hover:border-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <Upload className="w-4 h-4" />
-            Start free preview
+            {t('startFree')}
           </button>
           <button
             onClick={onUnlock}
             className="w-full md:w-auto h-12 md:h-auto px-5 md:py-3 rounded-xl md:rounded-lg bg-white md:bg-primary text-foreground md:text-white border border-border md:border-0 text-[15px] md:text-sm font-semibold flex items-center justify-center gap-2 md:shadow-sm md:hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <Unlock className="w-4 h-4" />
-            Unlock full deck &mdash; $5
+            {t('unlockFull')}
           </button>
         </div>
 
         <div className="mt-5 flex items-center justify-center gap-3 md:gap-5 text-[9px] md:text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
           <span className="flex items-center gap-1">
             <Check className="w-3 h-3 text-emerald-600" />
-            One-time
+            {t('trustOneTime')}
           </span>
           <span className="flex items-center gap-1">
             <Check className="w-3 h-3 text-emerald-600" />
-            Per board
+            {t('trustPerBoard')}
           </span>
           <span className="flex items-center gap-1">
             <Check className="w-3 h-3 text-emerald-600" />
-            No subscription
+            {t('trustNoSubscription')}
           </span>
         </div>
       </div>

@@ -180,7 +180,129 @@
       "cta": "Create Your First Board"
     }
   },
-  "BoardEditor": {},
+  "BoardEditor": {
+    "Page": {
+      "backToDashboardAriaLabel": "Back to dashboard",
+      "editBoardNameAriaLabel": "Edit board name: {name}",
+      "unlockedBadge": "Unlocked",
+      "freeBadge": "Free",
+      "mobileSubtitleCards": "{count} {count, plural, one {card} other {cards}} · Updated just now",
+      "mobileSubtitleEmpty": "Free preview",
+      "unlockButtonShort": "$5",
+      "unlockButtonPrefix": "Unlock for",
+      "yourCards": "Your cards",
+      "dragToReorder": "Drag to reorder",
+      "emptyStateTitle": "Upload your first photos",
+      "emptyStateDesc": "Drag photos onto the upload area above, or click Select to get started.",
+      "emptyStateCta": "Select photos",
+      "boardNotFoundTitle": "Board not found",
+      "boardNotFoundCta": "Back to Dashboard",
+      "toasts": {
+        "boardUnlockedTitle": "Board unlocked!",
+        "boardUnlockedDesc": "You now have full access to this board.",
+        "paymentCancelled": "Payment cancelled",
+        "errorProcessingCard": "Error processing card"
+      }
+    },
+    "ActionBar": {
+      "dropPhotos": "Drop photos to add cards",
+      "ready": "ready",
+      "processing": "processing",
+      "acceptedFormats": "PNG · JPG · WebP up to 10MB",
+      "select": "Select",
+      "exportTitle": "Export Loteria set",
+      "exportSubtitleDefault": "50 unique boards + card deck · PDF",
+      "exportSubtitleUsed": "Unlock to export again",
+      "freeExportUsed": "Free export used",
+      "exportButton": "Export",
+      "exportingButton": "Exporting…",
+      "unlockExport": "Unlock · $5",
+      "moreNeeded": "{count} more",
+      "bannerTitle": "Loved your first export?",
+      "bannerDesc": "Unlock for unlimited exports and the full 54-card deck.",
+      "bannerCta": "Unlock now →",
+      "mobileCardsStatus": "{processed}/{max} cards",
+      "mobileSaved": "Saved",
+      "mobileUpload": "Upload",
+      "toasts": {
+        "exportSuccessTitle": "Loteria set exported!",
+        "exportSuccessDesc": "50 unique boards and card deck downloaded as a PDF.",
+        "exportFailedTitle": "Failed to export Loteria set",
+        "exportFailedDesc": "Please try again.",
+        "startingExport": "Starting export…"
+      }
+    },
+    "CardGrid": {
+      "processing": "Processing…",
+      "generationFailed": "Generation failed",
+      "deleteAndRetry": "Delete card & retry",
+      "noImage": "No image",
+      "noLabel": "No label",
+      "freeLimitReached": "You've reached the free limit",
+      "keepBuildingPrefix": "Keep building —",
+      "keepBuildingSuffix": "await",
+      "moreCards": "{count} more cards",
+      "featureCards": "Up to 54 cards",
+      "featureExports": "Unlimited exports",
+      "featureWatermarks": "No watermarks",
+      "unlockButton": "Unlock",
+      "addMore": "Add more",
+      "deleteDialogTitle": "Delete this card?",
+      "deleteDialogDescWithLabel": "This will permanently delete card #{number} \"{label}\". This action cannot be undone.",
+      "deleteDialogDescNoLabel": "This will permanently delete this card. This action cannot be undone.",
+      "deleteDialogCancel": "Cancel",
+      "deleteDialogConfirm": "Delete"
+    },
+    "PreviewModal": {
+      "title": "Board Preview",
+      "imageAlt": "Lotería board preview"
+    },
+    "Welcome": {
+      "freePreviewBadge": "Free preview",
+      "headline": "Make a Lotería set",
+      "headlineEmphasis": "from your photos",
+      "subtitle": "Start free with 4 cards and one export. Unlock for $5 to fill the full 54-card deck.",
+      "startFree": "Start free preview",
+      "unlockFull": "Unlock full deck — $5",
+      "trustOneTime": "One-time",
+      "trustPerBoard": "Per board",
+      "trustNoSubscription": "No subscription"
+    },
+    "CardEditModal": {
+      "titleWithNumber": "Edit card #{number}",
+      "closeAriaLabel": "Close",
+      "originalLabel": "Original",
+      "illustrationLabel": "Illustration",
+      "labelField": "Label (in Spanish)",
+      "labelPlaceholder": "Enter the label",
+      "labelHint": "1-3 Spanish words",
+      "deleteButton": "Delete",
+      "cancelButton": "Cancel",
+      "saveButton": "Save"
+    },
+    "UnlockPrompt": {
+      "drawerTitleSrOnly": "Unlock \"{name}\"",
+      "drawerDescSrOnly": "Unlock this board for full access to all features.",
+      "dialogTitleSrOnly": "Unlock \"{name}\"",
+      "dialogDescSrOnly": "Unlock this board for full access to all features.",
+      "freeLimitReached": "You've reached the free limit",
+      "keepBuildingPrefix": "Keep building —",
+      "keepBuildingSuffix": "await",
+      "moreCards": "{count} more cards",
+      "featureCards": "Up to 54 cards",
+      "featureExports": "Unlimited exports",
+      "featureWatermarks": "No watermarks",
+      "unlockButton": "Unlock",
+      "redirectingButton": "Redirecting…",
+      "maybeLater": "Maybe later",
+      "toasts": {
+        "checkoutFailed": "Failed to start checkout. Please try again."
+      }
+    }
+  },
+  "CardMarquee": {
+    "ariaLabel": "Example Lotería cards produced by the generator"
+  },
   "Account": {},
   "Common": {
     "Buttons": {},

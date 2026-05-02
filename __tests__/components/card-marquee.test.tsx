@@ -1,7 +1,23 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { CardMarquee } from '@/components/card-marquee';
 import { heroCards } from '@/lib/hero-cards';
+
+// Mock next-intl so useTranslations returns real keys from CardMarquee messages
+vi.mock('next-intl', () => ({
+  useTranslations: (namespace: string) => {
+    const messages: Record<string, Record<string, string>> = {
+      CardMarquee: {
+        ariaLabel: 'Example Lotería cards produced by the generator',
+      },
+    };
+    const ns = messages[namespace] ?? {};
+    const t = (key: string) => ns[key] ?? key;
+    t.raw = (key: string) => ns[key];
+    t.rich = (key: string) => ns[key] ?? key;
+    return t;
+  },
+}));
 
 describe('CardMarquee', () => {
   it('renders a region landmark with a descriptive label', () => {

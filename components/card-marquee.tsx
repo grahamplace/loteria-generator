@@ -1,5 +1,6 @@
 import type { HeroCard as HeroCardData } from '@/lib/hero-cards';
 import { HeroCard } from './hero-card';
+import { useTranslations } from 'next-intl';
 
 // Deterministic pseudo-random tilt in [-4, 4] degrees from a seed.
 function tiltFor(seed: number) {
@@ -7,16 +8,14 @@ function tiltFor(seed: number) {
 }
 
 export function CardMarquee({ cards }: { cards: HeroCardData[] }) {
+  const t = useTranslations('CardMarquee');
+
   // Cards in numerical order (1 → 18). With leftward scroll, card 1 begins at
   // the right edge and successive cards appear from the right.
   const row = cards;
 
   return (
-    <div
-      role="region"
-      aria-label="Example Lotería cards produced by the generator"
-      className="hero-marquee relative mt-2"
-    >
+    <div role="region" aria-label={t('ariaLabel')} className="hero-marquee relative mt-2">
       <div
         className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[60px]"
         style={{
