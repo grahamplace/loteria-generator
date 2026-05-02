@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { LocaleBanner } from '@/components/locale-banner';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import grandpaPhoto from '@/scripts/example-images/source-photos/09-grandpa.jpg';
@@ -101,6 +102,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
 
   return (
     <>
+      <LocaleBanner currentLocale={locale} />
       <WebsiteJsonLd />
       <OrganizationJsonLd />
       <SoftwareApplicationJsonLd />
