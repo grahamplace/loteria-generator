@@ -303,7 +303,28 @@
   "CardMarquee": {
     "ariaLabel": "Example Lotería cards produced by the generator"
   },
-  "Account": {},
+  "Account": {
+    "pageTitle": "Account Settings",
+    "profile": {
+      "title": "Profile",
+      "description": "Your account information",
+      "imageAlt": "Profile",
+      "userFallback": "User"
+    },
+    "usage": {
+      "title": "Usage",
+      "description": "Your Lotería Generator stats",
+      "totalBoards": "Total Boards",
+      "unlocked": "Unlocked",
+      "cardsCreated": "Cards Created"
+    },
+    "purchases": {
+      "title": "Purchases",
+      "description": "Your unlocked boards",
+      "cardCount": "{count} cards"
+    },
+    "signOut": "Sign Out"
+  },
   "Common": {
     "Buttons": {},
     "Errors": {},
