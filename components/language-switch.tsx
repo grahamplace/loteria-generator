@@ -1,6 +1,5 @@
 'use client';
 
-import { Globe } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -11,10 +10,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const OPTIONS = [
-  { value: 'en' as const, label: 'English' },
-  { value: 'es-MX' as const, label: 'Español' },
+type LocaleValue = 'en' | 'es-MX';
+
+const OPTIONS: { value: LocaleValue; label: string; flag: string }[] = [
+  { value: 'en', label: 'English', flag: '🇺🇸' },
+  { value: 'es-MX', label: 'Español', flag: '🇲🇽' },
 ];
+
+const FLAG_BY_LOCALE: Record<LocaleValue, string> = {
+  en: '🇺🇸',
+  'es-MX': '🇲🇽',
+};
 
 export function LanguageSwitch() {
   const locale = useLocale();
@@ -22,7 +28,9 @@ export function LanguageSwitch() {
   const pathname = usePathname();
   const t = useTranslations('Common.Buttons');
 
-  function setLocale(next: 'en' | 'es-MX') {
+  const activeFlag = FLAG_BY_LOCALE[locale as LocaleValue] ?? FLAG_BY_LOCALE.en;
+
+  function setLocale(next: LocaleValue) {
     if (next === locale) return;
     document.cookie = `LOCALE=${next}; max-age=${60 * 60 * 24 * 365}; path=/; samesite=lax${
       typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; secure' : ''
@@ -41,7 +49,9 @@ export function LanguageSwitch() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" aria-label={t('changeLanguage')} className="gap-1.5">
-          <Globe className="h-4 w-4" />
+          <span aria-hidden="true" className="text-base leading-none">
+            {activeFlag}
+          </span>
           <span className="text-xs font-medium uppercase">{locale.slice(0, 2)}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -51,8 +61,12 @@ export function LanguageSwitch() {
             key={opt.value}
             data-active={opt.value === locale ? 'true' : 'false'}
             onClick={() => setLocale(opt.value)}
+            className="gap-2"
           >
-            {opt.label}
+            <span aria-hidden="true" className="text-base leading-none">
+              {opt.flag}
+            </span>
+            <span>{opt.label}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
