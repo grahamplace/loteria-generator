@@ -1,24 +1,54 @@
+import createNextIntlMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { routing } from '@/i18n/routing';
 
-// Routes that require authentication
+const intlMiddleware = createNextIntlMiddleware(routing);
+
+// Paths (without locale prefix) that require authentication
 const protectedRoutes = ['/dashboard', '/boards', '/account'];
 
-// Routes that should redirect to dashboard if already authenticated
+// Paths (without locale prefix) that redirect to dashboard if already authenticated
 const authRoutes = ['/sign-in', '/sign-up'];
+
+function getSessionToken(request: NextRequest): string | undefined {
+  return (
+    request.cookies.get('better-auth.session_token')?.value ||
+    request.cookies.get('__Secure-better-auth.session_token')?.value
+  );
+}
+
+/**
+ * Strip a locale prefix (/en or /es) from a pathname so auth guards can
+ * compare against canonical paths like "/dashboard".
+ */
+function stripLocale(pathname: string): string {
+  const pattern = new RegExp(`^/(${routing.locales.join('|')})(/.+|$)`);
+  const m = pathname.match(pattern);
+  if (m) return m[2] || '/';
+  return pathname;
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Get the session token from cookies
-  // Better Auth uses '__Secure-' prefix in production (HTTPS)
-  const sessionToken =
-    request.cookies.get('better-auth.session_token')?.value ||
-    request.cookies.get('__Secure-better-auth.session_token')?.value;
-  const isAuthenticated = !!sessionToken;
+  // --- API routes: apply auth guard only, skip intl routing ---
+  if (pathname.startsWith('/api/')) {
+    const isProtectedApiRoute =
+      pathname.startsWith('/api/boards') ||
+      (pathname.startsWith('/api/stripe') && !pathname.startsWith('/api/stripe/webhook'));
+    if (isProtectedApiRoute && !getSessionToken(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
 
-  // Check if trying to access protected route without auth
-  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+  // --- Auth guard (runs before intl so redirects go to clean paths) ---
+  const canonicalPath = stripLocale(pathname);
+  const isAuthenticated = !!getSessionToken(request);
+
+  const isProtectedRoute = protectedRoutes.some((route) => canonicalPath.startsWith(route));
+  const isAuthRoute = authRoutes.some((route) => canonicalPath.startsWith(route));
 
   if (isProtectedRoute && !isAuthenticated) {
     const signInUrl = new URL('/sign-in', request.url);
@@ -26,26 +56,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Check if trying to access auth routes while already authenticated
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
-
   if (isAuthRoute && isAuthenticated) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Check protected API routes
-  // Note: /api/stripe/webhook and /api/inngest must be excluded — they're
-  // called by third parties (Stripe / Inngest Cloud) and authenticate via
-  // their own signature headers.
-  const isProtectedApiRoute =
-    pathname.startsWith('/api/boards') ||
-    (pathname.startsWith('/api/stripe') && !pathname.startsWith('/api/stripe/webhook'));
-
-  if (isProtectedApiRoute && !isAuthenticated) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  return NextResponse.next();
+  // --- next-intl locale routing ---
+  return intlMiddleware(request);
 }
 
 export const config = {

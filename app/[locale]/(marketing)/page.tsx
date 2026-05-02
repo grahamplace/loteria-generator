@@ -1,3 +1,4 @@
+import { setRequestLocale } from 'next-intl/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -84,7 +85,9 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
   return result;
 }
 
-export default async function LandingPage() {
+export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (session?.user) {
