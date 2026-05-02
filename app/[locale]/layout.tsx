@@ -7,7 +7,7 @@ import { Agentation } from 'agentation';
 import { notFound, redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { routing, htmlLang, type Locale } from '@/i18n/routing';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
@@ -30,74 +30,68 @@ const jetbrains = JetBrains_Mono({
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-eta.vercel.app';
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: {
-    default: 'Lotería Generator - Create Custom Mexican Lotería Cards from Your Photos',
-    template: '%s | Lotería Generator',
-  },
-  description:
-    'Create personalized Mexican Lotería cards from your photos. The easiest custom Lotería card maker for weddings, parties, and family events. Transform photos into traditional Lotería-style illustrations instantly.',
-  keywords: [
-    'custom loteria cards',
-    'loteria generator',
-    'personalized loteria',
-    'mexican loteria generator',
-    'loteria card creator',
-    'custom mexican bingo',
-    'loteria for weddings',
-    'loteria party game',
-    'loteria from photos',
-    'loteria board maker',
-    'personalized bingo cards',
-    'mexican loteria printable',
-    'custom loteria game',
-    'loteria con fotos',
-    'loteria personalizada',
-  ],
-  authors: [{ name: 'Lotería Generator' }],
-  creator: 'Lotería Generator',
-  publisher: 'Lotería Generator',
-  formatDetection: {
-    email: false,
-    telephone: false,
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    alternateLocale: 'es_MX',
-    url: siteUrl,
-    siteName: 'Lotería Generator',
-    title: 'Lotería Generator - Create Custom Mexican Lotería Cards from Your Photos',
-    description:
-      'Transform your photos into beautiful Mexican Lotería cards. Perfect for weddings, parties, and special celebrations. Create personalized Lotería boards in minutes.',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Lotería Generator - Create Custom Mexican Lotería Cards from Your Photos',
-    description:
-      'Transform your photos into beautiful Mexican Lotería cards. Perfect for weddings, parties, and special celebrations.',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Marketing.Meta' });
+
+  // localePrefix: 'as-needed' → English at '/', Spanish at '/es'
+  const localePathRoot = locale === routing.defaultLocale ? '' : `/${locale}`;
+  const canonical = localePathRoot || '/';
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: { default: t('title'), template: `%s | ${t('siteName')}` },
+    description: t('description'),
+    keywords: t.raw('keywords') as string[],
+    alternates: {
+      canonical,
+      languages: {
+        en: '/',
+        'es-MX': '/es',
+        'x-default': '/',
+      },
+    },
+    authors: [{ name: t('siteName') }],
+    creator: t('siteName'),
+    publisher: t('siteName'),
+    formatDetection: { email: false, telephone: false },
+    openGraph: {
+      type: 'website',
+      locale: locale === 'en' ? 'en_US' : 'es_MX',
+      alternateLocale: locale === 'en' ? 'es_MX' : 'en_US',
+      url: `${siteUrl}${canonical}`,
+      siteName: t('siteName'),
+      title: t('ogTitle'),
+      description: t('ogDescription'),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('twitterTitle'),
+      description: t('twitterDescription'),
+    },
+    robots: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
-  },
-  icons: {
-    icon: '/icon.ico',
-  },
-  verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION,
-    yandex: process.env.YANDEX_VERIFICATION,
-  },
-  category: 'technology',
-};
+    icons: { icon: '/icon.ico' },
+    verification: {
+      google: process.env.GOOGLE_SITE_VERIFICATION,
+      yandex: process.env.YANDEX_VERIFICATION,
+    },
+    category: 'technology',
+  };
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

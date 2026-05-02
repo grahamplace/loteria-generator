@@ -5,26 +5,46 @@ import { Button } from '@/components/ui/button';
 import { LandingFaq } from '@/components/landing-faq';
 import { FAQJsonLd, BreadcrumbJsonLd } from '@/components/json-ld';
 
-export const metadata: Metadata = {
-  title: 'FAQ — Custom Lotería Card Questions Answered',
-  description:
-    'Find answers to common questions about creating custom Lotería cards. Learn how it works, pricing, printing, and more.',
-  keywords: [
-    'loteria faq',
-    'custom loteria questions',
-    'how to play loteria',
-    'loteria card maker help',
-    'personalized loteria guide',
-  ],
-  alternates: { canonical: '/faq' },
-  openGraph: {
-    title: 'FAQ — Custom Lotería Card Questions Answered',
-    description:
-      'Find answers to common questions about creating custom Lotería cards with our generator.',
-  },
-};
-
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-eta.vercel.app';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Marketing.Faq' });
+  const tMeta = await getTranslations({ locale, namespace: 'Marketing.Meta' });
+  const faqPath = '/faq';
+  const enPath = faqPath;
+  const esPath = `/es${faqPath}`;
+  const canonical = locale === 'en' ? enPath : esPath;
+  const ogLocale = locale === 'en' ? 'en_US' : 'es_MX';
+  const ogAlternateLocale = locale === 'en' ? 'es_MX' : 'en_US';
+
+  return {
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+    keywords: t.raw('metaKeywords') as string[],
+    alternates: {
+      canonical,
+      languages: {
+        en: enPath,
+        'es-MX': esPath,
+        'x-default': enPath,
+      },
+    },
+    openGraph: {
+      type: 'website',
+      locale: ogLocale,
+      alternateLocale: ogAlternateLocale,
+      url: `${siteUrl}${canonical}`,
+      siteName: tMeta('siteName'),
+      title: t('metaTitle'),
+      description: t('metaDescription'),
+    },
+  };
+}
 
 export default async function FAQPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

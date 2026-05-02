@@ -68,10 +68,39 @@
         "cta": "Desbloquea la Lotería completa"
       }
     },
+    "Meta": {
+      "siteName": "Lotería Generator",
+      "title": "Generador de Lotería — Cartas de Lotería Mexicana Personalizadas con tus Fotos",
+      "description": "Crea cartas de Lotería mexicana personalizadas con tus fotos. El generador de lotería personalizada más fácil para bodas, quinceañeras y reuniones familiares. Transforma fotos en ilustraciones al estilo clásico de la Lotería al instante.",
+      "ogTitle": "Generador de Lotería — Lotería Personalizada con tus Fotos",
+      "ogDescription": "Transforma tus fotos en hermosas cartas de Lotería mexicana. Perfecta para bodas, quinceañeras y celebraciones especiales. Crea tu lotería personalizada con fotos en minutos.",
+      "twitterTitle": "Generador de Lotería — Lotería Personalizada con tus Fotos",
+      "twitterDescription": "Transforma tus fotos en hermosas cartas de Lotería mexicana. Lotería personalizada para boda, quinceañera y más.",
+      "keywords": [
+        "loteria personalizada",
+        "generador de loteria",
+        "loteria con fotos",
+        "loteria para boda",
+        "loteria quinceañera",
+        "loteria mexicana personalizada",
+        "hacer loteria personalizada",
+        "loteria para fiestas",
+        "loteria con mis fotos",
+        "loteria imprimible",
+        "juego de loteria personalizado",
+        "loteria para reunion familiar",
+        "custom loteria cards",
+        "loteria generator",
+        "personalized loteria"
+      ]
+    },
     "Faq": {
       "tagline": "FAQ",
       "headline": "Preguntas frecuentes",
       "pageSubtitle": "Todo lo que necesitas saber para crear una Lotería personalizada con tus fotos.",
+      "metaTitle": "Preguntas Frecuentes — Lotería Personalizada",
+      "metaDescription": "Encuentra respuestas a las preguntas más comunes sobre cómo crear cartas de Lotería personalizadas. Aprende cómo funciona, precios, impresión y más.",
+      "metaKeywords": ["preguntas frecuentes loteria", "loteria personalizada preguntas", "cómo hacer loteria personalizada", "loteria con fotos ayuda", "generador de loteria guía"],
       "items": [
         {
           "question": "¿Qué es la Lotería y cómo se juega?",
@@ -115,6 +144,8 @@
   },
   "Auth": {
     "SignIn": {
+      "metaTitle": "Iniciar Sesión — Lotería Generator",
+      "metaDescription": "Inicia sesión en tu cuenta de Lotería Generator.",
       "cardTitle": "Bienvenido de nuevo",
       "cardDescription": "Inicia sesión en tu cuenta de Lotería Generator",
       "googleButton": "Continuar con Google",
@@ -133,6 +164,8 @@
       }
     },
     "SignUp": {
+      "metaTitle": "Registrarse — Lotería Generator",
+      "metaDescription": "Crea tu cuenta de Lotería Generator y empieza a hacer cartas personalizadas.",
       "cardTitle": "Crear cuenta",
       "cardDescription": "Empieza a crear cartas de Lotería personalizadas con tus fotos",
       "googleButton": "Continuar con Google",

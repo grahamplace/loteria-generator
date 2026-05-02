@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -24,11 +25,24 @@ import {
   HowToJsonLd,
 } from '@/components/json-ld';
 
-export const metadata = {
-  alternates: {
-    canonical: '/',
-  },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const canonical = locale === 'en' ? '/' : `/${locale}`;
+  return {
+    alternates: {
+      canonical,
+      languages: {
+        en: '/',
+        'es-MX': '/es',
+        'x-default': '/',
+      },
+    },
+  };
+}
 
 const occasionCards = [
   { front: 'la-boda', back: 'los-anillos' },

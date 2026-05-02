@@ -64,10 +64,39 @@
         "cta": "Get unlocked set"
       }
     },
+    "Meta": {
+      "siteName": "Lotería Generator",
+      "title": "Lotería Generator — Custom Mexican Lotería Cards from Your Photos",
+      "description": "Create personalized Mexican Lotería cards from your photos. The easiest custom Lotería card maker for weddings, parties, and family events. Transform photos into traditional Lotería-style illustrations instantly.",
+      "ogTitle": "Lotería Generator — Custom Mexican Lotería Cards from Your Photos",
+      "ogDescription": "Transform your photos into beautiful Mexican Lotería cards. Perfect for weddings, parties, and special celebrations. Create personalized Lotería boards in minutes.",
+      "twitterTitle": "Lotería Generator — Custom Mexican Lotería Cards from Your Photos",
+      "twitterDescription": "Transform your photos into beautiful Mexican Lotería cards.",
+      "keywords": [
+        "custom loteria cards",
+        "loteria generator",
+        "personalized loteria",
+        "mexican loteria generator",
+        "loteria card creator",
+        "custom mexican bingo",
+        "loteria for weddings",
+        "loteria party game",
+        "loteria from photos",
+        "loteria board maker",
+        "personalized bingo cards",
+        "mexican loteria printable",
+        "custom loteria game",
+        "loteria con fotos",
+        "loteria personalizada"
+      ]
+    },
     "Faq": {
       "tagline": "FAQ",
       "headline": "Frequently Asked Questions",
       "pageSubtitle": "Everything you need to know about creating a custom Lotería set from your photos.",
+      "metaTitle": "FAQ — Custom Lotería Card Questions Answered",
+      "metaDescription": "Find answers to common questions about creating custom Lotería cards. Learn how it works, pricing, printing, and more.",
+      "metaKeywords": ["loteria faq", "custom loteria questions", "how to play loteria", "loteria card maker help", "personalized loteria guide"],
       "items": [
         {
           "question": "What is Lotería and how do you play it?",
@@ -111,6 +140,8 @@
   },
   "Auth": {
     "SignIn": {
+      "metaTitle": "Sign In — Lotería Generator",
+      "metaDescription": "Sign in to your Lotería Generator account.",
       "cardTitle": "Welcome Back",
       "cardDescription": "Sign in to your Lotería Generator account",
       "googleButton": "Continue with Google",
@@ -129,6 +160,8 @@
       }
     },
     "SignUp": {
+      "metaTitle": "Sign Up — Lotería Generator",
+      "metaDescription": "Create your Lotería Generator account and start making custom cards.",
       "cardTitle": "Create Account",
       "cardDescription": "Start creating custom Lotería cards from your photos",
       "googleButton": "Continue with Google",
