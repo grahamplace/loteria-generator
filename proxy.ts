@@ -96,12 +96,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - api/auth (auth endpoints need to be accessible)
+     * - _next/static, _next/image (Next.js internals)
+     * - api/auth (Better Auth handles its own routing)
+     * - any path with a file extension (e.g. loteria-star.png, icon.ico,
+     *   robots.txt, sitemap.xml). These live in /public and would otherwise
+     *   be rewritten by next-intl's middleware to /<locale>/<file> and 404.
      */
-    '/((?!_next/static|_next/image|favicon.ico|public|api/auth).*)',
+    '/((?!_next/static|_next/image|api/auth|.*\\..*).*)',
   ],
 };
