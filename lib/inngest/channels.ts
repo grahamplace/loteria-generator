@@ -23,3 +23,19 @@ export const cardChannel = realtime.channel({
 });
 
 export const cardChannelTopics = ['label', 'illustration', 'completed', 'error'] as const;
+
+export const boardChannel = realtime.channel({
+  name: ({ boardId }: { boardId: string }) => `board:${boardId}`,
+  topics: {
+    cardUpdated: {
+      schema: z.object({
+        cardId: z.string().uuid(),
+        status: z.enum(['pending', 'processing', 'completed', 'error']),
+        illustrationUrl: z.string().url().optional(),
+        errorMessage: z.string().nullable().optional(),
+      }),
+    },
+  },
+});
+
+export const boardChannelTopics = ['cardUpdated'] as const;
