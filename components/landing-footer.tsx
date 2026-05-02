@@ -1,7 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 
-export function LandingFooter() {
+export async function LandingFooter() {
+  const t = await getTranslations('Marketing.Footer');
   return (
     <footer className="border-t border-[var(--color-rule-warm)] py-14">
       <div className="mx-auto max-w-[1240px] px-6 sm:px-8">
@@ -14,20 +16,20 @@ export function LandingFooter() {
           </div>
           <div className="flex flex-wrap gap-6">
             <Link href="/sign-up" className="text-sm text-muted-foreground hover:text-foreground">
-              Get started
+              {t('getStarted')}
             </Link>
             <Link href="/sign-in" className="text-sm text-muted-foreground hover:text-foreground">
-              Sign in
+              {t('signIn')}
             </Link>
             <Link href="/faq" className="text-sm text-muted-foreground hover:text-foreground">
-              FAQ
+              {t('faq')}
             </Link>
             <Link href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground">
-              Pricing
+              {t('pricing')}
             </Link>
           </div>
           <p className="font-jetbrains text-[12px] tracking-wider text-muted-foreground">
-            © {new Date().getFullYear()} — Hecho con cariño
+            © {new Date().getFullYear()} — {t('tagline')}
           </p>
         </div>
       </div>

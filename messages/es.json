@@ -1,12 +1,112 @@
 {
   "Marketing": {
-    "Nav": {},
-    "Hero": {},
+    "Nav": {
+      "howItWorks": "How it works",
+      "occasions": "Occasions",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "signIn": "Sign in",
+      "startFree": "Start free"
+    },
+    "Hero": {
+      "headlineLine1": "Turn your photos into",
+      "headlineLine2Prefix": "a custom",
+      "headlineLine2Suffix": "set.",
+      "subtitle": "Upload photos of your <strong>family, friends, even pets</strong> — we instantly illustrate them in classic Mexican Lotería style and generate a full Lotería set you can print and play at home.",
+      "ctaTry": "Try it for free →",
+      "ctaSeeHow": "See how it works",
+      "trustItems": ["Ready in minutes", "Print at home", "No subscription"]
+    },
     "UseCases": {},
-    "HowItWorks": {},
-    "Pricing": {},
-    "Faq": {},
-    "Footer": {}
+    "HowItWorks": {
+      "tagline": "Custom Lotería sets · Made from your photos",
+      "headlineLine1": "Three simple steps.",
+      "headlineLine2": "Get a custom Lotería set in minutes.",
+      "subtitle": "Upload your favorite photos and we handle the rest.",
+      "step1Title": "Upload your photos",
+      "step1Desc": "Upload photos of family, friends, or pets. We can illustrate anything or anyone you want to feature on a card.",
+      "step2Title": "We illustrate each card",
+      "step2Desc": "We instantly draw each photo in classic Lotería style and add Spanish labels — El Abuelo, La Novia, El Niño.",
+      "step3Title": "Print and play at home",
+      "step3Desc": "Download print-ready PDFs of every card and tabla. Print at home or at a local print shop. You're ready to play Lotería!",
+      "ctaGetStarted": "Get started for free →",
+      "step2GrandpaPhotoAlt": "Original photo of a grandfather"
+    },
+    "Occasions": {
+      "tagline": "For all the moments that matter",
+      "headlineLine1": "Make your next family gathering",
+      "headlineLine2": "even more memorable.",
+      "subtitle": "Surprise your friends and family with a custom Lotería set they'll love.",
+      "items": [
+        { "tag": "Wedding", "title": "For the bride & groom", "copy": "Photos of the couple, the wedding party, both families. A celebration of two families coming together." },
+        { "tag": "Quinceañera", "title": "Made for her court", "copy": "The quinceañera, her chambelanes, damas, and padrinos — everyone gets their card." },
+        { "tag": "Reunion", "title": "Every primo & tía", "copy": "Celebrate the whole familia. From abuela to the new baby — everyone will love playing custom Lotería featuring their loved ones." },
+        { "tag": "Birthday", "title": "Make their birthday memorable", "copy": "Cake, candles, and the people who showed up to celebrate — a custom Lotería deck the birthday star will treasure." }
+      ]
+    },
+    "Pricing": {
+      "tagline": "Pay once · No subscriptions",
+      "headline": "Simple pricing.",
+      "subtitle": "Start free with a sample set. Unlock the full 54-card deck when you're ready.",
+      "free": {
+        "name": "Free Preview",
+        "price": "$0",
+        "priceLabel": "/ forever",
+        "features": ["Up to 4 custom cards", "1 printable tabla", "Custom Lotería illustrations", "Spanish label generation"],
+        "cta": "Start free"
+      },
+      "unlocked": {
+        "name": "Full Lotería Set",
+        "price": "$5",
+        "priceLabel": "one-time",
+        "badge": "Most popular",
+        "features": ["Full 54-card custom deck", "Unlimited printable tablas", "High-resolution print PDFs", "No watermarks"],
+        "cta": "Get unlocked set"
+      }
+    },
+    "Faq": {
+      "tagline": "FAQ",
+      "headline": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "What is Lotería and how do you play it?",
+          "answer": "Lotería is a traditional Mexican game of chance, similar to bingo. Players use boards (tablas) with a 4x4 grid of images. A caller (cantor) draws cards and announces them, and players mark matching images on their boards. The first to complete a pattern wins!"
+        },
+        {
+          "question": "How do I create a custom Lotería set with my own photos?",
+          "answer": "Upload your photos and we restyle each one into a traditional Lotería-style illustration with a Spanish label. You then arrange your cards, edit labels, and generate printable tablas (boards) so you have a complete Lotería set ready to play."
+        },
+        {
+          "question": "Can I use this for my wedding or party?",
+          "answer": "Absolutely! A custom Lotería set is perfect for weddings, quinceañeras, birthday parties, family reunions, and any special celebration. Personalize the cards with your guests, memorable moments, or themed photos — and print tablas for everyone at the party."
+        },
+        {
+          "question": "How many cards can I create?",
+          "answer": "With the free preview, you can create up to 4 cards and generate one sample board. By unlocking your board for $5, you get access to 54 cards (a full traditional Lotería deck) and unlimited board generations."
+        },
+        {
+          "question": "What file formats can I export?",
+          "answer": "You can export your Lotería boards as high-quality printable PDFs, perfect for home or professional printing. Individual cards can also be downloaded as images."
+        },
+        {
+          "question": "Is there a subscription or recurring fee?",
+          "answer": "No subscriptions! Our pricing is simple — try for free, and when you're ready, pay a one-time $5 fee to unlock your board. That purchase gives you permanent access to that project."
+        }
+      ]
+    },
+    "FinalCta": {
+      "tagline": "¿Listo?",
+      "headline": "Try it for free",
+      "subtitle": "No credit card required to try. Just upload a photo and watch your first Lotería card come to life in under a minute.",
+      "cta": "Create your set →"
+    },
+    "Footer": {
+      "getStarted": "Get started",
+      "signIn": "Sign in",
+      "faq": "FAQ",
+      "pricing": "Pricing",
+      "tagline": "Hecho con cariño"
+    }
   },
   "Auth": {
     "SignIn": {},

@@ -2,8 +2,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitch } from '@/components/language-switch';
+import { getTranslations } from 'next-intl/server';
 
-export function LandingNav() {
+export async function LandingNav() {
+  const t = await getTranslations('Marketing.Nav');
   return (
     <nav className="sticky top-0 z-50 border-b border-[var(--color-rule-warm)] bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-[1240px] items-center justify-between px-6 py-4 sm:px-8">
@@ -18,39 +20,39 @@ export function LandingNav() {
             href="/#how-it-works"
             className="hidden text-sm font-medium text-foreground hover:text-primary md:inline"
           >
-            How it works
+            {t('howItWorks')}
           </Link>
           <Link
             href="/#occasions"
             className="hidden text-sm font-medium text-foreground hover:text-primary md:inline"
           >
-            Occasions
+            {t('occasions')}
           </Link>
           <Link
             href="/#pricing"
             className="hidden text-sm font-medium text-foreground hover:text-primary md:inline"
           >
-            Pricing
+            {t('pricing')}
           </Link>
           <Link
             href="/faq"
             className="hidden text-sm font-medium text-foreground hover:text-primary md:inline"
           >
-            FAQ
+            {t('faq')}
           </Link>
           <LanguageSwitch />
           <Link
             href="/sign-in"
             className="hidden text-sm font-medium text-foreground hover:text-primary sm:inline"
           >
-            Sign in
+            {t('signIn')}
           </Link>
           <Link href="/sign-up">
             <Button
               size="sm"
               className="h-auto rounded-full px-5 py-2.5 text-sm font-semibold shadow-[0_8px_18px_-10px_rgba(230,57,70,0.7)]"
             >
-              Start free
+              {t('startFree')}
             </Button>
           </Link>
         </div>
