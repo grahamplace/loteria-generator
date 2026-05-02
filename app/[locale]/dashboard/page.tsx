@@ -29,6 +29,7 @@ import {
 import { Plus, MoreVertical, Trash2, Lock, Unlock, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import posthog from 'posthog-js';
+import { LanguageSwitch } from '@/components/language-switch';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -73,39 +74,42 @@ export default function DashboardPage() {
             <Image src="/loteria-star.png" alt="" width={28} height={28} className="h-7 w-7" />
             Lotería Generator
           </h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                {user?.image ? (
-                  <Image
-                    src={user.image}
-                    alt={user.name || 'User avatar'}
-                    width={32}
-                    height={32}
-                    className="h-8 w-8 rounded-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <User className="h-5 w-5" />
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <div className="px-2 py-1.5">
-                <p className="text-sm font-medium">{user?.name || 'User'}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/account')}>
-                Account Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <LanguageSwitch />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  {user?.image ? (
+                    <Image
+                      src={user.image}
+                      alt={user.name || 'User avatar'}
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 rounded-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <User className="h-5 w-5" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push('/account')}>
+                  Account Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 

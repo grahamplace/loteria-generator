@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { LanguageSwitch } from '@/components/language-switch';
 
 export function LandingNav() {
   return (
@@ -37,6 +38,7 @@ export function LandingNav() {
           >
             FAQ
           </Link>
+          <LanguageSwitch />
           <Link
             href="/sign-in"
             className="hidden text-sm font-medium text-foreground hover:text-primary sm:inline"

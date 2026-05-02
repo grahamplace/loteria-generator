@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { LanguageSwitch } from '@/components/language-switch';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -71,7 +72,10 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-orange-50 to-white p-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-b from-orange-50 to-white p-4">
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSwitch />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>

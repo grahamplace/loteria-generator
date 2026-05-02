@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
 import { useBoards } from '@/hooks/use-boards';
 import { signOut } from '@/lib/auth-client';
+import { LanguageSwitch } from '@/components/language-switch';
 
 export default function AccountPage() {
   const router = useRouter();
@@ -30,8 +31,9 @@ export default function AccountPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
         <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-          <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <Skeleton className="h-8 w-32" />
+            <LanguageSwitch />
           </div>
         </header>
         <main className="container mx-auto px-4 py-8">
@@ -45,13 +47,16 @@ export default function AccountPage() {
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-bold">Account Settings</h1>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-xl font-bold">Account Settings</h1>
+          </div>
+          <LanguageSwitch />
         </div>
       </header>
 

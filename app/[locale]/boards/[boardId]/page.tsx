@@ -15,6 +15,7 @@ import { BoardWelcome } from '@/components/board-welcome';
 import { UnlockPrompt } from '@/components/unlock-prompt';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
+import { LanguageSwitch } from '@/components/language-switch';
 
 export default function BoardEditorPage() {
   const params = useParams();
@@ -131,8 +132,9 @@ export default function BoardEditorPage() {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-black/5 bg-white/70 backdrop-blur-sm sticky top-0 z-30">
-          <div className="max-w-[1400px] mx-auto px-6 py-3">
+          <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
             <Skeleton className="h-6 w-48" />
+            <LanguageSwitch />
           </div>
         </header>
         <div className="max-w-[1400px] mx-auto px-3 md:px-6 pt-5 pb-4 hidden md:block">
@@ -221,6 +223,7 @@ export default function BoardEditorPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <LanguageSwitch />
             {!board.isUnlocked && (
               <button
                 onClick={() => openUnlockPrompt('card_limit')}
