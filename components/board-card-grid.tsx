@@ -36,6 +36,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 interface DisplayCard {
   id: string;
@@ -108,6 +109,8 @@ function SortableCard({ card, onCardClick, isDragging }: SortableCardProps) {
 }
 
 function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay?: boolean }) {
+  const t = useTranslations('BoardEditor.CardGrid');
+
   return (
     <>
       {/* Card number overlay */}
@@ -132,15 +135,15 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
             <div className="text-center">
               <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">Processing…</p>
+              <p className="text-xs text-muted-foreground">{t('processing')}</p>
             </div>
           </div>
         ) : card.error ? (
           <div className="w-full h-full flex flex-col items-center justify-center bg-destructive/10 gap-2 px-4">
             <AlertTriangle className="w-8 h-8 text-destructive/60" />
-            <p className="text-xs font-medium text-destructive">Generation failed</p>
+            <p className="text-xs font-medium text-destructive">{t('generationFailed')}</p>
             <p className="text-[10px] text-destructive/60 text-center line-clamp-2">
-              Delete card &amp; retry
+              {t('deleteAndRetry')}
             </p>
           </div>
         ) : card.illustration ? (
@@ -155,7 +158,7 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-muted">
-            <p className="text-xs text-muted-foreground">No image</p>
+            <p className="text-xs text-muted-foreground">{t('noImage')}</p>
           </div>
         )}
       </div>
@@ -166,7 +169,7 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
           <div className="h-5 bg-muted-foreground/15 rounded animate-pulse" />
         ) : (
           <p className="text-sm font-semibold text-center text-foreground line-clamp-2 uppercase tracking-wide">
-            {card.label || 'No label'}
+            {card.label || t('noLabel')}
           </p>
         )}
       </div>
@@ -196,6 +199,7 @@ export function BoardCardGrid({
   maxCards = 54,
   onUnlockRequired,
 }: BoardCardGridProps) {
+  const t = useTranslations('BoardEditor.CardGrid');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingCard, setEditingCard] = useState<DisplayCard | null>(null);
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
@@ -343,27 +347,27 @@ export function BoardCardGrid({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[9px] md:text-[10px] font-mono uppercase tracking-wider text-primary mb-0.5">
-                    You&apos;ve reached the free limit
+                    {t('freeLimitReached')}
                   </div>
                   <div className="font-bold text-[13px] md:text-[14px] leading-tight">
-                    Keep building &mdash;{' '}
+                    {t('keepBuildingPrefix')}{' '}
                     <span className="font-caveat text-[18px] md:text-xl text-primary">
-                      {maxCards - cards.length} more cards
+                      {t('moreCards', { count: maxCards - cards.length })}
                     </span>{' '}
-                    await
+                    {t('keepBuildingSuffix')}
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-foreground/70">
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-600" />
-                      Up to 54 cards
+                      {t('featureCards')}
                     </span>
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-600" />
-                      Unlimited exports
+                      {t('featureExports')}
                     </span>
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-600" />
-                      No watermarks
+                      {t('featureWatermarks')}
                     </span>
                   </div>
                 </div>
@@ -372,7 +376,7 @@ export function BoardCardGrid({
                   className="px-3.5 py-2 rounded-lg bg-primary text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm whitespace-nowrap hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   <Unlock className="w-3.5 h-3.5" />
-                  Unlock
+                  {t('unlockButton')}
                 </button>
               </div>
             ) : onAddMore ? (
@@ -387,7 +391,7 @@ export function BoardCardGrid({
                     <Plus className="w-4 h-4" />
                   </div>
                   <span className="text-[10px] font-semibold uppercase tracking-wider">
-                    Add more
+                    {t('addMore')}
                   </span>
                 </div>
                 <div className="p-3">
@@ -429,17 +433,20 @@ export function BoardCardGrid({
       <AlertDialog open={!!deletingCardId} onOpenChange={() => setDeletingCardId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this card?</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDialogTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
               {deletingCard
-                ? `This will permanently delete card #${deletingCard.number}${deletingCard.label ? ` "${deletingCard.label}"` : ''}. This action cannot be undone.`
-                : 'This will permanently delete this card. This action cannot be undone.'}
+                ? t(deletingCard.label ? 'deleteDialogDescWithLabel' : 'deleteDialogDescNoLabel', {
+                    number: deletingCard.number,
+                    label: deletingCard.label,
+                  })
+                : t('deleteDialogDescNoLabel')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('deleteDialogCancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteCard} className="bg-red-600 hover:bg-red-700">
-              Delete
+              {t('deleteDialogConfirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

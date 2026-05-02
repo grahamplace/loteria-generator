@@ -8,11 +8,14 @@ export const metadata = {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAdmin();
-
   return (
-    <div className="min-h-screen bg-background">
-      <AdminSidebar email={session.user.email} />
-      <main className="ml-56 min-h-screen p-6">{children}</main>
-    </div>
+    <html lang="en">
+      <body>
+        <div className="min-h-screen bg-background">
+          <AdminSidebar email={session.user.email} />
+          <main className="ml-56 min-h-screen p-6">{children}</main>
+        </div>
+      </body>
+    </html>
   );
 }

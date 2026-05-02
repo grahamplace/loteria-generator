@@ -1,6 +1,9 @@
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { LocaleBanner } from '@/components/locale-banner';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import grandpaPhoto from '@/scripts/example-images/source-photos/09-grandpa.jpg';
@@ -14,7 +17,6 @@ import { HeroCard } from '@/components/hero-card';
 import { TablaBoard } from '@/components/tabla-board';
 import { heroCards } from '@/lib/hero-cards';
 import { LandingFaq } from '@/components/landing-faq';
-import { faqs } from '@/lib/faq-data';
 import {
   WebsiteJsonLd,
   OrganizationJsonLd,
@@ -23,41 +25,30 @@ import {
   HowToJsonLd,
 } from '@/components/json-ld';
 
-export const metadata = {
-  alternates: {
-    canonical: '/',
-  },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const canonical = locale === 'en' ? '/' : `/${locale}`;
+  return {
+    alternates: {
+      canonical,
+      languages: {
+        en: '/',
+        'es-MX': '/es',
+        'x-default': '/',
+      },
+    },
+  };
+}
 
-const occasions = [
-  {
-    tag: 'Wedding',
-    title: 'For the bride & groom',
-    copy: 'Photos of the couple, the wedding party, both families. A celebration of two families coming together.',
-    front: 'la-boda',
-    back: 'los-anillos',
-  },
-  {
-    tag: 'Quinceañera',
-    title: 'Made for her court',
-    copy: 'The quinceañera, her chambelanes, damas, and padrinos — everyone gets their card.',
-    front: 'la-quinceanera',
-    back: 'el-ramo',
-  },
-  {
-    tag: 'Reunion',
-    title: 'Every primo & tía',
-    copy: 'Celebrate the whole familia. From abuela to the new baby — everyone will love playing custom Lotería featuring their loved ones.',
-    front: 'la-familia',
-    back: 'el-abuelo',
-  },
-  {
-    tag: 'Birthday',
-    title: 'Make their birthday memorable',
-    copy: 'Cake, candles, and the people who showed up to celebrate — a custom Lotería deck the birthday star will treasure.',
-    front: 'el-cumpleanos',
-    back: 'la-guitarra',
-  },
+const occasionCards = [
+  { front: 'la-boda', back: 'los-anillos' },
+  { front: 'la-quinceanera', back: 'el-ramo' },
+  { front: 'la-familia', back: 'el-abuelo' },
+  { front: 'el-cumpleanos', back: 'la-guitarra' },
 ] as const;
 
 const fannedRotations = ['-rotate-[12deg]', '-rotate-[4deg]', 'rotate-[4deg]', 'rotate-[12deg]'];
@@ -84,12 +75,33 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
   return result;
 }
 
-export default async function LandingPage() {
+export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (session?.user) {
     redirect('/dashboard');
   }
+
+  const tHowItWorks = await getTranslations('Marketing.HowItWorks');
+  const tOccasions = await getTranslations('Marketing.Occasions');
+  const tPricing = await getTranslations('Marketing.Pricing');
+  const tFaq = await getTranslations('Marketing.Faq');
+  const tCta = await getTranslations('Marketing.FinalCta');
+  const tJsonLd = await getTranslations('Marketing.JsonLd');
+
+  const occasionStrings = tOccasions.raw('items') as Array<{
+    tag: string;
+    title: string;
+    copy: string;
+  }>;
+  const occasions = occasionCards.map((c, i) => ({ ...c, ...occasionStrings[i] }));
+
+  const faqs = tFaq.raw('items') as Array<{ question: string; answer: string }>;
+
+  const freeFeatures = tPricing.raw('free.features') as string[];
+  const unlockedFeatures = tPricing.raw('unlocked.features') as string[];
 
   const cardById = (id: string) => heroCards.find((c) => c.id === id);
   const finalCtaCards = ['la-boda', 'la-quinceanera', 'la-familia', 'el-cumpleanos']
@@ -98,11 +110,35 @@ export default async function LandingPage() {
 
   return (
     <>
-      <WebsiteJsonLd />
-      <OrganizationJsonLd />
-      <SoftwareApplicationJsonLd />
+      <LocaleBanner currentLocale={locale} />
+      <WebsiteJsonLd
+        name={tJsonLd('siteName')}
+        alternateName={tJsonLd.raw('siteAlternateNames') as string[]}
+        description={tJsonLd('siteDescription')}
+      />
+      <OrganizationJsonLd name={tJsonLd('siteName')} />
+      <SoftwareApplicationJsonLd
+        name={tJsonLd('softwareName')}
+        offers={[
+          {
+            price: '0',
+            name: tJsonLd('softwareFreeOfferName'),
+            description: tJsonLd('softwareFreeOfferDescription'),
+          },
+          {
+            price: '5',
+            name: tJsonLd('softwareUnlockedOfferName'),
+            description: tJsonLd('softwareUnlockedOfferDescription'),
+          },
+        ]}
+        featureList={tJsonLd.raw('softwareFeatures') as string[]}
+      />
       <FAQJsonLd faqs={faqs} />
-      <HowToJsonLd />
+      <HowToJsonLd
+        name={tJsonLd('howToName')}
+        description={tJsonLd('howToDescription')}
+        steps={tJsonLd.raw('howToSteps') as Array<{ name: string; text: string; url?: string }>}
+      />
 
       <LandingHero />
 
@@ -114,15 +150,15 @@ export default async function LandingPage() {
         <div className="mx-auto max-w-[1240px] px-6 sm:px-8">
           <div className="mx-auto max-w-[720px] text-center">
             <p className="font-jetbrains text-[12px] font-medium uppercase tracking-[0.18em] text-secondary">
-              Custom Lotería sets · Made from your photos
+              {tHowItWorks('tagline')}
             </p>
             <h2 className="mt-4 font-display text-[clamp(36px,4.4vw,64px)] font-bold leading-[1.05] tracking-[-0.02em] text-background">
-              Three simple steps.
+              {tHowItWorks('headlineLine1')}
               <br />
-              Get a custom Lotería set in minutes.
+              {tHowItWorks('headlineLine2')}
             </h2>
             <p className="mx-auto mt-4 max-w-[560px] text-[17px] leading-relaxed text-background/70">
-              Upload your favorite photos and we handle the rest.
+              {tHowItWorks('subtitle')}
             </p>
           </div>
 
@@ -152,11 +188,10 @@ export default async function LandingPage() {
                 </div>
               </div>
               <h3 className="mt-5 font-display text-[22px] font-bold text-background md:order-2">
-                Upload your photos
+                {tHowItWorks('step1Title')}
               </h3>
               <p className="mt-2.5 text-[14.5px] leading-relaxed text-background/70 md:order-3">
-                Upload photos of family, friends, or pets. We can illustrate anything or anyone you
-                want to feature on a card.
+                {tHowItWorks('step1Desc')}
               </p>
             </article>
 
@@ -171,7 +206,7 @@ export default async function LandingPage() {
                       <div className="relative aspect-[2/3]">
                         <Image
                           src={grandpaPhoto}
-                          alt="Original photo of a grandfather"
+                          alt={tHowItWorks('step2GrandpaPhotoAlt')}
                           fill
                           sizes="84px"
                           className="object-cover"
@@ -191,11 +226,10 @@ export default async function LandingPage() {
                 </div>
               </div>
               <h3 className="mt-5 font-display text-[22px] font-bold text-background md:order-2">
-                We illustrate each card
+                {tHowItWorks('step2Title')}
               </h3>
               <p className="mt-2.5 text-[14.5px] leading-relaxed text-background/70 md:order-3">
-                We instantly draw each photo in classic Lotería style and add Spanish labels — El
-                Abuelo, La Novia, El Niño.
+                {tHowItWorks('step2Desc')}
               </p>
             </article>
 
@@ -225,11 +259,10 @@ export default async function LandingPage() {
                 </div>
               </div>
               <h3 className="mt-5 font-display text-[22px] font-bold text-background md:order-2">
-                Print and play at home
+                {tHowItWorks('step3Title')}
               </h3>
               <p className="mt-2.5 text-[14.5px] leading-relaxed text-background/70 md:order-3">
-                Download print-ready PDFs of every card and tabla. Print at home or at a local print
-                shop. You&rsquo;re ready to play Lotería!
+                {tHowItWorks('step3Desc')}
               </p>
             </article>
           </div>
@@ -240,7 +273,7 @@ export default async function LandingPage() {
                 size="lg"
                 className="h-auto rounded-full bg-primary px-9 py-[18px] text-[16px] font-semibold text-primary-foreground shadow-[0_8px_18px_-10px_rgba(230,57,70,0.7)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_-10px_rgba(230,57,70,0.8)]"
               >
-                Get started for free →
+                {tHowItWorks('ctaGetStarted')}
               </Button>
             </Link>
           </div>
@@ -251,15 +284,15 @@ export default async function LandingPage() {
       <section id="occasions" className="scroll-mt-20 py-16 md:py-20">
         <div className="mx-auto max-w-[1240px] px-6 sm:px-8">
           <p className="text-center font-jetbrains text-[12px] font-medium uppercase tracking-[0.18em] text-primary">
-            For all the moments that matter
+            {tOccasions('tagline')}
           </p>
           <h2 className="mt-4 text-center font-display text-[clamp(36px,4.4vw,64px)] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">
-            Make your next family gathering
+            {tOccasions('headlineLine1')}
             <br />
-            even more memorable.
+            {tOccasions('headlineLine2')}
           </h2>
           <p className="mx-auto mt-4 max-w-[580px] text-center text-[17px] leading-relaxed text-muted-foreground">
-            Surprise your friends and family with a custom Lotería set they&rsquo;ll love.
+            {tOccasions('subtitle')}
           </p>
 
           <div className="-mx-6 mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 md:mt-14 lg:grid-cols-4">
@@ -306,34 +339,31 @@ export default async function LandingPage() {
       <section id="pricing" className="scroll-mt-20 pb-16 pt-2 md:pb-20 md:pt-4">
         <div className="mx-auto max-w-[1240px] px-6 sm:px-8">
           <p className="text-center font-jetbrains text-[12px] font-medium uppercase tracking-[0.18em] text-primary">
-            Pay once · No subscriptions
+            {tPricing('tagline')}
           </p>
           <h2 className="mt-4 text-center font-display text-[clamp(36px,4.4vw,64px)] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">
-            Simple pricing.
+            {tPricing('headline')}
           </h2>
           <p className="mx-auto mt-4 max-w-[540px] text-center text-[17px] leading-relaxed text-muted-foreground">
-            Start free with a sample set. Unlock the full 54-card deck when you&rsquo;re ready.
+            {tPricing('subtitle')}
           </p>
 
           <div className="mx-auto mt-16 grid max-w-[940px] grid-cols-2 gap-3 md:mt-20 md:gap-6">
             {/* Free Tier */}
             <article className="relative rounded-[22px] border border-[var(--color-rule-warm)] bg-white p-5 sm:p-7 md:p-10">
               <h3 className="font-display text-[18px] font-bold text-foreground md:text-[20px]">
-                Free Preview
+                {tPricing('free.name')}
               </h3>
               <div className="mt-3 flex items-baseline gap-1.5 md:mt-4">
                 <span className="font-display text-[40px] font-bold leading-none tracking-[-0.03em] text-foreground md:text-[64px]">
-                  $0
+                  {tPricing('free.price')}
                 </span>
-                <span className="text-xs text-muted-foreground md:text-sm">/ forever</span>
+                <span className="text-xs text-muted-foreground md:text-sm">
+                  {tPricing('free.priceLabel')}
+                </span>
               </div>
               <ul className="my-5 space-y-2.5 md:my-7 md:space-y-3">
-                {[
-                  'Up to 4 custom cards',
-                  '1 printable tabla',
-                  'Custom Lotería illustrations',
-                  'Spanish label generation',
-                ].map((f) => (
+                {freeFeatures.map((f) => (
                   <li
                     key={f}
                     className="flex items-start gap-2 text-[13px] text-foreground md:gap-2.5 md:text-[14.5px]"
@@ -350,7 +380,7 @@ export default async function LandingPage() {
                   variant="outline"
                   className="h-auto w-full rounded-full border-[1.5px] border-foreground bg-transparent py-3 text-[14px] font-semibold text-foreground hover:bg-foreground hover:text-background md:py-4 md:text-[15px]"
                 >
-                  Start free
+                  {tPricing('free.cta')}
                 </Button>
               </Link>
             </article>
@@ -358,24 +388,21 @@ export default async function LandingPage() {
             {/* Unlocked */}
             <article className="relative -translate-y-2 rounded-[22px] border-2 border-foreground bg-primary p-5 text-white sm:p-7 md:p-10">
               <span className="absolute -top-3 right-3 inline-block rounded-full border-2 border-foreground bg-secondary px-2.5 py-1 font-jetbrains text-[9px] font-semibold uppercase tracking-[0.08em] text-foreground md:right-6 md:px-3 md:py-1.5 md:text-[11px] md:tracking-[0.1em]">
-                Most popular
+                {tPricing('unlocked.badge')}
               </span>
               <h3 className="font-display text-[18px] font-bold text-white md:text-[20px]">
-                Full Lotería Set
+                {tPricing('unlocked.name')}
               </h3>
               <div className="mt-3 flex items-baseline gap-1.5 md:mt-4">
                 <span className="font-display text-[40px] font-bold leading-none tracking-[-0.03em] text-white md:text-[64px]">
-                  $5
+                  {tPricing('unlocked.price')}
                 </span>
-                <span className="text-xs text-white/70 md:text-sm">one-time</span>
+                <span className="text-xs text-white/70 md:text-sm">
+                  {tPricing('unlocked.priceLabel')}
+                </span>
               </div>
               <ul className="my-5 space-y-2.5 md:my-7 md:space-y-3">
-                {[
-                  'Full 54-card custom deck',
-                  'Unlimited printable tablas',
-                  'High-resolution print PDFs',
-                  'No watermarks',
-                ].map((f) => (
+                {unlockedFeatures.map((f) => (
                   <li
                     key={f}
                     className="flex items-start gap-2 text-[13px] text-white md:gap-2.5 md:text-[14.5px]"
@@ -389,7 +416,7 @@ export default async function LandingPage() {
               </ul>
               <Link href="/sign-up" className="block">
                 <Button className="h-auto w-full rounded-full bg-secondary py-3 text-[14px] font-semibold text-foreground shadow-none hover:bg-white hover:text-foreground md:py-4 md:text-[15px]">
-                  Get unlocked set
+                  {tPricing('unlocked.cta')}
                 </Button>
               </Link>
             </article>
@@ -404,10 +431,10 @@ export default async function LandingPage() {
       >
         <div className="mx-auto max-w-[980px] px-6 sm:px-8">
           <p className="text-center font-jetbrains text-[12px] font-medium uppercase tracking-[0.18em] text-primary">
-            FAQ
+            {tFaq('tagline')}
           </p>
           <h2 className="mt-4 text-center font-display text-[clamp(36px,4.4vw,64px)] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">
-            Frequently Asked Questions
+            {tFaq('headline')}
           </h2>
           <LandingFaq faqs={faqs} />
         </div>
@@ -417,21 +444,20 @@ export default async function LandingPage() {
       <section id="cta" className="bg-primary py-16 text-center text-white md:py-20">
         <div className="mx-auto max-w-[1240px] px-6 sm:px-8">
           <p className="font-jetbrains text-[12px] font-medium uppercase tracking-[0.18em] text-secondary">
-            ¿Listo?
+            {tCta('tagline')}
           </p>
           <h2 className="mx-auto mt-4 max-w-[720px] font-display text-[clamp(36px,4.4vw,64px)] font-bold leading-[1.05] tracking-[-0.02em] text-white">
-            Try it for free
+            {tCta('headline')}
           </h2>
           <p className="mx-auto mt-6 max-w-[540px] text-[18px] leading-relaxed text-white/85">
-            No credit card required to try. Just upload a photo and watch your first Lotería card
-            come to life in under a minute.
+            {tCta('subtitle')}
           </p>
           <Link href="/sign-up" className="mt-8 inline-block">
             <Button
               size="lg"
               className="h-auto rounded-full bg-secondary px-9 py-[18px] text-[17px] font-semibold text-foreground shadow-none hover:bg-white"
             >
-              Create your set →
+              {tCta('cta')}
             </Button>
           </Link>
 

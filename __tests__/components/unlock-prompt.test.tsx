@@ -5,6 +5,44 @@ import { UnlockPrompt } from '@/components/unlock-prompt';
 // Mock fetch for Stripe checkout
 global.fetch = vi.fn();
 
+// Mock next-intl with BoardEditor.UnlockPrompt messages
+vi.mock('next-intl', () => ({
+  useTranslations: (namespace: string) => {
+    const messages: Record<string, Record<string, string>> = {
+      'BoardEditor.UnlockPrompt': {
+        drawerTitleSrOnly: 'Unlock "{name}"',
+        drawerDescSrOnly: 'Unlock this board for full access to all features.',
+        dialogTitleSrOnly: 'Unlock "{name}"',
+        dialogDescSrOnly: 'Unlock this board for full access to all features.',
+        freeLimitReached: "You've reached the free limit",
+        keepBuildingPrefix: 'Keep building —',
+        keepBuildingSuffix: 'await',
+        moreCards: '{count} more cards',
+        featureCards: 'Up to 54 cards',
+        featureExports: 'Unlimited exports',
+        featureWatermarks: 'No watermarks',
+        unlockButton: 'Unlock',
+        redirectingButton: 'Redirecting…',
+        maybeLater: 'Maybe later',
+        'toasts.checkoutFailed': 'Failed to start checkout. Please try again.',
+      },
+    };
+    const ns = messages[namespace] ?? {};
+    const t = (key: string, params?: Record<string, unknown>) => {
+      let val = ns[key] ?? key;
+      if (params) {
+        for (const [k, v] of Object.entries(params)) {
+          val = val.replace(`{${k}}`, String(v));
+        }
+      }
+      return val;
+    };
+    t.raw = (key: string) => ns[key];
+    t.rich = (key: string) => ns[key] ?? key;
+    return t;
+  },
+}));
+
 describe('UnlockPrompt', () => {
   const defaultProps = {
     boardId: 'test-board-123',
@@ -41,7 +79,7 @@ describe('UnlockPrompt', () => {
   it('should show the free-limit headline regardless of trigger', () => {
     for (const trigger of ['card_limit', 'board_limit', 'export'] as const) {
       const { unmount } = render(<UnlockPrompt {...defaultProps} trigger={trigger} />);
-      expect(screen.getByText(/You['’]ve reached the free limit/i)).toBeInTheDocument();
+      expect(screen.getByText(/You['']ve reached the free limit/i)).toBeInTheDocument();
       unmount();
     }
   });

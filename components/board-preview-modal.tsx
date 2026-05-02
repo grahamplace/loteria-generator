@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useTranslations } from 'next-intl';
 
 interface BoardPreviewModalProps {
   open: boolean;
@@ -10,6 +11,8 @@ interface BoardPreviewModalProps {
 }
 
 export function BoardPreviewModal({ open, onOpenChange, imageUrl }: BoardPreviewModalProps) {
+  const t = useTranslations('BoardEditor.PreviewModal');
+
   function handleOpenChange(value: boolean) {
     if (!value && imageUrl) {
       URL.revokeObjectURL(imageUrl);
@@ -21,12 +24,12 @@ export function BoardPreviewModal({ open, onOpenChange, imageUrl }: BoardPreview
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Board Preview</DialogTitle>
+          <DialogTitle>{t('title')}</DialogTitle>
         </DialogHeader>
         {imageUrl && (
           <Image
             src={imageUrl}
-            alt="Lotería board preview"
+            alt={t('imageAlt')}
             width={2550}
             height={3300}
             className="w-full h-auto rounded-md"

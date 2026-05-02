@@ -15,8 +15,11 @@ import { BoardWelcome } from '@/components/board-welcome';
 import { UnlockPrompt } from '@/components/unlock-prompt';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
+import { LanguageSwitch } from '@/components/language-switch';
+import { useTranslations } from 'next-intl';
 
 export default function BoardEditorPage() {
+  const t = useTranslations('BoardEditor.Page');
   const params = useParams();
   const boardId = params.boardId as string;
   const router = useRouter();
@@ -46,13 +49,13 @@ export default function BoardEditorPage() {
   useEffect(() => {
     const payment = searchParams.get('payment');
     if (payment === 'success') {
-      toast.success('Board unlocked!', {
-        description: 'You now have full access to this board.',
+      toast.success(t('toasts.boardUnlockedTitle'), {
+        description: t('toasts.boardUnlockedDesc'),
       });
       refreshBoard();
       router.replace(`/boards/${boardId}`);
     } else if (payment === 'cancelled') {
-      toast.info('Payment cancelled');
+      toast.info(t('toasts.paymentCancelled'));
       router.replace(`/boards/${boardId}`);
     }
   }, [searchParams, boardId, refreshBoard, router]);
@@ -121,7 +124,8 @@ export default function BoardEditorPage() {
       card.localOriginalImage ||
       (card.originalImageUrl ? `/api/images/${boardId}/${card.id}/original` : undefined),
     isProcessing: card.isProcessing || card.status === 'processing',
-    error: card.status === 'error' ? card.errorMessage || 'Error processing card' : undefined,
+    error:
+      card.status === 'error' ? card.errorMessage || t('toasts.errorProcessingCard') : undefined,
   }));
 
   // Show welcome state for new locked boards with no cards
@@ -131,8 +135,9 @@ export default function BoardEditorPage() {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-black/5 bg-white/70 backdrop-blur-sm sticky top-0 z-30">
-          <div className="max-w-[1400px] mx-auto px-6 py-3">
+          <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
             <Skeleton className="h-6 w-48" />
+            <LanguageSwitch />
           </div>
         </header>
         <div className="max-w-[1400px] mx-auto px-3 md:px-6 pt-5 pb-4 hidden md:block">
@@ -153,9 +158,9 @@ export default function BoardEditorPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Board not found</h2>
+          <h2 className="text-xl font-semibold mb-2">{t('boardNotFoundTitle')}</h2>
           <Link href="/dashboard">
-            <Button>Back to Dashboard</Button>
+            <Button>{t('boardNotFoundCta')}</Button>
           </Link>
         </div>
       </div>
@@ -170,7 +175,7 @@ export default function BoardEditorPage() {
           <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/dashboard"
-              aria-label="Back to dashboard"
+              aria-label={t('backToDashboardAriaLabel')}
               className="w-9 h-9 md:w-8 md:h-8 rounded-full md:rounded-md hover:bg-black/5 flex items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -192,7 +197,7 @@ export default function BoardEditorPage() {
                 ) : (
                   <button
                     onClick={() => setIsEditingName(true)}
-                    aria-label={`Edit board name: ${board.name}`}
+                    aria-label={t('editBoardNameAriaLabel', { name: board.name })}
                     className="font-semibold text-[17px] md:text-[15px] md:font-bold tracking-tight truncate hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
                   >
                     {board.name}
@@ -201,12 +206,12 @@ export default function BoardEditorPage() {
                 {board.isUnlocked ? (
                   <span className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                     <Unlock className="w-2.5 h-2.5" />
-                    Unlocked
+                    {t('unlockedBadge')}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] md:text-[10px] font-mono uppercase tracking-wider md:tracking-normal md:font-medium bg-primary/10 text-primary border border-primary/20">
                     <Lock className="w-2.5 h-2.5" />
-                    Free
+                    {t('freeBadge')}
                   </span>
                 )}
               </div>
@@ -214,20 +219,22 @@ export default function BoardEditorPage() {
               {!isEditingName && (
                 <div className="md:hidden text-[11px] text-muted-foreground truncate">
                   {cards.length > 0
-                    ? `${cards.length} card${cards.length !== 1 ? 's' : ''} · Updated just now`
-                    : 'Free preview'}
+                    ? t('mobileSubtitleCards', { count: cards.length })
+                    : t('mobileSubtitleEmpty')}
                 </div>
               )}
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <LanguageSwitch />
             {!board.isUnlocked && (
               <button
                 onClick={() => openUnlockPrompt('card_limit')}
                 className="px-3 h-8 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary/90 flex items-center gap-1 md:gap-1.5 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 <Unlock className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">Unlock for</span> $5
+                <span className="hidden md:inline">{t('unlockButtonPrefix')}</span>{' '}
+                {t('unlockButtonShort')}
               </button>
             )}
           </div>
@@ -264,10 +271,10 @@ export default function BoardEditorPage() {
               <div className="flex-1 max-w-[1400px] w-full mx-auto px-3 md:px-6 pb-28 md:pb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    Your cards
+                    {t('yourCards')}
                   </h2>
                   <span className="text-[11px] font-mono text-muted-foreground hidden md:block">
-                    Drag to reorder
+                    {t('dragToReorder')}
                   </span>
                 </div>
                 <BoardCardGrid
@@ -289,16 +296,14 @@ export default function BoardEditorPage() {
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <Upload className="w-8 h-8 text-primary" />
                   </div>
-                  <h2 className="text-xl font-bold mb-2">Upload your first photos</h2>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Drag photos onto the upload area above, or click Select to get started.
-                  </p>
+                  <h2 className="text-xl font-bold mb-2">{t('emptyStateTitle')}</h2>
+                  <p className="text-sm text-muted-foreground mb-6">{t('emptyStateDesc')}</p>
                   <button
                     onClick={() => actionBarRef.current?.triggerFileSelect()}
                     className="px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 mx-auto shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     <Upload className="w-4 h-4" />
-                    Select photos
+                    {t('emptyStateCta')}
                   </button>
                 </div>
               </div>

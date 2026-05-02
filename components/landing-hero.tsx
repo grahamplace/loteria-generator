@@ -5,13 +5,12 @@ import { CardMarquee } from '@/components/card-marquee';
 import { HeroCard } from '@/components/hero-card';
 import { TablaBoard } from '@/components/tabla-board';
 import { heroCards } from '@/lib/hero-cards';
+import { getTranslations } from 'next-intl/server';
 
 import weddingCouplePhoto from '@/scripts/example-images/source-photos/01-wedding-couple.jpg';
 import quinceaneraPhoto from '@/scripts/example-images/source-photos/04-quinceanera.jpg';
 import familyPhoto from '@/scripts/example-images/source-photos/07-family-portrait.jpg';
 import birthdayCandlesPhoto from '@/scripts/example-images/source-photos/05-birthday-candles.jpg';
-
-const trustItems = ['Ready in minutes', 'Print at home', 'No subscription'];
 
 const fannedCardIds = ['la-boda', 'la-quinceanera', 'la-familia', 'el-cumpleanos'];
 const fannedRotations = ['-rotate-[12deg]', '-rotate-[4deg]', 'rotate-[4deg]', 'rotate-[12deg]'];
@@ -38,7 +37,10 @@ const stackedBoards = [
   { seed: 37, transform: 'rotate(-1.5deg)', z: 'z-20' },
 ];
 
-export function LandingHero() {
+export async function LandingHero() {
+  const t = await getTranslations('Marketing.Hero');
+  const trustItems = t.raw('trustItems') as string[];
+
   return (
     <header className="relative overflow-hidden pb-10 pt-6 md:pt-10">
       <div
@@ -116,8 +118,9 @@ export function LandingHero() {
       </div>
       <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
         <h1 className="font-display text-[clamp(34px,4.8vw,60px)] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">
-          Turn your photos into
-          <br />a custom{' '}
+          {t('headlineLine1')}
+          <br />
+          {t('headlineLine2Prefix')}{' '}
           <span className="relative inline-block">
             <span
               aria-hidden="true"
@@ -125,13 +128,12 @@ export function LandingHero() {
             />
             <span className="relative">Lotería</span>
           </span>{' '}
-          <span className="font-display italic font-medium">set.</span>
+          <span className="font-display italic font-medium">{t('headlineLine2Suffix')}</span>
         </h1>
         <p className="mx-auto mt-5 max-w-[600px] text-[17px] leading-[1.55] text-muted-foreground">
-          Upload photos of your{' '}
-          <strong className="font-semibold text-foreground">family, friends, even pets</strong>{' '}
-          &mdash; we instantly illustrate them in classic Mexican Lotería style and generate a full
-          Lotería set you can print and play at home.
+          {t.rich('subtitle', {
+            strong: (chunks) => <strong className="font-semibold text-foreground">{chunks}</strong>,
+          })}
         </p>
         <div className="mt-7 flex flex-wrap justify-center gap-3.5">
           <Link href="/sign-up">
@@ -139,7 +141,7 @@ export function LandingHero() {
               size="lg"
               className="h-auto rounded-full px-8 py-[14px] text-[16px] font-semibold shadow-[0_8px_18px_-10px_rgba(230,57,70,0.7)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_-10px_rgba(230,57,70,0.8)]"
             >
-              Try it for free →
+              {t('ctaTry')}
             </Button>
           </Link>
           <Link href="#how-it-works">
@@ -148,7 +150,7 @@ export function LandingHero() {
               variant="outline"
               className="h-auto rounded-full border-[1.5px] border-foreground bg-transparent px-8 py-[14px] text-[16px] font-semibold text-foreground hover:bg-foreground hover:text-background"
             >
-              See how it works
+              {t('ctaSeeHow')}
             </Button>
           </Link>
         </div>

@@ -2,6 +2,62 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BoardCardGrid } from '@/components/board-card-grid';
 
+// Mock next-intl for BoardEditor.CardGrid and BoardEditor.CardEditModal namespaces
+vi.mock('next-intl', () => ({
+  useTranslations: (namespace: string) => {
+    const messages: Record<string, Record<string, string>> = {
+      'BoardEditor.CardGrid': {
+        processing: 'Processing…',
+        generationFailed: 'Generation failed',
+        deleteAndRetry: 'Delete card & retry',
+        noImage: 'No image',
+        noLabel: 'No label',
+        freeLimitReached: "You've reached the free limit",
+        keepBuildingPrefix: 'Keep building —',
+        keepBuildingSuffix: 'await',
+        moreCards: '{count} more cards',
+        featureCards: 'Up to 54 cards',
+        featureExports: 'Unlimited exports',
+        featureWatermarks: 'No watermarks',
+        unlockButton: 'Unlock',
+        addMore: 'Add more',
+        deleteDialogTitle: 'Delete this card?',
+        deleteDialogDescWithLabel:
+          'This will permanently delete card #{number} "{label}". This action cannot be undone.',
+        deleteDialogDescNoLabel:
+          'This will permanently delete this card. This action cannot be undone.',
+        deleteDialogCancel: 'Cancel',
+        deleteDialogConfirm: 'Delete',
+      },
+      'BoardEditor.CardEditModal': {
+        titleWithNumber: 'Edit card #{number}',
+        closeAriaLabel: 'Close',
+        originalLabel: 'Original',
+        illustrationLabel: 'Illustration',
+        labelField: 'Label (in Spanish)',
+        labelPlaceholder: 'Enter the label',
+        labelHint: '1-3 Spanish words',
+        deleteButton: 'Delete',
+        cancelButton: 'Cancel',
+        saveButton: 'Save',
+      },
+    };
+    const ns = messages[namespace] ?? {};
+    const t = (key: string, params?: Record<string, unknown>) => {
+      let val = ns[key] ?? key;
+      if (params) {
+        for (const [k, v] of Object.entries(params)) {
+          val = val.replace(`{${k}}`, String(v));
+        }
+      }
+      return val;
+    };
+    t.raw = (key: string) => ns[key];
+    t.rich = (key: string) => ns[key] ?? key;
+    return t;
+  },
+}));
+
 describe('BoardCardGrid', () => {
   const mockCards = [
     {

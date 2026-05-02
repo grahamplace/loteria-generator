@@ -5,6 +5,7 @@ import { Upload, Package, Plus, Unlock, Sparkles } from 'lucide-react';
 import { generateLoteriaSetPdf, BoardStyleOptions } from '@/lib/generate-boards';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
+import { useTranslations } from 'next-intl';
 
 interface DisplayCard {
   id: string;
@@ -46,6 +47,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
     },
     ref
   ) {
+    const t = useTranslations('BoardEditor.ActionBar');
     const inputRef = useRef<HTMLInputElement>(null);
     const [dragActive, setDragActive] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
@@ -118,7 +120,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
       if (!canExport) return;
 
       setIsExporting(true);
-      setExportProgress('Starting export\u2026');
+      setExportProgress(t('toasts.startingExport'));
 
       try {
         const exportCards = cards
@@ -155,14 +157,14 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
           board_name: boardName,
           is_unlocked: isUnlocked,
         });
-        toast.success('Loteria set exported!', {
-          description: '50 unique boards and card deck downloaded as a PDF.',
+        toast.success(t('toasts.exportSuccessTitle'), {
+          description: t('toasts.exportSuccessDesc'),
         });
       } catch (error) {
         console.error('Error exporting Loteria set:', error);
         posthog.captureException(error);
-        toast.error('Failed to export Loteria set', {
-          description: 'Please try again.',
+        toast.error(t('toasts.exportFailedTitle'), {
+          description: t('toasts.exportFailedDesc'),
         });
       } finally {
         setIsExporting(false);
@@ -171,12 +173,12 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
     };
 
     const mobileExportLabel = isExporting
-      ? exportProgress || 'Exporting\u2026'
+      ? exportProgress || t('exportingButton')
       : hasUsedFreeExport
-        ? 'Unlock · $5'
+        ? t('unlockExport')
         : canExport
-          ? 'Export'
-          : `${16 - processedCount} more`;
+          ? t('exportButton')
+          : t('moreNeeded', { count: 16 - processedCount });
 
     return (
       <>
@@ -209,7 +211,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between">
-                  <span className="font-semibold text-[15px]">Drop photos to add cards</span>
+                  <span className="font-semibold text-[15px]">{t('dropPhotos')}</span>
                   <span className="text-[11px] font-mono text-muted-foreground tabular-nums">
                     {cardCount}/{maxCards}
                   </span>
@@ -225,15 +227,15 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                 </div>
                 <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
                   <span>
-                    <b className="text-foreground">{processedCount}</b> ready
+                    <b className="text-foreground">{processedCount}</b> {t('ready')}
                   </span>
                   {processingCount > 0 && (
                     <span className="flex items-center gap-1 text-primary">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                      {processingCount} processing
+                      {processingCount} {t('processing')}
                     </span>
                   )}
-                  <span className="ml-auto">PNG · JPG · WebP up to 10MB</span>
+                  <span className="ml-auto">{t('acceptedFormats')}</span>
                 </div>
               </div>
               <button
@@ -242,7 +244,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                 className="px-3 py-2 rounded-lg bg-white border border-border text-sm font-semibold flex items-center gap-1.5 hover:border-primary hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 <Plus className="w-4 h-4" />
-                Select
+                {t('select')}
               </button>
             </div>
 
@@ -258,18 +260,16 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                   className="absolute -top-2.5 right-4 border-2 border-primary rounded-md px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest text-primary bg-background"
                   style={{ transform: 'rotate(-4deg)' }}
                 >
-                  Free export used
+                  {t('freeExportUsed')}
                 </div>
               )}
               <div className="w-12 h-12 rounded-lg bg-primary text-white flex items-center justify-center shadow-sm shrink-0">
                 <Package className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="font-semibold text-[15px] block">Export Loteria set</span>
+                <span className="font-semibold text-[15px] block">{t('exportTitle')}</span>
                 <span className="text-[11px] text-muted-foreground mt-0.5 block">
-                  {hasUsedFreeExport
-                    ? 'Unlock to export again'
-                    : '50 unique boards + card deck · PDF'}
+                  {hasUsedFreeExport ? t('exportSubtitleUsed') : t('exportSubtitleDefault')}
                 </span>
               </div>
               <button
@@ -287,20 +287,20 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
               >
                 {isExporting ? (
                   <span className="text-xs" aria-live="polite">
-                    {exportProgress || 'Exporting\u2026'}
+                    {exportProgress || t('exportingButton')}
                   </span>
                 ) : hasUsedFreeExport ? (
                   <>
                     <Unlock className="w-3.5 h-3.5" />
-                    Unlock · $5
+                    {t('unlockExport')}
                   </>
                 ) : canExport ? (
                   <>
                     <Package className="w-4 h-4" />
-                    Export
+                    {t('exportButton')}
                   </>
                 ) : (
-                  `${16 - processedCount} more`
+                  t('moreNeeded', { count: 16 - processedCount })
                 )}
               </button>
             </div>
@@ -311,16 +311,14 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
             <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 flex items-center gap-2.5">
               <Sparkles className="w-4 h-4 text-primary shrink-0" />
               <div className="text-xs flex-1">
-                <b>Loved your first export?</b>{' '}
-                <span className="text-muted-foreground">
-                  Unlock for unlimited exports and the full 54-card deck.
-                </span>
+                <b>{t('bannerTitle')}</b>{' '}
+                <span className="text-muted-foreground">{t('bannerDesc')}</span>
               </div>
               <button
                 onClick={onUnlockRequired}
                 className="text-[11px] font-semibold text-primary hover:underline whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
               >
-                Unlock now &rarr;
+                {t('bannerCta')}
               </button>
             </div>
           )}
@@ -330,18 +328,18 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-background/95 backdrop-blur border-t border-border">
           <div className="px-3 pt-3 pb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
             <span className="tabular-nums">
-              {processedCount}/{maxCards} cards
+              {t('mobileCardsStatus', { processed: processedCount, max: maxCards })}
             </span>
             <span className="flex items-center gap-1">
               {processingCount > 0 ? (
                 <>
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  {processingCount} processing
+                  {processingCount} {t('processing')}
                 </>
               ) : (
                 <>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Saved
+                  {t('mobileSaved')}
                 </>
               )}
             </span>
@@ -353,7 +351,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
               className="flex-1 h-12 rounded-xl bg-white border border-border text-foreground font-semibold text-sm flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <Upload className="w-4 h-4" />
-              Upload
+              {t('mobileUpload')}
             </button>
             <button
               onClick={handleExport}

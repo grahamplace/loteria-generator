@@ -1,0 +1,400 @@
+{
+  "Marketing": {
+    "Nav": {
+      "howItWorks": "Cómo funciona",
+      "occasions": "Ocasiones",
+      "pricing": "Precios",
+      "faq": "Preguntas frecuentes",
+      "signIn": "Iniciar sesión",
+      "startFree": "Empieza gratis"
+    },
+    "Hero": {
+      "headlineLine1": "Convierte tus fotos en",
+      "headlineLine2Prefix": "una",
+      "headlineLine2Suffix": "personalizada.",
+      "subtitle": "Sube fotos de tu <strong>familia, amigos e incluso mascotas</strong> — al instante las ilustramos al estilo clásico de la Lotería Mexicana y generamos una Lotería completa que puedes imprimir y jugar en casa.",
+      "ctaTry": "Pruébalo gratis →",
+      "ctaSeeHow": "Ver cómo funciona",
+      "trustItems": ["Lista en minutos", "Imprime en casa", "Sin suscripción"]
+    },
+    "UseCases": {},
+    "HowItWorks": {
+      "tagline": "Loterías personalizadas · Hechas con tus fotos",
+      "headlineLine1": "Tres pasos sencillos.",
+      "headlineLine2": "Recibe tu Lotería personalizada en minutos.",
+      "subtitle": "Sube tus fotos favoritas y nosotros nos encargamos de lo demás.",
+      "step1Title": "Sube tus fotos",
+      "step1Desc": "Sube fotos de tu familia, amigos o mascotas. Podemos ilustrar a cualquier persona o cosa que quieras incluir en una carta.",
+      "step2Title": "Ilustramos cada carta",
+      "step2Desc": "Al instante dibujamos cada foto al estilo clásico de la Lotería y agregamos los nombres en español — El Abuelo, La Novia, El Niño.",
+      "step3Title": "Imprime y juega en casa",
+      "step3Desc": "Descarga PDFs listos para imprimir de cada carta y tabla. Imprime en casa o en una imprenta local. ¡Listo para jugar Lotería!",
+      "ctaGetStarted": "Empieza gratis →",
+      "step2GrandpaPhotoAlt": "Foto original de un abuelo"
+    },
+    "Occasions": {
+      "tagline": "Para todos los momentos que importan",
+      "headlineLine1": "Haz que tu próxima reunión familiar",
+      "headlineLine2": "sea aún más memorable.",
+      "subtitle": "Sorprende a tus amigos y familia con una Lotería personalizada que les va a encantar.",
+      "items": [
+        { "tag": "Boda", "title": "Para los novios", "copy": "Fotos de la pareja, los padrinos y ambas familias. Una celebración de dos familias que se unen." },
+        { "tag": "Quinceañera", "title": "Para su corte de honor", "copy": "La quinceañera, sus chambelanes, damas y padrinos — todos tienen su propia carta." },
+        {
+          "tag": "Reunión familiar",
+          "title": "Cada primo y tía",
+          "copy": "Celebra a toda la familia. Desde la abuela hasta el bebé recién nacido — a todos les va a encantar jugar una Lotería personalizada con sus seres queridos."
+        },
+        { "tag": "Cumpleaños", "title": "Haz su cumpleaños inolvidable", "copy": "Pastel, velitas y la gente que llegó a celebrar — una Lotería personalizada que el cumpleañero atesorará." }
+      ]
+    },
+    "Pricing": {
+      "tagline": "Pago único · Sin suscripciones",
+      "headline": "Precios sencillos.",
+      "subtitle": "Empieza gratis con una Lotería de muestra. Desbloquea las 54 cartas completas cuando estés listo.",
+      "free": {
+        "name": "Vista previa gratis",
+        "price": "$0",
+        "priceLabel": "/ para siempre",
+        "features": ["Hasta 4 cartas personalizadas", "1 tabla imprimible", "Ilustraciones de Lotería personalizadas", "Generación de nombres en español"],
+        "cta": "Empieza gratis"
+      },
+      "unlocked": {
+        "name": "Lotería completa",
+        "price": "$5",
+        "priceLabel": "pago único",
+        "badge": "La más popular",
+        "features": ["Lotería personalizada de 54 cartas", "Tablas imprimibles ilimitadas", "PDFs de alta resolución para imprimir", "Sin marcas de agua"],
+        "cta": "Desbloquea la Lotería completa"
+      }
+    },
+    "Meta": {
+      "siteName": "Lotería Generator",
+      "title": "Generador de Lotería — Cartas de Lotería Mexicana Personalizadas con tus Fotos",
+      "description": "Crea cartas de Lotería mexicana personalizadas con tus fotos. El generador de lotería personalizada más fácil para bodas, quinceañeras y reuniones familiares. Transforma fotos en ilustraciones al estilo clásico de la Lotería al instante.",
+      "ogTitle": "Generador de Lotería — Lotería Personalizada con tus Fotos",
+      "ogDescription": "Transforma tus fotos en hermosas cartas de Lotería mexicana. Perfecta para bodas, quinceañeras y celebraciones especiales. Crea tu lotería personalizada con fotos en minutos.",
+      "twitterTitle": "Generador de Lotería — Lotería Personalizada con tus Fotos",
+      "twitterDescription": "Transforma tus fotos en hermosas cartas de Lotería mexicana. Lotería personalizada para boda, quinceañera y más.",
+      "keywords": [
+        "loteria personalizada",
+        "generador de loteria",
+        "loteria con fotos",
+        "loteria para boda",
+        "loteria quinceañera",
+        "loteria mexicana personalizada",
+        "hacer loteria personalizada",
+        "loteria para fiestas",
+        "loteria con mis fotos",
+        "loteria imprimible",
+        "juego de loteria personalizado",
+        "loteria para reunion familiar",
+        "custom loteria cards",
+        "loteria generator",
+        "personalized loteria"
+      ]
+    },
+    "Faq": {
+      "tagline": "FAQ",
+      "headline": "Preguntas frecuentes",
+      "pageSubtitle": "Todo lo que necesitas saber para crear una Lotería personalizada con tus fotos.",
+      "metaTitle": "Preguntas Frecuentes — Lotería Personalizada",
+      "metaDescription": "Encuentra respuestas a las preguntas más comunes sobre cómo crear cartas de Lotería personalizadas. Aprende cómo funciona, precios, impresión y más.",
+      "metaKeywords": ["preguntas frecuentes loteria", "loteria personalizada preguntas", "cómo hacer loteria personalizada", "loteria con fotos ayuda", "generador de loteria guía"],
+      "items": [
+        {
+          "question": "¿Qué es la Lotería y cómo se juega?",
+          "answer": "La Lotería es un juego tradicional mexicano de azar, parecido al bingo. Los jugadores usan tablas con una cuadrícula de 4x4 imágenes. Un cantor saca cartas y las anuncia, y los jugadores marcan las imágenes que coinciden en sus tablas. ¡El primero en completar un patrón gana!"
+        },
+        {
+          "question": "¿Cómo creo una Lotería personalizada con mis propias fotos?",
+          "answer": "Sube tus fotos y nosotros transformamos cada una en una ilustración al estilo tradicional de la Lotería con su nombre en español. Después acomodas tus cartas, editas los nombres y generas tablas imprimibles para que tengas una Lotería completa lista para jugar."
+        },
+        {
+          "question": "¿Puedo usar esto para mi boda o fiesta?",
+          "answer": "¡Por supuesto! Una Lotería personalizada es perfecta para bodas, quinceañeras, fiestas de cumpleaños, reuniones familiares y cualquier celebración especial. Personaliza las cartas con tus invitados, momentos memorables o fotos temáticas — y manda imprimir tablas para todos en la fiesta."
+        },
+        {
+          "question": "¿Cuántas cartas puedo crear?",
+          "answer": "Con la vista previa gratis puedes crear hasta 4 cartas y generar una tabla de muestra. Al desbloquear tu tabla por $5, obtienes acceso a 54 cartas (una Lotería tradicional completa) y generación ilimitada de tablas."
+        },
+        {
+          "question": "¿En qué formatos puedo exportar?",
+          "answer": "Puedes exportar tus tablas de Lotería como PDFs imprimibles de alta calidad, perfectos para imprimir en casa o en una imprenta profesional. Las cartas individuales también se pueden descargar como imágenes."
+        },
+        {
+          "question": "¿Hay alguna suscripción o cobro recurrente?",
+          "answer": "¡Sin suscripciones! Nuestros precios son sencillos — pruébalo gratis y, cuando estés listo, paga una sola vez $5 para desbloquear tu tabla. Esa compra te da acceso permanente a ese proyecto."
+        }
+      ]
+    },
+    "FinalCta": {
+      "tagline": "¿Listo?",
+      "headline": "Pruébalo gratis",
+      "subtitle": "No necesitas tarjeta de crédito para probar. Solo sube una foto y mira cómo tu primera carta de Lotería cobra vida en menos de un minuto.",
+      "cta": "Crea tu Lotería →"
+    },
+    "Footer": {
+      "getStarted": "Empieza ahora",
+      "signIn": "Iniciar sesión",
+      "faq": "Preguntas frecuentes",
+      "pricing": "Precios",
+      "tagline": "Hecho con cariño"
+    },
+    "JsonLd": {
+      "siteName": "Lotería Generator",
+      "siteAlternateNames": ["Lotería personalizada con fotos", "Creador de Lotería mexicana"],
+      "siteDescription": "Crea cartas de Lotería mexicana personalizadas con tus fotos. El generador de Lotería personalizada más sencillo para bodas, fiestas y reuniones familiares.",
+      "softwareName": "Lotería Generator",
+      "softwareFreeOfferName": "Vista previa gratis",
+      "softwareFreeOfferDescription": "Crea hasta 4 cartas y 1 tabla gratis",
+      "softwareUnlockedOfferName": "Lotería completa desbloqueada",
+      "softwareUnlockedOfferDescription": "Acceso completo con hasta 54 cartas y generación ilimitada de tablas",
+      "softwareFeatures": [
+        "Conversión de fotos a cartas de Lotería",
+        "Ilustraciones al estilo tradicional de la Lotería mexicana",
+        "Generación automática de nombres en español",
+        "Generación de tablas imprimibles",
+        "Edición personalizada de cartas"
+      ],
+      "howToName": "Cómo crear cartas de Lotería personalizadas",
+      "howToDescription": "Aprende a crear cartas de Lotería mexicana personalizadas con tus fotos en unos pocos pasos sencillos.",
+      "howToSteps": [
+        { "name": "Regístrate", "text": "Crea una cuenta gratis para comenzar tu proyecto de Lotería personalizada.", "url": "/sign-up" },
+        { "name": "Sube tus fotos", "text": "Sube tus fotos favoritas — personas, mascotas, objetos o lo que más te importe." },
+        { "name": "Ilustración", "text": "Cada foto se transforma automáticamente en una ilustración al estilo tradicional de la Lotería con su nombre en español." },
+        { "name": "Personaliza las cartas", "text": "Edita los nombres y acomoda tus cartas como más te guste." },
+        { "name": "Genera las tablas", "text": "Crea tablas al azar con cuadrícula de 4x4 listas para imprimir y jugar." }
+      ]
+    }
+  },
+  "Auth": {
+    "SignIn": {
+      "metaTitle": "Iniciar Sesión — Lotería Generator",
+      "metaDescription": "Inicia sesión en tu cuenta de Lotería Generator.",
+      "cardTitle": "Bienvenido de nuevo",
+      "cardDescription": "Inicia sesión en tu cuenta de Lotería Generator",
+      "googleButton": "Continuar con Google",
+      "separator": "o",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Ingresa tu contraseña",
+      "submitButton": "Iniciar sesión",
+      "submitButtonLoading": "Iniciando sesión…",
+      "noAccountPrompt": "¿No tienes cuenta?",
+      "noAccountCta": "Regístrate",
+      "errors": {
+        "unexpectedError": "Ocurrió un error inesperado",
+        "googleSignInFailed": "No se pudo iniciar sesión con Google"
+      }
+    },
+    "SignUp": {
+      "metaTitle": "Registrarse — Lotería Generator",
+      "metaDescription": "Crea tu cuenta de Lotería Generator y empieza a hacer cartas personalizadas.",
+      "cardTitle": "Crear cuenta",
+      "cardDescription": "Empieza a crear cartas de Lotería personalizadas con tus fotos",
+      "googleButton": "Continuar con Google",
+      "separator": "o",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Tu nombre",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Mínimo 8 caracteres",
+      "submitButton": "Crear cuenta",
+      "submitButtonLoading": "Creando cuenta…",
+      "haveAccountPrompt": "¿Ya tienes cuenta?",
+      "haveAccountCta": "Inicia sesión",
+      "errors": {
+        "weakPassword": "La contraseña debe tener al menos 8 caracteres",
+        "unexpectedError": "Ocurrió un error inesperado",
+        "googleSignUpFailed": "No se pudo registrar con Google"
+      }
+    }
+  },
+  "Dashboard": {
+    "title": "Tus tablas",
+    "subtitle": "Crea y administra tus proyectos de Lotería",
+    "newBoardButton": "Nueva tabla",
+    "newBoardButtonLoading": "Creando…",
+    "lockedHint": "Desbloquea una tabla para crear otra",
+    "userFallbackName": "Usuario",
+    "userAvatarAlt": "Foto de perfil",
+    "userMenu": {
+      "accountSettings": "Ajustes de la cuenta",
+      "signOut": "Cerrar sesión"
+    },
+    "boardCard": {
+      "cardsReady": "{completed} de {total} cartas listas",
+      "unlockedAccess": "Acceso completo - hasta 54 cartas",
+      "lockedAccess": "Vista previa gratis - hasta 4 cartas",
+      "deleteMenuItem": "Eliminar"
+    },
+    "deleteDialog": {
+      "title": "¿Eliminar esta tabla?",
+      "description": "Esto eliminará la tabla y todas sus cartas de forma permanente. Esta acción no se puede deshacer.",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar"
+    },
+    "emptyState": {
+      "title": "Aún no tienes tablas",
+      "description": "Crea tu primera tabla de Lotería para empezar",
+      "cta": "Crea tu primera tabla"
+    }
+  },
+  "BoardEditor": {
+    "Page": {
+      "backToDashboardAriaLabel": "Volver al panel",
+      "editBoardNameAriaLabel": "Editar el nombre de la tabla: {name}",
+      "unlockedBadge": "Desbloqueada",
+      "freeBadge": "Gratis",
+      "mobileSubtitleCards": "{count} {count, plural, one {carta} other {cartas}} · Actualizado hace un momento",
+      "mobileSubtitleEmpty": "Vista previa gratis",
+      "unlockButtonShort": "$5",
+      "unlockButtonPrefix": "Desbloquear por",
+      "yourCards": "Tus cartas",
+      "dragToReorder": "Arrastra para reordenar",
+      "emptyStateTitle": "Sube tus primeras fotos",
+      "emptyStateDesc": "Arrastra fotos al área de subida de arriba, o haz clic en Seleccionar para empezar.",
+      "emptyStateCta": "Seleccionar fotos",
+      "boardNotFoundTitle": "Tabla no encontrada",
+      "boardNotFoundCta": "Volver al panel",
+      "toasts": {
+        "boardUnlockedTitle": "¡Tabla desbloqueada!",
+        "boardUnlockedDesc": "Ya tienes acceso completo a esta tabla.",
+        "paymentCancelled": "Pago cancelado",
+        "errorProcessingCard": "Error al procesar la carta"
+      }
+    },
+    "ActionBar": {
+      "dropPhotos": "Suelta fotos para agregar cartas",
+      "ready": "listas",
+      "processing": "procesando",
+      "acceptedFormats": "PNG · JPG · WebP hasta 10MB",
+      "select": "Seleccionar",
+      "exportTitle": "Exportar Lotería",
+      "exportSubtitleDefault": "50 tablas únicas + mazo de cartas · PDF",
+      "exportSubtitleUsed": "Desbloquea para exportar de nuevo",
+      "freeExportUsed": "Exportación gratis usada",
+      "exportButton": "Exportar",
+      "exportingButton": "Exportando…",
+      "unlockExport": "Desbloquear · $5",
+      "moreNeeded": "{count} más",
+      "bannerTitle": "¿Te encantó tu primera exportación?",
+      "bannerDesc": "Desbloquea para tener exportaciones ilimitadas y las 54 cartas completas.",
+      "bannerCta": "Desbloquear ahora →",
+      "mobileCardsStatus": "{processed}/{max} cartas",
+      "mobileSaved": "Guardado",
+      "mobileUpload": "Subir",
+      "toasts": {
+        "exportSuccessTitle": "¡Lotería exportada!",
+        "exportSuccessDesc": "50 tablas únicas y el mazo de cartas se descargaron como PDF.",
+        "exportFailedTitle": "No se pudo exportar la Lotería",
+        "exportFailedDesc": "Por favor, inténtalo de nuevo.",
+        "startingExport": "Iniciando exportación…"
+      }
+    },
+    "CardGrid": {
+      "processing": "Procesando…",
+      "generationFailed": "Falló la generación",
+      "deleteAndRetry": "Eliminar carta y reintentar",
+      "noImage": "Sin imagen",
+      "noLabel": "Sin nombre",
+      "freeLimitReached": "Llegaste al límite gratis",
+      "keepBuildingPrefix": "Sigue creando —",
+      "keepBuildingSuffix": "te esperan",
+      "moreCards": "{count} cartas más",
+      "featureCards": "Hasta 54 cartas",
+      "featureExports": "Exportaciones ilimitadas",
+      "featureWatermarks": "Sin marcas de agua",
+      "unlockButton": "Desbloquear",
+      "addMore": "Agregar más",
+      "deleteDialogTitle": "¿Eliminar esta carta?",
+      "deleteDialogDescWithLabel": "Esto eliminará permanentemente la carta #{number} \"{label}\". Esta acción no se puede deshacer.",
+      "deleteDialogDescNoLabel": "Esto eliminará esta carta permanentemente. Esta acción no se puede deshacer.",
+      "deleteDialogCancel": "Cancelar",
+      "deleteDialogConfirm": "Eliminar"
+    },
+    "PreviewModal": {
+      "title": "Vista previa de la tabla",
+      "imageAlt": "Vista previa de la tabla de Lotería"
+    },
+    "Welcome": {
+      "freePreviewBadge": "Vista previa gratis",
+      "headline": "Crea una Lotería",
+      "headlineEmphasis": "con tus fotos",
+      "subtitle": "Empieza gratis con 4 cartas y una exportación. Desbloquea por $5 para llenar las 54 cartas completas.",
+      "startFree": "Empieza la vista previa gratis",
+      "unlockFull": "Desbloquear las 54 cartas — $5",
+      "trustOneTime": "Pago único",
+      "trustPerBoard": "Por tabla",
+      "trustNoSubscription": "Sin suscripción"
+    },
+    "CardEditModal": {
+      "titleWithNumber": "Editar carta #{number}",
+      "closeAriaLabel": "Cerrar",
+      "originalLabel": "Original",
+      "illustrationLabel": "Ilustración",
+      "labelField": "Nombre (en español)",
+      "labelPlaceholder": "Ingresa el nombre",
+      "labelHint": "1-3 palabras en español",
+      "deleteButton": "Eliminar",
+      "cancelButton": "Cancelar",
+      "saveButton": "Guardar"
+    },
+    "UnlockPrompt": {
+      "drawerTitleSrOnly": "Desbloquear \"{name}\"",
+      "drawerDescSrOnly": "Desbloquea esta tabla para tener acceso completo a todas las funciones.",
+      "dialogTitleSrOnly": "Desbloquear \"{name}\"",
+      "dialogDescSrOnly": "Desbloquea esta tabla para tener acceso completo a todas las funciones.",
+      "freeLimitReached": "Llegaste al límite gratis",
+      "keepBuildingPrefix": "Sigue creando —",
+      "keepBuildingSuffix": "te esperan",
+      "moreCards": "{count} cartas más",
+      "featureCards": "Hasta 54 cartas",
+      "featureExports": "Exportaciones ilimitadas",
+      "featureWatermarks": "Sin marcas de agua",
+      "unlockButton": "Desbloquear",
+      "redirectingButton": "Redirigiendo…",
+      "maybeLater": "Tal vez después",
+      "toasts": {
+        "checkoutFailed": "No se pudo iniciar el pago. Por favor, inténtalo de nuevo."
+      }
+    }
+  },
+  "CardMarquee": {
+    "ariaLabel": "Cartas de Lotería de ejemplo creadas con el generador"
+  },
+  "Account": {
+    "pageTitle": "Ajustes de la cuenta",
+    "profile": {
+      "title": "Perfil",
+      "description": "La información de tu cuenta",
+      "imageAlt": "Perfil",
+      "userFallback": "Usuario"
+    },
+    "usage": {
+      "title": "Uso",
+      "description": "Tus estadísticas de Lotería Generator",
+      "totalBoards": "Tablas totales",
+      "unlocked": "Desbloqueadas",
+      "cardsCreated": "Cartas creadas"
+    },
+    "purchases": {
+      "title": "Compras",
+      "description": "Tus tablas desbloqueadas",
+      "cardCount": "{count} cartas"
+    },
+    "signOut": "Cerrar sesión"
+  },
+  "Common": {
+    "Buttons": {
+      "close": "Cerrar",
+      "changeLanguage": "Cambiar idioma"
+    },
+    "Errors": {},
+    "Toasts": {}
+  },
+  "Banner": {}
+}

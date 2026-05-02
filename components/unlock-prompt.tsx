@@ -19,6 +19,7 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
+import { useTranslations } from 'next-intl';
 
 interface UnlockPromptProps {
   boardId: string;
@@ -29,8 +30,6 @@ interface UnlockPromptProps {
   currentCardCount?: number;
   maxCards?: number;
 }
-
-const features = ['Up to 54 cards', 'Unlimited exports', 'No watermarks'];
 
 function UnlockContent({
   boardName,
@@ -45,6 +44,10 @@ function UnlockContent({
   onDismiss: () => void;
   remainingCards: number;
 }) {
+  const t = useTranslations('BoardEditor.UnlockPrompt');
+
+  const features = [t('featureCards'), t('featureExports'), t('featureWatermarks')];
+
   return (
     <div className="px-6 pt-3 pb-1">
       {/* Lock badge + $5 chip */}
@@ -61,14 +64,14 @@ function UnlockContent({
 
       <div className="text-center">
         <div className="text-[10px] font-mono uppercase tracking-wider text-primary mb-1">
-          You&apos;ve reached the free limit
+          {t('freeLimitReached')}
         </div>
         <div className="font-bold text-[22px] leading-tight tracking-tight">
-          Keep building &mdash;{' '}
+          {t('keepBuildingPrefix')}{' '}
           <span className="font-caveat text-[32px] text-primary leading-none">
-            {remainingCards} more cards
+            {t('moreCards', { count: remainingCards })}
           </span>{' '}
-          await
+          {t('keepBuildingSuffix')}
         </div>
       </div>
 
@@ -93,13 +96,13 @@ function UnlockContent({
         className="mt-5 w-full h-12 rounded-xl bg-primary text-white text-[15px] font-semibold flex items-center justify-center gap-2 shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       >
         <Unlock className="w-4 h-4" />
-        {isLoading ? 'Redirecting\u2026' : 'Unlock'}
+        {isLoading ? t('redirectingButton') : t('unlockButton')}
       </button>
       <button
         onClick={onDismiss}
         className="mt-1 w-full h-10 text-[12px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
       >
-        Maybe later
+        {t('maybeLater')}
       </button>
     </div>
   );
@@ -114,6 +117,7 @@ export function UnlockPrompt({
   currentCardCount = 4,
   maxCards = 54,
 }: UnlockPromptProps) {
+  const t = useTranslations('BoardEditor.UnlockPrompt');
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
 
@@ -139,7 +143,7 @@ export function UnlockPrompt({
     } catch (error) {
       console.error('Checkout error:', error);
       posthog.captureException(error);
-      toast.error('Failed to start checkout. Please try again.');
+      toast.error(t('toasts.checkoutFailed'));
       setIsLoading(false);
     }
   }
@@ -151,10 +155,10 @@ export function UnlockPrompt({
           className="rounded-t-[28px] border-t-0"
           style={{ background: 'linear-gradient(180deg, #faf5e6 0%, #f2e6c8 100%)' }}
         >
-          <DrawerTitle className="sr-only">Unlock &quot;{boardName}&quot;</DrawerTitle>
-          <DrawerDescription className="sr-only">
-            Unlock this board for full access to all features.
-          </DrawerDescription>
+          <DrawerTitle className="sr-only">
+            {t('drawerTitleSrOnly', { name: boardName })}
+          </DrawerTitle>
+          <DrawerDescription className="sr-only">{t('drawerDescSrOnly')}</DrawerDescription>
           <DrawerClose className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-foreground/70 z-10">
             <X className="w-4 h-4" />
           </DrawerClose>
@@ -177,8 +181,8 @@ export function UnlockPrompt({
         style={{ background: 'linear-gradient(180deg, #faf5e6 0%, #f2e6c8 100%)' }}
       >
         <DialogHeader className="sr-only">
-          <DialogTitle>Unlock &quot;{boardName}&quot;</DialogTitle>
-          <DialogDescription>Unlock this board for full access to all features.</DialogDescription>
+          <DialogTitle>{t('dialogTitleSrOnly', { name: boardName })}</DialogTitle>
+          <DialogDescription>{t('dialogDescSrOnly')}</DialogDescription>
         </DialogHeader>
         <UnlockContent
           boardName={boardName}
