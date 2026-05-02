@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRealtime } from 'inngest/react';
 import { Badge } from '@/components/ui/badge';
-import { boardChannel, boardChannelTopics } from '@/lib/inngest/channels';
+import { boardChannel, boardChannelTopics, type CardUpdatedPayload } from '@/lib/inngest/channels';
 import { getAdminBoardRealtimeToken } from '@/app/actions/admin-board-realtime';
 import type { Card } from '@/db/schema';
 
@@ -43,19 +43,14 @@ export function AdminBoardCardsGrid({
       let next = prev;
       for (const m of delta) {
         if (m.topic !== 'cardUpdated') continue;
-        const data = m.data as {
-          cardId: string;
-          status: Card['status'];
-          illustrationUrl?: string;
-          errorMessage?: string | null;
-        };
+        const { cardId, status, illustrationUrl, errorMessage } = m.data as CardUpdatedPayload;
         next = next.map((c) =>
-          c.id === data.cardId
+          c.id === cardId
             ? {
                 ...c,
-                status: data.status,
-                illustrationUrl: data.illustrationUrl ?? c.illustrationUrl,
-                errorMessage: data.errorMessage === undefined ? c.errorMessage : data.errorMessage,
+                status,
+                illustrationUrl: illustrationUrl ?? c.illustrationUrl,
+                errorMessage: errorMessage === undefined ? c.errorMessage : errorMessage,
               }
             : c
         );
@@ -71,7 +66,7 @@ export function AdminBoardCardsGrid({
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Cards ({cards.length})</h3>
         {liveDisconnected && (
-          <p className="text-xs text-muted-foreground">
+          <p role="status" aria-live="polite" className="text-xs text-muted-foreground">
             Live updates disconnected — refresh to see progress.
           </p>
         )}

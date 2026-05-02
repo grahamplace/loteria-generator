@@ -24,16 +24,20 @@ export const cardChannel = realtime.channel({
 
 export const cardChannelTopics = ['label', 'illustration', 'completed', 'error'] as const;
 
+const cardUpdatedSchema = z.object({
+  cardId: z.string().uuid(),
+  status: z.enum(['pending', 'processing', 'completed', 'error']),
+  illustrationUrl: z.string().url().optional(),
+  errorMessage: z.string().nullable().optional(),
+});
+
+export type CardUpdatedPayload = z.infer<typeof cardUpdatedSchema>;
+
 export const boardChannel = realtime.channel({
   name: ({ boardId }: { boardId: string }) => `board:${boardId}`,
   topics: {
     cardUpdated: {
-      schema: z.object({
-        cardId: z.string().uuid(),
-        status: z.enum(['pending', 'processing', 'completed', 'error']),
-        illustrationUrl: z.string().url().optional(),
-        errorMessage: z.string().nullable().optional(),
-      }),
+      schema: cardUpdatedSchema,
     },
   },
 });
