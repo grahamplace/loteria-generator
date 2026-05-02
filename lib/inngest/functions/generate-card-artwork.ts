@@ -134,11 +134,6 @@ export const generateCardArtwork = inngest.createFunction(
         return uploadIllustration(userId, boardId, cardId, illustrationBuffer);
       });
       await step.realtime.publish('publish-illustration', ch.illustration, { illustrationUrl });
-      await step.realtime.publish(
-        'publish-board-illustration',
-        boardChannel({ boardId }).cardUpdated,
-        { cardId, status: 'processing', illustrationUrl }
-      );
       return illustrationUrl;
     })();
 
