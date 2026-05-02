@@ -16,9 +16,9 @@
   "BoardEditor": {},
   "Account": {},
   "Common": {
-    "buttons": {},
-    "errors": {},
-    "toasts": {}
+    "Buttons": {},
+    "Errors": {},
+    "Toasts": {}
   },
   "Banner": {}
 }
