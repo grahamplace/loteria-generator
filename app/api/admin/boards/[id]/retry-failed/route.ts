@@ -31,31 +31,43 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   }
 
   const ids = errored.map((c) => c.id);
+  const erroredById = new Map(errored.map((c) => [c.id, c]));
 
-  await db
+  const flipped = await db
     .update(cards)
     .set({ status: 'processing', errorMessage: null, updatedAt: new Date() })
-    .where(inArray(cards.id, ids));
+    .where(and(inArray(cards.id, ids), eq(cards.status, 'error')))
+    .returning({ id: cards.id });
+
+  if (flipped.length === 0) {
+    return NextResponse.json({ retriedCount: 0, cardIds: [] });
+  }
+
+  const flippedIds = flipped.map((r) => r.id);
 
   try {
     await inngest.send(
-      errored.map((c) => ({
-        name: 'card/illustration.regenerate' as const,
-        data: {
-          cardId: c.id,
-          boardId,
-          userId: c.userId,
-          originalImageUrl: c.originalImageUrl!,
-        },
-      }))
+      flippedIds.map((id) => {
+        const c = erroredById.get(id)!;
+        return {
+          name: 'card/illustration.regenerate' as const,
+          data: {
+            cardId: id,
+            boardId,
+            userId: c.userId,
+            originalImageUrl: c.originalImageUrl!,
+          },
+        };
+      })
     );
   } catch (err) {
-    // Roll each card back individually so we restore its original errorMessage.
-    for (const c of errored) {
+    // Roll each flipped card back individually so we restore its original errorMessage.
+    for (const id of flippedIds) {
+      const c = erroredById.get(id)!;
       await db
         .update(cards)
         .set({ status: 'error', errorMessage: c.errorMessage, updatedAt: new Date() })
-        .where(eq(cards.id, c.id));
+        .where(eq(cards.id, id));
     }
     return NextResponse.json(
       { error: 'Failed to enqueue retries', detail: (err as Error).message },
@@ -63,5 +75,5 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     );
   }
 
-  return NextResponse.json({ retriedCount: ids.length, cardIds: ids });
+  return NextResponse.json({ retriedCount: flippedIds.length, cardIds: flippedIds });
 }

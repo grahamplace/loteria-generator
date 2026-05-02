@@ -10,6 +10,7 @@ vi.mock('next/headers', () => ({
 
 const selectMock = vi.fn();
 const updateMock = vi.fn();
+const returningMock = vi.fn();
 const sendMock = vi.fn();
 
 vi.mock('@/db', () => ({
@@ -21,7 +22,15 @@ vi.mock('@/db', () => ({
     }),
     update: () => ({
       set: (values: unknown) => ({
-        where: (...args: unknown[]) => updateMock(values, ...args),
+        where: (...args: unknown[]) => {
+          const result = updateMock(values, ...args);
+          // For the forward UPDATE the route calls .returning(...).
+          // For rollback UPDATEs the route awaits .where(...) directly.
+          // Make `result` thenable AND have a .returning() method.
+          return Object.assign(Promise.resolve(undefined), {
+            returning: () => returningMock(),
+          });
+        },
       }),
     }),
   },
@@ -56,6 +65,7 @@ describe('POST /api/admin/boards/[id]/retry-failed', () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN_SESSION as any);
     selectMock.mockResolvedValue([]);
     updateMock.mockResolvedValue(undefined);
+    returningMock.mockResolvedValue([]);
     sendMock.mockResolvedValue(undefined);
   });
 
@@ -82,6 +92,7 @@ describe('POST /api/admin/boards/[id]/retry-failed', () => {
       { id: 'c1', userId: 'u1', originalImageUrl: 'https://blob/x', errorMessage: 'boom' },
       { id: 'c2', userId: 'u1', originalImageUrl: 'https://blob/y', errorMessage: 'kaboom' },
     ]);
+    returningMock.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }]);
     const res = await POST(makeReq(), { params });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ retriedCount: 2, cardIds: ['c1', 'c2'] });
@@ -100,11 +111,24 @@ describe('POST /api/admin/boards/[id]/retry-failed', () => {
     expect(events[1].data.cardId).toBe('c2');
   });
 
+  it('returns 0 when another caller already flipped all errored cards (race)', async () => {
+    selectMock.mockResolvedValue([
+      { id: 'c1', userId: 'u1', originalImageUrl: 'https://blob/x', errorMessage: 'boom' },
+    ]);
+    returningMock.mockResolvedValue([]); // race: nothing was actually flipped
+    const res = await POST(makeReq(), { params });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ retriedCount: 0, cardIds: [] });
+    expect(updateMock).toHaveBeenCalledTimes(1); // forward UPDATE attempted
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
   it('rolls each card back to error with original errorMessage when inngest.send throws', async () => {
     selectMock.mockResolvedValue([
       { id: 'c1', userId: 'u1', originalImageUrl: 'https://blob/x', errorMessage: 'original-1' },
       { id: 'c2', userId: 'u1', originalImageUrl: 'https://blob/y', errorMessage: 'original-2' },
     ]);
+    returningMock.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }]);
     sendMock.mockRejectedValue(new Error('inngest down'));
 
     const res = await POST(makeReq(), { params });
