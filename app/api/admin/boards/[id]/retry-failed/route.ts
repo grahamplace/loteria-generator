@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { and, eq, inArray, isNotNull } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, lt, or } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
-import { isAdminEmail } from '@/lib/admin';
+import { isAdminEmail, STUCK_PROCESSING_THRESHOLD_MS } from '@/lib/admin';
 import { db, cards } from '@/db';
 import { inngest } from '@/lib/inngest/client';
 
@@ -14,6 +14,16 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
   const { id: boardId } = await params;
 
+  // Stuck-processing cards are also retriable: events that were accepted by
+  // inngest.send but never delivered to a worker (env mismatch, function
+  // deregistered, signing-key mismatch) leave rows in 'processing' forever.
+  // The error-only filter would never surface them again.
+  const stuckThreshold = new Date(Date.now() - STUCK_PROCESSING_THRESHOLD_MS);
+  const retriableCondition = or(
+    eq(cards.status, 'error'),
+    and(eq(cards.status, 'processing'), lt(cards.updatedAt, stuckThreshold))
+  );
+
   const errored = await db
     .select({
       id: cards.id,
@@ -22,9 +32,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       errorMessage: cards.errorMessage,
     })
     .from(cards)
-    .where(
-      and(eq(cards.boardId, boardId), eq(cards.status, 'error'), isNotNull(cards.originalImageUrl))
-    );
+    .where(and(eq(cards.boardId, boardId), isNotNull(cards.originalImageUrl), retriableCondition));
 
   if (errored.length === 0) {
     return NextResponse.json({ retriedCount: 0, cardIds: [] });
@@ -36,7 +44,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const flipped = await db
     .update(cards)
     .set({ status: 'processing', errorMessage: null, updatedAt: new Date() })
-    .where(and(inArray(cards.id, ids), eq(cards.status, 'error')))
+    .where(and(inArray(cards.id, ids), retriableCondition))
     .returning({ id: cards.id });
 
   if (flipped.length === 0) {

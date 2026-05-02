@@ -8,6 +8,7 @@ import { RetryFailedButton } from '../../components/retry-failed-button';
 import { AdminBoardCardsGrid } from '../../components/admin-board-cards-grid';
 import Link from 'next/link';
 import { IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db/schema';
+import { isRetriableCard } from '@/lib/admin';
 
 async function getBoardWithOwner(boardId: string) {
   const result = await db
@@ -42,9 +43,8 @@ export default async function AdminBoardDetailPage({
 
   const { board, ownerEmail, ownerId } = data;
   const genLimit = board.isUnlocked ? IMAGE_GENERATION_LIMIT_PAID : IMAGE_GENERATION_LIMIT_FREE;
-  const errorCount = boardCards.filter(
-    (c) => c.status === 'error' && c.originalImageUrl !== null
-  ).length;
+  const now = new Date();
+  const errorCount = boardCards.filter((c) => isRetriableCard(c, now)).length;
 
   return (
     <div className="space-y-6">

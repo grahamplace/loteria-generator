@@ -5,7 +5,13 @@ vi.mock('@/lib/auth', () => ({ auth: { api: { getSession: vi.fn() } } }));
 vi.mock('next/headers', () => ({ headers: vi.fn() }));
 vi.mock('next/navigation', () => ({ notFound: vi.fn() }));
 
-import { isAdminEmail, ADMIN_EMAIL, requireAdmin } from '@/lib/admin';
+import {
+  isAdminEmail,
+  ADMIN_EMAIL,
+  requireAdmin,
+  isRetriableCard,
+  STUCK_PROCESSING_THRESHOLD_MS,
+} from '@/lib/admin';
 import { auth } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 
@@ -59,5 +65,56 @@ describe('requireAdmin', () => {
     const result = await requireAdmin();
     expect(mockNotFound).not.toHaveBeenCalled();
     expect(result).toBe(session);
+  });
+});
+
+describe('isRetriableCard', () => {
+  const now = new Date('2026-05-01T12:00:00Z');
+
+  it('treats error-status cards with an original image as retriable', () => {
+    expect(
+      isRetriableCard({ status: 'error', originalImageUrl: 'https://blob/x', updatedAt: now }, now)
+    ).toBe(true);
+  });
+
+  it('skips error-status cards that have no original image (nothing to regenerate from)', () => {
+    expect(isRetriableCard({ status: 'error', originalImageUrl: null, updatedAt: now }, now)).toBe(
+      false
+    );
+  });
+
+  it('treats processing cards older than the staleness threshold as retriable', () => {
+    const stuckSince = new Date(now.getTime() - STUCK_PROCESSING_THRESHOLD_MS - 60_000);
+    expect(
+      isRetriableCard(
+        { status: 'processing', originalImageUrl: 'https://blob/x', updatedAt: stuckSince },
+        now
+      )
+    ).toBe(true);
+  });
+
+  it('does not retry processing cards that are still within the staleness window (likely just queued)', () => {
+    const recentlyUpdated = new Date(now.getTime() - 60_000);
+    expect(
+      isRetriableCard(
+        { status: 'processing', originalImageUrl: 'https://blob/x', updatedAt: recentlyUpdated },
+        now
+      )
+    ).toBe(false);
+  });
+
+  it('does not retry pending or completed cards', () => {
+    expect(
+      isRetriableCard(
+        { status: 'pending', originalImageUrl: 'https://blob/x', updatedAt: now },
+        now
+      )
+    ).toBe(false);
+    expect(
+      isRetriableCard(
+        { status: 'completed', originalImageUrl: 'https://blob/x', updatedAt: now },
+        now
+      )
+    ).toBe(false);
   });
 });

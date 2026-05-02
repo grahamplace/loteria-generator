@@ -111,6 +111,28 @@ describe('POST /api/admin/boards/[id]/retry-failed', () => {
     expect(events[1].data.cardId).toBe('c2');
   });
 
+  it('also retries cards stuck in processing whose updatedAt is past the staleness threshold', async () => {
+    // The select mock doesn't enforce the WHERE clause, so we feed it the
+    // same shape the route's SELECT would return for stuck-processing rows
+    // (no errorMessage). The route should not care about the source status
+    // — it just builds events from whatever the SELECT returns.
+    selectMock.mockResolvedValue([
+      { id: 'stuck-1', userId: 'u1', originalImageUrl: 'https://blob/x', errorMessage: null },
+    ]);
+    returningMock.mockResolvedValue([{ id: 'stuck-1' }]);
+
+    const res = await POST(makeReq(), { params });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ retriedCount: 1, cardIds: ['stuck-1'] });
+
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    const [events] = sendMock.mock.calls[0];
+    expect(events[0]).toMatchObject({
+      name: 'card/illustration.regenerate',
+      data: { cardId: 'stuck-1', boardId: 'board-1' },
+    });
+  });
+
   it('returns 0 when another caller already flipped all errored cards (race)', async () => {
     selectMock.mockResolvedValue([
       { id: 'c1', userId: 'u1', originalImageUrl: 'https://blob/x', errorMessage: 'boom' },
