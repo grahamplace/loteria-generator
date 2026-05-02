@@ -61,6 +61,7 @@ export const userProfiles = pgTable('user_profiles', {
     .primaryKey()
     .references(() => user.id, { onDelete: 'cascade' }),
   stripeCustomerId: text('stripe_customer_id'),
+  locale: text('locale'), // 'en' | 'es' | null — null means no preference set
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
