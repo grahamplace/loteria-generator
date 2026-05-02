@@ -1,14 +1,15 @@
 import type { HeroCard as HeroCardData } from '@/lib/hero-cards';
 import { HeroCard } from './hero-card';
 
+// Deterministic pseudo-random tilt in [-4, 4] degrees from a seed.
+function tiltFor(seed: number) {
+  return ((seed * 13 + 7) % 9) - 4;
+}
+
 export function CardMarquee({ cards }: { cards: HeroCardData[] }) {
-  // Top row: cards in numerical order (1 → 18). With rightward scroll the
-  // last card in DOM order ends up at the visual left edge first, so we render
-  // 18 → 1 (reversed) instead.
-  const topRow = [...cards].reverse();
-  // Bottom row: numerical order. With leftward scroll, card 1 begins at the
-  // right edge and successive cards appear from the right.
-  const bottomRow = cards;
+  // Cards in numerical order (1 → 18). With leftward scroll, card 1 begins at
+  // the right edge and successive cards appear from the right.
+  const row = cards;
 
   return (
     <div
@@ -31,21 +32,12 @@ export function CardMarquee({ cards }: { cards: HeroCardData[] }) {
         aria-hidden="true"
       />
 
-      <div className="hero-marquee-row hero-marquee-row--right py-3.5">
-        {topRow.map((card) => (
-          <HeroCard key={`top-${card.id}`} card={card} />
-        ))}
-        {topRow.map((card) => (
-          <HeroCard key={`top-dup-${card.id}`} card={card} duplicate />
-        ))}
-      </div>
-
       <div className="hero-marquee-row hero-marquee-row--left py-3.5">
-        {bottomRow.map((card) => (
-          <HeroCard key={`bot-${card.id}`} card={card} />
+        {row.map((card, i) => (
+          <HeroCard key={`row-${card.id}`} card={card} tilt={tiltFor(i)} />
         ))}
-        {bottomRow.map((card) => (
-          <HeroCard key={`bot-dup-${card.id}`} card={card} duplicate />
+        {row.map((card, i) => (
+          <HeroCard key={`row-dup-${card.id}`} card={card} duplicate tilt={tiltFor(i)} />
         ))}
       </div>
     </div>

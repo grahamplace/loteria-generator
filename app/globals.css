@@ -80,6 +80,13 @@
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --font-caveat: var(--font-caveat), 'cursive';
+  --font-display: var(--font-display), 'Helvetica Neue', sans-serif;
+  --font-jetbrains: var(--font-jetbrains), ui-monospace, monospace;
+  --color-cream: #fbf4e4;
+  --color-cream-deep: #f4e8cd;
+  --color-rule-warm: #e8dcbe;
+  --color-ink: #1a1a2e;
+  --color-ink-soft: #4a4a5e;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

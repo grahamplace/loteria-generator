@@ -83,7 +83,7 @@ export default function SignUpPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-          <CardDescription>Start creating custom Lotería cards with AI</CardDescription>
+          <CardDescription>Start creating custom Lotería cards from your photos</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button

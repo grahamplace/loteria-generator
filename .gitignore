@@ -28,7 +28,8 @@ next-env.d.ts
 .env*.local
 
 
-.claude
+.claude/*
+!.claude/skills/
 .agents
 .claude-cache
 .cursor
