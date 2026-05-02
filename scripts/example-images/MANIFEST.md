@@ -6,26 +6,26 @@ Photos are sourced from Unsplash ([Unsplash License](https://unsplash.com/licens
 
 ## Photos
 
-| #   | Filename                  | Subject                                                      | Photographer                   | Source                                                                                        |
-| --- | ------------------------- | ------------------------------------------------------------ | ------------------------------ | --------------------------------------------------------------------------------------------- |
-| 1   | `01-wedding-couple.jpg`   | Bride smiling, groom kissing temple, soft outdoor bokeh      | Melike B (Pexels)              | https://www.pexels.com/photo/10074941/                                                        |
-| 2   | `02-wedding-bouquet.jpg`  | Pink and cream bridal bouquet                                | Annie Spratt                   | https://unsplash.com/photos/01Wa3tPoQQ8                                                       |
-| 3   | `03-wedding-rings.jpg`    | Two diamond rings on plain dark surface (B&W)                | Lalesh Aldarwish (Pexels)      | https://www.pexels.com/photo/grayscale-photo-of-2-silver-with-diamond-rings-168927/           |
-| 4   | `04-quinceanera.jpg`      | Young Latina in lavender quinceañera ballgown with tiara     | Juliano Astc (Pexels)          | https://www.pexels.com/photo/portrait-of-a-quinceanera-posing-at-her-birthday-party-17931321/ |
-| 5   | `05-birthday-candles.jpg` | Boy in party hat holding fruit-topped cake with lit candles  | Antoni Shkraba Studio (Pexels) | https://www.pexels.com/photo/6148512/                                                         |
-| 6   | `06-birthday-cake.jpg`    | Chocolate cake with colorful lit candles                     | Lan Gao                        | https://unsplash.com/photos/mo28-RNn8j4                                                       |
-| 7   | `07-family-portrait.jpg`  | Mom + dad + baby studio portrait, plain dark gray backdrop   | Phạm Tuấn Hải (Pexels)         | https://www.pexels.com/photo/16555927/                                                        |
-| 8   | `08-baby.jpg`             | Smiling baby close-up                                        | Wesley Tingey                  | https://unsplash.com/photos/beF1iDFiZkA                                                       |
-| 9   | `09-grandpa.jpg`          | Older man in jacket and glasses                              | Pietro Schellino               | https://unsplash.com/photos/MeQ6cKkozpY                                                       |
-| 10  | `10-grandma.jpg`          | Elderly woman smiling broadly                                | Chanika Dulnitha               | https://unsplash.com/photos/_1yxW6acZng                                                       |
-| 11  | `11-dog.jpg`              | Golden retriever puppy portrait                              | Victor G                       | https://unsplash.com/photos/x5oPmHmY3kQ                                                       |
-| 12  | `12-cat.jpg`              | Gray tabby cat sitting against teal wall                     | Magda Ehlers (Pexels)          | https://www.pexels.com/photo/3822875/                                                         |
-| 13  | `13-house.jpg`            | Yellow Americana bungalow with brown shutters, front-on      | Arshad Khan (Pexels)           | https://www.pexels.com/photo/34030968/                                                        |
-| 14  | `14-car.jpg`              | Red classic VW Beetle, full 3/4 view                         | Efrem Efre (Pexels)            | https://www.pexels.com/photo/32790643/                                                        |
-| 15  | `15-guitar.jpg`           | Whole acoustic guitar on stand against plain wall            | Fernando FITDG (Pexels)        | https://www.pexels.com/photo/guitar-on-white-background-15486142/                             |
-| 16  | `16-soccer-ball.jpg`      | Whole soccer ball on grass, soft sky background, no branding | Mario Ortiz (Pexels)           | https://www.pexels.com/photo/12039816/                                                        |
-| 17  | `17-camera.jpg`           | Vintage Polaroid Pronto 600 camera, plain white background   | Yoann Siloine                  | https://unsplash.com/photos/beYOfeTV5Zo                                                       |
-| 18  | `18-tacos.jpg`            | Three street tacos on wooden plate                           | Frankie Lopez                  | https://unsplash.com/photos/_j4S4V2C8ew                                                       |
+| #   | Filename                  | Subject                                                         | Photographer                   | Source                                                                                        |
+| --- | ------------------------- | --------------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------- |
+| 1   | `01-wedding-couple.jpg`   | Bride smiling, groom kissing temple, soft outdoor bokeh         | Melike B (Pexels)              | https://www.pexels.com/photo/10074941/                                                        |
+| 2   | `02-wedding-bouquet.jpg`  | Pink and cream bridal bouquet                                   | Annie Spratt                   | https://unsplash.com/photos/01Wa3tPoQQ8                                                       |
+| 3   | `03-wedding-rings.jpg`    | Two gold wedding bands in a cream velvet ring box               | C. ISO (Pexels)                | https://www.pexels.com/photo/15950900/                                                        |
+| 4   | `04-quinceanera.jpg`      | Young Latina in lavender quinceañera ballgown with tiara        | Juliano Astc (Pexels)          | https://www.pexels.com/photo/portrait-of-a-quinceanera-posing-at-her-birthday-party-17931321/ |
+| 5   | `05-birthday-candles.jpg` | Boy in party hat holding fruit-topped cake with lit candles     | Antoni Shkraba Studio (Pexels) | https://www.pexels.com/photo/6148512/                                                         |
+| 6   | `06-christmas-tree.jpg`   | Decorated Christmas tree with red and gold ornaments and star   | Lisa (Pexels)                  | https://www.pexels.com/photo/3325719/                                                         |
+| 7   | `07-family-portrait.jpg`  | Mom + dad + baby studio portrait, plain dark gray backdrop      | Phạm Tuấn Hải (Pexels)         | https://www.pexels.com/photo/16555927/                                                        |
+| 8   | `08-baby.jpg`             | Smiling baby close-up                                           | Wesley Tingey                  | https://unsplash.com/photos/beF1iDFiZkA                                                       |
+| 9   | `09-grandpa.jpg`          | Older man in jacket and glasses                                 | Pietro Schellino               | https://unsplash.com/photos/MeQ6cKkozpY                                                       |
+| 10  | `10-grandma.jpg`          | Elderly woman smiling broadly                                   | Chanika Dulnitha               | https://unsplash.com/photos/_1yxW6acZng                                                       |
+| 11  | `11-dog.jpg`              | Golden retriever puppy portrait                                 | Victor G                       | https://unsplash.com/photos/x5oPmHmY3kQ                                                       |
+| 12  | `12-cat.jpg`              | Gray tabby cat sitting against teal wall                        | Magda Ehlers (Pexels)          | https://www.pexels.com/photo/3822875/                                                         |
+| 13  | `13-house.jpg`            | Yellow Americana bungalow with brown shutters, front-on         | Arshad Khan (Pexels)           | https://www.pexels.com/photo/34030968/                                                        |
+| 14  | `14-car.jpg`              | Red classic VW Beetle, full 3/4 view                            | Efrem Efre (Pexels)            | https://www.pexels.com/photo/32790643/                                                        |
+| 15  | `15-guitar.jpg`           | Whole acoustic guitar on stand against plain wall               | Fernando FITDG (Pexels)        | https://www.pexels.com/photo/guitar-on-white-background-15486142/                             |
+| 16  | `16-soccer-ball.jpg`      | Young boy juggling a soccer ball with his foot in a sunny field | Kampus Production (Pexels)     | https://www.pexels.com/photo/8914022/                                                         |
+| 17  | `17-camera.jpg`           | Vintage Polaroid Pronto 600 camera, plain white background      | Yoann Siloine                  | https://unsplash.com/photos/beYOfeTV5Zo                                                       |
+| 18  | `18-tacos.jpg`            | Three street tacos on wooden plate                              | Frankie Lopez                  | https://unsplash.com/photos/_j4S4V2C8ew                                                       |
 
 ## Reviewer notes
 
@@ -33,8 +33,8 @@ All 18 photos audited against Loteria-style requirements: single hero subject, s
 
 Minor notes (not blockers):
 
-- **#3 wedding-rings, #10 grandma**: B&W photos. The AI restyle invents the Loteria color palette regardless, so this is fine.
-- **#16 soccer-ball**: modern panel design rather than classic pentagon/hexagon. Strict pentagon/hexagon balls on free platforms all have visible barcodes/brand stamps; no-text rule wins.
+- **#10 grandma**: B&W photo. The AI restyle invents the Loteria color palette regardless, so this is fine.
+- **#16 soccer-ball**: subject is a kid juggling the ball with his foot rather than the ball alone. The label `La Pelota` still applies because the ball remains the iconic element, and the kid+ball framing reads more dynamically as Loteria art.
 - **#18 tacos**: three tacos + lime wedges (a "plate" rather than single object). Iconic for "tacos" subject and the Loteria pipeline handles complex food scenes per its prompt.
 
 ## Generating illustrations

@@ -13,7 +13,7 @@ export function WebsiteJsonLd() {
     alternateName: ['Custom Lotería Cards', 'Lotería Card Maker'],
     url: siteUrl,
     description:
-      'Create personalized Mexican Lotería cards from your photos using AI. The easiest custom Lotería card maker for weddings, parties, and family events.',
+      'Create personalized Mexican Lotería cards from your photos. The easiest custom Lotería card maker for weddings, parties, and family events.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -79,7 +79,7 @@ export function SoftwareApplicationJsonLd() {
       },
     ],
     featureList: [
-      'AI-powered photo to Lotería card conversion',
+      'Photo to Lotería card conversion',
       'Traditional Mexican Lotería style illustrations',
       'Automatic Spanish label generation',
       'Printable board generation',
@@ -143,7 +143,7 @@ export function HowToJsonLd() {
     '@type': 'HowTo',
     name: 'How to Create Custom Lotería Cards',
     description:
-      'Learn how to create personalized Mexican Lotería cards from your photos using AI in just a few simple steps.',
+      'Learn how to create personalized Mexican Lotería cards from your photos in just a few simple steps.',
     image: `${siteUrl}/opengraph-image`,
     totalTime: 'PT10M',
     estimatedCost: {
@@ -165,8 +165,8 @@ export function HowToJsonLd() {
       },
       {
         '@type': 'HowToStep',
-        name: 'AI Transformation',
-        text: 'Our AI automatically transforms each photo into a traditional Lotería-style illustration with a Spanish label.',
+        name: 'Lotería Transformation',
+        text: 'We automatically transform each photo into a traditional Lotería-style illustration with a Spanish label.',
       },
       {
         '@type': 'HowToStep',
