@@ -1,7 +1,7 @@
 'use client';
 
 import { Globe } from 'lucide-react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +20,7 @@ export function LanguageSwitch() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations('Common.Buttons');
 
   function setLocale(next: 'en' | 'es') {
     if (next === locale) return;
@@ -39,7 +40,7 @@ export function LanguageSwitch() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label="Change language" className="gap-1.5">
+        <Button variant="ghost" size="sm" aria-label={t('changeLanguage')} className="gap-1.5">
           <Globe className="h-4 w-4" />
           <span className="text-xs font-medium uppercase">{locale}</span>
         </Button>

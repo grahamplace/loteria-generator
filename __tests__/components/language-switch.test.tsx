@@ -12,6 +12,16 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 vi.mock('next-intl', () => ({
   useLocale: () => mockLocale,
+  useTranslations: () => {
+    const msgs: Record<string, string> = {
+      changeLanguage: 'Change language',
+      close: 'Close',
+    };
+    const t = (key: string) => msgs[key] ?? key;
+    t.raw = (key: string) => msgs[key];
+    t.rich = (key: string) => msgs[key] ?? key;
+    return t;
+  },
 }));
 
 // Polyfill PointerEvent for jsdom so Radix UI opens on pointerdown

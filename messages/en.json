@@ -326,7 +326,10 @@
     "signOut": "Sign Out"
   },
   "Common": {
-    "Buttons": {},
+    "Buttons": {
+      "close": "Close",
+      "changeLanguage": "Change language"
+    },
     "Errors": {},
     "Toasts": {}
   },
