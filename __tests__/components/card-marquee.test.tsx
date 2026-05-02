@@ -18,18 +18,17 @@ describe('CardMarquee', () => {
     }
   });
 
-  it('renders two rows with distinct class modifiers', () => {
+  it('renders a single scrolling row', () => {
     const { container } = render(<CardMarquee cards={heroCards} />);
     expect(container.querySelector('.hero-marquee-row--left')).not.toBeNull();
-    expect(container.querySelector('.hero-marquee-row--right')).not.toBeNull();
+    // The right-direction row was removed when the marquee was simplified to one row.
+    expect(container.querySelector('.hero-marquee-row--right')).toBeNull();
   });
 
-  it('puts every card in both rows and duplicates each row for seamless looping', () => {
+  it('duplicates the row for seamless looping', () => {
     const { container } = render(<CardMarquee cards={heroCards} />);
-    const leftRow = container.querySelector('.hero-marquee-row--left')!;
-    const rightRow = container.querySelector('.hero-marquee-row--right')!;
-    // Each row contains all 18 cards plus a duplicate set for the loop.
-    expect(leftRow.children.length).toBe(heroCards.length * 2);
-    expect(rightRow.children.length).toBe(heroCards.length * 2);
+    const row = container.querySelector('.hero-marquee-row--left')!;
+    // The row contains all cards plus a duplicate set for the loop.
+    expect(row.children.length).toBe(heroCards.length * 2);
   });
 });

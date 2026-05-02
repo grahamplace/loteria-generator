@@ -1,10 +1,19 @@
 import Image from 'next/image';
 import type { HeroCard as HeroCardData } from '@/lib/hero-cards';
 
-export function HeroCard({ card, duplicate = false }: { card: HeroCardData; duplicate?: boolean }) {
+export function HeroCard({
+  card,
+  duplicate = false,
+  tilt,
+}: {
+  card: HeroCardData;
+  duplicate?: boolean;
+  tilt?: number;
+}) {
   return (
     <div
-      className="relative flex-none w-[120px] rounded-md border-[3px] border-primary bg-[#f5f0e1] p-2 pt-3 shadow-[0_4px_14px_rgba(0,0,0,0.12)]"
+      className="relative flex-none w-[120px] rounded-md border-[3px] border-primary bg-[#f5f0e1] p-2 pt-3 shadow-[0_4px_14px_rgba(0,0,0,0.12)] transition-transform duration-300"
+      style={tilt !== undefined ? { transform: `rotate(${tilt}deg)` } : undefined}
       aria-hidden={duplicate ? 'true' : undefined}
     >
       <span

@@ -8,12 +8,12 @@ describe('LandingHero', () => {
     render(<LandingHero />);
     const h1 = screen.getByRole('heading', { level: 1 });
     expect(h1.textContent).toMatch(/Lotería/);
-    expect(h1.textContent).toMatch(/Custom/i);
+    expect(h1.textContent).toMatch(/custom/i);
   });
 
   it('renders the primary CTA linking to /sign-up', () => {
     render(<LandingHero />);
-    const cta = screen.getByRole('link', { name: /create your lotería set free/i });
+    const cta = screen.getByRole('link', { name: /create your set free/i });
     expect(cta).toHaveAttribute('href', '/sign-up');
   });
 
@@ -23,10 +23,10 @@ describe('LandingHero', () => {
     expect(cta).toHaveAttribute('href', '#how-it-works');
   });
 
-  it('renders all three feature pills', () => {
+  it('renders all three trust pills', () => {
     render(<LandingHero />);
     expect(screen.getByText(/ready in minutes/i)).toBeInTheDocument();
-    expect(screen.getByText(/prints on letter paper/i)).toBeInTheDocument();
+    expect(screen.getByText(/print at home/i)).toBeInTheDocument();
     expect(screen.getByText(/no subscription/i)).toBeInTheDocument();
   });
 
