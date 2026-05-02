@@ -11,6 +11,10 @@ const protectedRoutes = ['/dashboard', '/boards', '/account'];
 // Paths (without locale prefix) that redirect to dashboard if already authenticated
 const authRoutes = ['/sign-in', '/sign-up'];
 
+// The URL prefix for Spanish is always '/es', even though the locale token is 'es-MX'.
+const SPANISH_PREFIX = '/es';
+const SPANISH_LOCALE = 'es-MX' as const;
+
 function getSessionToken(request: NextRequest): string | undefined {
   return (
     request.cookies.get('better-auth.session_token')?.value ||
@@ -19,13 +23,12 @@ function getSessionToken(request: NextRequest): string | undefined {
 }
 
 /**
- * Strip a locale prefix (/en or /es) from a pathname so auth guards can
+ * Strip the /es locale prefix from a pathname so auth guards can
  * compare against canonical paths like "/dashboard".
  */
 function stripLocale(pathname: string): string {
-  const pattern = new RegExp(`^/(${routing.locales.join('|')})(/.+|$)`);
-  const m = pathname.match(pattern);
-  if (m) return m[2] || '/';
+  if (pathname === SPANISH_PREFIX) return '/';
+  if (pathname.startsWith(`${SPANISH_PREFIX}/`)) return pathname.slice(SPANISH_PREFIX.length);
   return pathname;
 }
 
@@ -35,22 +38,21 @@ function stripLocale(pathname: string): string {
  * (consistent with `localePrefix: 'as-needed'`).
  */
 function getLocale(pathname: string): (typeof routing.locales)[number] {
-  for (const locale of routing.locales) {
-    if (locale === routing.defaultLocale) continue;
-    if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) {
-      return locale;
-    }
+  if (pathname === SPANISH_PREFIX || pathname.startsWith(`${SPANISH_PREFIX}/`)) {
+    return SPANISH_LOCALE;
   }
-  return routing.defaultLocale;
+  return routing.defaultLocale; // 'en'
 }
 
 /**
  * Prepend a locale prefix to a path, unless the locale is the default
  * (no prefix needed when `localePrefix: 'as-needed'`).
+ * Note: locale token 'es-MX' maps to URL prefix '/es'.
  */
 function withLocale(path: string, locale: (typeof routing.locales)[number]): string {
   if (locale === routing.defaultLocale) return path;
-  return `/${locale}${path === '/' ? '' : path}`;
+  // locale is 'es-MX' → prepend '/es'
+  return `${SPANISH_PREFIX}${path === '/' ? '' : path}`;
 }
 
 export async function proxy(request: NextRequest) {

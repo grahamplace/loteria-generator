@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 
-function setLocaleCookie(value: 'en' | 'es') {
+function setLocaleCookie(value: 'en' | 'es-MX') {
   const secure =
     typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; secure' : '';
   document.cookie = `LOCALE=${value}; max-age=${60 * 60 * 24 * 365}; path=/; samesite=lax${secure}`;
@@ -27,8 +27,8 @@ export function LocaleBannerClient() {
       <Button
         size="sm"
         onClick={() => {
-          setLocaleCookie('es');
-          router.replace(pathname, { locale: 'es' });
+          setLocaleCookie('es-MX');
+          router.replace(pathname, { locale: 'es-MX' });
         }}
       >
         Sí, cambiar

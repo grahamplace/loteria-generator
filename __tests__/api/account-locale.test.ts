@@ -42,7 +42,7 @@ describe('POST /api/account/locale', () => {
 
   it('returns 401 when not authenticated', async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(null);
-    const res = await POST(makeReq({ locale: 'es' }));
+    const res = await POST(makeReq({ locale: 'es-MX' }));
     expect(res.status).toBe(401);
   });
 
@@ -51,13 +51,18 @@ describe('POST /api/account/locale', () => {
     expect(res.status).toBe(400);
   });
 
+  it('rejects bare es locale with 400', async () => {
+    const res = await POST(makeReq({ locale: 'es' }));
+    expect(res.status).toBe(400);
+  });
+
   it('rejects malformed body with 400', async () => {
     const res = await POST(makeReq({ wrong: 'shape' }));
     expect(res.status).toBe(400);
   });
 
-  it('updates user_profiles.locale and returns 204 on success (locale=es)', async () => {
-    const res = await POST(makeReq({ locale: 'es' }));
+  it('updates user_profiles.locale and returns 204 on success (locale=es-MX)', async () => {
+    const res = await POST(makeReq({ locale: 'es-MX' }));
     expect(res.status).toBe(204);
     expect(db.update).toHaveBeenCalled();
   });

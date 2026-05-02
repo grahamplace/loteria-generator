@@ -13,7 +13,7 @@ import {
 
 const OPTIONS = [
   { value: 'en' as const, label: 'English' },
-  { value: 'es' as const, label: 'Español' },
+  { value: 'es-MX' as const, label: 'Español' },
 ];
 
 export function LanguageSwitch() {
@@ -22,7 +22,7 @@ export function LanguageSwitch() {
   const pathname = usePathname();
   const t = useTranslations('Common.Buttons');
 
-  function setLocale(next: 'en' | 'es') {
+  function setLocale(next: 'en' | 'es-MX') {
     if (next === locale) return;
     document.cookie = `LOCALE=${next}; max-age=${60 * 60 * 24 * 365}; path=/; samesite=lax${
       typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; secure' : ''
@@ -42,7 +42,7 @@ export function LanguageSwitch() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" aria-label={t('changeLanguage')} className="gap-1.5">
           <Globe className="h-4 w-4" />
-          <span className="text-xs font-medium uppercase">{locale}</span>
+          <span className="text-xs font-medium uppercase">{locale.slice(0, 2)}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

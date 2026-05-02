@@ -62,7 +62,7 @@ describe('shouldShowBanner', () => {
       shouldShowBanner({
         cookieLocale: undefined,
         acceptLanguage: 'es-MX',
-        currentLocale: 'es',
+        currentLocale: 'es-MX',
       })
     ).toBe(false);
   });

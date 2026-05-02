@@ -72,8 +72,8 @@ describe('<LanguageSwitch />', () => {
     openDropdown();
     fireEvent.click(await screen.findByRole('menuitem', { name: /español/i }));
 
-    expect(replace).toHaveBeenCalledWith('/dashboard', { locale: 'es' });
-    expect(document.cookie).toContain('LOCALE=es');
+    expect(replace).toHaveBeenCalledWith('/dashboard', { locale: 'es-MX' });
+    expect(document.cookie).toContain('LOCALE=es-MX');
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/account/locale',
       expect.objectContaining({ method: 'POST' })
@@ -90,7 +90,7 @@ describe('<LanguageSwitch />', () => {
   });
 
   it('marks the active locale on the menu item', async () => {
-    mockLocale = 'es';
+    mockLocale = 'es-MX';
     render(<LanguageSwitch />);
     openDropdown();
     const esItem = await screen.findByRole('menuitem', { name: /español/i });
@@ -104,7 +104,7 @@ describe('<LanguageSwitch />', () => {
     fireEvent.click(await screen.findByRole('menuitem', { name: /español/i }));
 
     // Cookie was still set, navigation still happened.
-    expect(document.cookie).toContain('LOCALE=es');
+    expect(document.cookie).toContain('LOCALE=es-MX');
     expect(replace).toHaveBeenCalled();
   });
 });

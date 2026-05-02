@@ -6,7 +6,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { userProfiles } from '@/db/schema';
 
-const Body = z.object({ locale: z.enum(['en', 'es']) });
+const Body = z.object({ locale: z.enum(['en', 'es-MX']) });
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });

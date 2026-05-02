@@ -8,7 +8,7 @@ import { notFound, redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
-import { routing, htmlLang, type Locale } from '@/i18n/routing';
+import { routing, type Locale } from '@/i18n/routing';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db } from '@/db';
@@ -39,7 +39,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: 'Marketing.Meta' });
 
   // localePrefix: 'as-needed' → English at '/', Spanish at '/es'
-  const localePathRoot = locale === routing.defaultLocale ? '' : `/${locale}`;
+  const localePathRoot = locale === routing.defaultLocale ? '' : '/es';
   const canonical = localePathRoot || '/';
 
   return {
@@ -126,7 +126,7 @@ export default async function LocaleLayout({
         .limit(1);
 
       const dbLocale = profile?.locale;
-      if (dbLocale === 'es' || dbLocale === 'en') {
+      if (dbLocale === 'es-MX' || dbLocale === 'en') {
         cookieStore.set('LOCALE', dbLocale, {
           maxAge: 60 * 60 * 24 * 365,
           path: '/',
@@ -134,7 +134,7 @@ export default async function LocaleLayout({
           secure: process.env.NODE_ENV === 'production',
         });
         if (dbLocale !== locale) {
-          const target = dbLocale === 'en' ? '/' : `/${dbLocale}`;
+          const target = dbLocale === 'en' ? '/' : '/es';
           redirect(target);
         }
       }
@@ -144,7 +144,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={htmlLang[locale as Locale]}>
+    <html lang={locale}>
       <body
         className={`font-sans antialiased ${caveat.variable} ${bricolage.variable} ${jetbrains.variable}`}
       >
