@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import posthog from 'posthog-js';
+import { useTranslations } from 'next-intl';
 import { signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ import { Separator } from '@/components/ui/separator';
 import { LanguageSwitch } from '@/components/language-switch';
 
 export default function SignInPage() {
+  const t = useTranslations('Auth.SignIn');
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,7 +52,7 @@ export default function SignInPage() {
         router.push('/dashboard');
       }
     } catch (_err) {
-      setError('An unexpected error occurred');
+      setError(t('errors.unexpectedError'));
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +68,7 @@ export default function SignInPage() {
         callbackURL: '/dashboard',
       });
     } catch (_err) {
-      setError('Failed to sign in with Google');
+      setError(t('errors.googleSignInFailed'));
       setIsLoading(false);
     }
   }
@@ -78,8 +80,8 @@ export default function SignInPage() {
       </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your Lotería Generator account</CardDescription>
+          <CardTitle className="text-2xl font-bold">{t('cardTitle')}</CardTitle>
+          <CardDescription>{t('cardDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button
@@ -106,23 +108,23 @@ export default function SignInPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Continue with Google
+            {t('googleButton')}
           </Button>
 
           <div className="relative">
             <Separator />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-muted-foreground">
-              or
+              {t('separator')}
             </span>
           </div>
 
           <form onSubmit={handleEmailSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('emailLabel')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -130,11 +132,11 @@ export default function SignInPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('passwordLabel')}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder={t('passwordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -145,15 +147,15 @@ export default function SignInPage() {
             {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? t('submitButtonLoading') : t('submitButton')}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
+            {t('noAccountPrompt')}{' '}
             <Link href="/sign-up" className="text-primary hover:underline font-medium">
-              Sign up
+              {t('noAccountCta')}
             </Link>
           </p>
         </CardFooter>

@@ -110,8 +110,45 @@
     }
   },
   "Auth": {
-    "SignIn": {},
-    "SignUp": {}
+    "SignIn": {
+      "cardTitle": "Welcome Back",
+      "cardDescription": "Sign in to your Lotería Generator account",
+      "googleButton": "Continue with Google",
+      "separator": "or",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submitButton": "Sign In",
+      "submitButtonLoading": "Signing in...",
+      "noAccountPrompt": "Don't have an account?",
+      "noAccountCta": "Sign up",
+      "errors": {
+        "unexpectedError": "An unexpected error occurred",
+        "googleSignInFailed": "Failed to sign in with Google"
+      }
+    },
+    "SignUp": {
+      "cardTitle": "Create Account",
+      "cardDescription": "Start creating custom Lotería cards from your photos",
+      "googleButton": "Continue with Google",
+      "separator": "or",
+      "nameLabel": "Name",
+      "namePlaceholder": "Your name",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "submitButton": "Create Account",
+      "submitButtonLoading": "Creating account...",
+      "haveAccountPrompt": "Already have an account?",
+      "haveAccountCta": "Sign in",
+      "errors": {
+        "weakPassword": "Password must be at least 8 characters",
+        "unexpectedError": "An unexpected error occurred",
+        "googleSignUpFailed": "Failed to sign up with Google"
+      }
+    }
   },
   "Dashboard": {},
   "BoardEditor": {},
