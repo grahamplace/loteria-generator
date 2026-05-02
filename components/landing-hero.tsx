@@ -9,15 +9,15 @@ import { heroCards } from '@/lib/hero-cards';
 import weddingCouplePhoto from '@/scripts/example-images/source-photos/01-wedding-couple.jpg';
 import quinceaneraPhoto from '@/scripts/example-images/source-photos/04-quinceanera.jpg';
 import familyPhoto from '@/scripts/example-images/source-photos/07-family-portrait.jpg';
-import birthdayCakePhoto from '@/scripts/example-images/source-photos/06-birthday-cake.jpg';
+import birthdayCandlesPhoto from '@/scripts/example-images/source-photos/05-birthday-candles.jpg';
 
 const trustItems = ['Ready in minutes', 'Print at home', 'No subscription'];
 
-const fannedCardIds = ['la-boda', 'la-quinceanera', 'la-familia', 'las-velitas'];
+const fannedCardIds = ['la-boda', 'la-quinceanera', 'la-familia', 'la-fiesta'];
 const fannedRotations = ['-rotate-[12deg]', '-rotate-[4deg]', 'rotate-[4deg]', 'rotate-[12deg]'];
 const fannedOffsets = ['translate-y-0', '-translate-y-3', '-translate-y-3', 'translate-y-0'];
 
-const fannedPhotos = [weddingCouplePhoto, quinceaneraPhoto, familyPhoto, birthdayCakePhoto];
+const fannedPhotos = [weddingCouplePhoto, quinceaneraPhoto, familyPhoto, birthdayCandlesPhoto];
 
 // Deterministic Park-Miller PRNG so SSR and client agree.
 function seededShuffle<T>(arr: T[], seed: number): T[] {
@@ -139,7 +139,7 @@ export function LandingHero() {
               size="lg"
               className="h-auto rounded-full px-8 py-[14px] text-[16px] font-semibold shadow-[0_8px_18px_-10px_rgba(230,57,70,0.7)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_-10px_rgba(230,57,70,0.8)]"
             >
-              Create your set free →
+              Try it for free →
             </Button>
           </Link>
           <Link href="#how-it-works">

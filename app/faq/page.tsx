@@ -7,7 +7,7 @@ import { FAQJsonLd, BreadcrumbJsonLd } from '@/components/json-ld';
 export const metadata: Metadata = {
   title: 'FAQ - Custom Lotería Card Questions Answered',
   description:
-    'Find answers to common questions about creating custom Lotería cards. Learn how our AI Lotería generator works, pricing, printing, and more.',
+    'Find answers to common questions about creating custom Lotería cards. Learn how it works, pricing, printing, and more.',
   keywords: [
     'loteria faq',
     'custom loteria questions',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'FAQ - Custom Lotería Card Questions Answered',
     description:
-      'Find answers to common questions about creating custom Lotería cards with our AI-powered maker.',
+      'Find answers to common questions about creating custom Lotería cards with our generator.',
   },
 };
 
@@ -50,7 +50,7 @@ const faqs = [
       {
         question: 'How do I create custom Lotería cards with my photos?',
         answer:
-          'Simply sign up for a free account, create a new board, and upload your photos. Our AI automatically transforms each photo into a traditional Lotería-style illustration and generates an authentic Spanish label. You can edit labels, rearrange cards, and generate printable boards.',
+          'Simply sign up for a free account, create a new board, and upload your photos. We automatically transform each photo into a traditional Lotería-style illustration and generate an authentic Spanish label. You can edit labels, rearrange cards, and generate printable boards.',
       },
       {
         question: 'What types of photos work best?',
@@ -60,12 +60,12 @@ const faqs = [
       {
         question: 'Can I edit the Spanish labels on my cards?',
         answer:
-          'Yes! While our AI generates authentic Spanish labels automatically, you can edit any label to customize it. Click the Edit button on any card to change its label to whatever you prefer.',
+          'Yes! While we generate authentic Spanish labels automatically, you can edit any label to customize it. Click the Edit button on any card to change its label to whatever you prefer.',
       },
       {
         question: 'How long does it take to process a photo?',
         answer:
-          'Each photo typically takes 10-30 seconds to process. Our AI transforms the image into a Lotería-style illustration and generates an appropriate Spanish label. You can upload multiple photos and they will process in parallel.',
+          'Each photo typically takes 10-30 seconds to process. We transform the image into a Lotería-style illustration and generate an appropriate Spanish label. You can upload multiple photos and they will process in parallel.',
       },
     ],
   },
@@ -188,8 +188,7 @@ export default function FAQPage() {
           </Link>
           <h1 className="text-4xl font-bold mb-4">Frequently Asked Questions</h1>
           <p className="text-xl text-muted-foreground">
-            Everything you need to know about creating custom Lotería cards with our AI-powered
-            maker.
+            Everything you need to know about creating custom Lotería cards with our generator.
           </p>
         </header>
 

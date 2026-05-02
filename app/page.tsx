@@ -7,7 +7,7 @@ import grandpaPhoto from '@/scripts/example-images/source-photos/09-grandpa.jpg'
 import quinceaneraPhoto from '@/scripts/example-images/source-photos/04-quinceanera.jpg';
 import weddingCouplePhoto from '@/scripts/example-images/source-photos/01-wedding-couple.jpg';
 import familyPhoto from '@/scripts/example-images/source-photos/07-family-portrait.jpg';
-import birthdayCakePhoto from '@/scripts/example-images/source-photos/06-birthday-cake.jpg';
+import birthdayCandlesPhoto from '@/scripts/example-images/source-photos/05-birthday-candles.jpg';
 import { auth } from '@/lib/auth';
 import { LandingHero } from '@/components/landing-hero';
 import { LandingNav } from '@/components/landing-nav';
@@ -38,7 +38,7 @@ const faqs = [
   {
     question: 'How do I create a custom Lotería set with my own photos?',
     answer:
-      'Upload your photos and our AI restyles each one into a traditional Lotería-style illustration with a Spanish label. You then arrange your cards, edit labels, and generate printable tablas (boards) so you have a complete Lotería set ready to play.',
+      'Upload your photos and we restyle each one into a traditional Lotería-style illustration with a Spanish label. You then arrange your cards, edit labels, and generate printable tablas (boards) so you have a complete Lotería set ready to play.',
   },
   {
     question: 'Can I use this for my wedding or party?',
@@ -66,7 +66,7 @@ const occasions = [
   {
     tag: 'Wedding',
     title: 'For the bride & groom',
-    copy: 'Photos of the couple, the wedding party, both families. A keepsake guests genuinely take home.',
+    copy: 'Photos of the couple, the wedding party, both families. A celebration of two families coming together.',
     front: 'la-boda',
     back: 'la-sortija',
   },
@@ -80,7 +80,7 @@ const occasions = [
   {
     tag: 'Reunion',
     title: 'Every primo & tía',
-    copy: 'Build a deck for the whole familia. From abuela to the new baby — everyone will love playing Lotería with a custom set.',
+    copy: 'Celebrate the whole familia. From abuela to the new baby — everyone will love playing custom Lotería featuring their loved ones.',
     front: 'la-familia',
     back: 'el-abuelo',
   },
@@ -88,17 +88,15 @@ const occasions = [
     tag: 'Birthday',
     title: 'The whole crew',
     copy: 'Friends, inside jokes, and the birthday star front-and-center.',
-    front: 'las-velitas',
-    back: 'la-fiesta',
+    front: 'la-fiesta',
+    back: 'la-guitarra',
   },
 ] as const;
-
-const showcaseTilts = [-3, 2, -1, 4, -2, 1, -4, 3, 2, -3, 1, -2, 3, -1, 4, -3, 2, -2];
 
 const fannedRotations = ['-rotate-[12deg]', '-rotate-[4deg]', 'rotate-[4deg]', 'rotate-[12deg]'];
 const fannedOffsets = ['translate-y-0', '-translate-y-3', '-translate-y-3', 'translate-y-0'];
 
-const stepOnePhotos = [weddingCouplePhoto, quinceaneraPhoto, familyPhoto, birthdayCakePhoto];
+const stepOnePhotos = [weddingCouplePhoto, quinceaneraPhoto, familyPhoto, birthdayCandlesPhoto];
 
 const stackedBoards = [
   { seed: 11, transform: 'translate(-10px, -4px) rotate(-7deg)', z: 'z-0' },
@@ -127,7 +125,7 @@ export default async function LandingPage() {
   }
 
   const cardById = (id: string) => heroCards.find((c) => c.id === id);
-  const finalCtaCards = ['la-boda', 'la-quinceanera', 'la-familia', 'las-velitas']
+  const finalCtaCards = ['la-boda', 'la-quinceanera', 'la-familia', 'la-fiesta']
     .map((id) => cardById(id))
     .filter((c): c is NonNullable<typeof c> => Boolean(c));
 
@@ -165,106 +163,112 @@ export default async function LandingPage() {
             </div>
 
             <div className="mt-12 grid gap-8 md:mt-14 md:grid-cols-3">
-              <article className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-9">
-                <div className="font-display text-[88px] font-bold leading-none tracking-[-0.04em] text-primary">
-                  01
+              <article className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-6 md:p-9">
+                <div className="flex items-start gap-4 md:contents">
+                  <div className="flex-none font-display text-[72px] font-bold leading-none tracking-[-0.04em] text-primary md:order-1 md:text-[88px]">
+                    01
+                  </div>
+                  <div className="grid h-[200px] flex-1 place-items-center overflow-hidden md:order-4 md:mt-7 md:h-[260px] md:flex-none md:rounded-xl md:border md:border-dashed md:border-white/15 md:bg-white/[0.04]">
+                    <div className="flex" style={{ perspective: '1000px' }} aria-hidden="true">
+                      {stepOnePhotos.map((photo, i) => (
+                        <div key={i} className={`-mx-4 ${fannedRotations[i]} ${fannedOffsets[i]}`}>
+                          <div className="relative h-[120px] w-[80px] overflow-hidden rounded-lg border-[1.5px] border-white/30 bg-white shadow-[0_8px_20px_-8px_rgba(0,0,0,0.35)]">
+                            <Image
+                              src={photo}
+                              alt=""
+                              fill
+                              sizes="80px"
+                              placeholder="blur"
+                              className="object-cover"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <h3 className="mt-5 font-display text-[22px] font-bold text-background">
+                <h3 className="mt-5 font-display text-[22px] font-bold text-background md:order-2">
                   Upload your photos
                 </h3>
-                <p className="mt-2.5 text-[14.5px] leading-relaxed text-background/70">
+                <p className="mt-2.5 text-[14.5px] leading-relaxed text-background/70 md:order-3">
                   Upload photos of family, friends, or pets. We can illustrate anything or anyone
                   you want to feature on a card.
                 </p>
-                <div className="mt-7 grid h-[260px] flex-none place-items-center overflow-hidden rounded-xl border border-dashed border-white/15 bg-white/[0.04]">
-                  <div className="flex" style={{ perspective: '1000px' }} aria-hidden="true">
-                    {stepOnePhotos.map((photo, i) => (
-                      <div key={i} className={`-mx-4 ${fannedRotations[i]} ${fannedOffsets[i]}`}>
-                        <div className="relative h-[120px] w-[80px] overflow-hidden rounded-lg border-[1.5px] border-white/30 bg-white shadow-[0_8px_20px_-8px_rgba(0,0,0,0.35)]">
+              </article>
+
+              <article className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-6 md:p-9">
+                <div className="flex items-start gap-4 md:contents">
+                  <div className="flex-none font-display text-[72px] font-bold leading-none tracking-[-0.04em] text-primary md:order-1 md:text-[88px]">
+                    02
+                  </div>
+                  <div className="relative grid h-[200px] flex-1 place-items-center overflow-hidden md:order-4 md:mt-7 md:h-[260px] md:flex-none md:rounded-xl md:border md:border-dashed md:border-white/15 md:bg-white/[0.04] md:p-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="relative w-[84px] flex-none overflow-hidden rounded-md border-[3px] border-white/40 shadow-[0_4px_14px_rgba(0,0,0,0.35)]">
+                        <div className="relative aspect-[2/3]">
                           <Image
-                            src={photo}
-                            alt=""
+                            src={grandpaPhoto}
+                            alt="Original photo of a grandfather"
                             fill
-                            sizes="80px"
-                            placeholder="blur"
+                            sizes="84px"
                             className="object-cover"
                           />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </article>
-
-              <article className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-9">
-                <div className="font-display text-[88px] font-bold leading-none tracking-[-0.04em] text-primary">
-                  02
-                </div>
-                <h3 className="mt-5 font-display text-[22px] font-bold text-background">
-                  AI illustrates each card
-                </h3>
-                <p className="mt-2.5 text-[14.5px] leading-relaxed text-background/70">
-                  Our model draws each photo in classic Lotería style with authentic Spanish labels
-                  — El Abuelo, La Novia, El Niño.
-                </p>
-                <div className="relative mt-7 grid h-[260px] flex-none place-items-center overflow-hidden rounded-xl border border-dashed border-white/15 bg-white/[0.04] p-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="relative w-[84px] flex-none overflow-hidden rounded-md border-[3px] border-white/40 shadow-[0_4px_14px_rgba(0,0,0,0.35)]">
-                      <div className="relative aspect-[2/3]">
-                        <Image
-                          src={grandpaPhoto}
-                          alt="Original photo of a grandfather"
-                          fill
-                          sizes="84px"
-                          className="object-cover"
-                        />
-                      </div>
-                    </div>
-                    <span className="whitespace-nowrap font-jetbrains text-[10px] tracking-[0.2em] text-secondary">
-                      →&nbsp;AI&nbsp;→
-                    </span>
-                    <div className="flex-none" style={{ width: 84, height: 145 }}>
-                      <div style={{ transform: 'scale(0.7)', transformOrigin: 'top left' }}>
-                        {(() => {
-                          const c = cardById('el-abuelo');
-                          return c ? <HeroCard card={c} duplicate /> : null;
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </article>
-
-              <article className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-9">
-                <div className="font-display text-[88px] font-bold leading-none tracking-[-0.04em] text-primary">
-                  03
-                </div>
-                <h3 className="mt-5 font-display text-[22px] font-bold text-background">
-                  Print at home
-                </h3>
-                <p className="mt-2.5 text-[14.5px] leading-relaxed text-background/70">
-                  Download print-ready PDFs of every card and tabla. Print on letter or A4 paper at
-                  home or your local print shop.
-                </p>
-                <div className="mt-7 grid h-[260px] flex-none place-items-center overflow-hidden rounded-xl border border-dashed border-white/15 bg-white/[0.04]">
-                  <div className="relative h-full w-[200px]">
-                    {stackedBoards.map(({ seed, transform, z }) => {
-                      const cards = seededShuffle(heroCards, seed).slice(0, 16);
-                      return (
-                        <div
-                          key={seed}
-                          className={`absolute left-1/2 top-1/2 ${z}`}
-                          style={{
-                            transform: `translate(-50%, -50%) ${transform}`,
-                            transformOrigin: 'center center',
-                          }}
-                        >
-                          <TablaBoard cards={cards} width={165} />
+                      <span className="whitespace-nowrap font-jetbrains text-[10px] tracking-[0.2em] text-secondary">
+                        →&nbsp;AI&nbsp;→
+                      </span>
+                      <div className="flex-none" style={{ width: 84, height: 145 }}>
+                        <div style={{ transform: 'scale(0.7)', transformOrigin: 'top left' }}>
+                          {(() => {
+                            const c = cardById('el-abuelo');
+                            return c ? <HeroCard card={c} duplicate /> : null;
+                          })()}
                         </div>
-                      );
-                    })}
+                      </div>
+                    </div>
                   </div>
                 </div>
+                <h3 className="mt-5 font-display text-[22px] font-bold text-background md:order-2">
+                  We instantly illustrate each card
+                </h3>
+                <p className="mt-2.5 text-[14.5px] leading-relaxed text-background/70 md:order-3">
+                  We instantly draw each photo in classic Lotería style and add Spanish labels — El
+                  Abuelo, La Novia, El Niño.
+                </p>
+              </article>
+
+              <article className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-6 md:p-9">
+                <div className="flex items-start gap-4 md:contents">
+                  <div className="flex-none font-display text-[72px] font-bold leading-none tracking-[-0.04em] text-primary md:order-1 md:text-[88px]">
+                    03
+                  </div>
+                  <div className="grid h-[200px] flex-1 place-items-center overflow-hidden md:order-4 md:mt-7 md:h-[260px] md:flex-none md:rounded-xl md:border md:border-dashed md:border-white/15 md:bg-white/[0.04]">
+                    <div className="relative h-full w-[200px] origin-center scale-[0.78] md:scale-100">
+                      {stackedBoards.map(({ seed, transform, z }) => {
+                        const cards = seededShuffle(heroCards, seed).slice(0, 16);
+                        return (
+                          <div
+                            key={seed}
+                            className={`absolute left-1/2 top-1/2 ${z}`}
+                            style={{
+                              transform: `translate(-50%, -50%) ${transform}`,
+                              transformOrigin: 'center center',
+                            }}
+                          >
+                            <TablaBoard cards={cards} width={165} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <h3 className="mt-5 font-display text-[22px] font-bold text-background md:order-2">
+                  Print and play at home
+                </h3>
+                <p className="mt-2.5 text-[14.5px] leading-relaxed text-background/70 md:order-3">
+                  Download print-ready PDFs of every card and tabla. Print at home or at a local
+                  print shop. You&rsquo;re ready to play Lotería!
+                </p>
               </article>
             </div>
 
@@ -274,7 +278,7 @@ export default async function LandingPage() {
                   size="lg"
                   className="h-auto rounded-full bg-primary px-9 py-[18px] text-[16px] font-semibold text-primary-foreground shadow-[0_8px_18px_-10px_rgba(230,57,70,0.7)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_-10px_rgba(230,57,70,0.8)]"
                 >
-                  Start creating free →
+                  Get started for free →
                 </Button>
               </Link>
             </div>
@@ -285,7 +289,7 @@ export default async function LandingPage() {
         <section id="occasions" className="scroll-mt-20 py-16 md:py-20">
           <div className="mx-auto max-w-[1240px] px-6 sm:px-8">
             <p className="text-center font-jetbrains text-[12px] font-medium uppercase tracking-[0.18em] text-primary">
-              Made for the moments that matter
+              For all the moments that matter
             </p>
             <h2 className="mt-4 text-center font-display text-[clamp(36px,4.4vw,64px)] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">
               Make your next family gathering
@@ -296,14 +300,14 @@ export default async function LandingPage() {
               Surprise your friends and family with a custom Lotería set they&rsquo;ll love.
             </p>
 
-            <div className="mt-12 grid gap-6 md:mt-14 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="-mx-6 mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 md:mt-14 lg:grid-cols-4">
               {occasions.map((item) => {
                 const front = cardById(item.front);
                 const back = cardById(item.back);
                 return (
                   <article
                     key={item.tag}
-                    className="group relative overflow-hidden rounded-[22px] border border-[var(--color-rule-warm)] bg-[var(--color-cream-deep)] p-7 transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_24px_40px_-28px_rgba(26,26,46,0.35)]"
+                    className="group relative w-[82%] flex-none snap-start overflow-hidden rounded-[22px] border border-[var(--color-rule-warm)] bg-[var(--color-cream-deep)] p-7 transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_24px_40px_-28px_rgba(26,26,46,0.35)] sm:w-auto"
                   >
                     <div className="relative mb-6 grid h-[280px] place-items-center">
                       {back && (
@@ -336,66 +340,8 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* Showcase */}
-        <section className="border-y border-[var(--color-rule-warm)] bg-[var(--color-cream-deep)] py-16 md:py-20">
-          <div className="mx-auto max-w-[1240px] px-6 sm:px-8">
-            <div>
-              <p className="font-jetbrains text-[12px] font-medium uppercase tracking-[0.18em] text-primary">
-                Real outputs · Real people
-              </p>
-              <h2 className="mt-4 max-w-[560px] font-display text-[clamp(36px,4.4vw,64px)] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">
-                54 cards in the deck.
-                <br />
-                Every one custom.
-              </h2>
-            </div>
-
-            {/* Mobile: fanned stack of 4 sample cards */}
-            <div
-              className="mt-16 flex justify-center sm:hidden"
-              style={{ perspective: '1000px' }}
-              aria-hidden="true"
-            >
-              {[0, 6, 10, 14].map((idx, i) => {
-                const card = heroCards[idx];
-                if (!card) return null;
-                const rotations = [
-                  '-rotate-[12deg]',
-                  '-rotate-[4deg]',
-                  'rotate-[4deg]',
-                  'rotate-[12deg]',
-                ];
-                const offsets = [
-                  'translate-y-0',
-                  '-translate-y-3',
-                  '-translate-y-3',
-                  'translate-y-0',
-                ];
-                return (
-                  <div key={card.id} className={`-mx-6 ${rotations[i]} ${offsets[i]}`}>
-                    <HeroCard card={card} duplicate />
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* sm+ : full 16-card grid */}
-            <div className="mt-16 hidden gap-4 sm:grid sm:grid-cols-4 md:gap-5 xl:grid-cols-8">
-              {heroCards.slice(0, 16).map((card, i) => (
-                <div
-                  key={card.id}
-                  className="flex justify-center"
-                  style={{ transform: `rotate(${showcaseTilts[i] ?? 0}deg)` }}
-                >
-                  <HeroCard card={card} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Pricing */}
-        <section id="pricing" className="scroll-mt-20 py-16 md:py-20">
+        <section id="pricing" className="scroll-mt-20 pb-16 pt-2 md:pb-20 md:pt-4">
           <div className="mx-auto max-w-[1240px] px-6 sm:px-8">
             <p className="text-center font-jetbrains text-[12px] font-medium uppercase tracking-[0.18em] text-primary">
               Pay once · No subscriptions
@@ -407,24 +353,29 @@ export default async function LandingPage() {
               Start free with a sample set. Unlock the full 54-card deck when you&rsquo;re ready.
             </p>
 
-            <div className="mx-auto mt-16 grid max-w-[940px] gap-6 md:mt-20 md:grid-cols-2">
+            <div className="mx-auto mt-16 grid max-w-[940px] grid-cols-2 gap-3 md:mt-20 md:gap-6">
               {/* Free Tier */}
-              <article className="relative rounded-[22px] border border-[var(--color-rule-warm)] bg-white p-9 sm:p-10">
-                <h3 className="font-display text-[20px] font-bold text-foreground">Free Preview</h3>
-                <div className="mt-4 flex items-baseline gap-1.5">
-                  <span className="font-display text-[64px] font-bold leading-none tracking-[-0.03em] text-foreground">
+              <article className="relative rounded-[22px] border border-[var(--color-rule-warm)] bg-white p-5 sm:p-7 md:p-10">
+                <h3 className="font-display text-[18px] font-bold text-foreground md:text-[20px]">
+                  Free Preview
+                </h3>
+                <div className="mt-3 flex items-baseline gap-1.5 md:mt-4">
+                  <span className="font-display text-[40px] font-bold leading-none tracking-[-0.03em] text-foreground md:text-[64px]">
                     $0
                   </span>
-                  <span className="text-sm text-muted-foreground">/ forever</span>
+                  <span className="text-xs text-muted-foreground md:text-sm">/ forever</span>
                 </div>
-                <ul className="my-7 space-y-3">
+                <ul className="my-5 space-y-2.5 md:my-7 md:space-y-3">
                   {[
                     'Up to 4 custom cards',
                     '1 printable tabla',
                     'AI-generated illustrations',
                     'Spanish label generation',
                   ].map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-[14.5px] text-foreground">
+                    <li
+                      key={f}
+                      className="flex items-start gap-2 text-[13px] text-foreground md:gap-2.5 md:text-[14.5px]"
+                    >
                       <span aria-hidden="true" className="mt-0.5 font-bold text-accent">
                         ✓
                       </span>
@@ -435,7 +386,7 @@ export default async function LandingPage() {
                 <Link href="/sign-up" className="block">
                   <Button
                     variant="outline"
-                    className="h-auto w-full rounded-full border-[1.5px] border-foreground bg-transparent py-4 text-[15px] font-semibold text-foreground hover:bg-foreground hover:text-background"
+                    className="h-auto w-full rounded-full border-[1.5px] border-foreground bg-transparent py-3 text-[14px] font-semibold text-foreground hover:bg-foreground hover:text-background md:py-4 md:text-[15px]"
                   >
                     Start free
                   </Button>
@@ -443,25 +394,30 @@ export default async function LandingPage() {
               </article>
 
               {/* Unlocked */}
-              <article className="relative -translate-y-2 rounded-[22px] border-2 border-foreground bg-primary p-9 text-white sm:p-10">
-                <span className="absolute -top-3.5 right-6 inline-block rounded-full border-2 border-foreground bg-secondary px-3 py-1.5 font-jetbrains text-[11px] font-semibold uppercase tracking-[0.1em] text-foreground">
+              <article className="relative -translate-y-2 rounded-[22px] border-2 border-foreground bg-primary p-5 text-white sm:p-7 md:p-10">
+                <span className="absolute -top-3 right-3 inline-block rounded-full border-2 border-foreground bg-secondary px-2.5 py-1 font-jetbrains text-[9px] font-semibold uppercase tracking-[0.08em] text-foreground md:right-6 md:px-3 md:py-1.5 md:text-[11px] md:tracking-[0.1em]">
                   Most popular
                 </span>
-                <h3 className="font-display text-[20px] font-bold text-white">Unlocked Set</h3>
-                <div className="mt-4 flex items-baseline gap-1.5">
-                  <span className="font-display text-[64px] font-bold leading-none tracking-[-0.03em] text-white">
+                <h3 className="font-display text-[18px] font-bold text-white md:text-[20px]">
+                  Unlocked Set
+                </h3>
+                <div className="mt-3 flex items-baseline gap-1.5 md:mt-4">
+                  <span className="font-display text-[40px] font-bold leading-none tracking-[-0.03em] text-white md:text-[64px]">
                     $5
                   </span>
-                  <span className="text-sm text-white/70">one-time</span>
+                  <span className="text-xs text-white/70 md:text-sm">one-time</span>
                 </div>
-                <ul className="my-7 space-y-3">
+                <ul className="my-5 space-y-2.5 md:my-7 md:space-y-3">
                   {[
                     'Full 54-card custom deck',
                     'Unlimited printable tablas',
                     'High-resolution print PDFs',
                     'No watermarks · personal use',
                   ].map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-[14.5px] text-white">
+                    <li
+                      key={f}
+                      className="flex items-start gap-2 text-[13px] text-white md:gap-2.5 md:text-[14.5px]"
+                    >
                       <span aria-hidden="true" className="mt-0.5 font-bold text-secondary">
                         ✓
                       </span>
@@ -470,7 +426,7 @@ export default async function LandingPage() {
                   ))}
                 </ul>
                 <Link href="/sign-up" className="block">
-                  <Button className="h-auto w-full rounded-full bg-secondary py-4 text-[15px] font-semibold text-foreground shadow-none hover:bg-white hover:text-foreground">
+                  <Button className="h-auto w-full rounded-full bg-secondary py-3 text-[14px] font-semibold text-foreground shadow-none hover:bg-white hover:text-foreground md:py-4 md:text-[15px]">
                     Get unlocked set
                   </Button>
                 </Link>

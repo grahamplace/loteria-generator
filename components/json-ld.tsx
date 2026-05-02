@@ -165,8 +165,8 @@ export function HowToJsonLd() {
       },
       {
         '@type': 'HowToStep',
-        name: 'AI Transformation',
-        text: 'Our AI automatically transforms each photo into a traditional Lotería-style illustration with a Spanish label.',
+        name: 'Lotería Transformation',
+        text: 'We automatically transform each photo into a traditional Lotería-style illustration with a Spanish label.',
       },
       {
         '@type': 'HowToStep',
