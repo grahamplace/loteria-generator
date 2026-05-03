@@ -1,4 +1,5 @@
 import { requireAdmin } from '@/lib/admin';
+import { fontVariables } from '@/lib/fonts';
 import { AdminSidebar } from './admin/components/admin-sidebar';
 
 export const metadata = {
@@ -10,7 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await requireAdmin();
   return (
     <html lang="en">
-      <body>
+      <body className={`font-sans antialiased ${fontVariables}`}>
         <div className="min-h-screen bg-background">
           <AdminSidebar email={session.user.email} />
           <main className="ml-56 min-h-screen p-6">{children}</main>
