@@ -98,10 +98,13 @@ export const config = {
      * Match all request paths except:
      * - _next/static, _next/image (Next.js internals)
      * - api/auth (Better Auth handles its own routing)
+     * - admin (the (admin) route group has no locale prefix; running
+     *   next-intl's middleware here rewrites /admin → /en/admin which
+     *   doesn't exist, producing a 404 before requireAdmin() can run)
      * - any path with a file extension (e.g. loteria-star.png, icon.ico,
      *   robots.txt, sitemap.xml). These live in /public and would otherwise
      *   be rewritten by next-intl's middleware to /<locale>/<file> and 404.
      */
-    '/((?!_next/static|_next/image|api/auth|.*\\..*).*)',
+    '/((?!_next/static|_next/image|api/auth|admin|.*\\..*).*)',
   ],
 };
