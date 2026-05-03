@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono, Caveat, Bricolage_Grotesque, JetBrains_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/sonner';
 import { Agentation } from 'agentation';
@@ -13,22 +12,7 @@ import { eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { userProfiles } from '@/db/schema';
-
-const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
-const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-mono' });
-const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' });
-const bricolage = Bricolage_Grotesque({
-  subsets: ['latin'],
-  variable: '--font-display',
-  weight: ['400', '500', '600', '700', '800'],
-  display: 'swap',
-});
-const jetbrains = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-jetbrains',
-  weight: ['400', '500', '600'],
-  display: 'swap',
-});
+import { fontVariables } from '@/lib/fonts';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-eta.vercel.app';
 
@@ -147,9 +131,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale}>
-      <body
-        className={`font-sans antialiased ${geist.variable} ${geistMono.variable} ${caveat.variable} ${bricolage.variable} ${jetbrains.variable}`}
-      >
+      <body className={`font-sans antialiased ${fontVariables}`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>

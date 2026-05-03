@@ -11,6 +11,11 @@ const protectedRoutes = ['/dashboard', '/boards', '/account'];
 // Paths (without locale prefix) that redirect to dashboard if already authenticated
 const authRoutes = ['/sign-in', '/sign-up'];
 
+// Top-level paths that live OUTSIDE the [locale] tree (e.g. their own route group
+// with its own root layout). next-intl middleware would otherwise rewrite these
+// into the [locale] segment and break routing.
+const nonLocalizedRoots = ['/admin'];
+
 // The URL prefix for Spanish is always '/es', even though the locale token is 'es-MX'.
 const SPANISH_PREFIX = '/es';
 const SPANISH_LOCALE = 'es-MX' as const;
@@ -67,6 +72,11 @@ export async function proxy(request: NextRequest) {
     if (isProtectedApiRoute && !getSessionToken(request)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    return NextResponse.next();
+  }
+
+  // --- Non-localized roots: skip intl entirely so their own route group resolves ---
+  if (nonLocalizedRoots.some((root) => pathname === root || pathname.startsWith(`${root}/`))) {
     return NextResponse.next();
   }
 
