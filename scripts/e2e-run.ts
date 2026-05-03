@@ -15,6 +15,21 @@ import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { config as loadDotenv } from 'dotenv';
 import { existsSync } from 'node:fs';
 
+/** Kill any process listening on a port so Playwright can start a fresh server. */
+function freePort(port: number): void {
+  // lsof -ti :<port> prints PIDs listening on that port; kill them gracefully.
+  const result = spawnSync('lsof', ['-ti', `:${port}`], { encoding: 'utf8' });
+  const pids = (result.stdout ?? '').trim().split('\n').filter(Boolean);
+  for (const pid of pids) {
+    process.stderr.write(`killing process ${pid} on port ${port}…\n`);
+    spawnSync('kill', ['-TERM', pid]);
+  }
+  if (pids.length > 0) {
+    // Brief pause so the port is released before Playwright tries to bind it.
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
+  }
+}
+
 if (existsSync('.env.test')) {
   loadDotenv({ path: '.env.test' });
 }
@@ -102,6 +117,10 @@ async function main(): Promise<number> {
     process.stderr.write('seeding test user…\n');
     const seedStatus = runInherit('pnpm', ['exec', 'tsx', 'scripts/e2e-seed-user.ts'], childEnv);
     if (seedStatus !== 0) return seedStatus;
+
+    // Ensure Playwright can start a fresh server with the correct DATABASE_URL.
+    // A dev server may already be running on this port pointing at the wrong DB.
+    freePort(3006);
 
     process.stderr.write('running Playwright…\n');
     exitCode = runInherit('pnpm', ['exec', 'playwright', 'test'], childEnv);

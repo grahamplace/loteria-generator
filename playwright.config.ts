@@ -28,7 +28,10 @@ export default defineConfig({
   webServer: {
     command: 'next dev --port 3006',
     url: 'http://localhost:3006',
-    reuseExistingServer: !process.env.CI,
+    // Never reuse an existing server: the e2e orchestrator starts a fresh Neon
+    // branch per run and the server must connect to that branch's DATABASE_URL.
+    // Reusing a local dev server would use the wrong database.
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });
