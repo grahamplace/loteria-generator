@@ -5,6 +5,8 @@
  */
 
 const NEON_API = 'https://console.neon.tech/api/v2';
+const READY_TIMEOUT_MS = 30_000;
+const POLL_INTERVAL_MS = 500;
 
 interface NeonBranch {
   id: string;
@@ -35,7 +37,14 @@ async function neonFetch<T>(
   });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Neon API ${path} ${res.status}: ${body}`);
+    let detail = body;
+    try {
+      const parsed = JSON.parse(body) as { message?: string; error?: string };
+      detail = parsed.message ?? parsed.error ?? body;
+    } catch {
+      // body wasn't JSON — keep raw text
+    }
+    throw new Error(`Neon API ${path} ${res.status}: ${detail}`);
   }
   return (await res.json()) as T;
 }
@@ -64,20 +73,31 @@ async function main(): Promise<void> {
 
   const branchId = created.branch.id;
 
+  let ready = false;
   const start = Date.now();
-  while (Date.now() - start < 30_000) {
+  while (Date.now() - start < READY_TIMEOUT_MS) {
     const { branch } = await neonFetch<{ branch: NeonBranch }>(
       apiKey,
       `/projects/${projectId}/branches/${branchId}`
     );
-    if (branch.current_state === 'ready') break;
-    await new Promise((r) => setTimeout(r, 500));
+    if (branch.current_state === 'ready') {
+      ready = true;
+      break;
+    }
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+  }
+  if (!ready) {
+    throw new Error(
+      `Branch ${branchId} did not reach 'ready' state within ${READY_TIMEOUT_MS}ms`
+    );
   }
 
   const password = await getRolePassword(apiKey, projectId, branchId);
 
   const endpoint = created.endpoints.find((e) => e.type === 'read_write');
-  if (!endpoint) throw new Error('No read_write endpoint returned by Neon');
+  if (!endpoint?.host) {
+    throw new Error('Neon endpoint missing host');
+  }
 
   const databaseUrl =
     `postgresql://neondb_owner:${password}@${endpoint.host}/neondb` +
@@ -95,6 +115,9 @@ async function getRolePassword(
     apiKey,
     `/projects/${projectId}/branches/${branchId}/roles/neondb_owner/reveal_password`
   );
+  if (!password || typeof password !== 'string') {
+    throw new Error('Neon reveal_password returned empty password');
+  }
   return password;
 }
 
