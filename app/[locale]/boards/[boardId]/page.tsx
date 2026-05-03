@@ -115,17 +115,20 @@ export default function BoardEditorPage() {
     illustration:
       card.localIllustration ||
       card.localOriginalImage ||
-      (card.illustrationUrl
-        ? `/api/images/${boardId}/${card.id}/illustration`
-        : card.originalImageUrl
-          ? `/api/images/${boardId}/${card.id}/original`
-          : ''),
+      (card.isDefault && card.illustrationUrl
+        ? card.illustrationUrl
+        : card.illustrationUrl
+          ? `/api/images/${boardId}/${card.id}/illustration`
+          : card.originalImageUrl
+            ? `/api/images/${boardId}/${card.id}/original`
+            : ''),
     originalImage:
       card.localOriginalImage ||
       (card.originalImageUrl ? `/api/images/${boardId}/${card.id}/original` : undefined),
     isProcessing: card.isProcessing || card.status === 'processing',
     error:
       card.status === 'error' ? card.errorMessage || t('toasts.errorProcessingCard') : undefined,
+    isDefault: card.isDefault,
   }));
 
   // Show welcome state for new locked boards with no cards

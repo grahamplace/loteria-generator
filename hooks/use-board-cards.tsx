@@ -48,6 +48,8 @@ export interface BoardCard {
   illustrationUrl: string | null;
   status: CardStatus;
   errorMessage: string | null;
+  isDefault: boolean;
+  defaultCardId: string | null;
   // Local state for optimistic UI
   localOriginalImage?: string; // base64 for immediate display
   localIllustration?: string; // base64 for immediate display
@@ -221,6 +223,8 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
           illustrationUrl: null,
           status: 'processing' as CardStatus,
           errorMessage: null,
+          isDefault: false,
+          defaultCardId: null,
           localOriginalImage: base64Image,
           isProcessing: true,
         },
@@ -291,6 +295,8 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
           illustrationUrl: null,
           status: 'processing' as CardStatus,
           errorMessage: null,
+          isDefault: false,
+          defaultCardId: null,
           localOriginalImage: fd.base64,
           isProcessing: true,
         }));
