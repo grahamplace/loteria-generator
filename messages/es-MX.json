@@ -321,9 +321,9 @@
       "imageAlt": "Vista previa de la tabla de Lotería"
     },
     "Welcome": {
-      "freePreviewBadge": "Vista previa gratis",
-      "headline": "Crea una Lotería",
-      "headlineEmphasis": "con tus fotos",
+      "headlineLine1": "Convierte tus fotos en",
+      "headlineLine2Prefix": "una",
+      "headlineLine2Suffix": "personalizada.",
       "subtitle": "Empieza gratis con 4 cartas y una exportación. Desbloquea por $5 para llenar las 54 cartas completas.",
       "startFree": "Empieza la vista previa gratis",
       "unlockFull": "Desbloquear las 54 cartas — $5",
