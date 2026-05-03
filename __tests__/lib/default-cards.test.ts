@@ -20,11 +20,7 @@ describe('DEFAULT_CARDS manifest', () => {
     for (const card of DEFAULT_CARDS) {
       expect(card.src).toMatch(/^\/default-cards\/[a-z0-9-]+\.webp$/);
       const filename = card.src.replace(/^\//, '');
-      const fsPath = join(
-        process.cwd(),
-        'public',
-        filename.replace('default-cards/', 'default-cards/')
-      );
+      const fsPath = join(process.cwd(), 'public', filename);
       expect(existsSync(fsPath), `missing asset for ${card.id} at ${fsPath}`).toBe(true);
     }
   });

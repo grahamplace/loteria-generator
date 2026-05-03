@@ -25,7 +25,7 @@ export interface DefaultCard {
   src: string;
 }
 
-export const DEFAULT_CARDS: DefaultCard[] = [
+export const DEFAULT_CARDS: readonly DefaultCard[] = [
   {
     id: 'la-rosa',
     label: 'La Rosa',
@@ -35,6 +35,6 @@ export const DEFAULT_CARDS: DefaultCard[] = [
   },
 ];
 
-export const DEFAULT_CARDS_BY_ID: Record<string, DefaultCard> = Object.fromEntries(
+export const DEFAULT_CARDS_BY_ID: Record<string, DefaultCard | undefined> = Object.fromEntries(
   DEFAULT_CARDS.map((card) => [card.id, card])
 );
