@@ -24,7 +24,7 @@ import {
   FAQJsonLd,
   HowToJsonLd,
 } from '@/components/json-ld';
-import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
+import { BOARD_UNLOCK_PRICE_CENTS, BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
 
 export async function generateMetadata({
   params,
@@ -130,7 +130,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
             description: tJsonLd('softwareFreeOfferDescription'),
           },
           {
-            price: '5',
+            price: String(BOARD_UNLOCK_PRICE_CENTS / 100),
             name: tJsonLd('softwareUnlockedOfferName'),
             description: tJsonLd('softwareUnlockedOfferDescription'),
           },
@@ -142,6 +142,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         name={tJsonLd('howToName')}
         description={tJsonLd('howToDescription')}
         steps={tJsonLd.raw('howToSteps') as Array<{ name: string; text: string; url?: string }>}
+        estimatedCostMaxDollars={BOARD_UNLOCK_PRICE_CENTS / 100}
       />
 
       <LandingHero />
