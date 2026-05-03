@@ -283,6 +283,9 @@
       "mobileCardsStatus": "{processed}/{max} cards",
       "mobileSaved": "Saved",
       "mobileUpload": "Upload",
+      "addClassic": "Add classic",
+      "addClassicAriaLabel": "Add a classic Lotería card to this board",
+      "addClassicDisabledTitle": "Card limit reached",
       "toasts": {
         "exportSuccessTitle": "Loteria set exported!",
         "exportSuccessDesc": "50 unique boards and card deck downloaded as a PDF.",
@@ -306,6 +309,7 @@
       "featureWatermarks": "No watermarks",
       "unlockButton": "Unlock",
       "addMore": "Add more",
+      "addClassicTile": "ADD CLASSIC",
       "deleteDialogTitle": "Delete this card?",
       "deleteDialogDescWithLabel": "This will permanently delete card #{number} \"{label}\". This action cannot be undone.",
       "deleteDialogDescNoLabel": "This will permanently delete this card. This action cannot be undone.",
@@ -357,6 +361,15 @@
       "toasts": {
         "checkoutFailed": "Failed to start checkout. Please try again."
       }
+    },
+    "DefaultCardsPicker": {
+      "title": "Classic Lotería cards",
+      "subtitle": "Add traditional images to your board — no upload needed.",
+      "addButton": "Add {count, plural, one {# classic} other {# classics}} to board",
+      "alreadyAdded": "Already added",
+      "cardLimitNote": "You’ve hit the {limit}-card limit for this board.",
+      "empty": "All classics are on this board. Remove one to add another.",
+      "cancel": "Cancel"
     }
   },
   "CardMarquee": {
