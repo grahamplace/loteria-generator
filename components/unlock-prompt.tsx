@@ -20,7 +20,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
-import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
+import { BOARD_UNLOCK_PRICE_DISPLAY, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 
 interface UnlockPromptProps {
   boardId: string;
@@ -49,14 +49,13 @@ function UnlockContent({
 
   return (
     <div className="px-6 pt-3 pb-1">
-      {/* Lock badge + $5 chip */}
       <div className="flex justify-center mb-3">
         <div className="relative">
           <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg">
             <Unlock className="w-6 h-6" />
           </div>
           <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-secondary text-foreground flex items-center justify-center text-[12px] font-bold shadow">
-            $5
+            {BOARD_UNLOCK_PRICE_DISPLAY}
           </div>
         </div>
       </div>

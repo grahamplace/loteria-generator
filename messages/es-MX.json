@@ -61,7 +61,7 @@
       },
       "unlocked": {
         "name": "Lotería completa",
-        "price": "$5",
+        "price": "{price}",
         "priceLabel": "pago único",
         "badge": "La más popular",
         "features": ["Lotería personalizada de 54 cartas", "Tablas imprimibles ilimitadas", "PDFs de alta resolución para imprimir", "Sin marcas de agua"],
@@ -116,7 +116,7 @@
         },
         {
           "question": "¿Cuántas cartas puedo crear?",
-          "answer": "Con la vista previa gratis puedes crear hasta 4 cartas y generar una tabla de muestra. Al desbloquear tu tabla por $5, obtienes acceso a 54 cartas (una Lotería tradicional completa) y generación ilimitada de tablas."
+          "answer": "Con la vista previa gratis puedes crear hasta 4 cartas y generar una tabla de muestra. Al desbloquear tu tabla por {price}, obtienes acceso a 54 cartas (una Lotería tradicional completa) y generación ilimitada de tablas."
         },
         {
           "question": "¿En qué formatos puedo exportar?",
@@ -124,7 +124,7 @@
         },
         {
           "question": "¿Hay alguna suscripción o cobro recurrente?",
-          "answer": "¡Sin suscripciones! Nuestros precios son sencillos — pruébalo gratis y, cuando estés listo, paga una sola vez $5 para desbloquear tu tabla. Esa compra te da acceso permanente a ese proyecto."
+          "answer": "¡Sin suscripciones! Nuestros precios son sencillos — pruébalo gratis y, cuando estés listo, paga una sola vez {price} para desbloquear tu tabla. Esa compra te da acceso permanente a ese proyecto."
         }
       ]
     },
@@ -251,7 +251,7 @@
       "freeBadge": "Gratis",
       "mobileSubtitleCards": "{count} {count, plural, one {carta} other {cartas}} · Actualizado hace un momento",
       "mobileSubtitleEmpty": "Vista previa gratis",
-      "unlockButtonShort": "$5",
+      "unlockButtonShort": "{price}",
       "unlockButtonPrefix": "Desbloquear por",
       "yourCards": "Tus cartas",
       "dragToReorder": "Arrastra para reordenar",
@@ -279,7 +279,7 @@
       "freeExportUsed": "Exportación gratis usada",
       "exportButton": "Exportar",
       "exportingButton": "Exportando…",
-      "unlockExport": "Desbloquear · $5",
+      "unlockExport": "Desbloquear · {price}",
       "moreNeeded": "{count} más",
       "bannerTitle": "¿Te encantó tu primera exportación?",
       "bannerDesc": "Desbloquea para tener exportaciones ilimitadas y las 54 cartas completas.",
@@ -324,9 +324,9 @@
       "headlineLine1": "Convierte tus fotos en",
       "headlineLine2Prefix": "una",
       "headlineLine2Suffix": "personalizada.",
-      "subtitle": "Empieza gratis con 4 cartas. Desbloquea por $5 para llenar las 54 cartas completas.",
+      "subtitle": "Empieza gratis con 4 cartas. Desbloquea por {price} para llenar las 54 cartas completas.",
       "startFree": "Empieza la vista previa gratis",
-      "unlockFull": "Desbloquear las 54 cartas — $5",
+      "unlockFull": "Desbloquear las 54 cartas — {price}",
       "trustOneTime": "Pago único",
       "trustPerBoard": "Por tabla",
       "trustNoSubscription": "Sin suscripción"

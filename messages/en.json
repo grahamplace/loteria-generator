@@ -57,7 +57,7 @@
       },
       "unlocked": {
         "name": "Full Lotería Set",
-        "price": "$5",
+        "price": "{price}",
         "priceLabel": "one-time",
         "badge": "Most popular",
         "features": ["Full 54-card custom deck", "Unlimited printable tablas", "High-resolution print PDFs", "No watermarks"],
@@ -112,7 +112,7 @@
         },
         {
           "question": "How many cards can I create?",
-          "answer": "With the free preview, you can create up to 4 cards and generate one sample board. By unlocking your board for $5, you get access to 54 cards (a full traditional Lotería deck) and unlimited board generations."
+          "answer": "With the free preview, you can create up to 4 cards and generate one sample board. By unlocking your board for {price}, you get access to 54 cards (a full traditional Lotería deck) and unlimited board generations."
         },
         {
           "question": "What file formats can I export?",
@@ -120,7 +120,7 @@
         },
         {
           "question": "Is there a subscription or recurring fee?",
-          "answer": "No subscriptions! Our pricing is simple — try for free, and when you're ready, pay a one-time $5 fee to unlock your board. That purchase gives you permanent access to that project."
+          "answer": "No subscriptions! Our pricing is simple — try for free, and when you're ready, pay a one-time {price} fee to unlock your board. That purchase gives you permanent access to that project."
         }
       ]
     },
@@ -247,7 +247,7 @@
       "freeBadge": "Free",
       "mobileSubtitleCards": "{count} {count, plural, one {card} other {cards}} · Updated just now",
       "mobileSubtitleEmpty": "Free preview",
-      "unlockButtonShort": "$5",
+      "unlockButtonShort": "{price}",
       "unlockButtonPrefix": "Unlock for",
       "yourCards": "Your cards",
       "dragToReorder": "Drag to reorder",
@@ -275,7 +275,7 @@
       "freeExportUsed": "Free export used",
       "exportButton": "Export",
       "exportingButton": "Exporting…",
-      "unlockExport": "Unlock · $5",
+      "unlockExport": "Unlock · {price}",
       "moreNeeded": "{count} more",
       "bannerTitle": "Loved your first export?",
       "bannerDesc": "Unlock for unlimited exports and the full 54-card deck.",
@@ -320,9 +320,9 @@
       "headlineLine1": "Turn your photos into",
       "headlineLine2Prefix": "a custom",
       "headlineLine2Suffix": "set.",
-      "subtitle": "Start free with 4 cards. Unlock for $5 to fill the full 54-card deck.",
+      "subtitle": "Start free with 4 cards. Unlock for {price} to fill the full 54-card deck.",
       "startFree": "Start free preview",
-      "unlockFull": "Unlock full deck — $5",
+      "unlockFull": "Unlock full deck — {price}",
       "trustOneTime": "One-time",
       "trustPerBoard": "Per board",
       "trustNoSubscription": "No subscription"

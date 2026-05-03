@@ -24,6 +24,7 @@ import {
   FAQJsonLd,
   HowToJsonLd,
 } from '@/components/json-ld';
+import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
 
 export async function generateMetadata({
   params,
@@ -98,7 +99,10 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   }>;
   const occasions = occasionCards.map((c, i) => ({ ...c, ...occasionStrings[i] }));
 
-  const faqs = tFaq.raw('items') as Array<{ question: string; answer: string }>;
+  const faqs = (tFaq.raw('items') as Array<{ question: string; answer: string }>).map((item) => ({
+    question: item.question,
+    answer: item.answer.replaceAll('{price}', BOARD_UNLOCK_PRICE_DISPLAY),
+  }));
 
   const freeFeatures = tPricing.raw('free.features') as string[];
   const unlockedFeatures = tPricing.raw('unlocked.features') as string[];
@@ -395,7 +399,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
               </h3>
               <div className="mt-3 flex items-baseline gap-1.5 md:mt-4">
                 <span className="font-display text-[40px] font-bold leading-none tracking-[-0.03em] text-white md:text-[64px]">
-                  {tPricing('unlocked.price')}
+                  {tPricing('unlocked.price', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
                 </span>
                 <span className="text-xs text-white/70 md:text-sm">
                   {tPricing('unlocked.priceLabel')}

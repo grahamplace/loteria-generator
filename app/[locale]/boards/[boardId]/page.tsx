@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
 import { useTranslations } from 'next-intl';
+import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
 
 export default function BoardEditorPage() {
   const t = useTranslations('BoardEditor.Page');
@@ -234,7 +235,7 @@ export default function BoardEditorPage() {
               >
                 <Unlock className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">{t('unlockButtonPrefix')}</span>{' '}
-                {t('unlockButtonShort')}
+                {t('unlockButtonShort', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
               </button>
             )}
           </div>

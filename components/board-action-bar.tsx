@@ -6,6 +6,7 @@ import { generateLoteriaSetPdf, BoardStyleOptions } from '@/lib/generate-boards'
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
+import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
 
 interface DisplayCard {
   id: string;
@@ -175,7 +176,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
     const mobileExportLabel = isExporting
       ? exportProgress || t('exportingButton')
       : hasUsedFreeExport
-        ? t('unlockExport')
+        ? t('unlockExport', { price: BOARD_UNLOCK_PRICE_DISPLAY })
         : canExport
           ? t('exportButton')
           : t('moreNeeded', { count: 16 - processedCount });
@@ -292,7 +293,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                 ) : hasUsedFreeExport ? (
                   <>
                     <Unlock className="w-3.5 h-3.5" />
-                    {t('unlockExport')}
+                    {t('unlockExport', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
                   </>
                 ) : canExport ? (
                   <>

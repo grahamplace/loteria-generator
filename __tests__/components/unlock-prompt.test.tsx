@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { UnlockPrompt } from '@/components/unlock-prompt';
+import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
 
 // Mock fetch for Stripe checkout
 global.fetch = vi.fn();
@@ -65,7 +66,7 @@ describe('UnlockPrompt', () => {
   it('should display the price', () => {
     render(<UnlockPrompt {...defaultProps} />);
 
-    expect(screen.getByText('$5')).toBeInTheDocument();
+    expect(screen.getByText(BOARD_UNLOCK_PRICE_DISPLAY)).toBeInTheDocument();
   });
 
   it('should display the features list', () => {

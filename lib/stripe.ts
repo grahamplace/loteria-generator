@@ -1,12 +1,10 @@
 import Stripe from 'stripe';
+import { BOARD_UNLOCK_PRICE_CENTS } from '@/lib/constants';
 
 // Server-side Stripe client
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   typescript: true,
 });
-
-// Price for unlocking a board ($5)
-export const BOARD_UNLOCK_PRICE = 500; // in cents
 
 /**
  * Create a Stripe checkout session for unlocking a board
@@ -27,7 +25,7 @@ export async function createBoardUnlockCheckout(params: {
       {
         price_data: {
           currency: 'usd',
-          unit_amount: BOARD_UNLOCK_PRICE,
+          unit_amount: BOARD_UNLOCK_PRICE_CENTS,
           product_data: {
             name: `Unlock Loteria Board: ${params.boardName}`,
             description:
