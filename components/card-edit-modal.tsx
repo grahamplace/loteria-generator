@@ -71,6 +71,8 @@ export function CardEditModal({
                     src={originalImage}
                     alt={t('originalLabel')}
                     fill
+                    sizes="(max-width: 768px) 128px, 160px"
+                    unoptimized
                     className="object-cover"
                   />
                 </div>
@@ -87,6 +89,8 @@ export function CardEditModal({
                   src={card.illustration || '/placeholder.svg'}
                   alt={card.label}
                   fill
+                  sizes="(max-width: 768px) 128px, 160px"
+                  unoptimized
                   className="object-cover"
                 />
               </div>
