@@ -42,11 +42,7 @@ function run(
   };
 }
 
-function runInherit(
-  cmd: string,
-  args: string[],
-  env: NodeJS.ProcessEnv
-): number {
+function runInherit(cmd: string, args: string[], env: NodeJS.ProcessEnv): number {
   const result = spawnSync(cmd, args, {
     stdio: 'inherit',
     env,
@@ -104,11 +100,7 @@ async function main(): Promise<number> {
     if (migrateStatus !== 0) return migrateStatus;
 
     process.stderr.write('seeding test user…\n');
-    const seedStatus = runInherit(
-      'pnpm',
-      ['exec', 'tsx', 'scripts/e2e-seed-user.ts'],
-      childEnv
-    );
+    const seedStatus = runInherit('pnpm', ['exec', 'tsx', 'scripts/e2e-seed-user.ts'], childEnv);
     if (seedStatus !== 0) return seedStatus;
 
     process.stderr.write('running Playwright…\n');

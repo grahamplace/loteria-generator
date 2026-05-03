@@ -21,11 +21,7 @@ interface NeonEndpoint {
   type: string;
 }
 
-async function neonFetch<T>(
-  apiKey: string,
-  path: string,
-  init?: RequestInit
-): Promise<T> {
+async function neonFetch<T>(apiKey: string, path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${NEON_API}${path}`, {
     ...init,
     headers: {
@@ -87,9 +83,7 @@ async function main(): Promise<void> {
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
   }
   if (!ready) {
-    throw new Error(
-      `Branch ${branchId} did not reach 'ready' state within ${READY_TIMEOUT_MS}ms`
-    );
+    throw new Error(`Branch ${branchId} did not reach 'ready' state within ${READY_TIMEOUT_MS}ms`);
   }
 
   const password = await getRolePassword(apiKey, projectId, branchId);
@@ -100,8 +94,7 @@ async function main(): Promise<void> {
   }
 
   const databaseUrl =
-    `postgresql://neondb_owner:${password}@${endpoint.host}/neondb` +
-    `?sslmode=require`;
+    `postgresql://neondb_owner:${password}@${endpoint.host}/neondb` + `?sslmode=require`;
 
   process.stdout.write(JSON.stringify({ branchId, databaseUrl }) + '\n');
 }

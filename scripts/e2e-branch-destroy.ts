@@ -20,11 +20,7 @@ interface NeonBranch {
   created_at: string;
 }
 
-async function neonFetch<T>(
-  apiKey: string,
-  path: string,
-  init?: RequestInit
-): Promise<T> {
+async function neonFetch<T>(apiKey: string, path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${NEON_API}${path}`, {
     ...init,
     headers: {
@@ -48,11 +44,7 @@ async function neonFetch<T>(
   return (await res.json()) as T;
 }
 
-async function deleteBranch(
-  apiKey: string,
-  projectId: string,
-  branchId: string
-): Promise<void> {
+async function deleteBranch(apiKey: string, projectId: string, branchId: string): Promise<void> {
   await neonFetch<unknown>(apiKey, `/projects/${projectId}/branches/${branchId}`, {
     method: 'DELETE',
   });
