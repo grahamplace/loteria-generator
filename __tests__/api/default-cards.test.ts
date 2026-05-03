@@ -131,6 +131,51 @@ describe('POST /api/boards/[boardId]/cards/defaults', () => {
     expect(body.code).toBe('CARD_LIMIT_REACHED');
   });
 
+  it('returns 403 CARD_LIMIT_REACHED on unlocked board at 54 cards', async () => {
+    queryFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'user-1',
+      isUnlocked: true,
+      imageGenerationsUsed: 0,
+    });
+    queryFindMany.mockResolvedValue(
+      Array.from({ length: 54 }, (_, i) => ({ defaultCardId: null, number: i + 1 }))
+    );
+    const res = await POST(makeRequest({ defaultCardIds: ['la-rosa'] }) as never, { params });
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.code).toBe('CARD_LIMIT_REACHED');
+  });
+
+  it('succeeds on unlocked board with 53 cards (boundary)', async () => {
+    queryFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'user-1',
+      isUnlocked: true,
+      imageGenerationsUsed: 0,
+    });
+    queryFindMany.mockResolvedValue(
+      Array.from({ length: 53 }, (_, i) => ({ defaultCardId: null, number: i + 1 }))
+    );
+    insertReturning.mockResolvedValue([
+      {
+        id: 'card-54',
+        boardId: 'board-1',
+        userId: 'user-1',
+        number: 54,
+        label: 'La Rosa',
+        illustrationUrl: '/default-cards/la-rosa.webp',
+        isDefault: true,
+        defaultCardId: 'la-rosa',
+        status: 'completed',
+      },
+    ]);
+    const res = await POST(makeRequest({ defaultCardIds: ['la-rosa'] }) as never, { params });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.cards).toHaveLength(1);
+  });
+
   it('inserts and returns rows on success', async () => {
     queryFindFirst.mockResolvedValue({
       id: 'board-1',

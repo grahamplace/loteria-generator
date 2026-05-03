@@ -340,6 +340,7 @@ export default function BoardEditorPage() {
         onAdd={(ids) => addDefaultCards(ids)}
         alreadyAddedIds={alreadyAddedDefaultIds}
         remainingSlots={remainingSlots}
+        cardLimit={cardLimit}
       />
 
       {CardStreamSubscriptions}

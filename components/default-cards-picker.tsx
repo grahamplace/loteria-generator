@@ -21,6 +21,7 @@ interface DefaultCardsPickerProps {
   onAdd: (ids: string[]) => void;
   alreadyAddedIds: Set<string>;
   remainingSlots: number;
+  cardLimit: number;
 }
 
 export function DefaultCardsPicker({
@@ -29,6 +30,7 @@ export function DefaultCardsPicker({
   onAdd,
   alreadyAddedIds,
   remainingSlots,
+  cardLimit,
 }: DefaultCardsPickerProps) {
   const t = useTranslations('BoardEditor.DefaultCardsPicker');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -97,7 +99,7 @@ export function DefaultCardsPicker({
 
         {overLimit ? (
           <p className="text-xs text-muted-foreground" aria-live="polite">
-            {t('cardLimitNote', { limit: remainingSlots + alreadyAddedIds.size })}
+            {t('cardLimitNote', { limit: cardLimit })}
           </p>
         ) : null}
 

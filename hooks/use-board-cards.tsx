@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import type { Card, CardStatus } from '@/db/schema';
 import { useCardStream } from '@/hooks/use-card-stream';
 import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
+import { DEFAULT_CARDS_BY_ID } from '@/lib/default-cards';
 
 function preloadImage(src: string): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
@@ -354,7 +355,6 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
   const addDefaultCards = useCallback(
     async (defaultCardIds: string[]) => {
       // Resolve label + URL up-front so the optimistic cards render correctly.
-      const { DEFAULT_CARDS_BY_ID } = await import('@/lib/default-cards');
       const tempEntries = defaultCardIds.map((id) => {
         const def = DEFAULT_CARDS_BY_ID[id];
         if (!def) throw new Error(`Unknown default card id: ${id}`);
@@ -402,6 +402,12 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
           }
           if (data.code === 'INVALID_DEFAULT_ID') {
             toast.error('Could not add classic', { description: 'Unknown card id.' });
+            return;
+          }
+          if (data.code === 'DUPLICATE_IDS') {
+            toast.error('Could not add classics', {
+              description: 'Duplicate ids in request.',
+            });
             return;
           }
           throw new Error('Failed to add classics');
