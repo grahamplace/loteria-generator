@@ -218,6 +218,7 @@
     "userFallbackName": "User",
     "userAvatarAlt": "User avatar",
     "userMenu": {
+      "openMenuAriaLabel": "Open user menu",
       "accountSettings": "Account Settings",
       "signOut": "Sign Out"
     },

@@ -222,6 +222,7 @@
     "userFallbackName": "Usuario",
     "userAvatarAlt": "Foto de perfil",
     "userMenu": {
+      "openMenuAriaLabel": "Abrir menú de usuario",
       "accountSettings": "Ajustes de la cuenta",
       "signOut": "Cerrar sesión"
     },

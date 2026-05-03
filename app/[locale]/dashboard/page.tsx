@@ -80,7 +80,12 @@ export default function DashboardPage() {
             <LanguageSwitch />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full"
+                  aria-label={t('userMenu.openMenuAriaLabel')}
+                >
                   {user?.image ? (
                     <Image
                       src={user.image}
