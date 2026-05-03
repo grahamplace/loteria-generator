@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { Card, CardStatus } from '@/db/schema';
 import { useCardStream } from '@/hooks/use-card-stream';
+import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 
 function preloadImage(src: string): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
@@ -82,7 +83,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const cardLimit = isUnlocked ? 54 : 4;
+  const cardLimit = isUnlocked ? TOTAL_CARD_COUNT : FREE_CARD_LIMIT;
 
   const fetchCards = useCallback(async () => {
     if (!boardId) return;

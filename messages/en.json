@@ -317,10 +317,10 @@
       "imageAlt": "Lotería board preview"
     },
     "Welcome": {
-      "freePreviewBadge": "Free preview",
-      "headline": "Make a Lotería set",
-      "headlineEmphasis": "from your photos",
-      "subtitle": "Start free with 4 cards and one export. Unlock for $5 to fill the full 54-card deck.",
+      "headlineLine1": "Turn your photos into",
+      "headlineLine2Prefix": "a custom",
+      "headlineLine2Suffix": "set.",
+      "subtitle": "Start free with 4 cards. Unlock for $5 to fill the full 54-card deck.",
       "startFree": "Start free preview",
       "unlockFull": "Unlock full deck — $5",
       "trustOneTime": "One-time",

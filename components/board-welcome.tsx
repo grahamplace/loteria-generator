@@ -1,13 +1,20 @@
 'use client';
 
 import { useRef } from 'react';
-import { Upload, Unlock, Check } from 'lucide-react';
+import { Upload, Unlock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
+import { HeroCard } from '@/components/hero-card';
+import { heroCards } from '@/lib/hero-cards';
 
 interface BoardWelcomeProps {
   onFilesSelected: (files: File[]) => void;
   onUnlock: () => void;
 }
+
+const fannedCardIds = ['la-boda', 'la-quinceanera', 'la-familia', 'el-cumpleanos'];
+const fannedRotations = ['-rotate-[12deg]', '-rotate-[4deg]', 'rotate-[4deg]', 'rotate-[12deg]'];
+const fannedOffsets = ['translate-y-0', '-translate-y-3', '-translate-y-3', 'translate-y-0'];
 
 export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
   const t = useTranslations('BoardEditor.Welcome');
@@ -18,15 +25,8 @@ export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
     if (files && files.length > 0) {
       onFilesSelected(Array.from(files));
     }
-    // Reset so selecting the same file twice still fires onChange
     e.target.value = '';
   }
-
-  const previewCards = [
-    { hue: 18, glyph: '\u{1F339}', label: 'La Rosa', number: 1 },
-    { hue: 85, glyph: '☀️', label: 'El Sol', number: 2 },
-    { hue: 195, glyph: '❤️', label: 'El Corazón', number: 3 },
-  ];
 
   return (
     <div className="flex-1 flex items-center justify-center px-6 py-10">
@@ -38,90 +38,78 @@ export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
         onChange={handleChange}
         className="hidden"
       />
-      <div className="text-center max-w-xl">
-        {/* Free preview stamp */}
+      <div className="text-center max-w-2xl mx-auto">
         <div
-          className="inline-block px-3 py-1 border-2 border-primary text-primary rounded-md font-mono text-[10px] uppercase tracking-[0.18em] mb-6"
-          style={{ transform: 'rotate(-3deg)' }}
+          className="mb-8 flex items-center justify-center scale-[0.7] sm:scale-[0.85] md:scale-[0.9]"
+          style={{ perspective: '1000px' }}
+          aria-hidden="true"
         >
-          {t('freePreviewBadge')}
-        </div>
-
-        {/* Fanned card preview */}
-        <div className="relative mb-7 md:mb-8 flex items-center justify-center">
-          {previewCards.map((card, i) => (
-            <div
-              key={i}
-              className="bg-background border-2 border-black/80 mx-[-14px] shadow-md w-[96px] md:w-[130px]"
-              style={{
-                transform: `rotate(${(i - 1) * 9}deg)`,
-                borderRadius: '2px',
-              }}
-            >
+          {fannedCardIds.map((id, i) => {
+            const card = heroCards.find((c) => c.id === id);
+            if (!card) return null;
+            return (
               <div
-                className="aspect-[2/3] relative overflow-hidden"
-                style={{
-                  background: `linear-gradient(160deg, oklch(0.78 0.12 ${card.hue}), oklch(0.55 0.15 ${card.hue}))`,
-                }}
+                key={card.id}
+                className={`flex-none -mx-6 ${fannedRotations[i]} ${fannedOffsets[i]}`}
               >
-                <div className="absolute top-1.5 left-1.5 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-caveat font-bold text-sm">
-                  {card.number}
-                </div>
-                <div
-                  className="absolute inset-0 flex items-center justify-center text-4xl"
-                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}
-                >
-                  {card.glyph}
-                </div>
+                <HeroCard card={card} duplicate />
               </div>
-              <div className="p-2 text-center text-[11px] font-semibold uppercase tracking-wide">
-                {card.label}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <h1 className="text-[28px] md:text-4xl font-bold leading-tight tracking-tight md:tracking-normal px-2 md:px-0">
-          {t('headline')}{' '}
-          <span className="font-caveat text-primary text-[36px] md:text-5xl leading-none">
-            {t('headlineEmphasis')}
-          </span>
+        <h1 className="font-display text-[clamp(26px,3.6vw,40px)] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">
+          {t('headlineLine1')}
+          <br />
+          {t('headlineLine2Prefix')}{' '}
+          <span className="relative inline-block">
+            <span
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-[0.05em] -z-0 h-[0.18em] -skew-x-6 bg-secondary"
+            />
+            <span className="relative">Lotería</span>
+          </span>{' '}
+          <span className="font-display italic font-medium">{t('headlineLine2Suffix')}</span>
         </h1>
-        <p className="text-[13px] md:text-sm text-muted-foreground mt-3 max-w-[280px] md:max-w-md mx-auto">
+
+        <p className="mt-5 max-w-[480px] mx-auto text-[15px] leading-[1.55] text-muted-foreground">
           {t('subtitle')}
         </p>
 
-        <div className="mt-6 md:mt-8 w-full md:w-auto flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
-          <button
+        <div className="mt-7 flex flex-wrap justify-center gap-3.5">
+          <Button
+            size="lg"
             onClick={() => inputRef.current?.click()}
-            className="w-full md:w-auto h-12 md:h-auto px-5 md:py-3 rounded-xl md:rounded-lg bg-primary md:bg-white text-white md:text-foreground border-0 md:border md:border-border text-[15px] md:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm md:shadow-none md:hover:border-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="h-auto rounded-full px-7 py-[12px] text-[15px] font-semibold shadow-[0_8px_18px_-10px_rgba(230,57,70,0.7)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_-10px_rgba(230,57,70,0.8)]"
           >
             <Upload className="w-4 h-4" />
             {t('startFree')}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
             onClick={onUnlock}
-            className="w-full md:w-auto h-12 md:h-auto px-5 md:py-3 rounded-xl md:rounded-lg bg-white md:bg-primary text-foreground md:text-white border border-border md:border-0 text-[15px] md:text-sm font-semibold flex items-center justify-center gap-2 md:shadow-sm md:hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="h-auto rounded-full border-[1.5px] border-foreground bg-transparent px-7 py-[12px] text-[15px] font-semibold text-foreground hover:bg-foreground hover:text-background"
           >
             <Unlock className="w-4 h-4" />
             {t('unlockFull')}
-          </button>
+          </Button>
         </div>
 
-        <div className="mt-5 flex items-center justify-center gap-3 md:gap-5 text-[9px] md:text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Check className="w-3 h-3 text-emerald-600" />
+        <ul className="mt-5 flex flex-wrap justify-center gap-x-7 gap-y-2 font-jetbrains text-[12px] tracking-wider text-muted-foreground">
+          <li className="inline-flex items-center gap-1.5">
+            <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
             {t('trustOneTime')}
-          </span>
-          <span className="flex items-center gap-1">
-            <Check className="w-3 h-3 text-emerald-600" />
+          </li>
+          <li className="inline-flex items-center gap-1.5">
+            <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
             {t('trustPerBoard')}
-          </span>
-          <span className="flex items-center gap-1">
-            <Check className="w-3 h-3 text-emerald-600" />
+          </li>
+          <li className="inline-flex items-center gap-1.5">
+            <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
             {t('trustNoSubscription')}
-          </span>
-        </div>
+          </li>
+        </ul>
       </div>
     </div>
   );
