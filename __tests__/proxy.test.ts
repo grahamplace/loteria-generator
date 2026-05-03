@@ -9,7 +9,7 @@ vi.mock('next-intl/middleware', () => ({
   default: () => () => NextResponse.next(),
 }));
 
-import { proxy } from '@/proxy';
+import { proxy, config } from '@/proxy';
 
 function makeRequest(pathname: string, opts: { authed?: boolean } = {}) {
   const url = `http://localhost:3006${pathname}`;
@@ -66,5 +66,25 @@ describe('proxy locale-aware auth redirects', () => {
     // Either 200 (NextResponse.next) or no redirect — confirm it's not a redirect/401
     expect(res.status).not.toBe(307);
     expect(res.status).not.toBe(401);
+  });
+});
+
+describe('proxy matcher', () => {
+  // Compile the exported matcher string into a RegExp so we can verify which
+  // request paths trigger the proxy. The (admin) route group has no locale
+  // prefix, so running next-intl on /admin would rewrite it to /en/admin and
+  // 404 before requireAdmin() can check the session.
+  const matcher = new RegExp(`^${config.matcher[0]}$`);
+
+  it('excludes /admin so the (admin) route group bypasses next-intl', () => {
+    expect(matcher.test('/admin')).toBe(false);
+    expect(matcher.test('/admin/users')).toBe(false);
+    expect(matcher.test('/admin/boards/abc-123')).toBe(false);
+  });
+
+  it('still matches application paths that need locale handling', () => {
+    expect(matcher.test('/dashboard')).toBe(true);
+    expect(matcher.test('/es/dashboard')).toBe(true);
+    expect(matcher.test('/sign-in')).toBe(true);
   });
 });
