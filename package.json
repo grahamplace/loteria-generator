@@ -22,6 +22,7 @@
     "e2e:branch:create": "tsx scripts/e2e-branch-create.ts",
     "e2e:branch:destroy": "tsx scripts/e2e-branch-destroy.ts",
     "e2e:seed-user": "tsx scripts/e2e-seed-user.ts",
+    "e2e:reset": "tsx -e 'import(\"./e2e/helpers/cleanup\").then(async ({deleteBoardsForUser}) => { const {getUserIdByEmail} = await import(\"./e2e/helpers/get-user-id\"); const id = await getUserIdByEmail(\"e2etest@example.com\"); await deleteBoardsForUser(id); console.log(\"reset done\"); })'",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
