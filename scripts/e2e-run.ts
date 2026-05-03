@@ -17,6 +17,10 @@ import { existsSync } from 'node:fs';
 
 /** Kill any process listening on a port so Playwright can start a fresh server. */
 function freePort(port: number): void {
+  if (process.env.E2E_SKIP_PORT_FREE === '1') {
+    process.stderr.write(`E2E_SKIP_PORT_FREE=1; leaving port ${port} alone\n`);
+    return;
+  }
   // lsof -ti :<port> prints PIDs listening on that port; kill them gracefully.
   const result = spawnSync('lsof', ['-ti', `:${port}`], { encoding: 'utf8' });
   const pids = (result.stdout ?? '').trim().split('\n').filter(Boolean);
