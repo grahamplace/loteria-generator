@@ -7,7 +7,7 @@ AI-powered Loteria board generator. Upload photos, get traditional Loteria-style
 - **Framework**: Next.js 16 + React 19 + TypeScript
 - **Database**: Neon (serverless Postgres) + Drizzle ORM
 - **Auth**: Better Auth (email/password + Google OAuth)
-- **Payments**: Stripe Checkout ($5 one-time board unlock)
+- **Payments**: Stripe Checkout ($15 one-time board unlock)
 - **Storage**: Vercel Blob
 - **AI**: OpenAI API (DALL-E for illustrations, GPT for labels)
 - **UI**: Tailwind CSS v4 + shadcn/ui
@@ -229,12 +229,12 @@ lib/                     # Utilities (auth, stripe, blob)
 
 ## Features by Plan
 
-| Feature           | Free    | Unlocked ($5) |
-| ----------------- | ------- | ------------- |
-| Cards per board   | 16      | 54            |
-| Board generations | 1       | Unlimited     |
-| AI illustrations  | Yes     | Yes           |
-| Export options    | Limited | All           |
+| Feature           | Free    | Unlocked ($15) |
+| ----------------- | ------- | -------------- |
+| Cards per board   | 16      | 54             |
+| Board generations | 1       | Unlimited      |
+| AI illustrations  | Yes     | Yes            |
+| Export options    | Limited | All            |
 
 ## Deployment
 
@@ -255,7 +255,7 @@ Use live Stripe keys (`sk_live_...`, `pk_live_...`) and set up a real webhook en
 
 ### "Card limit reached" error
 
-The board is at capacity. Unlock it ($5) or delete some cards.
+The board is at capacity. Unlock it ($15) or delete some cards.
 
 ### Payments complete but board not unlocked
 

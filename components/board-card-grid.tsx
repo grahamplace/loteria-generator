@@ -37,6 +37,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
 
 interface DisplayCard {
   id: string;
@@ -342,7 +343,7 @@ export function BoardCardGrid({
                     <Unlock className="w-5 h-5 md:w-6 md:h-6" />
                   </div>
                   <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-secondary text-foreground flex items-center justify-center text-[10px] font-bold shadow">
-                    $5
+                    {BOARD_UNLOCK_PRICE_DISPLAY}
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">

@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { HeroCard } from '@/components/hero-card';
 import { heroCards } from '@/lib/hero-cards';
+import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
 
 interface BoardWelcomeProps {
   onFilesSelected: (files: File[]) => void;
@@ -73,7 +74,7 @@ export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
         </h1>
 
         <p className="mt-5 max-w-[480px] mx-auto text-[15px] leading-[1.55] text-muted-foreground">
-          {t('subtitle')}
+          {t('subtitle', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
         </p>
 
         <div className="mt-7 flex flex-wrap justify-center gap-3.5">
@@ -92,7 +93,7 @@ export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
             className="h-auto rounded-full border-[1.5px] border-foreground bg-transparent px-7 py-[12px] text-[15px] font-semibold text-foreground hover:bg-foreground hover:text-background"
           >
             <Unlock className="w-4 h-4" />
-            {t('unlockFull')}
+            {t('unlockFull', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
           </Button>
         </div>
 

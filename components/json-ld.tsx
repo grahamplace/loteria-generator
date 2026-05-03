@@ -141,10 +141,12 @@ export function HowToJsonLd({
   name,
   description,
   steps,
+  estimatedCostMaxDollars,
 }: {
   name: string;
   description: string;
   steps: Array<{ name: string; text: string; url?: string }>;
+  estimatedCostMaxDollars: number;
 }) {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -156,7 +158,7 @@ export function HowToJsonLd({
     estimatedCost: {
       '@type': 'MonetaryAmount',
       currency: 'USD',
-      value: '0-5',
+      value: `0-${estimatedCostMaxDollars}`,
     },
     step: steps.map((s) => ({
       '@type': 'HowToStep',
