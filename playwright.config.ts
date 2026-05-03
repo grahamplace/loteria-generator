@@ -10,17 +10,18 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3006',
     trace: 'retain-on-failure',
-    storageState: 'e2e/setup/storage-state.json',
   },
   projects: [
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,
-      use: { storageState: undefined },
     },
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/setup/storage-state.json',
+      },
       dependencies: ['setup'],
     },
   ],
