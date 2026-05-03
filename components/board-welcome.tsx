@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { Upload, Unlock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
 import { HeroCard } from '@/components/hero-card';
 import { heroCards } from '@/lib/hero-cards';
 
@@ -39,7 +40,7 @@ export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
       />
       <div className="text-center max-w-2xl mx-auto">
         <div
-          className="mb-8 flex items-center justify-center scale-[0.7] sm:scale-[0.85] md:scale-[0.9]"
+          className="mb-8 flex items-center justify-center overflow-hidden scale-[0.7] sm:scale-[0.85] md:scale-[0.9]"
           style={{ perspective: '1000px' }}
           aria-hidden="true"
         >
@@ -73,20 +74,23 @@ export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
         </p>
 
         <div className="mt-7 flex flex-wrap justify-center gap-3.5">
-          <button
+          <Button
+            size="lg"
             onClick={() => inputRef.current?.click()}
-            className="rounded-full px-7 py-[12px] text-[15px] font-semibold bg-primary text-white inline-flex items-center justify-center gap-2 shadow-[0_8px_18px_-10px_rgba(230,57,70,0.7)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_-10px_rgba(230,57,70,0.8)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="h-auto rounded-full px-7 py-[12px] text-[15px] font-semibold shadow-[0_8px_18px_-10px_rgba(230,57,70,0.7)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_-10px_rgba(230,57,70,0.8)]"
           >
             <Upload className="w-4 h-4" />
             {t('startFree')}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
             onClick={onUnlock}
-            className="rounded-full border-[1.5px] border-foreground bg-transparent px-7 py-[12px] text-[15px] font-semibold text-foreground inline-flex items-center justify-center gap-2 hover:bg-foreground hover:text-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="h-auto rounded-full border-[1.5px] border-foreground bg-transparent px-7 py-[12px] text-[15px] font-semibold text-foreground hover:bg-foreground hover:text-background"
           >
             <Unlock className="w-4 h-4" />
             {t('unlockFull')}
-          </button>
+          </Button>
         </div>
 
         <ul className="mt-5 flex flex-wrap justify-center gap-x-7 gap-y-2 font-jetbrains text-[12px] tracking-wider text-muted-foreground">
