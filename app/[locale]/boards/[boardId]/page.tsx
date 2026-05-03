@@ -319,8 +319,6 @@ export default function BoardEditorPage() {
         trigger={unlockTrigger}
         open={unlockPromptOpen}
         onOpenChange={setUnlockPromptOpen}
-        currentCardCount={cards.length}
-        maxCards={cardLimit}
       />
 
       {CardStreamSubscriptions}

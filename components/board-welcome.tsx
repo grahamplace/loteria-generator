@@ -40,7 +40,7 @@ export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
       />
       <div className="text-center max-w-2xl mx-auto">
         <div
-          className="mb-8 flex items-center justify-center overflow-hidden scale-[0.7] sm:scale-[0.85] md:scale-[0.9]"
+          className="mb-8 flex items-center justify-center scale-[0.7] sm:scale-[0.85] md:scale-[0.9]"
           style={{ perspective: '1000px' }}
           aria-hidden="true"
         >
@@ -48,7 +48,10 @@ export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
             const card = heroCards.find((c) => c.id === id);
             if (!card) return null;
             return (
-              <div key={card.id} className={`-mx-6 ${fannedRotations[i]} ${fannedOffsets[i]}`}>
+              <div
+                key={card.id}
+                className={`flex-none -mx-6 ${fannedRotations[i]} ${fannedOffsets[i]}`}
+              >
                 <HeroCard card={card} duplicate />
               </div>
             );

@@ -20,6 +20,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
+import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 
 interface UnlockPromptProps {
   boardId: string;
@@ -27,8 +28,6 @@ interface UnlockPromptProps {
   trigger: 'card_limit' | 'board_limit' | 'export';
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentCardCount?: number;
-  maxCards?: number;
 }
 
 function UnlockContent({
@@ -114,14 +113,12 @@ export function UnlockPrompt({
   trigger,
   open,
   onOpenChange,
-  currentCardCount = 4,
-  maxCards = 54,
 }: UnlockPromptProps) {
   const t = useTranslations('BoardEditor.UnlockPrompt');
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
 
-  const remainingCards = maxCards - currentCardCount;
+  const remainingCards = TOTAL_CARD_COUNT - FREE_CARD_LIMIT;
 
   async function handleUnlock() {
     setIsLoading(true);
