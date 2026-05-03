@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { GripVertical, AlertTriangle, Plus, Unlock, Check } from 'lucide-react';
+import { GripVertical, AlertTriangle, Plus, Sparkles, Unlock, Check } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +52,7 @@ interface DisplayCard {
   originalImage?: string;
   isProcessing?: boolean;
   error?: string;
+  isDefault?: boolean;
 }
 
 interface BoardCardGridProps {
@@ -60,6 +61,7 @@ interface BoardCardGridProps {
   onUpdateLabel: (id: string, label: string) => void;
   onReorderCards: (startIndex: number, endIndex: number) => void;
   onAddMore?: () => void;
+  onAddClassic?: () => void;
   isLocked?: boolean;
   atCardLimit?: boolean;
   maxCards?: number;
@@ -114,7 +116,9 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
   return (
     <>
       {/* Card number overlay */}
-      <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full w-9 h-9 flex items-center justify-center font-bold text-lg z-[1] shadow-md font-caveat">
+      <div
+        className={`absolute top-2 left-2 ${card.isDefault ? 'bg-accent' : 'bg-primary'} text-primary-foreground rounded-full w-9 h-9 flex items-center justify-center font-bold text-lg z-[1] shadow-md font-caveat`}
+      >
         {card.number}
       </div>
 
@@ -194,6 +198,7 @@ export function BoardCardGrid({
   onUpdateLabel,
   onReorderCards,
   onAddMore,
+  onAddClassic,
   isLocked = false,
   atCardLimit = false,
   maxCards = 54,
@@ -379,28 +384,55 @@ export function BoardCardGrid({
                   {t('unlockButton')}
                 </button>
               </div>
-            ) : onAddMore ? (
-              /* Add more tile - matches card dimensions */
-              <button
-                onClick={onAddMore}
-                className="rounded-sm flex flex-col text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                style={{ border: '1.5px dashed rgba(0,0,0,0.2)' }}
-              >
-                <div className="aspect-[2/3] flex flex-col items-center justify-center gap-1.5">
-                  <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center">
-                    <Plus className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">
-                    {t('addMore')}
-                  </span>
-                </div>
-                <div className="p-3">
-                  {/* Invisible spacer to match card label height */}
-                  <p className="text-sm font-semibold text-center uppercase tracking-wide opacity-0 select-none">
-                    &nbsp;
-                  </p>
-                </div>
-              </button>
+            ) : onAddMore || onAddClassic ? (
+              <>
+                {onAddMore ? (
+                  <button
+                    onClick={onAddMore}
+                    className="rounded-sm flex flex-col text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    style={{ border: '1.5px dashed rgba(0,0,0,0.2)' }}
+                  >
+                    <div className="aspect-[2/3] flex flex-col items-center justify-center gap-1.5">
+                      <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center">
+                        <Plus className="w-4 h-4" />
+                      </div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider">
+                        {t('addMore')}
+                      </span>
+                    </div>
+                    <div className="p-3">
+                      <p className="text-sm font-semibold text-center uppercase tracking-wide opacity-0 select-none">
+                        &nbsp;
+                      </p>
+                    </div>
+                  </button>
+                ) : null}
+                {onAddClassic ? (
+                  <button
+                    onClick={onAddClassic}
+                    className="rounded-sm flex flex-col text-secondary-foreground hover:text-primary hover:bg-secondary/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    style={{ border: '1.5px dashed var(--secondary)' }}
+                    aria-label={t('addClassicTile')}
+                  >
+                    <div className="aspect-[2/3] flex flex-col items-center justify-center gap-1.5">
+                      <div className="w-8 h-8 rounded-full bg-secondary/15 border border-secondary/40 flex items-center justify-center">
+                        <Sparkles
+                          className="w-4 h-4 text-secondary-foreground"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider">
+                        {t('addClassicTile')}
+                      </span>
+                    </div>
+                    <div className="p-3">
+                      <p className="text-sm font-semibold text-center uppercase tracking-wide opacity-0 select-none">
+                        &nbsp;
+                      </p>
+                    </div>
+                  </button>
+                ) : null}
+              </>
             ) : null}
           </div>
         </SortableContext>
