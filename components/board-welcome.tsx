@@ -1,15 +1,26 @@
 'use client';
 
+import { useRef } from 'react';
 import { Upload, Unlock, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface BoardWelcomeProps {
-  onStartFreePreview: () => void;
+  onFilesSelected: (files: File[]) => void;
   onUnlock: () => void;
 }
 
-export function BoardWelcome({ onStartFreePreview, onUnlock }: BoardWelcomeProps) {
+export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
   const t = useTranslations('BoardEditor.Welcome');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      onFilesSelected(Array.from(files));
+    }
+    // Reset so selecting the same file twice still fires onChange
+    e.target.value = '';
+  }
 
   const previewCards = [
     { hue: 18, glyph: '\u{1F339}', label: 'La Rosa', number: 1 },
@@ -19,6 +30,14 @@ export function BoardWelcome({ onStartFreePreview, onUnlock }: BoardWelcomeProps
 
   return (
     <div className="flex-1 flex items-center justify-center px-6 py-10">
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        onChange={handleChange}
+        className="hidden"
+      />
       <div className="text-center max-w-xl">
         {/* Free preview stamp */}
         <div
@@ -74,7 +93,7 @@ export function BoardWelcome({ onStartFreePreview, onUnlock }: BoardWelcomeProps
 
         <div className="mt-6 md:mt-8 w-full md:w-auto flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
           <button
-            onClick={onStartFreePreview}
+            onClick={() => inputRef.current?.click()}
             className="w-full md:w-auto h-12 md:h-auto px-5 md:py-3 rounded-xl md:rounded-lg bg-primary md:bg-white text-white md:text-foreground border-0 md:border md:border-border text-[15px] md:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm md:shadow-none md:hover:border-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <Upload className="w-4 h-4" />

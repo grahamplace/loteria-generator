@@ -245,7 +245,7 @@ export default function BoardEditorPage() {
         {showWelcome ? (
           /* Welcome state for new locked boards */
           <BoardWelcome
-            onStartFreePreview={() => actionBarRef.current?.triggerFileSelect()}
+            onFilesSelected={handleFilesSelected}
             onUnlock={() => openUnlockPrompt('card_limit')}
           />
         ) : (
