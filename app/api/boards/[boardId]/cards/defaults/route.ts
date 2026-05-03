@@ -32,6 +32,13 @@ export async function POST(
     }
     const { defaultCardIds } = parsed.data;
 
+    if (new Set(defaultCardIds).size !== defaultCardIds.length) {
+      return NextResponse.json(
+        { error: 'Duplicate ids in request', code: 'DUPLICATE_IDS' },
+        { status: 400 }
+      );
+    }
+
     // Validate every id exists in the manifest.
     const unknown = defaultCardIds.filter((id) => !DEFAULT_CARDS_BY_ID[id]);
     if (unknown.length > 0) {
@@ -123,6 +130,7 @@ export async function POST(
           board_id: boardId,
         },
       });
+      await ph.shutdown();
     }
 
     return NextResponse.json({ cards: inserted });

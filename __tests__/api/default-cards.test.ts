@@ -33,7 +33,7 @@ vi.mock('@/lib/invalidate-board-preview', () => ({
 }));
 
 vi.mock('@/lib/posthog-server', () => ({
-  getPostHogClient: () => ({ capture: vi.fn() }),
+  getPostHogClient: () => ({ capture: vi.fn(), shutdown: vi.fn().mockResolvedValue(undefined) }),
 }));
 
 import { auth } from '@/lib/auth';
@@ -66,6 +66,22 @@ describe('POST /api/boards/[boardId]/cards/defaults', () => {
     queryFindFirst.mockResolvedValue(undefined);
     const res = await POST(makeRequest({ defaultCardIds: ['la-rosa'] }) as never, { params });
     expect(res.status).toBe(404);
+  });
+
+  it('returns 400 DUPLICATE_IDS when the request has duplicate ids', async () => {
+    queryFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'user-1',
+      isUnlocked: false,
+      imageGenerationsUsed: 0,
+    });
+    queryFindMany.mockResolvedValue([]);
+    const res = await POST(makeRequest({ defaultCardIds: ['la-rosa', 'la-rosa'] }) as never, {
+      params,
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('DUPLICATE_IDS');
   });
 
   it('returns 400 INVALID_DEFAULT_ID when an id is unknown', async () => {
