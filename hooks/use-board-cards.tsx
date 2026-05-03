@@ -62,6 +62,7 @@ interface UseBoardCardsReturn {
   error: string | null;
   addCard: (file: File) => Promise<void>;
   addCards: (files: File[]) => Promise<void>;
+  addDefaultCards: (defaultCardIds: string[]) => Promise<void>;
   updateCardLabel: (cardId: string, newLabel: string) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   reorderCards: (startIndex: number, endIndex: number) => void;
@@ -350,6 +351,90 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
     [boardId, mergeServerCard]
   );
 
+  const addDefaultCards = useCallback(
+    async (defaultCardIds: string[]) => {
+      // Resolve label + URL up-front so the optimistic cards render correctly.
+      const { DEFAULT_CARDS_BY_ID } = await import('@/lib/default-cards');
+      const tempEntries = defaultCardIds.map((id) => {
+        const def = DEFAULT_CARDS_BY_ID[id];
+        if (!def) throw new Error(`Unknown default card id: ${id}`);
+        return { id, def, tempId: createTempId() };
+      });
+
+      setCards((prev) => {
+        const maxNumber = prev.reduce((max, c) => (c.number > max ? c.number : max), 0);
+        const newCards: BoardCard[] = tempEntries.map((entry, i) => ({
+          id: entry.tempId,
+          clientKey: entry.tempId,
+          boardId,
+          number: maxNumber + i + 1,
+          label: entry.def.label,
+          originalImageUrl: null,
+          illustrationUrl: entry.def.src,
+          status: 'completed' as CardStatus,
+          errorMessage: null,
+          isDefault: true,
+          defaultCardId: entry.id,
+        }));
+        return [...prev, ...newCards];
+      });
+
+      try {
+        const res = await fetch(`/api/boards/${boardId}/cards/defaults`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ defaultCardIds }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          // Roll back all temps for this batch.
+          setCards((prev) => prev.filter((c) => !tempEntries.some((e) => e.tempId === c.id)));
+          if (data.code === 'CARD_LIMIT_REACHED') {
+            toast.error('Card limit reached', { description: data.message });
+            return;
+          }
+          if (data.code === 'ALREADY_ADDED') {
+            toast.error('Already added', {
+              description: 'One of those classics is already on this board.',
+            });
+            return;
+          }
+          if (data.code === 'INVALID_DEFAULT_ID') {
+            toast.error('Could not add classic', { description: 'Unknown card id.' });
+            return;
+          }
+          throw new Error('Failed to add classics');
+        }
+
+        const { cards: serverCards } = (await res.json()) as { cards: Card[] };
+        // Match each temp to its server row by defaultCardId.
+        setCards((prev) =>
+          prev.map((c) => {
+            const matching = serverCards.find((s) => s.defaultCardId === c.defaultCardId);
+            if (matching && tempEntries.some((e) => e.tempId === c.id)) {
+              return {
+                ...c,
+                id: matching.id,
+                clientKey: matching.id,
+                number: matching.number,
+                status: matching.status as CardStatus,
+                isDefault: matching.isDefault,
+                defaultCardId: matching.defaultCardId,
+              };
+            }
+            return c;
+          })
+        );
+      } catch (err) {
+        console.error('Error adding default cards:', err);
+        setCards((prev) => prev.filter((c) => !tempEntries.some((e) => e.tempId === c.id)));
+        toast.error('Failed to add classics');
+      }
+    },
+    [boardId]
+  );
+
   const updateCardLabel = useCallback(
     async (cardId: string, newLabel: string) => {
       // Optimistic update
@@ -484,6 +569,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
     error,
     addCard,
     addCards,
+    addDefaultCards,
     updateCardLabel,
     deleteCard,
     reorderCards,
