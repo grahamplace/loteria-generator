@@ -231,7 +231,7 @@
       "unlockedAccess": "Acceso completo - hasta 54 cartas",
       "lockedAccess": "Vista previa gratis - hasta 4 cartas",
       "deleteMenuItem": "Eliminar",
-      "moreActionsAriaLabel": "Más acciones para el tablero {name}"
+      "moreActionsAriaLabel": "Más acciones para la tabla {name}"
     },
     "deleteDialog": {
       "title": "¿Eliminar esta tabla?",
@@ -249,7 +249,7 @@
     "Page": {
       "backToDashboardAriaLabel": "Volver al panel",
       "editBoardNameAriaLabel": "Editar el nombre de la tabla: {name}",
-      "renameInputAriaLabel": "Renombrar tablero",
+      "renameInputAriaLabel": "Cambiar el nombre de la tabla",
       "unlockedBadge": "Desbloqueada",
       "freeBadge": "Gratis",
       "mobileSubtitleCards": "{count} {count, plural, one {carta} other {cartas}} · Actualizado hace un momento",
