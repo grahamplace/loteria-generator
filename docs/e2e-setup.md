@@ -10,8 +10,8 @@ one-time setup the maintainer must complete so both local and CI runs work.
    branch.
 2. A Neon API key with access to that project.
 3. A test user password and a better-auth secret.
-4. Five GitHub Actions repository secrets.
-5. A local `.env.test` file with the same five values.
+4. Eight GitHub Actions repository secrets (five for the test infra + three for Stripe webhook signing).
+5. A local `.env.test` file with the same eight values.
 
 ## Steps
 
@@ -54,12 +54,15 @@ In `Settings → Secrets and variables → Actions`, add:
 - `NEON_TEST_BASE_BRANCH_ID`
 - `E2E_BETTER_AUTH_SECRET`
 - `E2E_TEST_PASSWORD`
+- `E2E_STRIPE_SECRET_KEY`
+- `E2E_STRIPE_PRICE_ID`
+- `E2E_STRIPE_WEBHOOK_SECRET`
 
 ### 7. Set up `.env.test` locally
 
     cp .env.test.example .env.test
 
-Fill in the same five values.
+Fill in the same eight values.
 
 ## Running tests
 
@@ -99,11 +102,7 @@ server is required.
 
 ## Running individual specs
 
-The orchestrator runs all specs by default. To filter, edit
-`scripts/e2e-run.ts` to forward positional args to Playwright, OR run
-Playwright directly after manually setting up a Neon branch.
-
-    pnpm test:e2e
+The orchestrator (`pnpm test:e2e`) currently runs all specs in one Neon branch. Filtering individual specs requires forwarding positional args to Playwright, which `scripts/e2e-run.ts` doesn't yet do. To run a single spec for iteration, edit the script to append `process.argv.slice(2)` to the playwright command, or run Playwright directly after manually setting `DATABASE_URL`.
 
 ## Resetting the seeded user's boards
 
