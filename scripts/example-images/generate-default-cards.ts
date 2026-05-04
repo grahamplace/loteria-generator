@@ -26,6 +26,17 @@ const STEMS = [
   'el-mundo',
   'la-sandia',
   'el-pescado',
+  'el-catrin',
+  'el-paraguas',
+  'la-sirena',
+  'el-arbol',
+  'la-bandera',
+  'la-mano',
+  'el-nopal',
+  'la-calavera',
+  'la-campana',
+  'el-venado',
+  'la-corona',
 ];
 
 if (!process.env.OPENAI_API_KEY) {

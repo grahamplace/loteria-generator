@@ -30,20 +30,34 @@ Photos are sourced from Unsplash ([Unsplash License](https://unsplash.com/licens
 ## Default-card source photos
 
 These feed `scripts/example-images/generate-default-cards.ts` to produce the
-classic Lotería webps in `public/default-cards/`. Same Unsplash/Pexels licenses
-as above — free for commercial use without attribution.
+classic Lotería webps in `public/default-cards/`. Sources are user-supplied
+scans of traditional Lotería card art (with the exception of `la-rosa.jpg`,
+the original seed photo). The script pipes each through `gpt-image-1.5` with
+the production `ILLUSTRATION_PROMPT`, which restyles them into the app's
+illustrated look while preserving subject and composition.
 
-| Default card | Filename          | Subject                                            | Source                                 |
-| ------------ | ----------------- | -------------------------------------------------- | -------------------------------------- |
-| La Rosa      | `la-rosa.jpg`     | Pink rose bud with green leaf, white background    | (User-supplied, copyright-cleared)     |
-| El Corazón   | `el-corazon.jpg`  | Red neon heart sign held against chest             | https://www.pexels.com/photo/887349/   |
-| El Sol       | `el-sol.jpg`      | Bright golden sun in cloudy sky                    | https://www.pexels.com/photo/301599/   |
-| La Luna      | `la-luna.jpg`     | Near-full moon close-up against black sky          | https://www.pexels.com/photo/47367/    |
-| La Estrella  | `la-estrella.jpg` | Five-pointed gold star surrounded by string lights | https://www.pexels.com/photo/1671431/  |
-| El Gallo     | `el-gallo.jpg`    | Rooster head close-up, vibrant red comb            | https://www.pexels.com/photo/14601538/ |
-| El Mundo     | `el-mundo.jpg`    | Blue+orange globe on black stand with foliage      | https://www.pexels.com/photo/8828602/  |
-| La Sandía    | `la-sandia.jpg`   | Whole watermelon, white background                 | https://www.pexels.com/photo/1313267/  |
-| El Pescado   | `el-pescado.jpg`  | Single clownfish in aquarium                       | https://www.pexels.com/photo/128756/   |
+| Default card | Filename          | Subject                                                    |
+| ------------ | ----------------- | ---------------------------------------------------------- |
+| El Gallo     | `el-gallo.jpg`    | Rooster, vintage Lotería style                             |
+| El Catrín    | `el-catrin.jpg`   | Dapper gentleman in tuxedo holding cigarette and kerchief  |
+| El Paraguas  | `el-paraguas.jpg` | Open blue umbrella in the rain                             |
+| La Sirena    | `la-sirena.jpg`   | Mermaid emerging from the sea                              |
+| El Árbol     | `el-arbol.jpg`    | Lone leafy tree on a hillside                              |
+| La Bandera   | `la-bandera.jpg`  | Mexican flag draped on staff                               |
+| La Mano      | `la-mano.jpg`     | Open palm hand                                             |
+| La Luna      | `la-luna.jpg`     | Crescent moon with face                                    |
+| El Corazón   | `el-corazon.jpg`  | Anatomical red heart pierced by an arrow                   |
+| La Sandía    | `la-sandia.jpg`   | Sliced watermelon on yellow background                     |
+| La Estrella  | `la-estrella.jpg` | Five-pointed white star                                    |
+| El Mundo     | `el-mundo.jpg`    | Strongman holding up the globe                             |
+| El Nopal     | `el-nopal.jpg`    | Prickly pear cactus with red fruit                         |
+| La Rosa      | `la-rosa.jpg`     | Pink rose bud with green leaf, white background (original) |
+| La Calavera  | `la-calavera.jpg` | Yellow sugar skull with crossbones                         |
+| La Campana   | `la-campana.jpg`  | Hanging brass bell                                         |
+| El Venado    | `el-venado.jpg`   | Stag with antlers in a field                               |
+| El Sol       | `el-sol.jpg`      | Red-faced sun                                              |
+| La Corona    | `la-corona.jpg`   | Gold king's crown with red gems and cross                  |
+| El Pescado   | `el-pescado.jpg`  | Pink fish jumping over water                               |
 
 ## Reviewer notes
 
