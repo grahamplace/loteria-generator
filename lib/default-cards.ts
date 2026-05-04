@@ -27,11 +27,67 @@ export interface DefaultCard {
 
 export const DEFAULT_CARDS: readonly DefaultCard[] = [
   {
+    id: 'el-gallo',
+    label: 'El Gallo',
+    labelEn: 'The Rooster',
+    traditionalNumber: 1,
+    src: '/default-cards/el-gallo.webp',
+  },
+  {
+    id: 'la-luna',
+    label: 'La Luna',
+    labelEn: 'The Moon',
+    traditionalNumber: 23,
+    src: '/default-cards/la-luna.webp',
+  },
+  {
+    id: 'el-corazon',
+    label: 'El Corazón',
+    labelEn: 'The Heart',
+    traditionalNumber: 27,
+    src: '/default-cards/el-corazon.webp',
+  },
+  {
+    id: 'la-sandia',
+    label: 'La Sandía',
+    labelEn: 'The Watermelon',
+    traditionalNumber: 28,
+    src: '/default-cards/la-sandia.webp',
+  },
+  {
+    id: 'la-estrella',
+    label: 'La Estrella',
+    labelEn: 'The Star',
+    traditionalNumber: 35,
+    src: '/default-cards/la-estrella.webp',
+  },
+  {
+    id: 'el-mundo',
+    label: 'El Mundo',
+    labelEn: 'The World',
+    traditionalNumber: 37,
+    src: '/default-cards/el-mundo.webp',
+  },
+  {
     id: 'la-rosa',
     label: 'La Rosa',
     labelEn: 'The Rose',
     traditionalNumber: 41,
     src: '/default-cards/la-rosa.webp',
+  },
+  {
+    id: 'el-sol',
+    label: 'El Sol',
+    labelEn: 'The Sun',
+    traditionalNumber: 46,
+    src: '/default-cards/el-sol.webp',
+  },
+  {
+    id: 'el-pescado',
+    label: 'El Pescado',
+    labelEn: 'The Fish',
+    traditionalNumber: 50,
+    src: '/default-cards/el-pescado.webp',
   },
 ];
 

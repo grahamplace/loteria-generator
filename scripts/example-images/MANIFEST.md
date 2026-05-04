@@ -27,6 +27,24 @@ Photos are sourced from Unsplash ([Unsplash License](https://unsplash.com/licens
 | 17  | `17-camera.jpg`           | Vintage Polaroid Pronto 600 camera, plain white background      | Yoann Siloine                  | https://unsplash.com/photos/beYOfeTV5Zo                                                       |
 | 18  | `18-tacos.jpg`            | Three street tacos on wooden plate                              | Frankie Lopez                  | https://unsplash.com/photos/_j4S4V2C8ew                                                       |
 
+## Default-card source photos
+
+These feed `scripts/example-images/generate-default-cards.ts` to produce the
+classic Lotería webps in `public/default-cards/`. Same Unsplash/Pexels licenses
+as above — free for commercial use without attribution.
+
+| Default card | Filename          | Subject                                            | Source                                 |
+| ------------ | ----------------- | -------------------------------------------------- | -------------------------------------- |
+| La Rosa      | `la-rosa.jpg`     | Pink rose bud with green leaf, white background    | (User-supplied, copyright-cleared)     |
+| El Corazón   | `el-corazon.jpg`  | Red neon heart sign held against chest             | https://www.pexels.com/photo/887349/   |
+| El Sol       | `el-sol.jpg`      | Bright golden sun in cloudy sky                    | https://www.pexels.com/photo/301599/   |
+| La Luna      | `la-luna.jpg`     | Near-full moon close-up against black sky          | https://www.pexels.com/photo/47367/    |
+| La Estrella  | `la-estrella.jpg` | Five-pointed gold star surrounded by string lights | https://www.pexels.com/photo/1671431/  |
+| El Gallo     | `el-gallo.jpg`    | Rooster head close-up, vibrant red comb            | https://www.pexels.com/photo/14601538/ |
+| El Mundo     | `el-mundo.jpg`    | Blue+orange globe on black stand with foliage      | https://www.pexels.com/photo/8828602/  |
+| La Sandía    | `la-sandia.jpg`   | Whole watermelon, white background                 | https://www.pexels.com/photo/1313267/  |
+| El Pescado   | `el-pescado.jpg`  | Single clownfish in aquarium                       | https://www.pexels.com/photo/128756/   |
+
 ## Reviewer notes
 
 All 18 photos audited against Loteria-style requirements: single hero subject, simple background, no visible text/branding, real photo, free for commercial use.
