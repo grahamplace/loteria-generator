@@ -106,6 +106,7 @@ export function CardEditModal({
               onChange={(e) => setLabel(e.target.value)}
               className="w-full px-3 py-2 border rounded-md text-[16px] md:text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder={t('labelPlaceholder')}
+              aria-label={t('labelInputAriaLabel')}
             />
             <p className="text-xs text-muted-foreground mt-1">{t('labelHint')}</p>
           </div>

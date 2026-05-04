@@ -205,6 +205,7 @@ export default function BoardEditorPage() {
                     }}
                     className="max-w-[200px] h-8"
                     autoFocus
+                    aria-label={t('renameInputAriaLabel')}
                   />
                 ) : (
                   <button

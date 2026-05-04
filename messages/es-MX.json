@@ -222,6 +222,7 @@
     "userFallbackName": "Usuario",
     "userAvatarAlt": "Foto de perfil",
     "userMenu": {
+      "openMenuAriaLabel": "Abrir menú de usuario",
       "accountSettings": "Ajustes de la cuenta",
       "signOut": "Cerrar sesión"
     },
@@ -229,7 +230,8 @@
       "cardsReady": "{completed} de {total} cartas listas",
       "unlockedAccess": "Acceso completo - hasta 54 cartas",
       "lockedAccess": "Vista previa gratis - hasta 4 cartas",
-      "deleteMenuItem": "Eliminar"
+      "deleteMenuItem": "Eliminar",
+      "moreActionsAriaLabel": "Más acciones para la tabla {name}"
     },
     "deleteDialog": {
       "title": "¿Eliminar esta tabla?",
@@ -247,6 +249,7 @@
     "Page": {
       "backToDashboardAriaLabel": "Volver al panel",
       "editBoardNameAriaLabel": "Editar el nombre de la tabla: {name}",
+      "renameInputAriaLabel": "Cambiar el nombre de la tabla",
       "unlockedBadge": "Desbloqueada",
       "freeBadge": "Gratis",
       "mobileSubtitleCards": "{count} {count, plural, one {carta} other {cartas}} · Actualizado hace un momento",
@@ -343,6 +346,7 @@
       "labelField": "Nombre (en español)",
       "labelPlaceholder": "Ingresa el nombre",
       "labelHint": "1-3 palabras en español",
+      "labelInputAriaLabel": "Etiqueta de la carta",
       "deleteButton": "Eliminar",
       "cancelButton": "Cancelar",
       "saveButton": "Guardar"
