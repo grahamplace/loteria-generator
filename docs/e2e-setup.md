@@ -10,8 +10,8 @@ one-time setup the maintainer must complete so both local and CI runs work.
    branch.
 2. A Neon API key with access to that project.
 3. A test user password and a better-auth secret.
-4. Eight GitHub Actions repository secrets (five for the test infra + three for Stripe webhook signing).
-5. A local `.env.test` file with the same eight values.
+4. Five GitHub Actions repository secrets (test infra). Stripe values are hardcoded as dummies in the workflow yaml — see "Stripe webhook signing" below.
+5. A local `.env.test` file populated from `.env.test.example`.
 
 ## Steps
 
@@ -54,15 +54,12 @@ In `Settings → Secrets and variables → Actions`, add:
 - `NEON_TEST_BASE_BRANCH_ID`
 - `E2E_BETTER_AUTH_SECRET`
 - `E2E_TEST_PASSWORD`
-- `E2E_STRIPE_SECRET_KEY`
-- `E2E_STRIPE_PRICE_ID`
-- `E2E_STRIPE_WEBHOOK_SECRET`
 
 ### 7. Set up `.env.test` locally
 
     cp .env.test.example .env.test
 
-Fill in the same eight values.
+Fill in the five values from steps 1–5. The Stripe + skip-AI defaults in the example file are fine as-is.
 
 ## Running tests
 
@@ -81,18 +78,19 @@ If a run crashes before destroying its branch, the weekly
 ## Stripe webhook signing
 
 The unlock test signs a fake `checkout.session.completed` event and POSTs it
-to `/api/stripe/webhook`. To make this work locally and in CI, set these env
-vars to **the same values** in both contexts:
+to `/api/stripe/webhook`. The signing helper uses `STRIPE_WEBHOOK_SECRET` and
+the app verifies with the same secret — they only need to match each other,
+not real Stripe. Three env vars are involved:
 
 - `STRIPE_SECRET_KEY` — any `sk_test_...` value (the SDK validates format on
   init but doesn't call Stripe for webhook handling)
 - `STRIPE_PRICE_ID` — any `price_...` value
 - `STRIPE_WEBHOOK_SECRET` — any `whsec_...` value
 
-In CI, these are stored as repo secrets (`E2E_STRIPE_SECRET_KEY`,
-`E2E_STRIPE_PRICE_ID`, `E2E_STRIPE_WEBHOOK_SECRET`).
-
-Add these secrets to `.env.test` locally under the existing five values.
+These are hardcoded as `sk_test_dummy` / `price_test_dummy` / `whsec_dummy`
+in `.github/workflows/ci.yml` and `.env.test.example`. No real Stripe account
+or GitHub secrets needed. Keep the local and CI values in sync if you ever
+change them.
 
 ## Skipping Inngest
 

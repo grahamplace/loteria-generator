@@ -149,9 +149,12 @@ jobs:
           NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 'pk_test_dummy'
           OPENAI_API_KEY: 'sk-dummy'
           NEXT_PUBLIC_APP_URL: 'http://localhost:3006'
-          STRIPE_SECRET_KEY: ${{ secrets.E2E_STRIPE_SECRET_KEY }}
-          STRIPE_PRICE_ID: ${{ secrets.E2E_STRIPE_PRICE_ID }}
-          STRIPE_WEBHOOK_SECRET: ${{ secrets.E2E_STRIPE_WEBHOOK_SECRET }}
+          # Hardcoded dummies — webhook signing only needs signer/verifier to
+          # match, and no real Stripe API calls happen during e2e. Keep these in
+          # sync with .env.test.
+          STRIPE_SECRET_KEY: 'sk_test_dummy'
+          STRIPE_PRICE_ID: 'price_test_dummy'
+          STRIPE_WEBHOOK_SECRET: 'whsec_dummy'
           NEXT_PUBLIC_SKIP_AI_PROCESSING: 'true'
 
       - name: Upload Playwright report
