@@ -74,3 +74,46 @@ branch. On failure, the Playwright HTML report is saved to `playwright-report/`.
 If a run crashes before destroying its branch, the weekly
 `e2e-branch-cleanup.yml` workflow deletes branches matching `e2e-*` older than
 1 hour. Manually trigger it via the GitHub Actions UI for an immediate cleanup.
+
+## Stripe webhook signing
+
+The unlock test signs a fake `checkout.session.completed` event and POSTs it
+to `/api/stripe/webhook`. To make this work locally and in CI, set these env
+vars to **the same values** in both contexts:
+
+- `STRIPE_SECRET_KEY` — any `sk_test_...` value (the SDK validates format on
+  init but doesn't call Stripe for webhook handling)
+- `STRIPE_PRICE_ID` — any `price_...` value
+- `STRIPE_WEBHOOK_SECRET` — any `whsec_...` value
+
+In CI, these are stored as repo secrets (`E2E_STRIPE_SECRET_KEY`,
+`E2E_STRIPE_PRICE_ID`, `E2E_STRIPE_WEBHOOK_SECRET`).
+
+Add these secrets to `.env.test` locally under the existing five values.
+
+## Skipping Inngest
+
+Tests set `NEXT_PUBLIC_SKIP_AI_PROCESSING=true` so card uploads complete
+synchronously with the original image as the illustration. No Inngest dev
+server is required.
+
+## Running individual specs
+
+The orchestrator runs all specs by default. To filter, edit
+`scripts/e2e-run.ts` to forward positional args to Playwright, OR run
+Playwright directly after manually setting up a Neon branch.
+
+    pnpm test:e2e
+
+## Resetting the seeded user's boards
+
+    pnpm e2e:reset
+
+## Local dev server conflict
+
+The orchestrator uses `reuseExistingServer: false` and kills any existing
+process on port 3006 before starting (the previous behavior of reusing a
+server connected to the wrong DATABASE_URL was silently breaking local runs).
+To opt out:
+
+    E2E_SKIP_PORT_FREE=1 pnpm test:e2e
