@@ -34,7 +34,15 @@ test.describe('card edit label', () => {
     const labelInput = page.getByRole('textbox', { name: /card label/i });
     await expect(labelInput).toBeVisible({ timeout: 5_000 });
     await labelInput.fill('El Sol');
+
+    // The label PATCH is fire-and-forget after an optimistic UI update — wait for
+    // it before asserting persistence to avoid racing the in-flight request.
+    const patchResponse = page.waitForResponse(
+      (res) =>
+        res.url().includes(`/api/boards/${boardId}/cards`) && res.request().method() === 'PATCH'
+    );
     await page.getByRole('button', { name: /save/i }).click();
+    await patchResponse;
 
     // Modal closes and the new label appears.
     await expect(page.getByText('El Sol')).toBeVisible({ timeout: 5_000 });
