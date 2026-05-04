@@ -36,3 +36,8 @@ export const updateCardSchema = z.object({
   status: z.enum(['pending', 'processing', 'completed', 'error']).optional(),
   errorMessage: z.string().max(1000).optional(),
 });
+
+// POST /api/boards/[boardId]/cards/defaults
+export const addDefaultCardsSchema = z.object({
+  defaultCardIds: z.array(z.string().min(1)).min(1).max(54),
+});

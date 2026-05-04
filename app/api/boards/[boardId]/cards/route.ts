@@ -355,11 +355,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Card not found' }, { status: 404 });
     }
 
-    // Delete images from blob storage
-    try {
-      await deleteCardImages(session.user.id, boardId, cardId);
-    } catch (blobError) {
-      console.error('Error deleting card images:', blobError);
+    // Skip blob cleanup for default cards — the asset is shared/public, not
+    // a per-user blob upload.
+    if (!card.isDefault) {
+      try {
+        await deleteCardImages(session.user.id, boardId, cardId);
+      } catch (blobError) {
+        console.error('Error deleting card images:', blobError);
+      }
     }
 
     const deletedCardNumber = card.number;

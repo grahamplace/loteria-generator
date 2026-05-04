@@ -27,6 +27,38 @@ Photos are sourced from Unsplash ([Unsplash License](https://unsplash.com/licens
 | 17  | `17-camera.jpg`           | Vintage Polaroid Pronto 600 camera, plain white background      | Yoann Siloine                  | https://unsplash.com/photos/beYOfeTV5Zo                                                       |
 | 18  | `18-tacos.jpg`            | Three street tacos on wooden plate                              | Frankie Lopez                  | https://unsplash.com/photos/_j4S4V2C8ew                                                       |
 
+## Default-card source photos
+
+These feed `scripts/example-images/generate-default-cards.ts` to produce the
+classic Lotería webps in `public/default-cards/`. Sources are user-supplied
+scans of traditional Lotería card art (with the exception of `la-rosa.jpg`,
+the original seed photo). The script pipes each through `gpt-image-1.5` with
+the production `ILLUSTRATION_PROMPT`, which restyles them into the app's
+illustrated look while preserving subject and composition.
+
+| Default card | Filename          | Subject                                                    |
+| ------------ | ----------------- | ---------------------------------------------------------- |
+| El Gallo     | `el-gallo.jpg`    | Rooster, vintage Lotería style                             |
+| El Catrín    | `el-catrin.jpg`   | Dapper gentleman in tuxedo holding cigarette and kerchief  |
+| El Paraguas  | `el-paraguas.jpg` | Open blue umbrella in the rain                             |
+| La Sirena    | `la-sirena.jpg`   | Mermaid emerging from the sea                              |
+| El Árbol     | `el-arbol.jpg`    | Lone leafy tree on a hillside                              |
+| La Bandera   | `la-bandera.jpg`  | Mexican flag draped on staff                               |
+| La Mano      | `la-mano.jpg`     | Open palm hand                                             |
+| La Luna      | `la-luna.jpg`     | Crescent moon with face                                    |
+| El Corazón   | `el-corazon.jpg`  | Anatomical red heart pierced by an arrow                   |
+| La Sandía    | `la-sandia.jpg`   | Sliced watermelon on yellow background                     |
+| La Estrella  | `la-estrella.jpg` | Five-pointed white star                                    |
+| El Mundo     | `el-mundo.jpg`    | Strongman holding up the globe                             |
+| El Nopal     | `el-nopal.jpg`    | Prickly pear cactus with red fruit                         |
+| La Rosa      | `la-rosa.jpg`     | Pink rose bud with green leaf, white background (original) |
+| La Calavera  | `la-calavera.jpg` | Yellow sugar skull with crossbones                         |
+| La Campana   | `la-campana.jpg`  | Hanging brass bell                                         |
+| El Venado    | `el-venado.jpg`   | Stag with antlers in a field                               |
+| El Sol       | `el-sol.jpg`      | Red-faced sun                                              |
+| La Corona    | `la-corona.jpg`   | Gold king's crown with red gems and cross                  |
+| El Pescado   | `el-pescado.jpg`  | Pink fish jumping over water                               |
+
 ## Reviewer notes
 
 All 18 photos audited against Loteria-style requirements: single hero subject, simple background, no visible text/branding, real photo, free for commercial use.

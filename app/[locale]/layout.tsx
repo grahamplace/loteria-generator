@@ -113,12 +113,11 @@ export default async function LocaleLayout({
 
       const dbLocale = profile?.locale;
       if (dbLocale === 'es-MX' || dbLocale === 'en') {
-        cookieStore.set('LOCALE', dbLocale, {
-          maxAge: 60 * 60 * 24 * 365,
-          path: '/',
-          sameSite: 'lax',
-          secure: process.env.NODE_ENV === 'production',
-        });
+        // Next 16 forbids cookieStore.set() inside Server Components — the
+        // DB→cookie write needs to live in a Route Handler / Server Action.
+        // For now, just redirect when the URL locale doesn't match the saved
+        // preference; subsequent loads re-do this DB read until we move the
+        // sync elsewhere.
         if (dbLocale !== locale) {
           const target = dbLocale === 'en' ? '/' : '/es';
           redirect(target);

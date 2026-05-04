@@ -13,6 +13,7 @@ import { BoardActionBar, BoardActionBarRef } from '@/components/board-action-bar
 import { BoardCardGrid } from '@/components/board-card-grid';
 import { BoardWelcome } from '@/components/board-welcome';
 import { UnlockPrompt } from '@/components/unlock-prompt';
+import { DefaultCardsPicker } from '@/components/default-cards-picker';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
@@ -32,6 +33,7 @@ export default function BoardEditorPage() {
     cards,
     isLoading: cardsLoading,
     addCards,
+    addDefaultCards,
     updateCardLabel,
     deleteCard,
     reorderCards,
@@ -42,6 +44,7 @@ export default function BoardEditorPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [unlockPromptOpen, setUnlockPromptOpen] = useState(false);
+  const [defaultsPickerOpen, setDefaultsPickerOpen] = useState(false);
   const [unlockTrigger, setUnlockTrigger] = useState<'card_limit' | 'board_limit' | 'export'>(
     'card_limit'
   );
@@ -116,18 +119,26 @@ export default function BoardEditorPage() {
     illustration:
       card.localIllustration ||
       card.localOriginalImage ||
-      (card.illustrationUrl
-        ? `/api/images/${boardId}/${card.id}/illustration`
-        : card.originalImageUrl
-          ? `/api/images/${boardId}/${card.id}/original`
-          : ''),
+      (card.isDefault && card.illustrationUrl
+        ? card.illustrationUrl
+        : card.illustrationUrl
+          ? `/api/images/${boardId}/${card.id}/illustration`
+          : card.originalImageUrl
+            ? `/api/images/${boardId}/${card.id}/original`
+            : ''),
     originalImage:
       card.localOriginalImage ||
       (card.originalImageUrl ? `/api/images/${boardId}/${card.id}/original` : undefined),
     isProcessing: card.isProcessing || card.status === 'processing',
     error:
       card.status === 'error' ? card.errorMessage || t('toasts.errorProcessingCard') : undefined,
+    isDefault: card.isDefault,
   }));
+
+  const alreadyAddedDefaultIds = new Set(
+    cards.map((c) => c.defaultCardId).filter((id): id is string => !!id)
+  );
+  const remainingSlots = Math.max(0, cardLimit - cards.length);
 
   // Show welcome state for new locked boards with no cards
   const showWelcome = !isLoading && board && cards.length === 0 && !board.isUnlocked;
@@ -264,6 +275,7 @@ export default function BoardEditorPage() {
                 cards={displayCards}
                 boardName={board.name}
                 onUnlockRequired={handleExportLimitReached}
+                onOpenDefaults={() => setDefaultsPickerOpen(true)}
               />
             </div>
 
@@ -284,6 +296,7 @@ export default function BoardEditorPage() {
                   onUpdateLabel={updateCardLabel}
                   onReorderCards={reorderCards}
                   onAddMore={() => actionBarRef.current?.triggerFileSelect()}
+                  onAddClassic={() => setDefaultsPickerOpen(true)}
                   isLocked={!board.isUnlocked}
                   atCardLimit={atCardLimit}
                   maxCards={cardLimit}
@@ -320,6 +333,15 @@ export default function BoardEditorPage() {
         trigger={unlockTrigger}
         open={unlockPromptOpen}
         onOpenChange={setUnlockPromptOpen}
+      />
+
+      <DefaultCardsPicker
+        open={defaultsPickerOpen}
+        onClose={() => setDefaultsPickerOpen(false)}
+        onAdd={(ids) => addDefaultCards(ids)}
+        alreadyAddedIds={alreadyAddedDefaultIds}
+        remainingSlots={remainingSlots}
+        cardLimit={cardLimit}
       />
 
       {CardStreamSubscriptions}

@@ -27,6 +27,7 @@ interface BoardActionBarProps {
   cards: DisplayCard[];
   boardName: string;
   onUnlockRequired: () => void;
+  onOpenDefaults: () => void;
 }
 
 export interface BoardActionBarRef {
@@ -45,6 +46,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
       cards,
       boardName,
       onUnlockRequired,
+      onOpenDefaults,
     },
     ref
   ) {
@@ -239,14 +241,26 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                   <span className="ml-auto">{t('acceptedFormats')}</span>
                 </div>
               </div>
-              <button
-                onClick={() => inputRef.current?.click()}
-                disabled={isMaxReached}
-                className="px-3 py-2 rounded-lg bg-white border border-border text-sm font-semibold flex items-center gap-1.5 hover:border-primary hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              >
-                <Plus className="w-4 h-4" />
-                {t('select')}
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => inputRef.current?.click()}
+                  disabled={isMaxReached}
+                  className="px-3 py-2 rounded-lg bg-white border border-border text-sm font-semibold flex items-center gap-1.5 hover:border-primary hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  {t('select')}
+                </button>
+                <button
+                  onClick={onOpenDefaults}
+                  disabled={isMaxReached}
+                  aria-label={t('addClassicAriaLabel')}
+                  title={isMaxReached ? t('addClassicDisabledTitle') : undefined}
+                  className="px-3 py-2 rounded-lg bg-secondary/15 border border-secondary/40 text-foreground text-sm font-semibold flex items-center gap-1.5 hover:bg-secondary/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <Sparkles className="w-4 h-4" aria-hidden="true" />
+                  {t('addClassic')}
+                </button>
+              </div>
             </div>
 
             {/* Export section */}

@@ -287,6 +287,9 @@
       "mobileCardsStatus": "{processed}/{max} cartas",
       "mobileSaved": "Guardado",
       "mobileUpload": "Subir",
+      "addClassic": "Agregar clásica",
+      "addClassicAriaLabel": "Agregar una carta clásica de Lotería a este tablero",
+      "addClassicDisabledTitle": "Límite de cartas alcanzado",
       "toasts": {
         "exportSuccessTitle": "¡Lotería exportada!",
         "exportSuccessDesc": "50 tablas únicas y el mazo de cartas se descargaron como PDF.",
@@ -310,6 +313,7 @@
       "featureWatermarks": "Sin marcas de agua",
       "unlockButton": "Desbloquear",
       "addMore": "Agregar más",
+      "addClassicTile": "AGREGAR CLÁSICA",
       "deleteDialogTitle": "¿Eliminar esta carta?",
       "deleteDialogDescWithLabel": "Esto eliminará permanentemente la carta #{number} \"{label}\". Esta acción no se puede deshacer.",
       "deleteDialogDescNoLabel": "Esto eliminará esta carta permanentemente. Esta acción no se puede deshacer.",
@@ -361,6 +365,15 @@
       "toasts": {
         "checkoutFailed": "No se pudo iniciar el pago. Por favor, inténtalo de nuevo."
       }
+    },
+    "DefaultCardsPicker": {
+      "title": "Cartas clásicas de Lotería",
+      "subtitle": "Agrega imágenes tradicionales a tu tablero — sin subir fotos.",
+      "addButton": "Agregar {count, plural, one {# clásica} other {# clásicas}} al tablero",
+      "alreadyAdded": "Ya agregada",
+      "cardLimitNote": "Has alcanzado el límite de {limit} cartas para este tablero.",
+      "empty": "Todas las clásicas están en este tablero. Quita una para agregar otra.",
+      "cancel": "Cancelar"
     }
   },
   "CardMarquee": {

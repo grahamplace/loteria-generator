@@ -43,6 +43,13 @@
       "when": 1746057600000,
       "tag": "0005_locale_es_to_es_mx",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777849266083,
+      "tag": "0006_cloudy_wolfsbane",
+      "breakpoints": true
     }
   ]
 }

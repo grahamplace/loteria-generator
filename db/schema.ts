@@ -112,6 +112,8 @@ export const cards = pgTable('cards', {
   illustrationUrl: text('illustration_url'), // Vercel Blob URL - private
   status: text('status').$type<CardStatus>().notNull().default('pending'),
   errorMessage: text('error_message'),
+  isDefault: boolean('is_default').notNull().default(false),
+  defaultCardId: text('default_card_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

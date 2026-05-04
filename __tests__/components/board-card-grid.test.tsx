@@ -21,6 +21,7 @@ vi.mock('next-intl', () => ({
         featureWatermarks: 'No watermarks',
         unlockButton: 'Unlock',
         addMore: 'Add more',
+        addClassicTile: 'Add classic',
         deleteDialogTitle: 'Delete this card?',
         deleteDialogDescWithLabel:
           'This will permanently delete card #{number} "{label}". This action cannot be undone.',
@@ -178,5 +179,35 @@ describe('BoardCardGrid', () => {
     // Processing cards omit the drag-handle indicator entirely so users can't
     // try to interact with a card that isn't ready.
     expect(container.querySelector('[data-icon="grip-vertical"]')).toBeNull();
+  });
+
+  it('should use bg-accent badge for classic cards and bg-primary for custom cards', () => {
+    const mixedCards = [
+      {
+        ...mockCards[0],
+        number: 1,
+        isDefault: true,
+      },
+      {
+        ...mockCards[1],
+        number: 2,
+        isDefault: false,
+      },
+    ];
+
+    const { container } = render(<BoardCardGrid {...defaultProps} cards={mixedCards} />);
+
+    // The number badge elements are identified by containing the card number text.
+    // They sit at absolute top-left of each card and carry either bg-accent or bg-primary.
+    const badges = container.querySelectorAll('.absolute.top-2.left-2');
+    expect(badges).toHaveLength(2);
+
+    // Classic card (isDefault: true) → green/accent badge
+    expect(badges[0].classList.contains('bg-accent')).toBe(true);
+    expect(badges[0].classList.contains('bg-primary')).toBe(false);
+
+    // Custom card (isDefault: false) → red/primary badge
+    expect(badges[1].classList.contains('bg-primary')).toBe(true);
+    expect(badges[1].classList.contains('bg-accent')).toBe(false);
   });
 });
