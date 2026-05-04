@@ -156,38 +156,41 @@ export async function POST(
     // Upload original image to blob storage if provided
     if (originalImageBase64) {
       try {
-        const buffer = base64ToBuffer(originalImageBase64);
-        const contentType = getContentTypeFromDataUrl(originalImageBase64);
-
-        const originalUrl = await uploadOriginalImage(
-          session.user.id,
-          boardId,
-          newCard.id,
-          buffer,
-          contentType
-        );
-
-        // Update card with image URL
-        await db
-          .update(cards)
-          .set({ originalImageUrl: originalUrl })
-          .where(eq(cards.id, newCard.id));
-
-        newCard.originalImageUrl = originalUrl;
-
         if (skipAIProcessing) {
-          // Dev mode: skip AI, mark completed with the original as illustration.
+          // Skip blob upload entirely — use the base64 data URL directly. This
+          // mode is for E2E tests and avoids touching production blob storage.
           await db
             .update(cards)
             .set({
-              illustrationUrl: originalUrl,
+              originalImageUrl: originalImageBase64,
+              illustrationUrl: originalImageBase64,
               status: 'completed',
               updatedAt: new Date(),
             })
             .where(eq(cards.id, newCard.id));
-          newCard.illustrationUrl = originalUrl;
+          newCard.originalImageUrl = originalImageBase64;
+          newCard.illustrationUrl = originalImageBase64;
           newCard.status = 'completed';
         } else {
+          const buffer = base64ToBuffer(originalImageBase64);
+          const contentType = getContentTypeFromDataUrl(originalImageBase64);
+
+          const originalUrl = await uploadOriginalImage(
+            session.user.id,
+            boardId,
+            newCard.id,
+            buffer,
+            contentType
+          );
+
+          // Update card with image URL
+          await db
+            .update(cards)
+            .set({ originalImageUrl: originalUrl })
+            .where(eq(cards.id, newCard.id));
+
+          newCard.originalImageUrl = originalUrl;
+
           // Hand off AI generation to the Inngest background job.
           await inngest.send(
             cardGenerateRequested.create({

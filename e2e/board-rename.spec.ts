@@ -31,7 +31,13 @@ test.describe('board rename', () => {
 
     const renameInput = page.getByRole('textbox', { name: /rename board/i });
     await renameInput.fill('Renamed Board');
+
+    // The PATCH is async; wait for it before reloading to avoid a race.
+    const patchResponse = page.waitForResponse(
+      (res) => res.url().includes(`/api/boards/${boardId}`) && res.request().method() === 'PATCH'
+    );
     await renameInput.press('Enter');
+    await patchResponse;
 
     // The visible name should update.
     await expect(page.getByRole('button', { name: /edit board name.*Renamed Board/i })).toBeVisible({ timeout: 5_000 });
