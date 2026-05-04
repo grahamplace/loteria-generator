@@ -28,14 +28,16 @@ test.describe('free tier limit', () => {
     // Wait for the board to render with all 4 seeded cards.
     await expect(page.getByText('4/4').first()).toBeVisible({ timeout: 10_000 });
 
-    // The inline unlock tile renders automatically when atCardLimit && isLocked.
-    // It contains a $5 badge and an "Unlock" CTA button.
-    await expect(page.getByText('$5').first()).toBeVisible({ timeout: 5_000 });
+    // Strict regex `^unlock$` matches the inline tile button only ("Unlock"),
+    // not the header button ("Unlock for $5") that's always visible while locked.
+    const inlineUnlock = page.getByRole('button', { name: /^unlock$/i });
+    await expect(inlineUnlock).toBeVisible({ timeout: 5_000 });
 
-    // Clicking the inline Unlock button opens the full unlock prompt modal.
-    await page.getByRole('button', { name: /unlock/i }).first().click();
+    // Modal dialog isn't in the DOM until clicked.
+    await expect(page.getByRole('dialog')).toHaveCount(0);
 
-    // The modal renders with its own $5 CTA.
-    await expect(page.getByText(/\$5/).first()).toBeVisible();
+    await inlineUnlock.click();
+
+    await expect(page.getByRole('dialog')).toBeVisible();
   });
 });
