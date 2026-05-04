@@ -37,19 +37,25 @@ test.describe('card upload', () => {
     // DB assertion: card exists and is completed (skip-AI marks it completed synchronously).
     // Poll until the card reaches 'completed' — the blob upload inside the same
     // request handler takes a moment, so we wait rather than reading once.
-    await expect.poll(
-      async () => {
-        const rows = await db
-          .select({ status: cards.status })
-          .from(cards)
-          .where(eq(cards.boardId, boardId));
-        return rows[0]?.status ?? null;
-      },
-      { timeout: 20_000, intervals: [500, 1_000, 2_000] }
-    ).toBe('completed');
+    await expect
+      .poll(
+        async () => {
+          const rows = await db
+            .select({ status: cards.status })
+            .from(cards)
+            .where(eq(cards.boardId, boardId));
+          return rows[0]?.status ?? null;
+        },
+        { timeout: 20_000, intervals: [500, 1_000, 2_000] }
+      )
+      .toBe('completed');
 
     const rows = await db
-      .select({ status: cards.status, originalImageUrl: cards.originalImageUrl, illustrationUrl: cards.illustrationUrl })
+      .select({
+        status: cards.status,
+        originalImageUrl: cards.originalImageUrl,
+        illustrationUrl: cards.illustrationUrl,
+      })
       .from(cards)
       .where(eq(cards.boardId, boardId));
     expect(rows[0].status).toBe('completed');

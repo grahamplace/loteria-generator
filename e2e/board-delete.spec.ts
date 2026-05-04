@@ -34,13 +34,19 @@ test.describe('board delete', () => {
     await page.getByRole('menuitem', { name: /delete/i }).click();
 
     // AlertDialog confirm.
-    await page.getByRole('button', { name: /^(yes,?\s*)?delete/i }).last().click();
+    await page
+      .getByRole('button', { name: /^(yes,?\s*)?delete/i })
+      .last()
+      .click();
 
     // "Delete Me" gone; "Keep Me" remains.
     await expect(page.getByText('Delete Me')).toHaveCount(0, { timeout: 5_000 });
     await expect(page.getByText('Keep Me')).toBeVisible();
 
-    const rows = await db.select({ name: boards.name }).from(boards).where(eq(boards.userId, userId));
+    const rows = await db
+      .select({ name: boards.name })
+      .from(boards)
+      .where(eq(boards.userId, userId));
     expect(rows).toHaveLength(1);
     expect(rows[0].name).toBe('Keep Me');
   });

@@ -19,7 +19,10 @@ test.describe('board create', () => {
     await page.goto('/dashboard');
     await expect(page).toHaveURL(/\/(en\/)?dashboard/);
 
-    await page.getByRole('button', { name: /new board/i }).first().click();
+    await page
+      .getByRole('button', { name: /new board/i })
+      .first()
+      .click();
 
     await expect(page).toHaveURL(/\/(en\/)?boards\/[0-9a-f-]+/, { timeout: 10_000 });
   });

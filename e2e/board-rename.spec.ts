@@ -40,11 +40,15 @@ test.describe('board rename', () => {
     await patchResponse;
 
     // The visible name should update.
-    await expect(page.getByRole('button', { name: /edit board name.*Renamed Board/i })).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('button', { name: /edit board name.*Renamed Board/i })).toBeVisible(
+      { timeout: 5_000 }
+    );
 
     // Reload and confirm persistence.
     await page.reload();
-    await expect(page.getByRole('button', { name: /edit board name.*Renamed Board/i })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('button', { name: /edit board name.*Renamed Board/i })).toBeVisible(
+      { timeout: 10_000 }
+    );
 
     const [row] = await db.select({ name: boards.name }).from(boards).where(eq(boards.id, boardId));
     expect(row.name).toBe('Renamed Board');

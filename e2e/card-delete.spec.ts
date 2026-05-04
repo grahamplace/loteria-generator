@@ -40,7 +40,10 @@ test.describe('card delete', () => {
     const deleteResponse = page.waitForResponse(
       (res) => res.url().includes('/api/boards/') && res.request().method() === 'DELETE'
     );
-    await page.getByRole('button', { name: /^(yes,?\s*)?delete/i }).last().click();
+    await page
+      .getByRole('button', { name: /^(yes,?\s*)?delete/i })
+      .last()
+      .click();
     await deleteResponse;
 
     // Card 1 should disappear; Card 2 remains.

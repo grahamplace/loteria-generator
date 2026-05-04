@@ -31,13 +31,19 @@ test.describe('board export (unlocked)', () => {
 
     // First export.
     const downloadPromise1 = page.waitForEvent('download', { timeout: 30_000 });
-    await page.getByRole('button', { name: /^export/i }).first().click();
+    await page
+      .getByRole('button', { name: /^export/i })
+      .first()
+      .click();
     const download1 = await downloadPromise1;
     expect(download1.suggestedFilename()).toMatch(/loteria-set\.pdf$/);
 
     // Second export should also succeed (unlocked = unlimited).
     const downloadPromise2 = page.waitForEvent('download', { timeout: 30_000 });
-    await page.getByRole('button', { name: /^export/i }).first().click();
+    await page
+      .getByRole('button', { name: /^export/i })
+      .first()
+      .click();
     const download2 = await downloadPromise2;
     expect(download2.suggestedFilename()).toMatch(/loteria-set\.pdf$/);
   });
