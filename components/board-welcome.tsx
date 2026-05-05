@@ -1,7 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
-import { Upload, Unlock } from 'lucide-react';
+import { ArrowRight, Unlock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { HeroCard } from '@/components/hero-card';
@@ -9,7 +8,7 @@ import { heroCards } from '@/lib/hero-cards';
 import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
 
 interface BoardWelcomeProps {
-  onFilesSelected: (files: File[]) => void;
+  onContinue: () => void;
   onUnlock: () => void;
 }
 
@@ -17,28 +16,11 @@ const fannedCardIds = ['la-boda', 'la-quinceanera', 'la-familia', 'el-cumpleanos
 const fannedRotations = ['-rotate-[12deg]', '-rotate-[4deg]', 'rotate-[4deg]', 'rotate-[12deg]'];
 const fannedOffsets = ['translate-y-0', '-translate-y-3', '-translate-y-3', 'translate-y-0'];
 
-export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
+export function BoardWelcome({ onContinue, onUnlock }: BoardWelcomeProps) {
   const t = useTranslations('BoardEditor.Welcome');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      onFilesSelected(Array.from(files));
-    }
-    e.target.value = '';
-  }
 
   return (
     <div className="flex-1 flex items-center justify-center px-6 py-10">
-      <input
-        ref={inputRef}
-        type="file"
-        multiple
-        accept="image/png,image/jpeg,image/webp,image/gif"
-        onChange={handleChange}
-        className="hidden"
-      />
       <div className="text-center max-w-2xl mx-auto">
         <div
           className="mb-8 flex items-center justify-center scale-[0.7] sm:scale-[0.85] md:scale-[0.9]"
@@ -80,11 +62,11 @@ export function BoardWelcome({ onFilesSelected, onUnlock }: BoardWelcomeProps) {
         <div className="mt-7 flex flex-wrap justify-center gap-3.5">
           <Button
             size="lg"
-            onClick={() => inputRef.current?.click()}
+            onClick={onContinue}
             className="h-auto rounded-full px-7 py-[12px] text-[15px] font-semibold shadow-[0_8px_18px_-10px_rgba(230,57,70,0.7)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_-10px_rgba(230,57,70,0.8)]"
           >
-            <Upload className="w-4 h-4" />
             {t('startFree')}
+            <ArrowRight className="w-4 h-4" />
           </Button>
           <Button
             variant="outline"

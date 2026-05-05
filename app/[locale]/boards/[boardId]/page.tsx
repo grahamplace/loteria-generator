@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Lock, Unlock, Upload } from 'lucide-react';
+import { ArrowLeft, Lock, Sparkles, Unlock, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,6 +45,7 @@ export default function BoardEditorPage() {
   const [editedName, setEditedName] = useState('');
   const [unlockPromptOpen, setUnlockPromptOpen] = useState(false);
   const [defaultsPickerOpen, setDefaultsPickerOpen] = useState(false);
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const [unlockTrigger, setUnlockTrigger] = useState<'card_limit' | 'board_limit' | 'export'>(
     'card_limit'
   );
@@ -141,7 +142,8 @@ export default function BoardEditorPage() {
   const remainingSlots = Math.max(0, cardLimit - cards.length);
 
   // Show welcome state for new locked boards with no cards
-  const showWelcome = !isLoading && board && cards.length === 0 && !board.isUnlocked;
+  const showWelcome =
+    !isLoading && board && cards.length === 0 && !board.isUnlocked && !welcomeDismissed;
 
   if (isLoading) {
     return (
@@ -258,7 +260,7 @@ export default function BoardEditorPage() {
         {showWelcome ? (
           /* Welcome state for new locked boards */
           <BoardWelcome
-            onFilesSelected={handleFilesSelected}
+            onContinue={() => setWelcomeDismissed(true)}
             onUnlock={() => openUnlockPrompt('card_limit')}
           />
         ) : (
@@ -305,7 +307,7 @@ export default function BoardEditorPage() {
                 />
               </div>
             ) : (
-              /* Empty state for unlocked boards with no cards */
+              /* Empty state for boards with no cards */
               <div className="flex-1 flex items-center justify-center px-6 py-10">
                 <div className="text-center max-w-sm">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -313,13 +315,22 @@ export default function BoardEditorPage() {
                   </div>
                   <h2 className="text-xl font-bold mb-2">{t('emptyStateTitle')}</h2>
                   <p className="text-sm text-muted-foreground mb-6">{t('emptyStateDesc')}</p>
-                  <button
-                    onClick={() => actionBarRef.current?.triggerFileSelect()}
-                    className="px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 mx-auto shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                  >
-                    <Upload className="w-4 h-4" />
-                    {t('emptyStateCta')}
-                  </button>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <button
+                      onClick={() => actionBarRef.current?.triggerFileSelect()}
+                      className="px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    >
+                      <Upload className="w-4 h-4" />
+                      {t('emptyStateCta')}
+                    </button>
+                    <button
+                      onClick={() => setDefaultsPickerOpen(true)}
+                      className="px-5 py-3 rounded-lg bg-secondary/15 border border-secondary/40 text-foreground text-sm font-semibold flex items-center gap-2 hover:bg-secondary/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    >
+                      <Sparkles className="w-4 h-4" aria-hidden="true" />
+                      {t('emptyStateAddClassic')}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
