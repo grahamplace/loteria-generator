@@ -8,6 +8,13 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
 
 ---
 
+## Board Unlock Price
+
+- MUST: Change the unlock price by editing both constants in `lib/constants.ts`: `BOARD_UNLOCK_PRICE_CENTS` (integer cents, used by Stripe) and `BOARD_UNLOCK_PRICE_DISPLAY` (formatted string, e.g. `'$20'`, used in UI/FAQ copy). Keep the two values in sync.
+- NEVER: Hardcode the price in components, copy, Stripe calls, or tests — import from `@/lib/constants`.
+
+---
+
 Concise rules for building accessible, fast, delightful UIs. Use MUST/SHOULD/NEVER to guide decisions.
 
 ## Interactions
