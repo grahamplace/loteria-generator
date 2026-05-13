@@ -59,9 +59,9 @@ export default async function AdminBoardDetailPage({
       {/* Board info */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-sm font-medium">Board Info</CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <RetryFailedButton boardId={id} errorCount={errorCount} />
               {board.isUnlocked ? (
                 <Badge variant="default">Unlocked</Badge>
@@ -71,11 +71,11 @@ export default async function AdminBoardDetailPage({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <div className="grid grid-cols-3 gap-4">
-            <div>
+        <CardContent className="space-y-3 text-sm sm:space-y-2">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="min-w-0">
               <p className="text-xs text-muted-foreground">Owner</p>
-              <Link href={`/admin/users/${ownerId}`} className="hover:underline">
+              <Link href={`/admin/users/${ownerId}`} className="block truncate hover:underline">
                 {ownerEmail}
               </Link>
             </div>
@@ -90,7 +90,7 @@ export default async function AdminBoardDetailPage({
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
               <p className="text-xs text-muted-foreground">Created</p>
               <p>{board.createdAt.toLocaleDateString()}</p>
@@ -100,16 +100,16 @@ export default async function AdminBoardDetailPage({
               <p>{board.updatedAt.toLocaleDateString()}</p>
             </div>
             {board.stripePaymentId && (
-              <div>
+              <div className="col-span-2 min-w-0 sm:col-span-1">
                 <p className="text-xs text-muted-foreground">Stripe Payment ID</p>
-                <p className="font-mono text-xs">{board.stripePaymentId}</p>
+                <p className="break-all font-mono text-xs">{board.stripePaymentId}</p>
               </div>
             )}
           </div>
           {board.styleOptions && (
             <div>
               <p className="text-xs text-muted-foreground">Style Options</p>
-              <pre className="mt-1 rounded bg-muted p-2 text-xs">
+              <pre className="mt-1 overflow-x-auto rounded bg-muted p-2 text-xs">
                 {JSON.stringify(board.styleOptions, null, 2)}
               </pre>
             </div>

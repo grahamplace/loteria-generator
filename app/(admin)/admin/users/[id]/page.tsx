@@ -92,14 +92,14 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
               <p className="text-muted-foreground">{userData.email}</p>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4 pt-2">
+          <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-3">
             <div>
               <p className="text-xs text-muted-foreground">Joined</p>
               <p>{userData.createdAt.toLocaleDateString()}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Auth Providers</p>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 {providers.map((p) => (
                   <Badge key={p} variant="secondary">
                     {p}
@@ -107,9 +107,9 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 ))}
               </div>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted-foreground">User ID</p>
-              <p className="font-mono text-xs">{userData.id}</p>
+              <p className="break-all font-mono text-xs">{userData.id}</p>
             </div>
           </div>
         </CardContent>
@@ -121,47 +121,52 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
         {userBoards.length === 0 ? (
           <p className="text-sm text-muted-foreground">No boards</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Cards</TableHead>
-                <TableHead>Generations</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {userBoards.map((board) => {
-                const genLimit = board.isUnlocked
-                  ? IMAGE_GENERATION_LIMIT_PAID
-                  : IMAGE_GENERATION_LIMIT_FREE;
-                return (
-                  <TableRow key={board.id}>
-                    <TableCell>
-                      <Link href={`/admin/boards/${board.id}`} className="text-sm hover:underline">
-                        {board.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-sm">{board.cardCount}</TableCell>
-                    <TableCell className="text-sm">
-                      {board.imageGenerationsUsed}/{genLimit}
-                    </TableCell>
-                    <TableCell>
-                      {board.isUnlocked ? (
-                        <Badge variant="default">Unlocked</Badge>
-                      ) : (
-                        <Badge variant="secondary">Free</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {board.updatedAt.toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <div className="-mx-4 overflow-x-auto px-4 md:-mx-6 md:px-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Cards</TableHead>
+                  <TableHead>Generations</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Updated</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {userBoards.map((board) => {
+                  const genLimit = board.isUnlocked
+                    ? IMAGE_GENERATION_LIMIT_PAID
+                    : IMAGE_GENERATION_LIMIT_FREE;
+                  return (
+                    <TableRow key={board.id}>
+                      <TableCell className="whitespace-nowrap">
+                        <Link
+                          href={`/admin/boards/${board.id}`}
+                          className="text-sm hover:underline"
+                        >
+                          {board.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-sm tabular-nums">{board.cardCount}</TableCell>
+                      <TableCell className="whitespace-nowrap text-sm tabular-nums">
+                        {board.imageGenerationsUsed}/{genLimit}
+                      </TableCell>
+                      <TableCell>
+                        {board.isUnlocked ? (
+                          <Badge variant="default">Unlocked</Badge>
+                        ) : (
+                          <Badge variant="secondary">Free</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                        {board.updatedAt.toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </div>
     </div>

@@ -9,16 +9,16 @@ export interface BreadcrumbItem {
 
 export function AdminBreadcrumb({ items }: { items: BreadcrumbItem[] }) {
   return (
-    <nav className="mb-4 flex items-center gap-1 text-sm text-muted-foreground">
+    <nav className="mb-4 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-sm text-muted-foreground">
       {items.map((item, index) => (
         <Fragment key={index}>
-          {index > 0 && <ChevronRight className="h-3 w-3" />}
+          {index > 0 && <ChevronRight className="h-3 w-3 shrink-0" />}
           {item.href ? (
-            <Link href={item.href} className="hover:text-foreground">
+            <Link href={item.href} className="break-all hover:text-foreground">
               {item.label}
             </Link>
           ) : (
-            <span className="text-foreground">{item.label}</span>
+            <span className="break-all text-foreground">{item.label}</span>
           )}
         </Fragment>
       ))}

@@ -56,25 +56,25 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
       {/* Metadata */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-sm font-medium">
               Card #{card.number} — {card.label || 'Unlabeled'}
             </CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {card.originalImageUrl && <RegenerateButton cardId={card.id} />}
               <StatusBadge status={card.status} />
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <div className="grid grid-cols-4 gap-4">
-            <div>
+        <CardContent className="space-y-3 text-sm sm:space-y-2">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="col-span-2 min-w-0 sm:col-span-1">
               <p className="text-xs text-muted-foreground">Card ID</p>
-              <p className="font-mono text-xs">{card.id}</p>
+              <p className="break-all font-mono text-xs">{card.id}</p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted-foreground">Board</p>
-              <Link href={`/admin/boards/${boardId}`} className="hover:underline">
+              <Link href={`/admin/boards/${boardId}`} className="block truncate hover:underline">
                 {boardName}
               </Link>
             </div>
@@ -97,7 +97,7 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
       </Card>
 
       {/* Side-by-side images */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Original */}
         <Card>
           <CardHeader>
