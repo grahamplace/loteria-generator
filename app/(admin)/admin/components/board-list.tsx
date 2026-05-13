@@ -44,56 +44,58 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
       {filtered.length === 0 ? (
         <p className="text-sm text-muted-foreground">No boards found</p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Owner</TableHead>
-              <TableHead>Cards</TableHead>
-              <TableHead>Generations</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Updated</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((board) => {
-              const genLimit = board.isUnlocked
-                ? IMAGE_GENERATION_LIMIT_PAID
-                : IMAGE_GENERATION_LIMIT_FREE;
-              return (
-                <TableRow key={board.id}>
-                  <TableCell>
-                    <Link href={`/admin/boards/${board.id}`} className="text-sm hover:underline">
-                      {board.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/admin/users/${board.ownerId}`}
-                      className="text-xs hover:underline"
-                    >
-                      {board.ownerEmail}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-sm tabular-nums">{board.cardCount}</TableCell>
-                  <TableCell className="text-sm tabular-nums">
-                    {board.imageGenerationsUsed}/{genLimit}
-                  </TableCell>
-                  <TableCell>
-                    {board.isUnlocked ? (
-                      <Badge variant="default">Unlocked</Badge>
-                    ) : (
-                      <Badge variant="secondary">Free</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(board.updatedAt).toLocaleDateString()}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <div className="-mx-4 overflow-x-auto px-4 md:-mx-6 md:px-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Owner</TableHead>
+                <TableHead>Cards</TableHead>
+                <TableHead>Generations</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Updated</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((board) => {
+                const genLimit = board.isUnlocked
+                  ? IMAGE_GENERATION_LIMIT_PAID
+                  : IMAGE_GENERATION_LIMIT_FREE;
+                return (
+                  <TableRow key={board.id}>
+                    <TableCell className="whitespace-nowrap">
+                      <Link href={`/admin/boards/${board.id}`} className="text-sm hover:underline">
+                        {board.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Link
+                        href={`/admin/users/${board.ownerId}`}
+                        className="text-xs hover:underline"
+                      >
+                        {board.ownerEmail}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-sm tabular-nums">{board.cardCount}</TableCell>
+                    <TableCell className="whitespace-nowrap text-sm tabular-nums">
+                      {board.imageGenerationsUsed}/{genLimit}
+                    </TableCell>
+                    <TableCell>
+                      {board.isUnlocked ? (
+                        <Badge variant="default">Unlocked</Badge>
+                      ) : (
+                        <Badge variant="secondary">Free</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                      {new Date(board.updatedAt).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );

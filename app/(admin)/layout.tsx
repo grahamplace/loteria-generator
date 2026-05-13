@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <body className={`font-sans antialiased ${fontVariables}`}>
         <div className="min-h-screen bg-background">
           <AdminSidebar email={session.user.email} />
-          <main className="ml-56 min-h-screen p-6">{children}</main>
+          <main className="min-h-screen p-4 md:ml-56 md:p-6">{children}</main>
         </div>
       </body>
     </html>

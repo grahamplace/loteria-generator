@@ -39,42 +39,44 @@ export function UserSearch({ users }: { users: UserRow[] }) {
         className="max-w-sm"
         spellCheck={false}
       />
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Email</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Boards</TableHead>
-            <TableHead>Cards</TableHead>
-            <TableHead>Joined</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filtered.length === 0 ? (
+      <div className="-mx-4 overflow-x-auto px-4 md:-mx-6 md:px-6">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-sm text-muted-foreground">
-                No users found
-              </TableCell>
+              <TableHead>Email</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Boards</TableHead>
+              <TableHead>Cards</TableHead>
+              <TableHead>Joined</TableHead>
             </TableRow>
-          ) : (
-            filtered.map((u) => (
-              <TableRow key={u.id}>
-                <TableCell>
-                  <Link href={`/admin/users/${u.id}`} className="text-sm hover:underline">
-                    {u.email}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-sm">{u.name}</TableCell>
-                <TableCell className="text-sm">{u.boardCount}</TableCell>
-                <TableCell className="text-sm">{u.cardCount}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {new Date(u.createdAt).toLocaleDateString()}
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-sm text-muted-foreground">
+                  No users found
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              filtered.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell className="whitespace-nowrap">
+                    <Link href={`/admin/users/${u.id}`} className="text-sm hover:underline">
+                      {u.email}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm">{u.name}</TableCell>
+                  <TableCell className="text-sm tabular-nums">{u.boardCount}</TableCell>
+                  <TableCell className="text-sm tabular-nums">{u.cardCount}</TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                    {new Date(u.createdAt).toLocaleDateString()}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
