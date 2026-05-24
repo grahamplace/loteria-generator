@@ -137,7 +137,11 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
               <div className="space-y-2">
                 <div className="relative aspect-[2/3] overflow-hidden rounded border border-border bg-muted">
                   <Image
-                    src={`/api/admin/images/${card.id}/illustration`}
+                    src={
+                      card.isDefault
+                        ? card.illustrationUrl
+                        : `/api/admin/images/${card.id}/illustration`
+                    }
                     alt="AI illustration"
                     fill
                     unoptimized
