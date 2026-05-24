@@ -67,7 +67,7 @@ export const regenerateIllustration = inngest.createFunction(
       const normalized = await normalizeImageForOpenAI(buffer);
       const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
       const illustrationModel =
-        process.env.NODE_ENV === 'production' ? 'gpt-image-1.5' : 'gpt-image-1-mini';
+        process.env.NODE_ENV === 'production' ? 'gpt-image-2' : 'gpt-image-1-mini';
       const result = await withAITrace(
         'regenerate-illustration',
         { userId, boardId, cardId, model: illustrationModel },
