@@ -44,6 +44,8 @@ export function addCallerSheetPages(
   entries: CallerSheetEntry[],
   labels: CallerSheetLabels
 ): void {
+  if (entries.length === 0) return;
+
   const PAGE_WIDTH = 8.5;
   const PAGE_HEIGHT = 11;
   const MARGIN = 0.75;

@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { shouldIncludeCallerSheet, buildCallerSheetEntries } from '@/lib/caller-sheet';
+import { jsPDF } from 'jspdf';
+import {
+  shouldIncludeCallerSheet,
+  buildCallerSheetEntries,
+  addCallerSheetPages,
+  type CallerSheetEntry,
+} from '@/lib/caller-sheet';
 import type { LotteriaCard } from '@/lib/generate-boards';
 
 const card = (over: Partial<LotteriaCard> & { number: number }): LotteriaCard => ({
@@ -51,5 +57,41 @@ describe('buildCallerSheetEntries', () => {
     ]);
     expect(entries[0].riddle).toBeNull();
     expect(entries[1].riddle).toBe('Pista corta');
+  });
+});
+
+describe('addCallerSheetPages', () => {
+  const newPdf = () => new jsPDF({ orientation: 'portrait', unit: 'in', format: 'letter' });
+
+  it('adds no pages when entries is empty', () => {
+    const pdf = newPdf();
+    const before = pdf.getNumberOfPages();
+    addCallerSheetPages(pdf, [], { title: 'Caller Sheet' });
+    expect(pdf.getNumberOfPages()).toBe(before);
+  });
+
+  it('adds exactly one page for a few short entries', () => {
+    const pdf = newPdf();
+    const before = pdf.getNumberOfPages();
+    const entries: CallerSheetEntry[] = [
+      { number: 1, label: 'El Gallo', riddle: 'Canta al amanecer.' },
+      { number: 2, label: 'La Dama', riddle: null },
+      { number: 3, label: 'El Catrín', riddle: 'Bien vestido.' },
+    ];
+    addCallerSheetPages(pdf, entries, { title: 'Caller Sheet' });
+    expect(pdf.getNumberOfPages()).toBe(before + 1);
+  });
+
+  it('paginates many long entries across multiple pages', () => {
+    const pdf = newPdf();
+    const before = pdf.getNumberOfPages();
+    const longRiddle = 'Lorem ipsum dolor sit amet '.repeat(8).trim(); // ~200 chars
+    const entries: CallerSheetEntry[] = Array.from({ length: 40 }, (_, i) => ({
+      number: i + 1,
+      label: `Carta ${i + 1}`,
+      riddle: longRiddle,
+    }));
+    addCallerSheetPages(pdf, entries, { title: 'Caller Sheet' });
+    expect(pdf.getNumberOfPages() - before).toBeGreaterThanOrEqual(2);
   });
 });
