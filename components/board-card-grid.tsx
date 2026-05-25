@@ -49,6 +49,7 @@ interface DisplayCard {
   clientKey: string;
   number: number;
   label: string;
+  riddle?: string | null;
   illustration: string;
   originalImage?: string;
   isProcessing?: boolean;
@@ -59,7 +60,7 @@ interface DisplayCard {
 interface BoardCardGridProps {
   cards: DisplayCard[];
   onDeleteCard: (id: string) => void;
-  onUpdateLabel: (id: string, label: string) => void;
+  onUpdateLabel: (id: string, label: string, riddle: string) => void;
   onReorderCards: (startIndex: number, endIndex: number) => void;
   onAddMore?: () => void;
   onAddClassic?: () => void;
