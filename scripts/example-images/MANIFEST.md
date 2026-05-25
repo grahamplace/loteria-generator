@@ -36,28 +36,60 @@ the original seed photo). The script pipes each through `gpt-image-1.5` with
 the production `ILLUSTRATION_PROMPT`, which restyles them into the app's
 illustrated look while preserving subject and composition.
 
-| Default card | Filename          | Subject                                                    |
-| ------------ | ----------------- | ---------------------------------------------------------- |
-| El Gallo     | `el-gallo.jpg`    | Rooster, vintage Lotería style                             |
-| El Catrín    | `el-catrin.jpg`   | Dapper gentleman in tuxedo holding cigarette and kerchief  |
-| El Paraguas  | `el-paraguas.jpg` | Open blue umbrella in the rain                             |
-| La Sirena    | `la-sirena.jpg`   | Mermaid emerging from the sea                              |
-| El Árbol     | `el-arbol.jpg`    | Lone leafy tree on a hillside                              |
-| La Bandera   | `la-bandera.jpg`  | Mexican flag draped on staff                               |
-| La Mano      | `la-mano.jpg`     | Open palm hand                                             |
-| La Luna      | `la-luna.jpg`     | Crescent moon with face                                    |
-| El Corazón   | `el-corazon.jpg`  | Anatomical red heart pierced by an arrow                   |
-| La Sandía    | `la-sandia.jpg`   | Sliced watermelon on yellow background                     |
-| La Estrella  | `la-estrella.jpg` | Five-pointed white star                                    |
-| El Mundo     | `el-mundo.jpg`    | Strongman holding up the globe                             |
-| El Nopal     | `el-nopal.jpg`    | Prickly pear cactus with red fruit                         |
-| La Rosa      | `la-rosa.jpg`     | Pink rose bud with green leaf, white background (original) |
-| La Calavera  | `la-calavera.jpg` | Yellow sugar skull with crossbones                         |
-| La Campana   | `la-campana.jpg`  | Hanging brass bell                                         |
-| El Venado    | `el-venado.jpg`   | Stag with antlers in a field                               |
-| El Sol       | `el-sol.jpg`      | Red-faced sun                                              |
-| La Corona    | `la-corona.jpg`   | Gold king's crown with red gems and cross                  |
-| El Pescado   | `el-pescado.jpg`  | Pink fish jumping over water                               |
+| Default card   | Filename             | Subject                                                    |
+| -------------- | -------------------- | ---------------------------------------------------------- |
+| El Gallo       | `el-gallo.jpg`       | Rooster, vintage Lotería style                             |
+| El Diablito    | `el-diablito.jpg`    | Red horned devil with tail holding a trident               |
+| La Dama        | `la-dama.jpg`        | Woman in green skirt-suit and pink beret holding flowers   |
+| El Catrín      | `el-catrin.jpg`      | Dapper gentleman in tuxedo holding cigarette and kerchief  |
+| El Paraguas    | `el-paraguas.jpg`    | Open blue umbrella in the rain                             |
+| La Sirena      | `la-sirena.jpg`      | Mermaid emerging from the sea                              |
+| La Escalera    | `la-escalera.jpg`    | Yellow ladder leaning against a wall                       |
+| La Botella     | `la-botella.jpg`     | Glass soda bottle filled with red liquid                   |
+| El Barril      | `el-barril.jpg`      | Wooden barrel painted in Mexican flag colors               |
+| El Árbol       | `el-arbol.jpg`       | Lone leafy tree on a hillside                              |
+| El Melón       | `el-melon.jpg`       | Sliced cantaloupe melon                                    |
+| El Valiente    | `el-valiente.jpg`    | Man in striped shirt holding a kerchief                    |
+| El Gorrito     | `el-gorrito.jpg`     | Ornate red embroidered baby bonnet                         |
+| La Muerte      | `la-muerte.jpg`      | Yellow skeleton holding a scythe                           |
+| La Pera        | `la-pera.jpg`        | Green pear with a leafy stem                               |
+| La Bandera     | `la-bandera.jpg`     | Mexican flag draped on staff                               |
+| El Bandolón    | `el-bandolon.jpg`    | Teardrop-body mandolin on blue background                  |
+| El Violoncello | `el-violoncello.jpg` | Yellow cello on white background                           |
+| La Garza       | `la-garza.jpg`       | Great blue heron standing on a log by water                |
+| El Pájaro      | `el-pajaro.jpg`      | Red and yellow bird perched on a branch                    |
+| La Mano        | `la-mano.jpg`        | Open palm hand                                             |
+| La Bota        | `la-bota.jpg`        | Brown leather cowboy boot                                  |
+| La Luna        | `la-luna.jpg`        | Crescent moon with face                                    |
+| El Cotorro     | `el-cotorro.jpg`     | Green parrot perched on a branch                           |
+| El Borracho    | `el-borracho.jpg`    | Man stumbling drunk with a bottle in hand                  |
+| El Corazón     | `el-corazon.jpg`     | Anatomical red heart pierced by an arrow                   |
+| La Sandía      | `la-sandia.jpg`      | Sliced watermelon on yellow background                     |
+| El Tambor      | `el-tambor.jpg`      | Yellow drum with drumsticks                                |
+| El Camarón     | `el-camaron.jpg`     | Orange shrimp                                              |
+| Las Jaras      | `las-jaras.jpg`      | Crossed arrows tied with a blue ribbon                     |
+| El Músico      | `el-musico.jpg`      | Man in a hat holding a guitar and sheet music              |
+| La Araña       | `la-arana.jpg`       | Red spider on a web                                        |
+| El Soldado     | `el-soldado.jpg`     | Soldier in green uniform holding a rifle                   |
+| La Estrella    | `la-estrella.jpg`    | Five-pointed white star                                    |
+| El Cazo        | `el-cazo.jpg`        | Yellow metal basin with two handles                        |
+| El Mundo       | `el-mundo.jpg`       | Strongman holding up the globe                             |
+| El Nopal       | `el-nopal.jpg`       | Prickly pear cactus with red fruit                         |
+| El Alacrán     | `el-alacran.jpg`     | Red and black scorpion                                     |
+| La Rosa        | `la-rosa.jpg`        | Pink rose bud with green leaf, white background (original) |
+| La Calavera    | `la-calavera.jpg`    | Yellow sugar skull with crossbones                         |
+| La Campana     | `la-campana.jpg`     | Hanging brass bell                                         |
+| El Cantarito   | `el-cantarito.jpg`   | Red clay water pitcher                                     |
+| El Venado      | `el-venado.jpg`      | Stag with antlers in a field                               |
+| El Sol         | `el-sol.jpg`         | Red-faced sun                                              |
+| La Corona      | `la-corona.jpg`      | Gold king's crown with red gems and cross                  |
+| La Chalupa     | `la-chalupa.jpg`     | Woman paddling a flower-filled canoe                       |
+| El Pino        | `el-pino.jpg`        | Tall green pine tree                                       |
+| El Pescado     | `el-pescado.jpg`     | Pink fish jumping over water                               |
+| La Palma       | `la-palma.jpg`       | Palm tree on a beach                                       |
+| La Maceta      | `la-maceta.jpg`      | Flowerpot with red roses                                   |
+| El Arpa        | `el-arpa.jpg`        | Golden harp                                                |
+| La Rana        | `la-rana.jpg`        | Green frog on a lily pad                                   |
 
 ## Reviewer notes
 
