@@ -34,6 +34,13 @@ export const DEFAULT_CARDS: readonly DefaultCard[] = [
     src: '/default-cards/el-gallo.webp',
   },
   {
+    id: 'el-diablito',
+    label: 'El Diablito',
+    labelEn: 'The Little Devil',
+    traditionalNumber: 2,
+    src: '/default-cards/el-diablito.webp',
+  },
+  {
     id: 'el-catrin',
     label: 'El Catrín',
     labelEn: 'The Dapper Gentleman',
