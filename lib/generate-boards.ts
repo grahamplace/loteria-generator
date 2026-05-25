@@ -1,10 +1,17 @@
 import { jsPDF } from 'jspdf';
+import {
+  shouldIncludeCallerSheet,
+  buildCallerSheetEntries,
+  addCallerSheetPages,
+  type CallerSheetLabels,
+} from './caller-sheet';
 
 export interface LotteriaCard {
   id: string;
   label: string;
   illustration: string;
   number: number;
+  riddle?: string | null;
   isProcessing?: boolean;
   error?: string;
 }
@@ -463,7 +470,8 @@ async function renderDeckPageToCanvas(
 export async function generateLoteriaSetPdf(
   cards: LotteriaCard[],
   styleOptions: BoardStyleOptions = {},
-  onProgress?: (message: string) => void
+  onProgress?: (message: string) => void,
+  callerSheetLabels: CallerSheetLabels = { title: 'Caller Sheet' }
 ): Promise<Blob> {
   const boards = generateBoards(cards, 50);
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'in', format: 'letter' });
@@ -492,6 +500,12 @@ export async function generateLoteriaSetPdf(
     const canvas = await renderDeckPageToCanvas(pageCards, styleOptions);
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
     pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
+  }
+
+  // Caller sheet (only when at least one card has a riddle)
+  if (shouldIncludeCallerSheet(cards)) {
+    onProgress?.('Generating caller sheet…');
+    addCallerSheetPages(pdf, buildCallerSheetEntries(cards), callerSheetLabels);
   }
 
   onProgress?.('Creating PDF…');
