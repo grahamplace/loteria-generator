@@ -313,7 +313,7 @@
       "featureExports": "Unlimited exports",
       "featureWatermarks": "No watermarks",
       "unlockButton": "Unlock",
-      "addMore": "Add more",
+      "addMore": "Add custom",
       "addClassicTile": "ADD CLASSIC",
       "deleteDialogTitle": "Delete this card?",
       "deleteDialogDescWithLabel": "This will permanently delete card #{number} \"{label}\". This action cannot be undone.",

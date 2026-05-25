@@ -79,7 +79,7 @@ export function DefaultCardsPicker({
         {allAdded ? (
           <div className="py-12 text-center text-muted-foreground">{t('empty')}</div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto p-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 auto-rows-max gap-3 max-h-[60vh] overflow-y-auto p-1">
             {DEFAULT_CARDS.map((card) => (
               <PickerCell
                 key={card.id}
@@ -173,7 +173,7 @@ function PickerCell({
         )}
       </div>
       <div className="p-2 bg-[#f5f0e1]">
-        <p className="text-xs font-semibold text-center text-foreground line-clamp-1 uppercase tracking-wide">
+        <p className="text-[10px] font-semibold text-center text-foreground line-clamp-1 uppercase tracking-tight">
           {card.label}
         </p>
       </div>
