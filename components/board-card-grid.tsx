@@ -449,10 +449,11 @@ export function BoardCardGrid({
             label: editingCard.label,
             illustration: editingCard.illustration,
             number: editingCard.number,
+            riddle: editingCard.riddle,
           }}
           originalImage={editingCard.originalImage}
-          onSave={(newLabel) => {
-            onUpdateLabel(editingCard.id, newLabel);
+          onSave={(newLabel, newRiddle) => {
+            onUpdateLabel(editingCard.id, newLabel, newRiddle);
             setEditingCard(null);
           }}
           onDelete={() => {

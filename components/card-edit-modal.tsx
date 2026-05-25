@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 interface CardEditModalProps {
   card: LotteriaCard;
   originalImage?: string;
-  onSave: (newLabel: string) => void;
+  onSave: (newLabel: string, newRiddle: string) => void;
   onDelete?: () => void;
   onClose: () => void;
 }
@@ -25,6 +25,7 @@ export function CardEditModal({
 }: CardEditModalProps) {
   const t = useTranslations('BoardEditor.CardEditModal');
   const [label, setLabel] = useState(card.label);
+  const [riddle, setRiddle] = useState(card.riddle ?? '');
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -39,8 +40,11 @@ export function CardEditModal({
 
   const handleSave = () => {
     if (label.trim()) {
-      posthog.capture('card_label_edited', { card_number: card.number });
-      onSave(label.trim());
+      posthog.capture('card_label_edited', {
+        card_number: card.number,
+        has_riddle: riddle.trim().length > 0,
+      });
+      onSave(label.trim(), riddle.trim());
     }
   };
 
@@ -109,6 +113,30 @@ export function CardEditModal({
               aria-label={t('labelInputAriaLabel')}
             />
             <p className="text-xs text-muted-foreground mt-1">{t('labelHint')}</p>
+          </div>
+
+          {/* Riddle input */}
+          <div>
+            <label className="block text-sm font-medium mb-2" htmlFor="card-riddle">
+              {t('riddleField')}
+            </label>
+            <textarea
+              id="card-riddle"
+              value={riddle}
+              onChange={(e) => setRiddle(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSave();
+                }
+              }}
+              rows={3}
+              maxLength={500}
+              className="w-full px-3 py-2 border rounded-md text-[16px] md:text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+              placeholder={t('riddlePlaceholder')}
+              aria-label={t('riddleInputAriaLabel')}
+            />
+            <p className="text-xs text-muted-foreground mt-1">{t('riddleHint')}</p>
           </div>
         </div>
 
