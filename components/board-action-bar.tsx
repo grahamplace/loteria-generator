@@ -13,6 +13,7 @@ interface DisplayCard {
   number: number;
   label: string;
   illustration: string;
+  riddle?: string | null;
   isProcessing?: boolean;
   error?: string;
 }
@@ -133,12 +134,14 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
             number: c.number,
             label: c.label,
             illustration: c.illustration,
+            riddle: c.riddle,
           }));
 
         const pdfBlob = await generateLoteriaSetPdf(
           exportCards,
           boardStyleOptions,
-          setExportProgress
+          setExportProgress,
+          { title: t('callerSheetTitle') }
         );
 
         const url = URL.createObjectURL(pdfBlob);
