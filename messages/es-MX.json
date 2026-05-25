@@ -294,6 +294,7 @@
       "addClassic": "Agregar clásica",
       "addClassicAriaLabel": "Agregar una carta clásica de Lotería a este tablero",
       "addClassicDisabledTitle": "Límite de cartas alcanzado",
+      "callerSheetTitle": "Hoja del cantor",
       "toasts": {
         "exportSuccessTitle": "¡Lotería exportada!",
         "exportSuccessDesc": "50 tablas únicas y el mazo de cartas se descargaron como PDF.",
@@ -348,6 +349,10 @@
       "labelPlaceholder": "Ingresa el nombre",
       "labelHint": "1-3 palabras en español",
       "labelInputAriaLabel": "Etiqueta de la carta",
+      "riddleField": "Adivinanza (opcional)",
+      "riddlePlaceholder": "Escribe un verso o pista que el cantor leerá en voz alta…",
+      "riddleHint": "Aparece en la hoja del cantor al exportar. Déjalo en blanco para omitir.",
+      "riddleInputAriaLabel": "Adivinanza de la carta",
       "deleteButton": "Eliminar",
       "cancelButton": "Cancelar",
       "saveButton": "Guardar"

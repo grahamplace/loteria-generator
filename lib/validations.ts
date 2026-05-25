@@ -32,6 +32,7 @@ export const createCardSchema = z.object({
 export const updateCardSchema = z.object({
   cardId: z.string().uuid(),
   label: z.string().max(200).optional(),
+  riddle: z.string().max(500).nullish(),
   illustrationBase64: base64ImageString.optional(),
   status: z.enum(['pending', 'processing', 'completed', 'error']).optional(),
   errorMessage: z.string().max(1000).optional(),

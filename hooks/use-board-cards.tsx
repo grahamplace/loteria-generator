@@ -45,6 +45,7 @@ export interface BoardCard {
   boardId: string;
   number: number;
   label: string;
+  riddle: string | null;
   originalImageUrl: string | null;
   illustrationUrl: string | null;
   status: CardStatus;
@@ -64,7 +65,7 @@ interface UseBoardCardsReturn {
   addCard: (file: File) => Promise<void>;
   addCards: (files: File[]) => Promise<void>;
   addDefaultCards: (defaultCardIds: string[]) => Promise<void>;
-  updateCardLabel: (cardId: string, newLabel: string) => Promise<void>;
+  updateCardLabel: (cardId: string, newLabel: string, newRiddle?: string) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   reorderCards: (startIndex: number, endIndex: number) => void;
   refreshCards: () => Promise<void>;
@@ -221,6 +222,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
           boardId,
           number: prev.reduce((max, c) => (c.number > max ? c.number : max), 0) + 1,
           label: '',
+          riddle: null,
           originalImageUrl: null,
           illustrationUrl: null,
           status: 'processing' as CardStatus,
@@ -293,6 +295,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
           boardId,
           number: maxNumber + i + 1,
           label: '',
+          riddle: null,
           originalImageUrl: null,
           illustrationUrl: null,
           status: 'processing' as CardStatus,
@@ -369,6 +372,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
           boardId,
           number: maxNumber + i + 1,
           label: entry.def.label,
+          riddle: null,
           originalImageUrl: null,
           illustrationUrl: entry.def.src,
           status: 'completed' as CardStatus,
@@ -442,15 +446,27 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
   );
 
   const updateCardLabel = useCallback(
-    async (cardId: string, newLabel: string) => {
+    async (cardId: string, newLabel: string, newRiddle?: string) => {
       // Optimistic update
-      setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, label: newLabel } : c)));
+      setCards((prev) =>
+        prev.map((c) =>
+          c.id === cardId
+            ? { ...c, label: newLabel, ...(newRiddle !== undefined ? { riddle: newRiddle } : {}) }
+            : c
+        )
+      );
 
       try {
+        const body: { cardId: string; label: string; riddle?: string } = {
+          cardId,
+          label: newLabel,
+        };
+        if (newRiddle !== undefined) body.riddle = newRiddle;
+
         const response = await fetch(`/api/boards/${boardId}/cards`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cardId, label: newLabel }),
+          body: JSON.stringify(body),
         });
 
         if (!response.ok) {

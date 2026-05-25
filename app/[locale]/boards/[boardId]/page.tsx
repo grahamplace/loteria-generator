@@ -117,6 +117,7 @@ export default function BoardEditorPage() {
     clientKey: card.clientKey,
     number: card.number,
     label: card.label,
+    riddle: card.riddle,
     illustration:
       card.localIllustration ||
       card.localOriginalImage ||
