@@ -317,7 +317,7 @@
       "featureExports": "Exportaciones ilimitadas",
       "featureWatermarks": "Sin marcas de agua",
       "unlockButton": "Desbloquear",
-      "addMore": "Agregar más",
+      "addMore": "Agregar personalizada",
       "addClassicTile": "AGREGAR CLÁSICA",
       "deleteDialogTitle": "¿Eliminar esta carta?",
       "deleteDialogDescWithLabel": "Esto eliminará permanentemente la carta #{number} \"{label}\". Esta acción no se puede deshacer.",
