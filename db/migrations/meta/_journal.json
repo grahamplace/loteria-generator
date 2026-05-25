@@ -50,6 +50,13 @@
       "when": 1777849266083,
       "tag": "0006_cloudy_wolfsbane",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779687442182,
+      "tag": "0007_magical_blonde_phantom",
+      "breakpoints": true
     }
   ]
 }

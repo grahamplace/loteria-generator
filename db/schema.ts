@@ -108,6 +108,7 @@ export const cards = pgTable('cards', {
     .references(() => user.id, { onDelete: 'cascade' }),
   number: integer('number').notNull(),
   label: text('label').notNull().default(''),
+  riddle: text('riddle'),
   originalImageUrl: text('original_image_url'), // Vercel Blob URL - private
   illustrationUrl: text('illustration_url'), // Vercel Blob URL - private
   status: text('status').$type<CardStatus>().notNull().default('pending'),
