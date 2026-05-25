@@ -39,6 +39,7 @@ illustrated look while preserving subject and composition.
 | Default card   | Filename             | Subject                                                    |
 | -------------- | -------------------- | ---------------------------------------------------------- |
 | El Gallo       | `el-gallo.jpg`       | Rooster, vintage Lotería style                             |
+| El Diablito    | `el-diablito.jpg`    | Red horned devil with tail holding a trident               |
 | La Dama        | `la-dama.jpg`        | Woman in green skirt-suit and pink beret holding flowers   |
 | El Catrín      | `el-catrin.jpg`      | Dapper gentleman in tuxedo holding cigarette and kerchief  |
 | El Paraguas    | `el-paraguas.jpg`    | Open blue umbrella in the rain                             |
