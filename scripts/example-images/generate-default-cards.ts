@@ -18,6 +18,15 @@ const SOURCE_DIR = join(__dirname, 'source-photos');
 const OUTPUT_DIR = join(__dirname, 'illustrations');
 
 const STEMS = [
+  'la-dama',
+  'la-escalera',
+  'la-botella',
+  'el-barril',
+  'el-melon',
+  'el-valiente',
+  'el-gorrito',
+  'la-muerte',
+  'la-pera',
   'el-corazon',
   'el-sol',
   'la-luna',

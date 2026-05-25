@@ -39,10 +39,19 @@ illustrated look while preserving subject and composition.
 | Default card | Filename          | Subject                                                    |
 | ------------ | ----------------- | ---------------------------------------------------------- |
 | El Gallo     | `el-gallo.jpg`    | Rooster, vintage Lotería style                             |
+| La Dama      | `la-dama.jpg`     | Woman in green skirt-suit and pink beret holding flowers   |
 | El Catrín    | `el-catrin.jpg`   | Dapper gentleman in tuxedo holding cigarette and kerchief  |
 | El Paraguas  | `el-paraguas.jpg` | Open blue umbrella in the rain                             |
 | La Sirena    | `la-sirena.jpg`   | Mermaid emerging from the sea                              |
+| La Escalera  | `la-escalera.jpg` | Yellow ladder leaning against a wall                       |
+| La Botella   | `la-botella.jpg`  | Glass soda bottle filled with red liquid                   |
+| El Barril    | `el-barril.jpg`   | Wooden barrel painted in Mexican flag colors               |
 | El Árbol     | `el-arbol.jpg`    | Lone leafy tree on a hillside                              |
+| El Melón     | `el-melon.jpg`    | Sliced cantaloupe melon                                    |
+| El Valiente  | `el-valiente.jpg` | Man in striped shirt holding a kerchief                    |
+| El Gorrito   | `el-gorrito.jpg`  | Ornate red embroidered baby bonnet                         |
+| La Muerte    | `la-muerte.jpg`   | Yellow skeleton holding a scythe                           |
+| La Pera      | `la-pera.jpg`     | Green pear with a leafy stem                               |
 | La Bandera   | `la-bandera.jpg`  | Mexican flag draped on staff                               |
 | La Mano      | `la-mano.jpg`     | Open palm hand                                             |
 | La Luna      | `la-luna.jpg`     | Crescent moon with face                                    |
