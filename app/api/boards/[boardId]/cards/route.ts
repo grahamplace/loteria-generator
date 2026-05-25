@@ -260,7 +260,7 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    const { cardId, label, illustrationBase64, status, errorMessage } = parsed.data;
+    const { cardId, label, riddle, illustrationBase64, status, errorMessage } = parsed.data;
 
     // Verify ownership
     const card = await db.query.cards.findFirst({
@@ -282,6 +282,10 @@ export async function PATCH(
 
     if (label !== undefined) {
       updateData.label = label;
+    }
+
+    if (riddle !== undefined) {
+      updateData.riddle = riddle;
     }
 
     if (status !== undefined) {
