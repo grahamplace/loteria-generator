@@ -103,11 +103,11 @@ export function DefaultCardsPicker({
           </p>
         ) : null}
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleClose}>
+        <DialogFooter className="flex-row gap-2">
+          <Button variant="outline" onClick={handleClose} className="flex-1">
             {t('cancel')}
           </Button>
-          <Button onClick={handleAdd} disabled={selected.size === 0}>
+          <Button onClick={handleAdd} disabled={selected.size === 0} className="flex-1">
             {t('addButton', { count: selected.size })}
           </Button>
         </DialogFooter>
