@@ -275,7 +275,7 @@
       "dropPhotos": "Suelta fotos para agregar cartas",
       "ready": "listas",
       "processing": "procesando",
-      "acceptedFormats": "PNG · JPG · WebP hasta 10MB",
+      "acceptedFormats": "PNG · JPG · WebP hasta {maxSize}",
       "select": "Seleccionar",
       "exportTitle": "Exportar Lotería",
       "exportSubtitleDefault": "50 tablas únicas + mazo de cartas · PDF",
@@ -300,7 +300,9 @@
         "exportSuccessDesc": "50 tablas únicas y el mazo de cartas se descargaron como PDF.",
         "exportFailedTitle": "No se pudo exportar la Lotería",
         "exportFailedDesc": "Por favor, inténtalo de nuevo.",
-        "startingExport": "Iniciando exportación…"
+        "startingExport": "Iniciando exportación…",
+        "tooLargeTitle": "Imagen demasiado grande",
+        "tooLargeDesc": "{count, plural, =1 {# foto supera el límite de {maxSize}. Redúcela o elige un archivo más pequeño.} other {# fotos superan el límite de {maxSize}. Redúcelas o elige archivos más pequeños.}}"
       }
     },
     "CardGrid": {

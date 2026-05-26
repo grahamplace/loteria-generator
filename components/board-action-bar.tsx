@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
 import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
+import { partitionBySize, MAX_UPLOAD_DISPLAY } from '@/lib/upload-limits';
 
 interface DisplayCard {
   id: string;
@@ -80,31 +81,38 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
       }
     };
 
+    const acceptFiles = (files: File[], method: 'drop' | 'picker') => {
+      const imageFiles = files.filter((f) => f.type.startsWith('image/'));
+      const { valid, oversized } = partitionBySize(imageFiles);
+      if (oversized.length > 0) {
+        toast.error(t('toasts.tooLargeTitle'), {
+          description: t('toasts.tooLargeDesc', {
+            count: oversized.length,
+            maxSize: MAX_UPLOAD_DISPLAY,
+          }),
+        });
+      }
+      const remaining = maxCards - cardCount;
+      const validFiles = valid.slice(0, remaining);
+      if (validFiles.length > 0) {
+        posthog.capture('photos_uploaded', { count: validFiles.length, method });
+        onFilesSelected(validFiles);
+      }
+    };
+
     const handleDrop = (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
       setDragActive(false);
       const files = e.dataTransfer.files;
       if (files && files.length > 0) {
-        const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
-        const remaining = maxCards - cardCount;
-        const validFiles = imageFiles.slice(0, remaining);
-        if (validFiles.length > 0) {
-          posthog.capture('photos_uploaded', { count: validFiles.length, method: 'drop' });
-          onFilesSelected(validFiles);
-        }
+        acceptFiles(Array.from(files), 'drop');
       }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-        const imageFiles = Array.from(e.target.files).filter((f) => f.type.startsWith('image/'));
-        const remaining = maxCards - cardCount;
-        const validFiles = imageFiles.slice(0, remaining);
-        if (validFiles.length > 0) {
-          posthog.capture('photos_uploaded', { count: validFiles.length, method: 'picker' });
-          onFilesSelected(validFiles);
-        }
+        acceptFiles(Array.from(e.target.files), 'picker');
       }
       // Reset so re-selecting the same file triggers onChange again
       e.target.value = '';
@@ -241,7 +249,9 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                       {processingCount} {t('processing')}
                     </span>
                   )}
-                  <span className="ml-auto">{t('acceptedFormats')}</span>
+                  <span className="ml-auto">
+                    {t('acceptedFormats', { maxSize: MAX_UPLOAD_DISPLAY })}
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
