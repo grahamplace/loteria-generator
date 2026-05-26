@@ -271,7 +271,7 @@
       "dropPhotos": "Drop photos to add cards",
       "ready": "ready",
       "processing": "processing",
-      "acceptedFormats": "PNG · JPG · WebP up to 10MB",
+      "acceptedFormats": "PNG · JPG · WebP up to {maxSize}",
       "select": "Select",
       "exportTitle": "Export Loteria set",
       "exportSubtitleDefault": "50 unique boards + card deck · PDF",
@@ -296,7 +296,9 @@
         "exportSuccessDesc": "50 unique boards and card deck downloaded as a PDF.",
         "exportFailedTitle": "Failed to export Loteria set",
         "exportFailedDesc": "Please try again.",
-        "startingExport": "Starting export…"
+        "startingExport": "Starting export…",
+        "tooLargeTitle": "Image too large",
+        "tooLargeDesc": "{count, plural, =1 {# photo is over the {maxSize} limit. Resize it or pick a smaller file.} other {# photos are over the {maxSize} limit. Resize them or pick smaller files.}}"
       }
     },
     "CardGrid": {
