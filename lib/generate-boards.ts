@@ -5,6 +5,7 @@ import {
   addCallerSheetPages,
   type CallerSheetLabels,
 } from './caller-sheet';
+import { fitRiddle } from './riddle-layout';
 
 export interface LotteriaCard {
   id: string;
@@ -152,9 +153,16 @@ function drawCard(
   y: number,
   cardWidth: number,
   cardHeight: number,
-  styleOptions: { badgeColor: string; labelColor: string }
+  styleOptions: { badgeColor: string; labelColor: string },
+  renderRiddle = false
 ) {
   const { badgeColor, labelColor } = styleOptions;
+
+  // Caller-deck cards reserve a fixed footer band for the riddle (capped at
+  // 500 chars). Player boards pass renderRiddle=false and are unaffected.
+  const riddleText = renderRiddle && typeof card.riddle === 'string' ? card.riddle.trim() : '';
+  const hasRiddle = riddleText.length > 0;
+  const riddleBandHeight = hasRiddle ? Math.round(cardHeight * 0.28) : 0;
 
   // Draw hand-drawn card border
   ctx.strokeStyle = '#000000';
@@ -167,7 +175,8 @@ function drawCard(
   const labelSpace = 40;
 
   const availableImageWidth = cardWidth - imagePadding * 2;
-  const availableImageHeight = cardHeight - imagePadding * 2 - badgeSpace - labelSpace;
+  const availableImageHeight =
+    cardHeight - imagePadding * 2 - badgeSpace - labelSpace - riddleBandHeight;
 
   const imageAspectRatio = 2 / 3;
   let imageWidth: number;
@@ -275,7 +284,7 @@ function drawCard(
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
 
-  const labelY2 = y + cardHeight - 15;
+  const labelY2 = y + cardHeight - riddleBandHeight - 15;
   const maxLabelWidth = cardWidth - 20;
 
   let fontSize = baseFontSize;
@@ -288,6 +297,54 @@ function drawCard(
   }
 
   ctx.fillText(labelText, x + cardWidth / 2, labelY2);
+
+  // Riddle footer band (caller deck only): hairline + auto-shrinking verse
+  if (hasRiddle) {
+    const bandTop = y + cardHeight - riddleBandHeight;
+    const bandPadX = 28;
+    const sepY = bandTop + 8;
+
+    ctx.strokeStyle = '#d1d5db';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x + bandPadX, sepY);
+    ctx.lineTo(x + cardWidth - bandPadX, sepY);
+    ctx.stroke();
+
+    const textTop = sepY + 22;
+    const textBottom = y + cardHeight - 22;
+    const maxRiddleWidth = cardWidth - bandPadX * 2;
+    const maxRiddleHeight = textBottom - textTop;
+    const lineHeightRatio = 1.18;
+
+    const fit = fitRiddle({
+      text: riddleText,
+      maxWidth: maxRiddleWidth,
+      maxHeight: maxRiddleHeight,
+      maxFontPx: 34,
+      minFontPx: 18,
+      lineHeightRatio,
+      measureAtFont: (fontPx, s) => {
+        ctx.font = `italic ${fontPx}px Arial, Helvetica, sans-serif`;
+        return ctx.measureText(s).width;
+      },
+    });
+
+    ctx.fillStyle = labelColor;
+    ctx.font = `italic ${fit.fontPx}px Arial, Helvetica, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+
+    const lineAdvance = fit.fontPx * lineHeightRatio;
+    const blockHeight = fit.lines.length * lineAdvance;
+    // Vertically center the verse block within the band's text area
+    let lineY = textTop + fit.fontPx + Math.max(0, (maxRiddleHeight - blockHeight) / 2);
+    for (const line of fit.lines) {
+      ctx.fillText(line, x + cardWidth / 2, lineY);
+      lineY += lineAdvance;
+    }
+  }
 }
 
 /**
@@ -399,16 +456,21 @@ async function renderDeckPageToCanvas(
   const rows = 3;
   const cols = 3;
   const cardSpacing = 40;
-
-  // Standard playing card size: 2.5" × 3.5" at 300 DPI
-  const cardWidth = 750;
-  const cardHeight = 1050;
-
   const headerHeight = 120;
+  const bottomMargin = 60;
+
+  // Size cards to fit the page below the header (keeping the 2.5:3.5 card
+  // aspect). A previous fixed 1050px height made the 3-row grid taller than
+  // the available space, clipping the bottom row — worse now that the riddle
+  // band sits at the card's bottom edge.
+  const availableHeight = height - headerHeight - bottomMargin;
+  const cardHeight = Math.floor((availableHeight - cardSpacing * (rows - 1)) / rows);
+  const cardWidth = Math.round(cardHeight * (2.5 / 3.5));
+
   const gridWidth = cardWidth * cols + cardSpacing * (cols - 1);
   const gridHeight = cardHeight * rows + cardSpacing * (rows - 1);
   const offsetX = (width - gridWidth) / 2;
-  const offsetY = headerHeight + (height - headerHeight - gridHeight) / 2;
+  const offsetY = headerHeight + (availableHeight - gridHeight) / 2;
 
   // Draw header label
   ctx.fillStyle = '#9ca3af';
@@ -433,7 +495,7 @@ async function renderDeckPageToCanvas(
     const x = offsetX + col * (cardWidth + cardSpacing);
     const y = offsetY + row * (cardHeight + cardSpacing);
 
-    drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor });
+    drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor }, true);
   }
 
   // Draw dashed cut lines between cards
