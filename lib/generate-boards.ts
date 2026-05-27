@@ -154,7 +154,8 @@ function drawCard(
   cardWidth: number,
   cardHeight: number,
   styleOptions: { badgeColor: string; labelColor: string },
-  renderRiddle = false
+  renderRiddle = false,
+  badgeSize = 70
 ) {
   const { badgeColor, labelColor } = styleOptions;
 
@@ -259,8 +260,8 @@ function drawCard(
 
   ctx.drawImage(offscreen, imageX, imageY);
 
-  // Draw number badge (top-left corner)
-  const badgeSize = 70;
+  // Draw number badge (top-left corner). badgeSize is caller-controlled so
+  // boards and the larger deck cards can use proportionally bigger numbers.
   const badgeX = x + 10;
   const badgeY = y + 10;
 
@@ -270,12 +271,14 @@ function drawCard(
   ctx.fill();
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 42px Caveat, cursive';
+  // Glyph fills ~60% of the circle; keep the ratio as the badge scales.
+  ctx.font = `bold ${Math.round(badgeSize * 0.6)}px Caveat, cursive`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  // Nudge left ~3px: Caveat digits sit slightly right of the glyph box, so
-  // centering on the circle's center looks off without this correction.
-  ctx.fillText(card.number.toString(), badgeX + badgeSize / 2 - 3, badgeY + badgeSize / 2);
+  // Nudge left: Caveat digits sit slightly right of the glyph box, so centering
+  // on the circle's center looks off without this correction (scales with size).
+  const badgeNudge = (badgeSize * 3) / 70;
+  ctx.fillText(card.number.toString(), badgeX + badgeSize / 2 - badgeNudge, badgeY + badgeSize / 2);
 
   // Draw label text (bottom of card)
   ctx.fillStyle = labelColor;
@@ -424,7 +427,7 @@ async function renderBoardToCanvas(
       const x = offsetX + col * (cardWidth + cardSpacing);
       const y = offsetY + row * (cardHeight + cardSpacing);
 
-      drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor });
+      drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor }, false, 88);
     }
   }
 
@@ -508,7 +511,7 @@ async function renderDeckPageToCanvas(
     const x = offsetX + col * (cardWidth + cardSpacing);
     const y = offsetY + row * (cardHeight + cardSpacing);
 
-    drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor }, true);
+    drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor }, true, 140);
   }
 
   // Draw dashed cut lines between cards
