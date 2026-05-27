@@ -282,7 +282,7 @@ function drawCard(
 
   const labelText = card.label.toUpperCase();
   const baseFontSize = 40;
-  ctx.font = `normal ${baseFontSize}px Arial, Helvetica, sans-serif`;
+  ctx.font = `normal ${baseFontSize}px 'Jost', Arial, Helvetica, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
 
@@ -294,7 +294,7 @@ function drawCard(
 
   while (metrics.width > maxLabelWidth && fontSize > 22) {
     fontSize -= 1;
-    ctx.font = `normal ${fontSize}px Arial, Helvetica, sans-serif`;
+    ctx.font = `normal ${fontSize}px 'Jost', Arial, Helvetica, sans-serif`;
     metrics = ctx.measureText(labelText);
   }
 
@@ -408,6 +408,10 @@ async function renderBoardToCanvas(
     'Caveat',
     'https://fonts.gstatic.com/s/caveat/v18/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9eIWpYQ.woff2'
   );
+  await loadGoogleFont(
+    'Jost',
+    'https://fonts.gstatic.com/s/jost/v20/92zPtBhPNqw79Ij1E865zBUv7myjJTVBNIgun_HKOEo.woff2'
+  );
 
   const cardImages = await Promise.all(board.map((card) => loadImage(card.illustration)));
 
@@ -487,6 +491,10 @@ async function renderDeckPageToCanvas(
   await loadGoogleFont(
     'Caveat',
     'https://fonts.gstatic.com/s/caveat/v18/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9eIWpYQ.woff2'
+  );
+  await loadGoogleFont(
+    'Jost',
+    'https://fonts.gstatic.com/s/jost/v20/92zPtBhPNqw79Ij1E865zBUv7myjJTVBNIgun_HKOEo.woff2'
   );
 
   const cardImages = await Promise.all(cards.map((card) => loadImage(card.illustration)));

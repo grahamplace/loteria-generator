@@ -183,7 +183,7 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
         {card.isProcessing ? (
           <div className="h-5 bg-muted-foreground/15 rounded animate-pulse" />
         ) : (
-          <p className="text-sm font-semibold text-center text-foreground line-clamp-2 uppercase tracking-wide">
+          <p className="font-jost text-sm font-semibold text-center text-foreground line-clamp-2 uppercase tracking-wide">
             {card.label || t('noLabel')}
           </p>
         )}
