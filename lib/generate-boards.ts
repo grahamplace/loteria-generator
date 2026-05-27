@@ -167,7 +167,7 @@ function drawCard(
   // Draw hand-drawn card border
   ctx.strokeStyle = '#000000';
   ctx.lineWidth = 3;
-  drawHandDrawnRect(ctx, x, y, cardWidth, cardHeight, 2);
+  drawHandDrawnRect(ctx, x, y, cardWidth, cardHeight, 1);
 
   // Draw card illustration (portrait orientation, centered with padding)
   const imagePadding = 5;
