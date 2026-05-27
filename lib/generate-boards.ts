@@ -426,8 +426,10 @@ async function renderBoardToCanvas(
 }
 
 /**
- * Renders a deck page with cards in a 3×3 grid onto a canvas.
- * Page dimensions: 8.5" × 11" (US Letter) at 300 DPI = 2550 × 3300 pixels
+ * Renders a deck page with cards in a 2×2 grid onto a canvas.
+ * Page dimensions: 8.5" × 11" (US Letter) at 300 DPI = 2550 × 3300 pixels.
+ * Each card prints at exactly 3" × 5" (standard index card); only four
+ * 3×5 cards fit per Letter sheet.
  */
 async function renderDeckPageToCanvas(
   cards: LotteriaCard[],
@@ -453,19 +455,20 @@ async function renderDeckPageToCanvas(
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
 
-  const rows = 3;
-  const cols = 3;
+  const rows = 2;
+  const cols = 2;
   const cardSpacing = 40;
   const headerHeight = 120;
   const bottomMargin = 60;
 
-  // Size cards to fit the page below the header (keeping the 2.5:3.5 card
-  // aspect). A previous fixed 1050px height made the 3-row grid taller than
-  // the available space, clipping the bottom row — worse now that the riddle
-  // band sits at the card's bottom edge.
+  // Cards print at exactly 3" × 5" (standard index card). The full canvas is
+  // placed 1:1 onto the 8.5"×11" page (see addImage at 0,0,8.5,11), and the
+  // canvas is 300 DPI, so 3" = 900px and 5" = 1500px. At this size only a 2×2
+  // grid fits per sheet: 2×3"=6" wide and 2×5"=10" tall, both within Letter.
+  const cardWidth = 900; // 3" at 300 DPI
+  const cardHeight = 1500; // 5" at 300 DPI
+
   const availableHeight = height - headerHeight - bottomMargin;
-  const cardHeight = Math.floor((availableHeight - cardSpacing * (rows - 1)) / rows);
-  const cardWidth = Math.round(cardHeight * (2.5 / 3.5));
 
   const gridWidth = cardWidth * cols + cardSpacing * (cols - 1);
   const gridHeight = cardHeight * rows + cardSpacing * (rows - 1);
@@ -547,12 +550,13 @@ export async function generateLoteriaSetPdf(
     pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
   }
 
-  // Generate deck pages (9 cards per page, ordered by card number)
+  // Generate deck pages (4 cards per page — 2×2 grid of 3"×5" cards — ordered
+  // by card number)
   const processedCards = cards
     .filter((c) => !c.isProcessing && !c.error)
     .sort((a, b) => a.number - b.number);
 
-  const cardsPerPage = 9;
+  const cardsPerPage = 4;
   const totalPages = Math.ceil(processedCards.length / cardsPerPage);
 
   for (let i = 0; i < totalPages; i++) {
