@@ -327,8 +327,8 @@ function drawCard(
       text: riddleText,
       maxWidth: maxRiddleWidth,
       maxHeight: maxRiddleHeight,
-      maxFontPx: 34,
-      minFontPx: 18,
+      maxFontPx: 46,
+      minFontPx: 22,
       lineHeightRatio,
       measureAtFont: (fontPx, s) => {
         ctx.font = `italic ${fontPx}px Arial, Helvetica, sans-serif`;
