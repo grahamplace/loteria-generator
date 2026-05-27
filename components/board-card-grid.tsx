@@ -121,7 +121,9 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
       <div
         className={`absolute top-2 left-2 ${card.isDefault ? 'bg-accent' : 'bg-primary'} text-primary-foreground rounded-full w-9 h-9 flex items-center justify-center font-bold text-lg z-[1] shadow-md font-caveat`}
       >
-        {card.number}
+        {/* Nudge left: Caveat digits sit slightly right of the glyph box, so
+            flex-centering leaves them visually off-center in the circle. */}
+        <span className="block -translate-x-px">{card.number}</span>
       </div>
 
       {/* Drag handle indicator */}
