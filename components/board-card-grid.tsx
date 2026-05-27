@@ -154,7 +154,14 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
           </div>
         ) : card.illustration ? (
           <Image
-            src={card.illustration}
+            src={
+              // Cards render ~180px wide (360px at 2x). Request a webp thumbnail
+              // from the image proxy instead of the full-size ~2-4MB source PNG.
+              // Default cards already point at small public webp, so leave them.
+              card.illustration.startsWith('/api/images/')
+                ? `${card.illustration}?w=400`
+                : card.illustration
+            }
             alt={card.label}
             fill
             sizes="(max-width: 768px) 30vw, 180px"
