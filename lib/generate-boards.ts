@@ -273,7 +273,9 @@ function drawCard(
   ctx.font = 'bold 42px Caveat, cursive';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(card.number.toString(), badgeX + badgeSize / 2, badgeY + badgeSize / 2);
+  // Nudge left ~3px: Caveat digits sit slightly right of the glyph box, so
+  // centering on the circle's center looks off without this correction.
+  ctx.fillText(card.number.toString(), badgeX + badgeSize / 2 - 3, badgeY + badgeSize / 2);
 
   // Draw label text (bottom of card)
   ctx.fillStyle = labelColor;
