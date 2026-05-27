@@ -82,6 +82,7 @@
   --font-caveat: var(--font-caveat), 'cursive';
   --font-display: var(--font-display), 'Helvetica Neue', sans-serif;
   --font-jetbrains: var(--font-jetbrains), ui-monospace, monospace;
+  --font-jost: var(--font-jost), 'Futura', sans-serif;
   --color-cream: #fbf4e4;
   --color-cream-deep: #f4e8cd;
   --color-rule-warm: #e8dcbe;
