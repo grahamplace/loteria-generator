@@ -52,7 +52,7 @@ export function CardEditModal({
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 md:p-6 border-b shrink-0">
+        <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b shrink-0">
           <h2 className="text-lg font-semibold">{t('titleWithNumber', { number: card.number })}</h2>
           <button
             onClick={onClose}
@@ -64,7 +64,7 @@ export function CardEditModal({
         </div>
 
         {/* Body */}
-        <div className="p-4 md:p-6 space-y-4 overflow-y-auto">
+        <div className="px-4 md:px-6 py-3 md:py-4 space-y-3 overflow-y-auto">
           {/* Image preview */}
           <div className="flex justify-center gap-3">
             {originalImage && (
@@ -141,7 +141,7 @@ export function CardEditModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 p-4 md:p-6 border-t shrink-0">
+        <div className="flex items-center gap-3 px-4 md:px-6 py-3 md:py-4 border-t shrink-0">
           {onDelete && (
             <Button
               variant="outline"
