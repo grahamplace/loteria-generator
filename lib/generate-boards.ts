@@ -279,7 +279,7 @@ function drawCard(
   ctx.fillStyle = labelColor;
 
   const labelText = card.label.toUpperCase();
-  const baseFontSize = 32;
+  const baseFontSize = 40;
   ctx.font = `normal ${baseFontSize}px Arial, Helvetica, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
@@ -290,7 +290,7 @@ function drawCard(
   let fontSize = baseFontSize;
   let metrics = ctx.measureText(labelText);
 
-  while (metrics.width > maxLabelWidth && fontSize > 16) {
+  while (metrics.width > maxLabelWidth && fontSize > 22) {
     fontSize -= 1;
     ctx.font = `normal ${fontSize}px Arial, Helvetica, sans-serif`;
     metrics = ctx.measureText(labelText);
