@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { filenameToLabel } from '@/lib/filename-label';
 
@@ -29,7 +29,6 @@ export function AdminBulkUpload() {
   const [items, setItems] = useState<FileItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   function onFilesSelected(fileList: FileList | null) {
     if (!fileList) return;
@@ -60,6 +59,7 @@ export function AdminBulkUpload() {
       return;
     }
 
+    let succeeded = 0;
     for (let i = 0; i < items.length; i++) {
       setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, status: 'uploading' } : it)));
       try {
@@ -73,6 +73,7 @@ export function AdminBulkUpload() {
           body: JSON.stringify({ originalImageBase64: base64, label, skipLabeling }),
         });
         if (!res.ok) throw new Error('Upload failed');
+        succeeded++;
         setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, status: 'done' } : it)));
       } catch (e) {
         setItems((prev) =>
@@ -85,7 +86,14 @@ export function AdminBulkUpload() {
       }
     }
 
-    router.push(`/admin/boards/${boardId}`);
+    // Only leave for the board if at least one card was created; otherwise keep
+    // the per-file error states visible so the admin can see what went wrong.
+    if (succeeded > 0) {
+      router.push(`/admin/boards/${boardId}`);
+      return;
+    }
+    setError('Every file failed to upload. The board was created but has no cards.');
+    setSubmitting(false);
   }
 
   return (
@@ -117,7 +125,6 @@ export function AdminBulkUpload() {
 
       <div className="mb-3">
         <input
-          ref={inputRef}
           type="file"
           multiple
           accept="image/*"

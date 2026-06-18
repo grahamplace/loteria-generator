@@ -130,7 +130,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the board
+    // Create the board. Admin-created boards are unlocked so the bulk-upload
+    // tool can add a full 54-card deck. This applies to ANY board the admin
+    // creates via this route (including the normal dashboard flow) — acceptable
+    // since the admin is a single trusted internal account.
     const [newBoard] = await db
       .insert(boards)
       .values({
