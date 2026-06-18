@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { db, boards, userProfiles } from '@/db';
 import { eq, desc } from 'drizzle-orm';
 import { createBoardSchema } from '@/lib/validations';
+import { isAdminEmail } from '@/lib/admin';
 
 /**
  * GET /api/boards - List all boards for the current user
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
       );
     }
     const { name } = parsed.data;
+    const isAdmin = isAdminEmail(session.user.email);
 
     // Ensure user profile exists
     const existingProfile = await db.query.userProfiles.findFirst({
@@ -117,7 +119,7 @@ export async function POST(request: NextRequest) {
     const unlockedCount = existingBoards.filter((b) => b.isUnlocked).length;
     const maxBoards = unlockedCount + 1;
 
-    if (existingBoards.length >= maxBoards) {
+    if (!isAdmin && existingBoards.length >= maxBoards) {
       return NextResponse.json(
         {
           error: 'Board limit reached',
@@ -134,6 +136,7 @@ export async function POST(request: NextRequest) {
       .values({
         userId: session.user.id,
         name: name || 'My Loteria Board',
+        isUnlocked: isAdmin,
       })
       .returning();
 
