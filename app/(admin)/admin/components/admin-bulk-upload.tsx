@@ -129,7 +129,7 @@ export function AdminBulkUpload() {
           multiple
           accept="image/*"
           onChange={(e) => onFilesSelected(e.target.files)}
-          className="block text-sm"
+          className="block w-full text-sm text-foreground/70 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-primary/90 file:[touch-action:manipulation]"
         />
       </div>
 
