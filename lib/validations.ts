@@ -26,6 +26,9 @@ export const updateBoardSchema = z.object({
 export const createCardSchema = z.object({
   originalImageBase64: base64ImageString.optional(),
   label: z.string().max(200).optional(),
+  // Admin-only: when true, the supplied label is used verbatim and the AI
+  // label step is skipped (illustration still runs). Ignored for non-admins.
+  skipLabeling: z.boolean().optional(),
 });
 
 // PATCH /api/boards/[boardId]/cards

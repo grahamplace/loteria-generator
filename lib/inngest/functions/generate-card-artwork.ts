@@ -64,13 +64,25 @@ export const generateCardArtwork = inngest.createFunction(
     },
   },
   async ({ event, step }) => {
-    const { cardId, boardId, userId, originalImageUrl } = event.data;
+    const { cardId, boardId, userId, originalImageUrl, skipLabeling } = event.data;
     const ch = cardChannel({ cardId });
 
     // Each branch refetches the original image inside its own step so the raw
     // bytes never cross a step boundary. Inngest caps step output at ~4MB, and
     // a large base64 PNG would exceed that.
     const labelPromise = (async () => {
+      if (skipLabeling) {
+        const label = await step.run('load-existing-label', async () => {
+          const card = await db.query.cards.findFirst({
+            where: eq(cards.id, cardId),
+            columns: { label: true },
+          });
+          return card?.label ?? '';
+        });
+        await step.realtime.publish('publish-label', ch.label, { label });
+        return label;
+      }
+
       const label = await step.run('generate-label', async () => {
         const { buffer, contentType } = await fetchBlob(originalImageUrl);
         const mime = OPENAI_IMAGE_MIME_TO_EXT[contentType] ? contentType : 'image/png';
@@ -148,7 +160,7 @@ export const generateCardArtwork = inngest.createFunction(
       await db
         .update(cards)
         .set({
-          label,
+          ...(skipLabeling ? {} : { label }),
           illustrationUrl,
           status: 'completed',
           errorMessage: null,

@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { db, boards, userProfiles } from '@/db';
 import { eq, desc } from 'drizzle-orm';
 import { createBoardSchema } from '@/lib/validations';
+import { isAdminEmail } from '@/lib/admin';
 
 /**
  * GET /api/boards - List all boards for the current user
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
       );
     }
     const { name } = parsed.data;
+    const isAdmin = isAdminEmail(session.user.email);
 
     // Ensure user profile exists
     const existingProfile = await db.query.userProfiles.findFirst({
@@ -117,7 +119,7 @@ export async function POST(request: NextRequest) {
     const unlockedCount = existingBoards.filter((b) => b.isUnlocked).length;
     const maxBoards = unlockedCount + 1;
 
-    if (existingBoards.length >= maxBoards) {
+    if (!isAdmin && existingBoards.length >= maxBoards) {
       return NextResponse.json(
         {
           error: 'Board limit reached',
@@ -128,12 +130,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the board
+    // Create the board. Admin-created boards are unlocked so the bulk-upload
+    // tool can add a full 54-card deck. This applies to ANY board the admin
+    // creates via this route (including the normal dashboard flow) — acceptable
+    // since the admin is a single trusted internal account.
     const [newBoard] = await db
       .insert(boards)
       .values({
         userId: session.user.id,
         name: name || 'My Loteria Board',
+        isUnlocked: isAdmin,
       })
       .returning();
 

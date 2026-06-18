@@ -15,6 +15,7 @@ import { inngest } from '@/lib/inngest/client';
 import { cardGenerateRequested } from '@/lib/inngest/events';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { getPostHogClient } from '@/lib/posthog-server';
+import { isAdminEmail } from '@/lib/admin';
 
 // Constants for limits
 const MAX_CARDS_FREE = 4;
@@ -86,6 +87,9 @@ export async function POST(
     }
     const { originalImageBase64, label } = parsed.data;
 
+    const isAdmin = isAdminEmail(session.user.email);
+    const skipLabeling = isAdmin && parsed.data.skipLabeling === true;
+
     // Verify board ownership
     const board = await db.query.boards.findFirst({
       where: and(eq(boards.id, boardId), eq(boards.userId, session.user.id)),
@@ -102,7 +106,7 @@ export async function POST(
 
     const maxCards = board.isUnlocked ? MAX_CARDS_UNLOCKED : MAX_CARDS_FREE;
 
-    if (existingCards.length >= maxCards) {
+    if (!isAdmin && existingCards.length >= maxCards) {
       return NextResponse.json(
         {
           error: 'Card limit reached',
@@ -118,7 +122,7 @@ export async function POST(
     // Check AI generation limit before creating the card so over-limit uploads
     // are rejected up front (the Inngest job increments the counter on success).
     const skipAIProcessing = process.env.NEXT_PUBLIC_SKIP_AI_PROCESSING === 'true';
-    if (originalImageBase64 && !skipAIProcessing) {
+    if (originalImageBase64 && !skipAIProcessing && !isAdmin) {
       const generationLimit = board.isUnlocked
         ? IMAGE_GENERATION_LIMIT_PAID
         : IMAGE_GENERATION_LIMIT_FREE;
@@ -198,6 +202,7 @@ export async function POST(
               boardId,
               userId: session.user.id,
               originalImageUrl: originalUrl,
+              skipLabeling,
             })
           );
           const posthog = getPostHogClient();

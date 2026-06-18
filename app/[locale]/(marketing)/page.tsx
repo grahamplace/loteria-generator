@@ -12,6 +12,7 @@ import weddingCouplePhoto from '@/scripts/example-images/source-photos/01-weddin
 import familyPhoto from '@/scripts/example-images/source-photos/07-family-portrait.jpg';
 import birthdayCandlesPhoto from '@/scripts/example-images/source-photos/05-birthday-candles.jpg';
 import { auth } from '@/lib/auth';
+import { isAdminEmail } from '@/lib/admin';
 import { LandingHero } from '@/components/landing-hero';
 import { HeroCard } from '@/components/hero-card';
 import { TablaBoard } from '@/components/tabla-board';
@@ -82,7 +83,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (session?.user) {
-    redirect('/dashboard');
+    redirect(isAdminEmail(session.user.email) ? '/admin' : '/dashboard');
   }
 
   const tHowItWorks = await getTranslations('Marketing.HowItWorks');
