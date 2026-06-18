@@ -1,6 +1,7 @@
 import { db, boards, user } from '@/db';
 import { desc, eq, sql, gt } from 'drizzle-orm';
 import { AdminBreadcrumb } from '../components/admin-breadcrumb';
+import { AdminBulkUpload } from '../components/admin-bulk-upload';
 import { BoardList } from '../components/board-list';
 
 async function getBoards() {
@@ -36,6 +37,7 @@ export default async function AdminBoardsPage() {
   return (
     <div className="space-y-4">
       <AdminBreadcrumb items={[{ label: 'Boards' }]} />
+      <AdminBulkUpload />
       <h2 className="text-lg font-semibold">Boards ({boardList.length})</h2>
       <BoardList boards={boardList} />
     </div>
