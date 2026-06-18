@@ -7,6 +7,7 @@ export const cardGenerateRequested = eventType('card/generate.requested', {
     boardId: z.string().uuid(),
     userId: z.string(),
     originalImageUrl: z.string().url(),
+    skipLabeling: z.boolean().optional(),
   }),
 });
 
