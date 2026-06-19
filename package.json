@@ -96,6 +96,7 @@
     "react-day-picker": "9.8.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.60.0",
+    "react-image-crop": "^11.0.10",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.4",
     "sharp": "^0.34.5",
