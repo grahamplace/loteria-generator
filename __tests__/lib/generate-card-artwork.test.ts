@@ -8,6 +8,9 @@ const { captured, updateSetSpy, cardsFindFirst, chatCreate, imagesEdit } = vi.ho
   imagesEdit: vi.fn(),
 }));
 
+const { extractCrop } = vi.hoisted(() => ({ extractCrop: vi.fn(async (b: Buffer) => b) }));
+vi.mock('@/lib/crop-region', () => ({ extractCrop }));
+
 vi.mock('@/lib/inngest/client', () => ({
   inngest: {
     createFunction: (_config: unknown, handler: (arg: unknown) => Promise<unknown>) => {
@@ -127,5 +130,72 @@ describe('generate-card-artwork skipLabeling', () => {
     expect(chatCreate).toHaveBeenCalledOnce();
     const persisted = persistCall();
     expect(persisted!.label).toBe('La Luna');
+  });
+});
+
+describe('generate-card-artwork skipIllustration', () => {
+  it('preserves the original image as the card face and skips AI illustration + counter', async () => {
+    chatCreate.mockResolvedValue({ choices: [{ message: { content: 'La Luna' } }] });
+    const { runNames, step } = makeStep();
+
+    await captured.handler!({
+      event: {
+        data: {
+          cardId: CARD,
+          boardId: BOARD,
+          userId: 'u1',
+          originalImageUrl: 'https://blob/o.png',
+          skipIllustration: true,
+        },
+      },
+      step,
+    });
+
+    expect(imagesEdit).not.toHaveBeenCalled();
+    expect(runNames).not.toContain('generate-and-upload-illustration');
+    const persisted = persistCall();
+    expect(persisted!.illustrationUrl).toBe('https://blob/o.png');
+    const touchedCounter = updateSetSpy.mock.calls
+      .map((c) => c[0] as Record<string, unknown>)
+      .some((v) => 'imageGenerationsUsed' in v);
+    expect(touchedCounter).toBe(false);
+  });
+});
+
+describe('generate-card-artwork cropData (AI branch)', () => {
+  it('crops the source before AI when cropData is present', async () => {
+    chatCreate.mockResolvedValue({ choices: [{ message: { content: 'La Luna' } }] });
+    const { step } = makeStep();
+    await captured.handler!({
+      event: {
+        data: {
+          cardId: CARD,
+          boardId: BOARD,
+          userId: 'u1',
+          originalImageUrl: 'https://blob/o.png',
+          cropData: { x: 1, y: 2, width: 3, height: 4 },
+        },
+      },
+      step,
+    });
+    expect(extractCrop).toHaveBeenCalled();
+    expect(imagesEdit).toHaveBeenCalled();
+  });
+
+  it('does not crop when cropData is absent', async () => {
+    chatCreate.mockResolvedValue({ choices: [{ message: { content: 'La Luna' } }] });
+    const { step } = makeStep();
+    await captured.handler!({
+      event: {
+        data: {
+          cardId: CARD,
+          boardId: BOARD,
+          userId: 'u1',
+          originalImageUrl: 'https://blob/o.png',
+        },
+      },
+      step,
+    });
+    expect(extractCrop).not.toHaveBeenCalled();
   });
 });

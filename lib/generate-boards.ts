@@ -424,6 +424,9 @@ async function renderBoardToCanvas(
       const card = board[cardIndex];
       const img = cardImages[cardIndex];
 
+      // A partial board (fewer than 16 cards) leaves trailing grid cells empty.
+      if (!card || !img) continue;
+
       const x = offsetX + col * (cardWidth + cardSpacing);
       const y = offsetY + row * (cardHeight + cardSpacing);
 
@@ -590,4 +593,43 @@ export async function generateLoteriaSetPdf(
   onProgress?.('Creating PDF…');
   const pdfBlob = pdf.output('blob');
   return pdfBlob;
+}
+
+/**
+ * Generates a "preview boards" PDF: every card laid out in order (by card
+ * number) into the actual 4×4 board layout, 16 cards per page. The final page
+ * may contain fewer than 16 cards — remaining grid cells are left empty.
+ *
+ * Unlike generateLoteriaSetPdf, this does not randomize/dedupe boards or add
+ * deck/caller-sheet pages. It is a sequential preview of the full card set.
+ */
+export async function generatePreviewBoardsPdf(
+  cards: LotteriaCard[],
+  styleOptions: BoardStyleOptions = {},
+  onProgress?: (message: string) => void
+): Promise<Blob> {
+  const orderedCards = cards
+    .filter((c) => !c.isProcessing && !c.error)
+    .sort((a, b) => a.number - b.number);
+
+  if (orderedCards.length === 0) {
+    throw new Error('No completed cards to preview');
+  }
+
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'in', format: 'letter' });
+
+  const cardsPerBoard = 16;
+  const totalPages = Math.ceil(orderedCards.length / cardsPerBoard);
+
+  for (let i = 0; i < totalPages; i++) {
+    onProgress?.(`Generating preview board ${i + 1} of ${totalPages}…`);
+    if (i > 0) pdf.addPage('letter', 'portrait');
+    const pageCards = orderedCards.slice(i * cardsPerBoard, (i + 1) * cardsPerBoard);
+    const canvas = await renderBoardToCanvas(pageCards, styleOptions);
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
+  }
+
+  onProgress?.('Creating PDF…');
+  return pdf.output('blob');
 }

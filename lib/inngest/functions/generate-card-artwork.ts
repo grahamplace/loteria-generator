@@ -4,6 +4,7 @@ import { db, boards, cards } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
 import { ILLUSTRATION_PROMPT } from '@/lib/illustration-prompt';
 import { normalizeImageForOpenAI } from '@/lib/image-normalize';
+import { extractCrop } from '@/lib/crop-region';
 
 export const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
   'image/png': 'png',
@@ -64,7 +65,8 @@ export const generateCardArtwork = inngest.createFunction(
     },
   },
   async ({ event, step }) => {
-    const { cardId, boardId, userId, originalImageUrl, skipLabeling } = event.data;
+    const { cardId, boardId, userId, originalImageUrl, skipLabeling, skipIllustration, cropData } =
+      event.data;
     const ch = cardChannel({ cardId });
 
     // Each branch refetches the original image inside its own step so the raw
@@ -118,6 +120,14 @@ export const generateCardArtwork = inngest.createFunction(
     })();
 
     const illustrationPromise = (async () => {
+      if (skipIllustration) {
+        // Preserve the uploaded (cropped) photo as the card face — no AI.
+        await step.realtime.publish('publish-illustration', ch.illustration, {
+          illustrationUrl: originalImageUrl,
+        });
+        return originalImageUrl;
+      }
+
       const illustrationUrl = await step.run('generate-and-upload-illustration', async () => {
         const { buffer, contentType } = await fetchBlob(originalImageUrl);
         if (!OPENAI_IMAGE_MIME_TO_EXT[contentType]) {
@@ -125,7 +135,8 @@ export const generateCardArtwork = inngest.createFunction(
             `Unsupported image format "${contentType}". Please upload PNG, JPEG, WebP, or GIF.`
           );
         }
-        const normalized = await normalizeImageForOpenAI(buffer);
+        const sourceBuffer = cropData ? await extractCrop(buffer, cropData) : buffer;
+        const normalized = await normalizeImageForOpenAI(sourceBuffer);
         const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
         const illustrationModel =
           process.env.NODE_ENV === 'production' ? 'gpt-image-2' : 'gpt-image-1-mini';
@@ -169,15 +180,17 @@ export const generateCardArtwork = inngest.createFunction(
         .where(eq(cards.id, cardId));
     });
 
-    await step.run('increment-generation-counter', async () => {
-      await db
-        .update(boards)
-        .set({
-          imageGenerationsUsed: sql`${boards.imageGenerationsUsed} + 1`,
-          updatedAt: new Date(),
-        })
-        .where(eq(boards.id, boardId));
-    });
+    if (!skipIllustration) {
+      await step.run('increment-generation-counter', async () => {
+        await db
+          .update(boards)
+          .set({
+            imageGenerationsUsed: sql`${boards.imageGenerationsUsed} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(eq(boards.id, boardId));
+      });
+    }
 
     await step.run('invalidate-preview', async () => {
       await invalidateBoardPreview(boardId, userId);

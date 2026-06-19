@@ -1,8 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { filenameToLabel } from '@/lib/filename-label';
+import { type PixelRect } from '@/lib/crop-image';
+import { downscaleToDataUrl } from '@/lib/downscale-image';
+import { scaleRect } from '@/lib/crop-math';
+import { ImageCropModal } from './image-crop-modal';
 
 type FileStatus = 'pending' | 'uploading' | 'done' | 'error';
 
@@ -11,32 +15,46 @@ interface FileItem {
   label: string;
   status: FileStatus;
   error?: string;
-}
-
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
+  crop?: PixelRect;
+  previewUrl: string;
 }
 
 export function AdminBulkUpload() {
   const router = useRouter();
   const [name, setName] = useState('Admin Board');
   const [useFilenameLabels, setUseFilenameLabels] = useState(true);
+  const [reIllustrate, setReIllustrate] = useState(false);
   const [items, setItems] = useState<FileItem[]>([]);
+  const [cropIndex, setCropIndex] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Revoke any outstanding preview object URLs when the component unmounts
+  // (e.g. after navigating to the new board). Re-selection revokes the prior
+  // batch inline in onFilesSelected.
+  const itemsRef = useRef<FileItem[]>([]);
+  itemsRef.current = items;
+  useEffect(() => () => itemsRef.current.forEach((it) => URL.revokeObjectURL(it.previewUrl)), []);
+
   function onFilesSelected(fileList: FileList | null) {
     if (!fileList) return;
-    const next: FileItem[] = Array.from(fileList)
-      .filter((f) => f.type.startsWith('image/'))
-      .map((file) => ({ file, label: filenameToLabel(file.name), status: 'pending' as const }));
-    setItems(next);
+    setItems((prev) => {
+      prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+      return Array.from(fileList)
+        .filter((f) => f.type.startsWith('image/'))
+        .map((file) => ({
+          file,
+          label: filenameToLabel(file.name),
+          status: 'pending' as const,
+          previewUrl: URL.createObjectURL(file),
+        }));
+    });
     setError(null);
+  }
+
+  function saveCrop(rect: PixelRect) {
+    setItems((prev) => prev.map((it, idx) => (idx === cropIndex ? { ...it, crop: rect } : it)));
+    setCropIndex(null);
   }
 
   async function handleCreate() {
@@ -59,18 +77,27 @@ export function AdminBulkUpload() {
       return;
     }
 
+    const skipIllustration = !reIllustrate;
     let succeeded = 0;
     for (let i = 0; i < items.length; i++) {
       setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, status: 'uploading' } : it)));
       try {
-        const base64 = await readAsDataUrl(items[i].file);
-        const label = useFilenameLabels ? items[i].label : '';
+        const item = items[i];
+        const { dataUrl, scale } = await downscaleToDataUrl(item.file, 2048);
+        const cropData = item.crop ? scaleRect(item.crop, scale) : undefined;
+        const label = useFilenameLabels ? item.label : '';
         // If the toggle is on but the derived label is empty, fall back to AI.
         const skipLabeling = useFilenameLabels && label.length > 0;
         const res = await fetch(`/api/boards/${boardId}/cards`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ originalImageBase64: base64, label, skipLabeling }),
+          body: JSON.stringify({
+            originalImageBase64: dataUrl,
+            label,
+            skipLabeling,
+            skipIllustration,
+            cropData,
+          }),
         });
         if (!res.ok) throw new Error('Upload failed');
         succeeded++;
@@ -86,8 +113,6 @@ export function AdminBulkUpload() {
       }
     }
 
-    // Only leave for the board if at least one card was created; otherwise keep
-    // the per-file error states visible so the admin can see what went wrong.
     if (succeeded > 0) {
       router.push(`/admin/boards/${boardId}`);
       return;
@@ -114,6 +139,15 @@ export function AdminBulkUpload() {
         />
       </div>
 
+      <label className="mb-2 flex items-center gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          checked={reIllustrate}
+          onChange={(e) => setReIllustrate(e.target.checked)}
+        />
+        Re-illustrate with AI
+      </label>
+
       <label className="mb-3 flex items-center gap-2 text-sm text-foreground">
         <input
           type="checkbox"
@@ -134,16 +168,33 @@ export function AdminBulkUpload() {
       </div>
 
       {items.length > 0 && (
-        <ul className="mb-3 max-h-64 overflow-auto rounded-md border border-foreground/10 text-sm">
+        <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
           {items.map((it, idx) => (
-            <li key={idx} className="flex items-center justify-between gap-2 px-3 py-1.5">
-              <span className="min-w-0 truncate">{it.file.name}</span>
-              <span className="shrink-0 text-foreground/60">
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setCropIndex(idx)}
+              className="group relative overflow-hidden rounded-md border border-foreground/10 focus-visible:outline-2 focus-visible:outline-primary"
+              style={{ touchAction: 'manipulation' }}
+              title={`${it.file.name} — click to crop`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={it.previewUrl}
+                alt={it.file.name}
+                className="aspect-[2/3] w-full object-cover"
+              />
+              {it.crop && (
+                <span className="absolute left-1 top-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  cropped
+                </span>
+              )}
+              <span className="absolute inset-x-0 bottom-0 truncate bg-black/50 px-1 py-0.5 text-[10px] text-white">
                 {useFilenameLabels ? it.label || '(AI label)' : '(AI label)'} · {it.status}
               </span>
-            </li>
+            </button>
           ))}
-        </ul>
+        </div>
       )}
 
       {error && (
@@ -161,6 +212,15 @@ export function AdminBulkUpload() {
       >
         {submitting ? 'Creating…' : 'Create board'}
       </button>
+
+      {cropIndex !== null && items[cropIndex] && (
+        <ImageCropModal
+          src={items[cropIndex].previewUrl}
+          initialCrop={items[cropIndex].crop}
+          onSave={saveCrop}
+          onCancel={() => setCropIndex(null)}
+        />
+      )}
     </section>
   );
 }

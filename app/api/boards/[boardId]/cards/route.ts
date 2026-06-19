@@ -89,6 +89,8 @@ export async function POST(
 
     const isAdmin = isAdminEmail(session.user.email);
     const skipLabeling = isAdmin && parsed.data.skipLabeling === true;
+    const skipIllustration = isAdmin && parsed.data.skipIllustration === true;
+    const cropData = isAdmin ? (parsed.data.cropData ?? null) : null;
 
     // Verify board ownership
     const board = await db.query.boards.findFirst({
@@ -154,6 +156,8 @@ export async function POST(
         number: sql`COALESCE((SELECT MAX(${cards.number}) FROM ${cards} WHERE ${cards.boardId} = ${boardId}), 0) + 1`,
         label: label || '',
         status: initialStatus,
+        preserveOriginal: skipIllustration,
+        cropData,
       })
       .returning();
 
@@ -186,37 +190,58 @@ export async function POST(
             buffer,
             contentType
           );
-
-          // Update card with image URL
-          await db
-            .update(cards)
-            .set({ originalImageUrl: originalUrl })
-            .where(eq(cards.id, newCard.id));
-
           newCard.originalImageUrl = originalUrl;
 
-          // Hand off AI generation to the Inngest background job.
-          await inngest.send(
-            cardGenerateRequested.create({
-              cardId: newCard.id,
-              boardId,
-              userId: session.user.id,
-              originalImageUrl: originalUrl,
-              skipLabeling,
-            })
-          );
-          const posthog = getPostHogClient();
-          if (posthog) {
-            posthog.capture({
-              distinctId: session.user.id,
-              event: 'card_upload_started',
-              properties: {
-                board_id: boardId,
-                card_id: newCard.id,
-                board_is_unlocked: board.isUnlocked,
-              },
-            });
-            await posthog.shutdown();
+          if (skipIllustration && skipLabeling) {
+            // No AI work is required: the uploaded photo is preserved as the
+            // card face (cropped at serve time) with a filename label. Finalize
+            // the card in-request so it never enters a background "processing"
+            // state and never depends on the Inngest worker running. (Routing it
+            // through Inngest would leave it stuck "processing" whenever the
+            // worker is down, and make it eligible for AI retry/regenerate.)
+            await db
+              .update(cards)
+              .set({
+                originalImageUrl: originalUrl,
+                illustrationUrl: originalUrl,
+                status: 'completed',
+                updatedAt: new Date(),
+              })
+              .where(eq(cards.id, newCard.id));
+            newCard.illustrationUrl = originalUrl;
+            newCard.status = 'completed';
+          } else {
+            // Update card with image URL
+            await db
+              .update(cards)
+              .set({ originalImageUrl: originalUrl })
+              .where(eq(cards.id, newCard.id));
+
+            // Hand off AI generation (label and/or illustration) to Inngest.
+            await inngest.send(
+              cardGenerateRequested.create({
+                cardId: newCard.id,
+                boardId,
+                userId: session.user.id,
+                originalImageUrl: originalUrl,
+                skipLabeling,
+                skipIllustration,
+                cropData: cropData ?? undefined,
+              })
+            );
+            const posthog = getPostHogClient();
+            if (posthog) {
+              posthog.capture({
+                distinctId: session.user.id,
+                event: 'card_upload_started',
+                properties: {
+                  board_id: boardId,
+                  card_id: newCard.id,
+                  board_is_unlocked: board.isUnlocked,
+                },
+              });
+              await posthog.shutdown();
+            }
           }
         }
       } catch (uploadError) {
@@ -256,6 +281,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const isAdmin = isAdminEmail(session.user.email);
+
     const { boardId } = await params;
     const body = await request.json();
     const parsed = updateCardSchema.safeParse(body);
@@ -265,7 +292,8 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    const { cardId, label, riddle, illustrationBase64, status, errorMessage } = parsed.data;
+    const { cardId, label, riddle, illustrationBase64, status, errorMessage, cropData } =
+      parsed.data;
 
     // Verify ownership
     const card = await db.query.cards.findFirst({
@@ -299,6 +327,10 @@ export async function PATCH(
 
     if (errorMessage !== undefined) {
       updateData.errorMessage = errorMessage;
+    }
+
+    if (isAdmin && cropData !== undefined) {
+      updateData.cropData = cropData;
     }
 
     // Upload illustration if provided

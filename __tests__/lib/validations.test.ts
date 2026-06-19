@@ -42,3 +42,40 @@ describe('createCardSchema skipLabeling', () => {
     expect(parsed.success).toBe(false);
   });
 });
+
+describe('createCardSchema skipIllustration', () => {
+  it('accepts skipIllustration true', () => {
+    const parsed = createCardSchema.safeParse({ label: 'El Sol', skipIllustration: true });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.skipIllustration).toBe(true);
+  });
+
+  it('is optional', () => {
+    expect(createCardSchema.safeParse({ label: 'El Sol' }).success).toBe(true);
+  });
+
+  it('rejects non-boolean skipIllustration', () => {
+    expect(createCardSchema.safeParse({ skipIllustration: 'yes' }).success).toBe(false);
+  });
+});
+
+describe('cropData on card schemas', () => {
+  const crop = { x: 1, y: 2, width: 3, height: 4 };
+  it('createCardSchema accepts cropData', () => {
+    const p = createCardSchema.safeParse({ skipIllustration: true, cropData: crop });
+    expect(p.success).toBe(true);
+    if (p.success) expect(p.data.cropData).toEqual(crop);
+  });
+  it('updateCardSchema accepts cropData', () => {
+    const p = updateCardSchema.safeParse({
+      cardId: '11111111-1111-1111-1111-111111111111',
+      cropData: crop,
+    });
+    expect(p.success).toBe(true);
+  });
+  it('rejects malformed cropData', () => {
+    expect(
+      createCardSchema.safeParse({ cropData: { x: 'a', y: 2, width: 3, height: 4 } }).success
+    ).toBe(false);
+  });
+});
