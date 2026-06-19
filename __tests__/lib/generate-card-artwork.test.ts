@@ -129,3 +129,32 @@ describe('generate-card-artwork skipLabeling', () => {
     expect(persisted!.label).toBe('La Luna');
   });
 });
+
+describe('generate-card-artwork skipIllustration', () => {
+  it('preserves the original image as the card face and skips AI illustration + counter', async () => {
+    chatCreate.mockResolvedValue({ choices: [{ message: { content: 'La Luna' } }] });
+    const { runNames, step } = makeStep();
+
+    await captured.handler!({
+      event: {
+        data: {
+          cardId: CARD,
+          boardId: BOARD,
+          userId: 'u1',
+          originalImageUrl: 'https://blob/o.png',
+          skipIllustration: true,
+        },
+      },
+      step,
+    });
+
+    expect(imagesEdit).not.toHaveBeenCalled();
+    expect(runNames).not.toContain('generate-and-upload-illustration');
+    const persisted = persistCall();
+    expect(persisted!.illustrationUrl).toBe('https://blob/o.png');
+    const touchedCounter = updateSetSpy.mock.calls
+      .map((c) => c[0] as Record<string, unknown>)
+      .some((v) => 'imageGenerationsUsed' in v);
+    expect(touchedCounter).toBe(false);
+  });
+});

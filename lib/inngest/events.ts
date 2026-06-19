@@ -8,6 +8,7 @@ export const cardGenerateRequested = eventType('card/generate.requested', {
     userId: z.string(),
     originalImageUrl: z.string().url(),
     skipLabeling: z.boolean().optional(),
+    skipIllustration: z.boolean().optional(),
   }),
 });
 

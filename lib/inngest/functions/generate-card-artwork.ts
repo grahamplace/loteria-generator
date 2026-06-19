@@ -64,7 +64,8 @@ export const generateCardArtwork = inngest.createFunction(
     },
   },
   async ({ event, step }) => {
-    const { cardId, boardId, userId, originalImageUrl, skipLabeling } = event.data;
+    const { cardId, boardId, userId, originalImageUrl, skipLabeling, skipIllustration } =
+      event.data;
     const ch = cardChannel({ cardId });
 
     // Each branch refetches the original image inside its own step so the raw
@@ -118,6 +119,14 @@ export const generateCardArtwork = inngest.createFunction(
     })();
 
     const illustrationPromise = (async () => {
+      if (skipIllustration) {
+        // Preserve the uploaded (cropped) photo as the card face — no AI.
+        await step.realtime.publish('publish-illustration', ch.illustration, {
+          illustrationUrl: originalImageUrl,
+        });
+        return originalImageUrl;
+      }
+
       const illustrationUrl = await step.run('generate-and-upload-illustration', async () => {
         const { buffer, contentType } = await fetchBlob(originalImageUrl);
         if (!OPENAI_IMAGE_MIME_TO_EXT[contentType]) {
@@ -169,15 +178,17 @@ export const generateCardArtwork = inngest.createFunction(
         .where(eq(cards.id, cardId));
     });
 
-    await step.run('increment-generation-counter', async () => {
-      await db
-        .update(boards)
-        .set({
-          imageGenerationsUsed: sql`${boards.imageGenerationsUsed} + 1`,
-          updatedAt: new Date(),
-        })
-        .where(eq(boards.id, boardId));
-    });
+    if (!skipIllustration) {
+      await step.run('increment-generation-counter', async () => {
+        await db
+          .update(boards)
+          .set({
+            imageGenerationsUsed: sql`${boards.imageGenerationsUsed} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(eq(boards.id, boardId));
+      });
+    }
 
     await step.run('invalidate-preview', async () => {
       await invalidateBoardPreview(boardId, userId);
