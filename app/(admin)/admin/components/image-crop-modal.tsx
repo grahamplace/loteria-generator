@@ -6,21 +6,21 @@ import 'react-image-crop/dist/ReactCrop.css';
 import { scaleCropToNatural, type PixelRect } from '@/lib/crop-image';
 
 interface ImageCropModalProps {
-  file: File;
+  src: string;
+  initialCrop?: PixelRect;
   onSave: (rect: PixelRect) => void;
   onCancel: () => void;
 }
 
-export function ImageCropModal({ file, onSave, onCancel }: ImageCropModalProps) {
-  const [crop, setCrop] = useState<Crop>();
-  const [completed, setCompleted] = useState<PixelCrop>();
+export function ImageCropModal({ src, initialCrop, onSave, onCancel }: ImageCropModalProps) {
+  const [crop, setCrop] = useState<Crop | undefined>(
+    initialCrop ? { unit: 'px', ...initialCrop } : undefined
+  );
+  const [completed, setCompleted] = useState<PixelCrop | undefined>(
+    initialCrop ? { unit: 'px', ...initialCrop } : undefined
+  );
   const imgRef = useRef<HTMLImageElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const [src] = useState(() => URL.createObjectURL(file));
-
-  useEffect(() => {
-    return () => URL.revokeObjectURL(src);
-  }, [src]);
 
   // Move focus into the dialog on open and close it on Escape (APG dialog basics).
   useEffect(() => {

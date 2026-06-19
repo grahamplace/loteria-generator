@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { filenameToLabel } from '@/lib/filename-label';
-import { getCroppedDataUrl, type PixelRect } from '@/lib/crop-image';
+import { type PixelRect } from '@/lib/crop-image';
+import { downscaleToDataUrl } from '@/lib/downscale-image';
+import { scaleRect } from '@/lib/crop-region';
 import { ImageCropModal } from './image-crop-modal';
 
 type FileStatus = 'pending' | 'uploading' | 'done' | 'error';
@@ -16,17 +18,6 @@ interface FileItem {
   crop?: PixelRect;
   previewUrl: string;
 }
-
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-const mimeForCrop = (file: File) => (file.type === 'image/png' ? 'image/png' : 'image/jpeg');
 
 export function AdminBulkUpload() {
   const router = useRouter();
@@ -92,9 +83,8 @@ export function AdminBulkUpload() {
       setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, status: 'uploading' } : it)));
       try {
         const item = items[i];
-        const base64 = item.crop
-          ? await getCroppedDataUrl(item.file, item.crop, mimeForCrop(item.file))
-          : await readAsDataUrl(item.file);
+        const { dataUrl, scale } = await downscaleToDataUrl(item.file, 2048);
+        const cropData = item.crop ? scaleRect(item.crop, scale) : undefined;
         const label = useFilenameLabels ? item.label : '';
         // If the toggle is on but the derived label is empty, fall back to AI.
         const skipLabeling = useFilenameLabels && label.length > 0;
@@ -102,10 +92,11 @@ export function AdminBulkUpload() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            originalImageBase64: base64,
+            originalImageBase64: dataUrl,
             label,
             skipLabeling,
             skipIllustration,
+            cropData,
           }),
         });
         if (!res.ok) throw new Error('Upload failed');
@@ -224,7 +215,8 @@ export function AdminBulkUpload() {
 
       {cropIndex !== null && items[cropIndex] && (
         <ImageCropModal
-          file={items[cropIndex].file}
+          src={items[cropIndex].previewUrl}
+          initialCrop={items[cropIndex].crop}
           onSave={saveCrop}
           onCancel={() => setCropIndex(null)}
         />
