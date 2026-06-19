@@ -15,11 +15,24 @@ export function ImageCropModal({ file, onSave, onCancel }: ImageCropModalProps) 
   const [crop, setCrop] = useState<Crop>();
   const [completed, setCompleted] = useState<PixelCrop>();
   const imgRef = useRef<HTMLImageElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [src] = useState(() => URL.createObjectURL(file));
 
   useEffect(() => {
     return () => URL.revokeObjectURL(src);
   }, [src]);
+
+  // Move focus into the dialog on open and close it on Escape (APG dialog basics).
+  useEffect(() => {
+    panelRef.current?.focus();
+  }, []);
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onCancel();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onCancel]);
 
   function handleSave() {
     const img = imgRef.current;
@@ -47,7 +60,11 @@ export function ImageCropModal({ file, onSave, onCancel }: ImageCropModalProps) 
       aria-label="Crop image"
       style={{ overscrollBehavior: 'contain' }}
     >
-      <div className="max-h-[90vh] max-w-2xl overflow-auto rounded-lg bg-background p-4 shadow-lg">
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="max-h-[90vh] max-w-2xl overflow-auto rounded-lg bg-background p-4 shadow-lg focus:outline-none"
+      >
         <h3 className="mb-2 text-base font-semibold text-foreground">Crop image</h3>
         <p className="mb-3 text-sm text-foreground/60">
           Drag to select the part of the photo to use. Cancel to keep the full image.

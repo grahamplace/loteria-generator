@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { filenameToLabel } from '@/lib/filename-label';
 import { getCroppedDataUrl, type PixelRect } from '@/lib/crop-image';
@@ -37,6 +37,13 @@ export function AdminBulkUpload() {
   const [cropIndex, setCropIndex] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Revoke any outstanding preview object URLs when the component unmounts
+  // (e.g. after navigating to the new board). Re-selection revokes the prior
+  // batch inline in onFilesSelected.
+  const itemsRef = useRef<FileItem[]>([]);
+  itemsRef.current = items;
+  useEffect(() => () => itemsRef.current.forEach((it) => URL.revokeObjectURL(it.previewUrl)), []);
 
   function onFilesSelected(fileList: FileList | null) {
     if (!fileList) return;
