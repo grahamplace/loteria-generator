@@ -29,6 +29,9 @@ export const createCardSchema = z.object({
   // Admin-only: when true, the supplied label is used verbatim and the AI
   // label step is skipped (illustration still runs). Ignored for non-admins.
   skipLabeling: z.boolean().optional(),
+  // Admin-only: when true, preserve the uploaded image as the card face and
+  // skip AI illustration. Ignored for non-admins.
+  skipIllustration: z.boolean().optional(),
 });
 
 // PATCH /api/boards/[boardId]/cards

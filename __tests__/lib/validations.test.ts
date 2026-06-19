@@ -42,3 +42,19 @@ describe('createCardSchema skipLabeling', () => {
     expect(parsed.success).toBe(false);
   });
 });
+
+describe('createCardSchema skipIllustration', () => {
+  it('accepts skipIllustration true', () => {
+    const parsed = createCardSchema.safeParse({ label: 'El Sol', skipIllustration: true });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.skipIllustration).toBe(true);
+  });
+
+  it('is optional', () => {
+    expect(createCardSchema.safeParse({ label: 'El Sol' }).success).toBe(true);
+  });
+
+  it('rejects non-boolean skipIllustration', () => {
+    expect(createCardSchema.safeParse({ skipIllustration: 'yes' }).success).toBe(false);
+  });
+});
