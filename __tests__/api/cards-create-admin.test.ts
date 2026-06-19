@@ -220,3 +220,45 @@ describe('POST /api/boards/[boardId]/cards persists preserveOriginal + cropData'
     expect(insertValuesSpy.mock.calls[0][0].cropData ?? null).toBeNull();
   });
 });
+
+describe('POST /api/boards/[boardId]/cards finalizes no-AI preserve cards synchronously', () => {
+  it('admin: skipIllustration + skipLabeling completes the card without Inngest', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN as never);
+    boardsFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'admin-1',
+      isUnlocked: true,
+      imageGenerationsUsed: 0,
+    });
+    const res = await POST(
+      makeReq({
+        originalImageBase64: IMG,
+        label: 'El Perro',
+        skipIllustration: true,
+        skipLabeling: true,
+      }),
+      { params }
+    );
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.card.status).toBe('completed');
+    expect(body.card.illustrationUrl).toBe('https://blob/original.png');
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it('admin: skipIllustration with AI labeling still uses Inngest', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN as never);
+    boardsFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'admin-1',
+      isUnlocked: true,
+      imageGenerationsUsed: 0,
+    });
+    const res = await POST(
+      makeReq({ originalImageBase64: IMG, label: '', skipIllustration: true, skipLabeling: false }),
+      { params }
+    );
+    expect(res.status).toBe(201);
+    expect(sendMock).toHaveBeenCalledOnce();
+  });
+});

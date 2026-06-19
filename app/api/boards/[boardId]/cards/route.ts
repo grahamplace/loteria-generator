@@ -190,39 +190,58 @@ export async function POST(
             buffer,
             contentType
           );
-
-          // Update card with image URL
-          await db
-            .update(cards)
-            .set({ originalImageUrl: originalUrl })
-            .where(eq(cards.id, newCard.id));
-
           newCard.originalImageUrl = originalUrl;
 
-          // Hand off AI generation to the Inngest background job.
-          await inngest.send(
-            cardGenerateRequested.create({
-              cardId: newCard.id,
-              boardId,
-              userId: session.user.id,
-              originalImageUrl: originalUrl,
-              skipLabeling,
-              skipIllustration,
-              cropData: cropData ?? undefined,
-            })
-          );
-          const posthog = getPostHogClient();
-          if (posthog) {
-            posthog.capture({
-              distinctId: session.user.id,
-              event: 'card_upload_started',
-              properties: {
-                board_id: boardId,
-                card_id: newCard.id,
-                board_is_unlocked: board.isUnlocked,
-              },
-            });
-            await posthog.shutdown();
+          if (skipIllustration && skipLabeling) {
+            // No AI work is required: the uploaded photo is preserved as the
+            // card face (cropped at serve time) with a filename label. Finalize
+            // the card in-request so it never enters a background "processing"
+            // state and never depends on the Inngest worker running. (Routing it
+            // through Inngest would leave it stuck "processing" whenever the
+            // worker is down, and make it eligible for AI retry/regenerate.)
+            await db
+              .update(cards)
+              .set({
+                originalImageUrl: originalUrl,
+                illustrationUrl: originalUrl,
+                status: 'completed',
+                updatedAt: new Date(),
+              })
+              .where(eq(cards.id, newCard.id));
+            newCard.illustrationUrl = originalUrl;
+            newCard.status = 'completed';
+          } else {
+            // Update card with image URL
+            await db
+              .update(cards)
+              .set({ originalImageUrl: originalUrl })
+              .where(eq(cards.id, newCard.id));
+
+            // Hand off AI generation (label and/or illustration) to Inngest.
+            await inngest.send(
+              cardGenerateRequested.create({
+                cardId: newCard.id,
+                boardId,
+                userId: session.user.id,
+                originalImageUrl: originalUrl,
+                skipLabeling,
+                skipIllustration,
+                cropData: cropData ?? undefined,
+              })
+            );
+            const posthog = getPostHogClient();
+            if (posthog) {
+              posthog.capture({
+                distinctId: session.user.id,
+                event: 'card_upload_started',
+                properties: {
+                  board_id: boardId,
+                  card_id: newCard.id,
+                  board_is_unlocked: board.isUnlocked,
+                },
+              });
+              await posthog.shutdown();
+            }
           }
         }
       } catch (uploadError) {
