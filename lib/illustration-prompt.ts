@@ -11,10 +11,10 @@ export const ILLUSTRATION_PROMPT = `
     - Color treatment should match classic Lotería: **high contrast, saturated primaries**, minimal neutral tones, and a slightly warm vintage print cast.
     - Lighting should feel illustrative (not photographic): soft highlights, gentle shadows, and limited tonal steps.
     - **Do not look like modern vector art**—it should feel like a mid-century printed card illustration.
-    - **No text, no numbers, no border—only the illustration** in Lotería style.
+    - **Do not add Loteria card elements to the illustrated (e.g. don't add a card number, a label, or a card border)**. We add them on top of the illustration later.
 
     ## Important:
-    - DO NOT APPLY A BORDER. THE IMAGE SHOULD BE JUST THE ILLUSTRATION, NO BORDER, NO FRAME, NO BACKGROUND, NO PADDING, NO TEXT, NO NUMBER.
+    - DO NOT APPLY A BORDER. THE IMAGE SHOULD BE JUST THE ILLUSTRATION, NO BORDER, NO FRAME, NO BACKGROUND, NO PADDING.
 
     ## Colors
     **Main colors / palette guidance (use these as dominant colors):**
