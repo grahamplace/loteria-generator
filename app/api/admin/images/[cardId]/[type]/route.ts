@@ -5,6 +5,19 @@ import { isAdminEmail } from '@/lib/admin';
 import { db, cards } from '@/db';
 import { eq } from 'drizzle-orm';
 import { getPrivateBlob } from '@/lib/blob';
+import sharp from 'sharp';
+import { cropExtractRegion } from '@/lib/crop-region';
+
+async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
+  }
+  return Buffer.concat(chunks);
+}
 
 export async function GET(
   request: NextRequest,
@@ -46,6 +59,34 @@ export async function GET(
 
       if (result?.statusCode !== 200) {
         return new NextResponse('Not found', { status: 404 });
+      }
+
+      const cropRect =
+        type === 'illustration' && card.preserveOriginal && card.cropData ? card.cropData : null;
+
+      if (cropRect) {
+        const etag = `"${result.blob.etag}-crop${cropRect.x}-${cropRect.y}-${cropRect.width}-${cropRect.height}"`;
+        if (request.headers.get('if-none-match') === etag) {
+          return new NextResponse(null, {
+            status: 304,
+            headers: { ETag: etag, 'Cache-Control': 'private, no-cache' },
+          });
+        }
+        if (!result.stream) {
+          return new NextResponse('Not found', { status: 404 });
+        }
+        const source = await streamToBuffer(result.stream);
+        const meta = await sharp(source).metadata();
+        const region = cropExtractRegion(cropRect, meta.width ?? 0, meta.height ?? 0);
+        const out = region ? await sharp(source).rotate().extract(region).png().toBuffer() : source;
+        return new NextResponse(new Uint8Array(out), {
+          headers: {
+            'Content-Type': 'image/png',
+            'X-Content-Type-Options': 'nosniff',
+            'Cache-Control': 'private, no-cache',
+            ETag: etag,
+          },
+        });
       }
 
       return new NextResponse(result.stream, {
