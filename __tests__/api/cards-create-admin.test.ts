@@ -139,3 +139,39 @@ describe('POST /api/boards/[boardId]/cards admin skipLabeling', () => {
     expect(sendMock).not.toHaveBeenCalled();
   });
 });
+
+describe('POST /api/boards/[boardId]/cards admin skipIllustration', () => {
+  it('admin: sends event with skipIllustration true', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN as never);
+    boardsFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'admin-1',
+      isUnlocked: true,
+      imageGenerationsUsed: 0,
+    });
+
+    const res = await POST(
+      makeReq({ originalImageBase64: IMG, label: 'El Perro', skipIllustration: true }),
+      { params }
+    );
+    expect(res.status).toBe(201);
+    expect(sendMock.mock.calls[0][0].data.skipIllustration).toBe(true);
+  });
+
+  it('non-admin: skipIllustration is ignored in the emitted event', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(USER as never);
+    boardsFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'user-1',
+      isUnlocked: false,
+      imageGenerationsUsed: 0,
+    });
+
+    const res = await POST(
+      makeReq({ originalImageBase64: IMG, label: 'El Perro', skipIllustration: true }),
+      { params }
+    );
+    expect(res.status).toBe(201);
+    expect(sendMock.mock.calls[0][0].data.skipIllustration).toBeFalsy();
+  });
+});

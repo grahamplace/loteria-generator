@@ -89,6 +89,7 @@ export async function POST(
 
     const isAdmin = isAdminEmail(session.user.email);
     const skipLabeling = isAdmin && parsed.data.skipLabeling === true;
+    const skipIllustration = isAdmin && parsed.data.skipIllustration === true;
 
     // Verify board ownership
     const board = await db.query.boards.findFirst({
@@ -203,6 +204,7 @@ export async function POST(
               userId: session.user.id,
               originalImageUrl: originalUrl,
               skipLabeling,
+              skipIllustration,
             })
           );
           const posthog = getPostHogClient();
