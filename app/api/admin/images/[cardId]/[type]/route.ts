@@ -6,7 +6,7 @@ import { db, cards } from '@/db';
 import { eq } from 'drizzle-orm';
 import { getPrivateBlob } from '@/lib/blob';
 import sharp from 'sharp';
-import { cropExtractRegion } from '@/lib/crop-region';
+import { cropExtractRegion } from '@/lib/crop-math';
 
 async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
   const reader = stream.getReader();

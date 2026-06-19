@@ -5,7 +5,7 @@ import { db, cards, boards } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { getPrivateBlob } from '@/lib/blob';
 import sharp from 'sharp';
-import { cropExtractRegion } from '@/lib/crop-region';
+import { cropExtractRegion } from '@/lib/crop-math';
 
 // Upper bound on the on-the-fly resize width. Stored illustrations are
 // 1024×1536 PNGs (~2-4MB); the board grid only renders them ~180px wide, so a

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { filenameToLabel } from '@/lib/filename-label';
 import { type PixelRect } from '@/lib/crop-image';
 import { downscaleToDataUrl } from '@/lib/downscale-image';
-import { scaleRect } from '@/lib/crop-region';
+import { scaleRect } from '@/lib/crop-math';
 import { ImageCropModal } from './image-crop-modal';
 
 type FileStatus = 'pending' | 'uploading' | 'done' | 'error';
