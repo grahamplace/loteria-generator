@@ -5,6 +5,13 @@ const MAX_BASE64_LENGTH = 14_000_000; // ~10MB decoded
 
 const base64ImageString = z.string().max(MAX_BASE64_LENGTH, 'Image exceeds maximum size of 10MB');
 
+const cropDataSchema = z.object({
+  x: z.number().int().nonnegative(),
+  y: z.number().int().nonnegative(),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+});
+
 // POST /api/boards
 export const createBoardSchema = z.object({
   name: z.string().max(200).optional(),
@@ -32,6 +39,7 @@ export const createCardSchema = z.object({
   // Admin-only: when true, preserve the uploaded image as the card face and
   // skip AI illustration. Ignored for non-admins.
   skipIllustration: z.boolean().optional(),
+  cropData: cropDataSchema.optional(),
 });
 
 // PATCH /api/boards/[boardId]/cards
@@ -42,6 +50,7 @@ export const updateCardSchema = z.object({
   illustrationBase64: base64ImageString.optional(),
   status: z.enum(['pending', 'processing', 'completed', 'error']).optional(),
   errorMessage: z.string().max(1000).optional(),
+  cropData: cropDataSchema.nullish(),
 });
 
 // POST /api/boards/[boardId]/cards/defaults

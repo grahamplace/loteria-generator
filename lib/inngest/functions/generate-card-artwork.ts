@@ -4,6 +4,7 @@ import { db, boards, cards } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
 import { ILLUSTRATION_PROMPT } from '@/lib/illustration-prompt';
 import { normalizeImageForOpenAI } from '@/lib/image-normalize';
+import { extractCrop } from '@/lib/crop-region';
 
 export const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
   'image/png': 'png',
@@ -64,7 +65,7 @@ export const generateCardArtwork = inngest.createFunction(
     },
   },
   async ({ event, step }) => {
-    const { cardId, boardId, userId, originalImageUrl, skipLabeling, skipIllustration } =
+    const { cardId, boardId, userId, originalImageUrl, skipLabeling, skipIllustration, cropData } =
       event.data;
     const ch = cardChannel({ cardId });
 
@@ -134,7 +135,8 @@ export const generateCardArtwork = inngest.createFunction(
             `Unsupported image format "${contentType}". Please upload PNG, JPEG, WebP, or GIF.`
           );
         }
-        const normalized = await normalizeImageForOpenAI(buffer);
+        const sourceBuffer = cropData ? await extractCrop(buffer, cropData) : buffer;
+        const normalized = await normalizeImageForOpenAI(sourceBuffer);
         const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
         const illustrationModel =
           process.env.NODE_ENV === 'production' ? 'gpt-image-2' : 'gpt-image-1-mini';

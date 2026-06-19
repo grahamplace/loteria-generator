@@ -5,7 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import { RetryFailedButton } from '../../components/retry-failed-button';
+import { AdminExportButton } from '../../components/admin-export-button';
+import { AdminPreviewBoardsButton } from '../../components/admin-preview-boards-button';
 import { AdminBoardCardsGrid } from '../../components/admin-board-cards-grid';
+import type { BoardStyleOptions } from '@/lib/generate-boards';
 import Link from 'next/link';
 import { IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db/schema';
 import { isRetriableCard } from '@/lib/admin';
@@ -63,6 +66,16 @@ export default async function AdminBoardDetailPage({
             <CardTitle className="text-sm font-medium">Board Info</CardTitle>
             <div className="flex flex-wrap items-center gap-2">
               <RetryFailedButton boardId={id} errorCount={errorCount} />
+              <AdminExportButton
+                boardName={board.name}
+                cards={boardCards}
+                styleOptions={board.styleOptions as BoardStyleOptions | null}
+              />
+              <AdminPreviewBoardsButton
+                boardName={board.name}
+                cards={boardCards}
+                styleOptions={board.styleOptions as BoardStyleOptions | null}
+              />
               {board.isUnlocked ? (
                 <Badge variant="default">Unlocked</Badge>
               ) : (

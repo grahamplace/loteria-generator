@@ -5,6 +5,7 @@ import { db, cards, boards } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { getPrivateBlob } from '@/lib/blob';
 import sharp from 'sharp';
+import { cropExtractRegion } from '@/lib/crop-math';
 
 // Upper bound on the on-the-fly resize width. Stored illustrations are
 // 1024×1536 PNGs (~2-4MB); the board grid only renders them ~180px wide, so a
@@ -98,13 +99,15 @@ export async function GET(
       }
 
       const resizeWidth = parseResizeWidth(request.nextUrl.searchParams.get('w'));
+      const cropRect =
+        type === 'illustration' && card.preserveOriginal && card.cropData ? card.cropData : null;
 
-      if (resizeWidth) {
-        // ETag is derived from the source blob's etag, so regenerating a card
-        // (new bytes → new etag) busts the thumbnail cache instantly. Keep
-        // `no-cache` so the browser always revalidates and never shows a stale
-        // illustration; unchanged sources short-circuit to a bodiless 304.
-        const etag = `"${result.blob.etag}-w${resizeWidth}-webp"`;
+      if (resizeWidth || cropRect) {
+        const cropSig = cropRect
+          ? `-crop${cropRect.x}-${cropRect.y}-${cropRect.width}-${cropRect.height}`
+          : '';
+        const widthSig = resizeWidth ? `-w${resizeWidth}-webp` : '';
+        const etag = `"${result.blob.etag}${cropSig}${widthSig}"`;
         if (request.headers.get('if-none-match') === etag) {
           return new NextResponse(null, {
             status: 304,
@@ -113,15 +116,22 @@ export async function GET(
         }
 
         const source = await streamToBuffer(result.stream);
-        const thumbnail = await sharp(source)
-          .rotate()
-          .resize({ width: resizeWidth, withoutEnlargement: true })
-          .webp({ quality: 75 })
-          .toBuffer();
+        let pipeline = sharp(source).rotate();
+        if (cropRect) {
+          const meta = await sharp(source).metadata();
+          const region = cropExtractRegion(cropRect, meta.width ?? 0, meta.height ?? 0);
+          if (region) pipeline = pipeline.extract(region);
+        }
+        if (resizeWidth) {
+          pipeline = pipeline.resize({ width: resizeWidth, withoutEnlargement: true });
+        }
+        const out = resizeWidth
+          ? await pipeline.webp({ quality: 75 }).toBuffer()
+          : await pipeline.png().toBuffer();
 
-        return new NextResponse(new Uint8Array(thumbnail), {
+        return new NextResponse(new Uint8Array(out), {
           headers: {
-            'Content-Type': 'image/webp',
+            'Content-Type': resizeWidth ? 'image/webp' : 'image/png',
             'X-Content-Type-Options': 'nosniff',
             'Cache-Control': 'private, no-cache',
             ETag: etag,

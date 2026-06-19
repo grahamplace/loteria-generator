@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import Link from 'next/link';
 import { RegenerateButton } from '../../components/regenerate-button';
+import { RecropButton } from '../../components/recrop-button';
 
 async function getCardWithContext(cardId: string) {
   const result = await db
@@ -62,6 +63,13 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
             </CardTitle>
             <div className="flex flex-wrap items-center gap-2">
               {card.originalImageUrl && <RegenerateButton cardId={card.id} />}
+              {card.preserveOriginal && card.originalImageUrl && (
+                <RecropButton
+                  cardId={card.id}
+                  boardId={card.boardId}
+                  initialCrop={card.cropData ?? null}
+                />
+              )}
               <StatusBadge status={card.status} />
             </div>
           </div>

@@ -73,6 +73,14 @@ export interface BoardStyleOptions {
   labelColor?: string;
 }
 
+// Crop rectangle in pixels of the stored (downscaled) original image.
+export interface CropData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 // Generation limits
 export const IMAGE_GENERATION_LIMIT_FREE = 4;
 export const IMAGE_GENERATION_LIMIT_PAID = 100;
@@ -115,6 +123,8 @@ export const cards = pgTable('cards', {
   errorMessage: text('error_message'),
   isDefault: boolean('is_default').notNull().default(false),
   defaultCardId: text('default_card_id'),
+  preserveOriginal: boolean('preserve_original').notNull().default(false),
+  cropData: json('crop_data').$type<CropData>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
