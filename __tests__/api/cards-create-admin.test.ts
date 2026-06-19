@@ -175,3 +175,48 @@ describe('POST /api/boards/[boardId]/cards admin skipIllustration', () => {
     expect(sendMock.mock.calls[0][0].data.skipIllustration).toBeFalsy();
   });
 });
+
+describe('POST /api/boards/[boardId]/cards persists preserveOriginal + cropData', () => {
+  it('admin: inserts preserveOriginal from skipIllustration and cropData, and sends cropData', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN as never);
+    boardsFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'admin-1',
+      isUnlocked: true,
+      imageGenerationsUsed: 0,
+    });
+    const crop = { x: 1, y: 2, width: 3, height: 4 };
+    const res = await POST(
+      makeReq({ originalImageBase64: IMG, label: 'X', skipIllustration: true, cropData: crop }),
+      { params }
+    );
+    expect(res.status).toBe(201);
+    expect(insertValuesSpy.mock.calls[0][0]).toMatchObject({
+      preserveOriginal: true,
+      cropData: crop,
+    });
+    expect(sendMock.mock.calls[0][0].data.cropData).toEqual(crop);
+  });
+
+  it('non-admin: preserveOriginal false and cropData not persisted', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(USER as never);
+    boardsFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'user-1',
+      isUnlocked: false,
+      imageGenerationsUsed: 0,
+    });
+    const res = await POST(
+      makeReq({
+        originalImageBase64: IMG,
+        label: 'X',
+        skipIllustration: true,
+        cropData: { x: 1, y: 2, width: 3, height: 4 },
+      }),
+      { params }
+    );
+    expect(res.status).toBe(201);
+    expect(insertValuesSpy.mock.calls[0][0]).toMatchObject({ preserveOriginal: false });
+    expect(insertValuesSpy.mock.calls[0][0].cropData ?? null).toBeNull();
+  });
+});

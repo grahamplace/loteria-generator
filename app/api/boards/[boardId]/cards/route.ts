@@ -90,6 +90,7 @@ export async function POST(
     const isAdmin = isAdminEmail(session.user.email);
     const skipLabeling = isAdmin && parsed.data.skipLabeling === true;
     const skipIllustration = isAdmin && parsed.data.skipIllustration === true;
+    const cropData = isAdmin ? (parsed.data.cropData ?? null) : null;
 
     // Verify board ownership
     const board = await db.query.boards.findFirst({
@@ -155,6 +156,8 @@ export async function POST(
         number: sql`COALESCE((SELECT MAX(${cards.number}) FROM ${cards} WHERE ${cards.boardId} = ${boardId}), 0) + 1`,
         label: label || '',
         status: initialStatus,
+        preserveOriginal: skipIllustration,
+        cropData,
       })
       .returning();
 
@@ -205,6 +208,7 @@ export async function POST(
               originalImageUrl: originalUrl,
               skipLabeling,
               skipIllustration,
+              cropData: cropData ?? undefined,
             })
           );
           const posthog = getPostHogClient();
@@ -258,6 +262,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const isAdmin = isAdminEmail(session.user.email);
+
     const { boardId } = await params;
     const body = await request.json();
     const parsed = updateCardSchema.safeParse(body);
@@ -267,7 +273,8 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    const { cardId, label, riddle, illustrationBase64, status, errorMessage } = parsed.data;
+    const { cardId, label, riddle, illustrationBase64, status, errorMessage, cropData } =
+      parsed.data;
 
     // Verify ownership
     const card = await db.query.cards.findFirst({
@@ -301,6 +308,10 @@ export async function PATCH(
 
     if (errorMessage !== undefined) {
       updateData.errorMessage = errorMessage;
+    }
+
+    if (isAdmin && cropData !== undefined) {
+      updateData.cropData = cropData;
     }
 
     // Upload illustration if provided
