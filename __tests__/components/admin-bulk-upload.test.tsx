@@ -4,6 +4,10 @@ import { AdminBulkUpload } from '@/app/(admin)/admin/components/admin-bulk-uploa
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
+vi.mock('@/app/(admin)/admin/components/image-crop-modal', () => ({
+  ImageCropModal: () => null,
+}));
+
 describe('AdminBulkUpload', () => {
   it('renders with the filename-label toggle on by default', () => {
     render(<AdminBulkUpload />);
@@ -21,5 +25,11 @@ describe('AdminBulkUpload', () => {
     render(<AdminBulkUpload />);
     const button = screen.getByRole('button', { name: /create board/i });
     expect(button).toBeDisabled();
+  });
+
+  it('defaults "Re-illustrate with AI" to OFF (preserve as-is)', () => {
+    render(<AdminBulkUpload />);
+    const toggle = screen.getByRole('checkbox', { name: /re-illustrate with ai/i });
+    expect(toggle).not.toBeChecked();
   });
 });
