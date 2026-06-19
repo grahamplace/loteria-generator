@@ -6,10 +6,10 @@ const MAX_BASE64_LENGTH = 14_000_000; // ~10MB decoded
 const base64ImageString = z.string().max(MAX_BASE64_LENGTH, 'Image exceeds maximum size of 10MB');
 
 const cropDataSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-  width: z.number(),
-  height: z.number(),
+  x: z.number().int().nonnegative(),
+  y: z.number().int().nonnegative(),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
 });
 
 // POST /api/boards

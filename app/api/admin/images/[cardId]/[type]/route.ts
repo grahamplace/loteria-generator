@@ -78,7 +78,11 @@ export async function GET(
         const source = await streamToBuffer(result.stream);
         const meta = await sharp(source).metadata();
         const region = cropExtractRegion(cropRect, meta.width ?? 0, meta.height ?? 0);
-        const out = region ? await sharp(source).rotate().extract(region).png().toBuffer() : source;
+        // Always re-encode to PNG so the Content-Type below is accurate even on
+        // the degenerate-crop fallback (stored originals may be JPEG).
+        const out = region
+          ? await sharp(source).rotate().extract(region).png().toBuffer()
+          : await sharp(source).png().toBuffer();
         return new NextResponse(new Uint8Array(out), {
           headers: {
             'Content-Type': 'image/png',

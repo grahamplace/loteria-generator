@@ -59,4 +59,18 @@ describe('PATCH /api/boards/[boardId]/cards cropData', () => {
     const setArg = updateSetSpy.mock.calls.map((c) => c[0]).find((v) => 'cropData' in v);
     expect(setArg?.cropData).toEqual(crop);
   });
+
+  it('non-admin: cropData is ignored', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue({
+      user: { email: 'user@example.com', id: 'user-1' },
+    } as never);
+    cardsFindFirst.mockResolvedValue({ id: 'c1', boardId: 'board-1', userId: 'user-1' });
+    const res = await PATCH(
+      makeReq({ cardId: '11111111-1111-1111-1111-111111111111', cropData: crop }),
+      { params }
+    );
+    expect(res.status).toBe(200);
+    const setArg = updateSetSpy.mock.calls.map((c) => c[0]).find((v) => 'cropData' in v);
+    expect(setArg).toBeUndefined();
+  });
 });

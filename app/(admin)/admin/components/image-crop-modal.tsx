@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type SyntheticEvent } from 'react';
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { scaleCropToNatural, type PixelRect } from '@/lib/crop-image';
@@ -13,14 +13,30 @@ interface ImageCropModalProps {
 }
 
 export function ImageCropModal({ src, initialCrop, onSave, onCancel }: ImageCropModalProps) {
-  const [crop, setCrop] = useState<Crop | undefined>(
-    initialCrop ? { unit: 'px', ...initialCrop } : undefined
-  );
-  const [completed, setCompleted] = useState<PixelCrop | undefined>(
-    initialCrop ? { unit: 'px', ...initialCrop } : undefined
-  );
+  // `crop` is the visual overlay; `completed` is the user's finished selection in
+  // DISPLAY pixels (what react-image-crop's onComplete reports). We seed only the
+  // overlay from `initialCrop`, and as a resolution-independent percent crop
+  // computed on image load — react-image-crop interprets px crops in display
+  // space, so seeding natural-px values directly would misrender and (on a
+  // no-drag save) double-scale into corrupted coordinates. `completed` stays
+  // undefined until the admin actually drags, so an unchanged Save is a no-op.
+  const [crop, setCrop] = useState<Crop | undefined>(undefined);
+  const [completed, setCompleted] = useState<PixelCrop | undefined>(undefined);
   const imgRef = useRef<HTMLImageElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  function onImageLoad(e: SyntheticEvent<HTMLImageElement>) {
+    if (!initialCrop) return;
+    const { naturalWidth, naturalHeight } = e.currentTarget;
+    if (!naturalWidth || !naturalHeight) return;
+    setCrop({
+      unit: '%',
+      x: (initialCrop.x / naturalWidth) * 100,
+      y: (initialCrop.y / naturalHeight) * 100,
+      width: (initialCrop.width / naturalWidth) * 100,
+      height: (initialCrop.height / naturalHeight) * 100,
+    });
+  }
 
   // Move focus into the dialog on open and close it on Escape (APG dialog basics).
   useEffect(() => {
@@ -72,7 +88,7 @@ export function ImageCropModal({ src, initialCrop, onSave, onCancel }: ImageCrop
         <ReactCrop crop={crop} onChange={(c) => setCrop(c)} onComplete={(c) => setCompleted(c)}>
           {/* react-image-crop requires a raw <img> child */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img ref={imgRef} src={src} alt="" className="max-h-[60vh] w-auto" />
+          <img ref={imgRef} src={src} alt="" onLoad={onImageLoad} className="max-h-[60vh] w-auto" />
         </ReactCrop>
         <div className="mt-3 flex justify-end gap-2">
           <button
