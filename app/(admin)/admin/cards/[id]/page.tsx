@@ -8,6 +8,7 @@ import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import Link from 'next/link';
 import { RegenerateButton } from '../../components/regenerate-button';
 import { RecropButton } from '../../components/recrop-button';
+import { ReplaceIllustrationButton } from '../../components/replace-illustration-button';
 
 async function getCardWithContext(cardId: string) {
   const result = await db
@@ -70,6 +71,7 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
                   initialCrop={card.cropData ?? null}
                 />
               )}
+              {!card.isDefault && <ReplaceIllustrationButton cardId={card.id} />}
               <StatusBadge status={card.status} />
             </div>
           </div>
