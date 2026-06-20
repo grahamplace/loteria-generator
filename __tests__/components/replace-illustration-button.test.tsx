@@ -55,4 +55,13 @@ describe('ReplaceIllustrationButton', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it('shows a size error and does not open the modal for an oversized file', () => {
+    render(<ReplaceIllustrationButton cardId="c1" />);
+    const big = new File(['x'], 'big.png', { type: 'image/png' });
+    Object.defineProperty(big, 'size', { value: 11 * 1024 * 1024 });
+    fireEvent.change(screen.getByLabelText(/replace illustration/i), { target: { files: [big] } });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(/exceeds maximum size/i);
+  });
 });
