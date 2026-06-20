@@ -1,5 +1,33 @@
-import { describe, it, expect } from 'vitest';
-import { base64ToBuffer, getContentTypeFromDataUrl } from '@/lib/blob';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const putMock = vi.hoisted(() => vi.fn());
+vi.mock('@vercel/blob', () => ({
+  put: (...args: unknown[]) => putMock(...args),
+  del: vi.fn(),
+  list: vi.fn(),
+  get: vi.fn(),
+}));
+
+import { base64ToBuffer, getContentTypeFromDataUrl, uploadIllustration } from '@/lib/blob';
+
+describe('uploadImage (via uploadIllustration)', () => {
+  beforeEach(() => {
+    putMock.mockReset();
+    putMock.mockResolvedValue({ url: 'https://blob/illustration.png' });
+  });
+
+  // Card image paths are deterministic and meant to be replaced in place
+  // (regenerate / admin replace). Without allowOverwrite, @vercel/blob v2
+  // throws "This blob already exists" on the second upload to the same path.
+  it('overwrites the existing blob at the deterministic path', async () => {
+    await uploadIllustration('u1', 'b1', 'c1', Buffer.from('png'));
+    expect(putMock).toHaveBeenCalledWith(
+      'users/u1/boards/b1/cards/c1/illustration.png',
+      expect.any(Buffer),
+      expect.objectContaining({ addRandomSuffix: false, allowOverwrite: true })
+    );
+  });
+});
 
 describe('blob utilities', () => {
   describe('base64ToBuffer', () => {
