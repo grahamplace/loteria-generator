@@ -117,4 +117,23 @@ describe('PUT /api/admin/cards/[cardId]/illustration', () => {
     const res = await PUT(makeReq({ illustrationBase64: DATA_URL }), { params: params() });
     expect(res.status).toBe(404);
   });
+
+  it('rejects a malformed (non data URL) payload with 400', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN as never);
+    const res = await PUT(makeReq({ illustrationBase64: 'not-a-data-url' }), { params: params() });
+    expect(res.status).toBe(400);
+    expect(updateSetSpy).not.toHaveBeenCalled();
+    expect(uploadIllustrationMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 (not 500) when the image cannot be decoded', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN as never);
+    sharpToBuffer.mockRejectedValueOnce(
+      new Error('Input buffer contains unsupported image format')
+    );
+    const res = await PUT(makeReq({ illustrationBase64: DATA_URL }), { params: params() });
+    expect(res.status).toBe(400);
+    expect(updateSetSpy).not.toHaveBeenCalled();
+    expect(uploadIllustrationMock).not.toHaveBeenCalled();
+  });
 });

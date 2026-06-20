@@ -55,12 +55,19 @@ export async function PUT(
     // Normalize any input format (jpg/webp/png) to PNG so the bytes match the
     // fixed illustration.png path + image/png content type uploadIllustration
     // writes. rotate() bakes in EXIF orientation, then metadata is stripped.
+    // A decode failure here means the upload was an unsupported/corrupt image —
+    // a client error (400), not a server fault (500).
     const buffer = base64ToBuffer(parsed.data.illustrationBase64);
-    const pngBuffer = await sharp(buffer)
-      .rotate()
-      .resize({ width: MAX_ILLUSTRATION_WIDTH, withoutEnlargement: true })
-      .png()
-      .toBuffer();
+    let pngBuffer: Buffer;
+    try {
+      pngBuffer = await sharp(buffer)
+        .rotate()
+        .resize({ width: MAX_ILLUSTRATION_WIDTH, withoutEnlargement: true })
+        .png()
+        .toBuffer();
+    } catch {
+      return NextResponse.json({ error: 'Unsupported or invalid image file' }, { status: 400 });
+    }
 
     const illustrationUrl = await uploadIllustration(card.userId, card.boardId, card.id, pngBuffer);
 
