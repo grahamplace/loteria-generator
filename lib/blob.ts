@@ -15,6 +15,7 @@ export async function uploadImage(
     access: 'private',
     contentType,
     addRandomSuffix: false, // Use exact path for predictable URLs
+    allowOverwrite: true, // Paths are deterministic and replaced in place (regenerate / admin replace)
     token: PRIVATE_BLOB_TOKEN,
   });
 
