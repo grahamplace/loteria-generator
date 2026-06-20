@@ -53,6 +53,11 @@ export const updateCardSchema = z.object({
   cropData: cropDataSchema.nullish(),
 });
 
+// PUT /api/admin/cards/[cardId]/illustration (admin-only escape hatch)
+export const replaceIllustrationSchema = z.object({
+  illustrationBase64: base64ImageString,
+});
+
 // POST /api/boards/[boardId]/cards/defaults
 export const addDefaultCardsSchema = z.object({
   defaultCardIds: z.array(z.string().min(1)).min(1).max(54),
