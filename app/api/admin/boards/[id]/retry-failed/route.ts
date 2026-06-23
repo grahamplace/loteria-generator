@@ -30,6 +30,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       userId: cards.userId,
       originalImageUrl: cards.originalImageUrl,
       errorMessage: cards.errorMessage,
+      promptOverlay: cards.promptOverlay,
     })
     .from(cards)
     .where(and(eq(cards.boardId, boardId), isNotNull(cards.originalImageUrl), retriableCondition));
@@ -64,6 +65,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
             boardId,
             userId: c.userId,
             originalImageUrl: c.originalImageUrl!,
+            promptOverlay: c.promptOverlay ?? undefined,
           },
         };
       })
