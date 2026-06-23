@@ -1,4 +1,4 @@
-// __tests__/lib/reengagement-recipients.test.ts
+// __tests__/lib/campaign-recipients.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Terminal operation for the select chain is `.where()`
@@ -21,10 +21,7 @@ vi.mock('drizzle-orm', () => ({
 }));
 
 import { db } from '@/db';
-import {
-  getReengagementRecipients,
-  type ReengagementRecipient,
-} from '@/lib/marketing/reengagement';
+import { getCampaignRecipients, type CampaignRecipient } from '@/lib/marketing/campaign-recipients';
 
 const dbChain = db as unknown as Record<string, ReturnType<typeof vi.fn>>;
 
@@ -33,21 +30,21 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('getReengagementRecipients', () => {
+describe('getCampaignRecipients', () => {
   it('returns [] immediately and never calls db.select when userIds is empty', async () => {
-    const result = await getReengagementRecipients([]);
+    const result = await getCampaignRecipients([]);
     expect(result).toEqual([]);
     expect(dbChain.select).not.toHaveBeenCalled();
   });
 
   it('returns the rows resolved by the db mock for a non-empty userIds list', async () => {
-    const fakeRows: ReengagementRecipient[] = [
+    const fakeRows: CampaignRecipient[] = [
       { id: 'u1', email: 'alice@example.com', name: 'Alice', locale: 'en' },
       { id: 'u2', email: 'bob@example.com', name: 'Bob', locale: null },
     ];
     state.where = fakeRows;
 
-    const result = await getReengagementRecipients(['u1', 'u2']);
+    const result = await getCampaignRecipients(['u1', 'u2']);
     expect(result).toEqual(fakeRows);
     expect(dbChain.select).toHaveBeenCalledOnce();
   });

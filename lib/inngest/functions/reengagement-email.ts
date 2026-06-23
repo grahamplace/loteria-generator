@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { inngest } from '../client';
 import { reengagementEmailRequested } from '../events';
 import { db, lifecycleEmails } from '@/db';
-import { getReengagementRecipients } from '@/lib/marketing/reengagement';
+import { getCampaignRecipients } from '@/lib/marketing/campaign-recipients';
 import { generateDiscountCode } from '@/lib/email/discount-code';
 import { createOneTimePromotionCode, getOrCreateReengagementCoupon } from '@/lib/stripe-promotions';
 import { sendReengagementEmail } from '@/lib/email/send-reengagement';
@@ -20,7 +20,7 @@ export const reengagementEmail = inngest.createFunction(
   },
   async ({ step, event }) => {
     const recipients = await step.run('load-recipients', () =>
-      getReengagementRecipients(event.data.userIds)
+      getCampaignRecipients(event.data.userIds)
     );
 
     let sent = 0;

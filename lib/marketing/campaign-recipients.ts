@@ -1,16 +1,14 @@
 import { db, user, userProfiles } from '@/db';
 import { eq, inArray } from 'drizzle-orm';
 
-export type ReengagementRecipient = {
+export type CampaignRecipient = {
   id: string;
   email: string;
   name: string;
   locale: string | null;
 };
 
-export async function getReengagementRecipients(
-  userIds: string[]
-): Promise<ReengagementRecipient[]> {
+export async function getCampaignRecipients(userIds: string[]): Promise<CampaignRecipient[]> {
   if (userIds.length === 0) return [];
 
   const rows = await db
