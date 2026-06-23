@@ -16,6 +16,10 @@ async function getUsers() {
       cardCount: sql<number>`(select count(*) from cards where cards.user_id = "user"."id")`.as(
         'card_count'
       ),
+      paidBoardCount:
+        sql<number>`(select count(*) from boards where boards.user_id = "user"."id" and boards.is_unlocked = true)`.as(
+          'paid_board_count'
+        ),
     })
     .from(user)
     .orderBy(desc(user.createdAt));
@@ -24,6 +28,7 @@ async function getUsers() {
     ...u,
     boardCount: Number(u.boardCount),
     cardCount: Number(u.cardCount),
+    paidBoardCount: Number(u.paidBoardCount),
     createdAt: u.createdAt.toISOString(),
   }));
 }
