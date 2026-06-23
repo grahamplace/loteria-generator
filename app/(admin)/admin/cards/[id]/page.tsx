@@ -4,8 +4,10 @@ import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import Link from 'next/link';
+import { Grid2X2 } from 'lucide-react';
 import { RegenerateButton } from '../../components/regenerate-button';
 import { RecropButton } from '../../components/recrop-button';
 import { ReplaceIllustrationButton } from '../../components/replace-illustration-button';
@@ -63,6 +65,13 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
               Card #{card.number} — {card.label || 'Unlabeled'}
             </CardTitle>
             <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/admin/boards/${boardId}`}>
+                  <Grid2X2 className="h-4 w-4" />
+                  View Board
+                </Link>
+              </Button>
+              {card.originalImageUrl && <RegenerateButton cardId={card.id} />}
               {card.originalImageUrl && (
                 <RegenerateButton cardId={card.id} initialOverlay={card.promptOverlay} />
               )}
