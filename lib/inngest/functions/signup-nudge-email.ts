@@ -43,7 +43,7 @@ export const signupNudgeEmail = inngest.createFunction(
 
           const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3006';
           const redeemUrl = `${appUrl}/redeem?code=${encodeURIComponent(code)}${
-            r.boardId ? `&boardId=${r.boardId}` : ''
+            r.boardId ? `&boardId=${encodeURIComponent(r.boardId)}` : ''
           }`;
           const locale: 'en' | 'es' = r.locale === 'es' ? 'es' : 'en';
 
@@ -80,15 +80,16 @@ export const signupNudgeEmail = inngest.createFunction(
       if (result.outcome === 'failed') {
         failed++;
         const posthog = getPostHogClient();
-        if (posthog) {
-          posthog.capture({
-            distinctId: r.id,
-            event: 'lifecycle_email_failed',
-            properties: { type: LIFECYCLE_EMAIL_TYPE_SIGNUP_NUDGE, error: result.error },
-          });
-          await posthog.shutdown();
-        }
+        posthog?.capture({
+          distinctId: r.id,
+          event: 'lifecycle_email_failed',
+          properties: { type: LIFECYCLE_EMAIL_TYPE_SIGNUP_NUDGE, error: result.error },
+        });
       }
+    }
+
+    if (failed > 0) {
+      await getPostHogClient()?.shutdown();
     }
 
     return { candidates: recipients.length, sent, failed };

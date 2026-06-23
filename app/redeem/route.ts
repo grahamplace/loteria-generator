@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
       sameSite: 'lax',
       path: '/',
       maxAge: SIGNUP_NUDGE_EXPIRY_DAYS * 24 * 60 * 60,
+      secure: process.env.NODE_ENV === 'production',
     });
   }
   return res;

@@ -5,7 +5,7 @@ import { SIGNUP_NUDGE_COUPON_ID, SIGNUP_NUDGE_DISCOUNT_PERCENT } from '@/lib/con
 function defaultClient(): Stripe {
   // Lazily import so tests that pass their own client never touch the real singleton.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require('@/lib/stripe').stripe as Stripe;
+  return require('./stripe').stripe as Stripe;
 }
 
 /** Idempotently ensure the reusable 25%-off coupon exists; returns its id. */
