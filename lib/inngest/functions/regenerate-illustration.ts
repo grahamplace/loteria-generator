@@ -7,7 +7,7 @@ import { inngest } from '../client';
 import { illustrationRegenerateRequested } from '../events';
 import { cardChannel, boardChannel } from '../channels';
 import { OPENAI_IMAGE_MIME_TO_EXT } from './generate-card-artwork';
-import { ILLUSTRATION_PROMPT } from '@/lib/illustration-prompt';
+import { buildIllustrationPrompt } from '@/lib/illustration-prompt';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
 
@@ -42,7 +42,7 @@ export const regenerateIllustration = inngest.createFunction(
     },
   },
   async ({ event, step }) => {
-    const { cardId, boardId, userId, originalImageUrl } = event.data;
+    const { cardId, boardId, userId, originalImageUrl, promptOverlay } = event.data;
     const ch = cardChannel({ cardId });
 
     await step.run('set-processing', async () => {
@@ -75,7 +75,7 @@ export const regenerateIllustration = inngest.createFunction(
           openai.images.edit({
             model: illustrationModel,
             image: imageFile,
-            prompt: ILLUSTRATION_PROMPT,
+            prompt: buildIllustrationPrompt(promptOverlay),
             size: '1024x1536',
           })
       );
