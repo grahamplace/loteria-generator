@@ -24,3 +24,9 @@ export const illustrationRegenerateRequested = eventType('card/illustration.rege
     promptOverlay: z.string().optional(),
   }),
 });
+
+export const reengagementEmailRequested = eventType('admin/reengagement-email.requested', {
+  schema: z.object({
+    userIds: z.array(z.string()).min(1),
+  }),
+});
