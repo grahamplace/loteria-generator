@@ -1,6 +1,11 @@
 // lib/stripe-promotions.ts
 import type Stripe from 'stripe';
-import { SIGNUP_NUDGE_COUPON_ID, SIGNUP_NUDGE_DISCOUNT_PERCENT } from '@/lib/constants';
+import {
+  SIGNUP_NUDGE_COUPON_ID,
+  SIGNUP_NUDGE_DISCOUNT_PERCENT,
+  REENGAGEMENT_COUPON_ID,
+  REENGAGEMENT_DISCOUNT_PERCENT,
+} from '@/lib/constants';
 
 function defaultClient(): Stripe {
   // Lazily import so tests that pass their own client never touch the real singleton.
@@ -28,14 +33,37 @@ export async function getOrCreateNudgeCoupon(client: Stripe = defaultClient()): 
   }
 }
 
-/** Create a single-use promotion code that expires at `expiresAt`. */
+/** Idempotently ensure the reusable 25%-off re-engagement coupon exists; returns its id. */
+export async function getOrCreateReengagementCoupon(
+  client: Stripe = defaultClient()
+): Promise<string> {
+  try {
+    const coupon = await client.coupons.retrieve(REENGAGEMENT_COUPON_ID);
+    return coupon.id;
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    if (code === 'resource_missing') {
+      const created = await client.coupons.create({
+        id: REENGAGEMENT_COUPON_ID,
+        percent_off: REENGAGEMENT_DISCOUNT_PERCENT,
+        duration: 'once',
+        name: `Re-engagement ${REENGAGEMENT_DISCOUNT_PERCENT}% Off`,
+      });
+      return created.id;
+    }
+    throw err;
+  }
+}
+
+/** Create a single-use promotion code that expires at `expiresAt`.
+ *  When `couponId` is supplied it is used directly; otherwise the nudge coupon is resolved. */
 export async function createOneTimePromotionCode(
-  params: { code: string; expiresAt: Date },
+  params: { code: string; expiresAt: Date; couponId?: string },
   client: Stripe = defaultClient()
 ): Promise<Stripe.PromotionCode> {
-  const couponId = await getOrCreateNudgeCoupon(client);
+  const resolvedCouponId = params.couponId ?? (await getOrCreateNudgeCoupon(client));
   return client.promotionCodes.create({
-    promotion: { type: 'coupon', coupon: couponId },
+    promotion: { type: 'coupon', coupon: resolvedCouponId },
     code: params.code,
     max_redemptions: 1,
     expires_at: Math.floor(params.expiresAt.getTime() / 1000),

@@ -11,3 +11,9 @@ export const SIGNUP_NUDGE_DISCOUNT_PERCENT = 25;
 export const SIGNUP_NUDGE_CODE_PREFIX = 'LOTERIA';
 export const SIGNUP_NUDGE_EXPIRY_DAYS = 7;
 export const LIFECYCLE_EMAIL_TYPE_SIGNUP_NUDGE = 'signup_nudge';
+
+// Re-engagement lifecycle email + discount
+export const REENGAGEMENT_COUPON_ID = 'reengagement-25';
+export const REENGAGEMENT_DISCOUNT_PERCENT = 25;
+export const REENGAGEMENT_EXPIRY_DAYS = 30;
+export const LIFECYCLE_EMAIL_TYPE_REENGAGEMENT = 'reengagement';
