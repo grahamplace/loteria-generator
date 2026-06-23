@@ -16,6 +16,7 @@ export async function createBoardUnlockCheckout(params: {
   boardName: string;
   successUrl: string;
   cancelUrl: string;
+  promotionCodeId?: string;
 }): Promise<Stripe.Checkout.Session> {
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
@@ -35,6 +36,10 @@ export async function createBoardUnlockCheckout(params: {
         quantity: 1,
       },
     ],
+    // Stripe rejects setting both discounts and allow_promotion_codes.
+    ...(params.promotionCodeId
+      ? { discounts: [{ promotion_code: params.promotionCodeId }] }
+      : { allow_promotion_codes: true }),
     metadata: {
       boardId: params.boardId,
       userId: params.userId,

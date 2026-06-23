@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 import { db, boards } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { createBoardUnlockCheckout } from '@/lib/stripe';
 import { getPostHogClient } from '@/lib/posthog-server';
+import { resolvePromotionCode } from '@/lib/stripe-promotions';
 
 /**
  * POST /api/stripe/checkout - Create a checkout session for board unlock
@@ -42,6 +43,18 @@ export async function POST(request: NextRequest) {
     // Get the base URL for redirects
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+    // Auto-apply a signup-nudge discount if the user arrived via /redeem.
+    const cookieStore = await cookies();
+    const promoCode = cookieStore.get('loteria_promo')?.value;
+    let promotionCodeId: string | undefined;
+    if (promoCode) {
+      try {
+        promotionCodeId = (await resolvePromotionCode(promoCode)) ?? undefined;
+      } catch (err) {
+        console.error('Failed to resolve promotion code:', err);
+      }
+    }
+
     // Create Stripe checkout session
     const checkoutSession = await createBoardUnlockCheckout({
       boardId: board.id,
@@ -50,6 +63,7 @@ export async function POST(request: NextRequest) {
       boardName: board.name,
       successUrl: `${baseUrl}/boards/${boardId}?payment=success`,
       cancelUrl: `${baseUrl}/boards/${boardId}?payment=cancelled`,
+      promotionCodeId,
     });
 
     const posthog = getPostHogClient();
@@ -60,13 +74,19 @@ export async function POST(request: NextRequest) {
         properties: {
           board_id: board.id,
           board_name: board.name,
+          discount_applied: Boolean(promotionCodeId),
           $set: { email: session.user.email, name: session.user.name },
         },
       });
       await posthog.shutdown();
     }
 
-    return NextResponse.json({ url: checkoutSession.url });
+    const response = NextResponse.json({ url: checkoutSession.url });
+    if (promoCode) {
+      // Clear the cookie once consumed (best-effort).
+      response.cookies.set('loteria_promo', '', { path: '/', maxAge: 0 });
+    }
+    return response;
   } catch (error) {
     console.error('Error creating checkout session:', error);
     return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
