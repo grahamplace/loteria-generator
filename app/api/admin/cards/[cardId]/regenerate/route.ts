@@ -20,6 +20,14 @@ export async function POST(
 
   const { cardId } = await params;
 
+  let overlay: string | null = null;
+  try {
+    const body = (await request.json()) as { promptOverlay?: string };
+    overlay = body.promptOverlay?.trim() || null;
+  } catch {
+    // No/invalid body — treat as no overlay.
+  }
+
   const card = await db.query.cards.findFirst({
     where: eq(cards.id, cardId),
   });
@@ -36,6 +44,11 @@ export async function POST(
     return NextResponse.json({ error: 'Board not found' }, { status: 404 });
   }
 
+  await db
+    .update(cards)
+    .set({ promptOverlay: overlay, updatedAt: new Date() })
+    .where(eq(cards.id, card.id));
+
   await inngest.send({
     name: 'card/illustration.regenerate',
     data: {
@@ -43,6 +56,7 @@ export async function POST(
       boardId: card.boardId,
       userId: card.userId,
       originalImageUrl: card.originalImageUrl,
+      promptOverlay: overlay ?? undefined,
     },
   });
 
