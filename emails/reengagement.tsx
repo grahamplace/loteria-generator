@@ -47,7 +47,7 @@ const COPY = {
     preview: `Hemos mejorado Lotería Generator — aquí tienes ${REENGAGEMENT_DISCOUNT_PERCENT}% de descuento`,
     heading: 'Hemos mejorado Lotería Generator',
     greeting: (n: string) => `Hola ${n},`,
-    body: 'Vi que te registraste recientemente en Lotería Generator — desde la última vez que lo visitaste hemos hecho muchas mejoras. Si todavía buscas un juego de Lotería personalizado para tu quinceañera, boda, reunión familiar u otro evento, ¡dale otra oportunidad!',
+    body: 'Vi que te registraste recientemente en Lotería Generator — desde tu última visita hemos hecho muchas mejoras. Si todavía buscas un juego de Lotería personalizado para tu quinceañera, boda, reunión familiar u otro evento, ¡dale otra oportunidad!',
     discountLead: `Aquí tienes un ${REENGAGEMENT_DISCOUNT_PERCENT}% de descuento, solo para ti:`,
     expires: `Este código es de un solo uso y vence en ${REENGAGEMENT_EXPIRY_DAYS} días.`,
     cta: `Inténtalo de nuevo con ${REENGAGEMENT_DISCOUNT_PERCENT}% de descuento`,
