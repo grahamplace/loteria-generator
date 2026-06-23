@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
 import { inngest } from '@/lib/inngest/client';
+import { getCampaignTemplate } from '@/lib/email/campaigns/registry';
 
 export async function POST(req: Request) {
   const session = await auth.api.getSession({
@@ -20,7 +21,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { userIds } = body as { userIds?: unknown };
+  const { templateKey, userIds } = body as { templateKey?: unknown; userIds?: unknown };
+
+  if (typeof templateKey !== 'string' || !getCampaignTemplate(templateKey)) {
+    return NextResponse.json({ error: 'Unknown template' }, { status: 400 });
+  }
 
   if (
     !Array.isArray(userIds) ||
@@ -34,8 +39,8 @@ export async function POST(req: Request) {
   }
 
   await inngest.send({
-    name: 'admin/reengagement-email.requested',
-    data: { userIds },
+    name: 'admin/campaign-email.requested',
+    data: { templateKey, userIds },
   });
 
   return NextResponse.json({ queued: userIds.length });
