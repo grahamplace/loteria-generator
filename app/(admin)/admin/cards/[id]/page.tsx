@@ -72,6 +72,9 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
                 </Link>
               </Button>
               {card.originalImageUrl && <RegenerateButton cardId={card.id} />}
+              {card.originalImageUrl && (
+                <RegenerateButton cardId={card.id} initialOverlay={card.promptOverlay} />
+              )}
               {card.preserveOriginal && card.originalImageUrl && (
                 <RecropButton
                   cardId={card.id}
