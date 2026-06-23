@@ -55,3 +55,6 @@ e2e/.auth/
 playwright-report/
 test-results/
 .env.test
+
+# react-email preview server
+.react-email/

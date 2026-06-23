@@ -166,4 +166,13 @@ export function SignupNudgeEmail({
   );
 }
 
+// Sample data the React Email preview server (`pnpm email:dev`) renders with.
+SignupNudgeEmail.PreviewProps = {
+  name: 'Ana',
+  locale: 'en',
+  discountCode: 'LOTERIA-7KQ2M9',
+  redeemUrl: 'http://localhost:3006/redeem?code=LOTERIA-7KQ2M9&boardId=demo',
+  unsubscribeUrl: 'http://localhost:3006/unsubscribe?token=demo-token&lang=en',
+} satisfies SignupNudgeEmailProps;
+
 export default SignupNudgeEmail;
