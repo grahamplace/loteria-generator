@@ -154,30 +154,28 @@ export function UserSearch({
             {plural(selected.size, 'selected')}
           </span>
 
-          {templateOptions.length > 1 && (
-            <div className="flex items-center gap-2">
-              <label htmlFor="campaign-template-select" className="text-sm text-muted-foreground">
-                Template
-              </label>
-              <Select value={selectedKey} onValueChange={setSelectedKey}>
-                <SelectTrigger
-                  id="campaign-template-select"
-                  size="sm"
-                  aria-label="Select campaign template"
-                  style={{ touchAction: 'manipulation' }}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {templateOptions.map((opt) => (
-                    <SelectItem key={opt.key} value={opt.key}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <label htmlFor="campaign-template-select" className="text-sm text-muted-foreground">
+              Template
+            </label>
+            <Select value={selectedKey} onValueChange={setSelectedKey}>
+              <SelectTrigger
+                id="campaign-template-select"
+                size="sm"
+                aria-label="Select campaign template"
+                style={{ touchAction: 'manipulation' }}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {templateOptions.map((opt) => (
+                  <SelectItem key={opt.key} value={opt.key}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <AlertDialogTrigger asChild>
