@@ -1,8 +1,8 @@
 // lib/email/send-campaign.tsx
-import { Resend } from 'resend';
 import { getCampaignTemplate } from '@/lib/email/campaigns/registry';
 import { lifecycleEmailsEnabled } from './guard';
 import { isMarketingUnsubscribed } from './unsubscribe';
+import { sendEmail } from './resend';
 
 export async function sendCampaignEmail(params: {
   templateKey: string;
@@ -30,10 +30,8 @@ export async function sendCampaignEmail(params: {
     return { id: null, skipped: true };
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY!);
-  const { data, error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM!,
-    to: [params.to],
+  const { id } = await sendEmail({
+    to: params.to,
     subject: template.subject(params.locale),
     react: template.render({
       name: params.name,
@@ -52,8 +50,5 @@ export async function sendCampaignEmail(params: {
     },
   });
 
-  if (error) {
-    throw new Error(`Resend send failed: ${error.message}`);
-  }
-  return { id: data?.id ?? null, skipped: false };
+  return { id, skipped: false };
 }

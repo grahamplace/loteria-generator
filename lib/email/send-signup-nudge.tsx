@@ -1,8 +1,8 @@
 // lib/email/send-signup-nudge.tsx
-import { Resend } from 'resend';
 import { SignupNudgeEmail, signupNudgeSubject } from '@/emails/signup-nudge';
 import { lifecycleEmailsEnabled } from './guard';
 import { isMarketingUnsubscribed } from './unsubscribe';
+import { sendEmail } from './resend';
 
 export async function sendSignupNudgeEmail(params: {
   userId: string;
@@ -23,10 +23,8 @@ export async function sendSignupNudgeEmail(params: {
     return { id: null, skipped: true };
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY!);
-  const { data, error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM!,
-    to: [params.to],
+  const { id } = await sendEmail({
+    to: params.to,
     subject: signupNudgeSubject(params.locale),
     react: SignupNudgeEmail({
       name: params.name,
@@ -44,8 +42,5 @@ export async function sendSignupNudgeEmail(params: {
     },
   });
 
-  if (error) {
-    throw new Error(`Resend send failed: ${error.message}`);
-  }
-  return { id: data?.id ?? null, skipped: false };
+  return { id, skipped: false };
 }

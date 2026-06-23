@@ -1,22 +1,17 @@
 // __tests__/lib/send-campaign.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock resend before importing the module under test
-vi.mock('resend', () => {
-  const mockSend = vi.fn();
-  return {
-    Resend: vi.fn().mockImplementation(() => ({
-      emails: { send: mockSend },
-    })),
-  };
-});
-
 vi.mock('@/lib/email/guard', () => ({
   lifecycleEmailsEnabled: vi.fn(),
 }));
 
 vi.mock('@/lib/email/unsubscribe', () => ({
   isMarketingUnsubscribed: vi.fn(),
+}));
+
+// The send fn now delegates the actual Resend call to the central wrapper.
+vi.mock('@/lib/email/resend', () => ({
+  sendEmail: vi.fn(),
 }));
 
 const fakeSubject = vi.fn(() => 'SUBJECT');
@@ -31,10 +26,9 @@ vi.mock('@/lib/email/campaigns/registry', () => ({
   }),
 }));
 
-import { Resend } from 'resend';
 import { lifecycleEmailsEnabled } from '@/lib/email/guard';
 import { isMarketingUnsubscribed } from '@/lib/email/unsubscribe';
-import { getCampaignTemplate } from '@/lib/email/campaigns/registry';
+import { sendEmail } from '@/lib/email/resend';
 import { sendCampaignEmail } from '@/lib/email/send-campaign';
 
 const baseParams = {
@@ -50,38 +44,29 @@ const baseParams = {
   redeemUrl: 'https://example.com/redeem?code=FAKE-CODE',
 };
 
-function getMockSend() {
-  const ResendMock = vi.mocked(Resend);
-  const instance = ResendMock.mock.results[ResendMock.mock.results.length - 1]?.value;
-  return instance?.emails.send as ReturnType<typeof vi.fn>;
-}
-
 describe('sendCampaignEmail', () => {
   beforeEach(() => {
     vi.mocked(lifecycleEmailsEnabled).mockReset();
     vi.mocked(isMarketingUnsubscribed).mockReset();
-    vi.mocked(Resend).mockClear();
+    vi.mocked(sendEmail).mockReset();
     fakeSubject.mockClear();
     fakeRender.mockClear();
-    process.env.RESEND_API_KEY = 'test-key';
-    process.env.EMAIL_FROM = 'hello@example.com';
   });
 
-  it('throws and does not call Resend when templateKey is unknown', async () => {
+  it('throws and does not send when templateKey is unknown', async () => {
     await expect(sendCampaignEmail({ ...baseParams, templateKey: 'unknown-key' })).rejects.toThrow(
       'Unknown campaign template: unknown-key'
     );
-
-    expect(Resend).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 
-  it('returns { id: null, skipped: true } and does not call Resend when guard is disabled', async () => {
+  it('returns { id: null, skipped: true } and does not send when guard is disabled', async () => {
     vi.mocked(lifecycleEmailsEnabled).mockReturnValue(false);
 
     const result = await sendCampaignEmail(baseParams);
 
     expect(result).toEqual({ id: null, skipped: true });
-    expect(Resend).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
     expect(isMarketingUnsubscribed).not.toHaveBeenCalled();
   });
 
@@ -93,31 +78,25 @@ describe('sendCampaignEmail', () => {
 
     expect(result).toEqual({ id: null, skipped: true });
     expect(isMarketingUnsubscribed).toHaveBeenCalledWith(baseParams.userId);
-    expect(Resend).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 
-  it('calls resend.emails.send with subject/render from template and one-click header, returns { id, skipped: false }', async () => {
+  it('calls sendEmail with the template subject/render and one-click header, returns { id, skipped: false }', async () => {
     vi.mocked(lifecycleEmailsEnabled).mockReturnValue(true);
     vi.mocked(isMarketingUnsubscribed).mockResolvedValue(false);
-
-    const mockSend = vi.fn().mockResolvedValue({ data: { id: 'msg-abc' }, error: null });
-    vi.mocked(Resend).mockImplementationOnce(
-      () => ({ emails: { send: mockSend } }) as unknown as InstanceType<typeof Resend>
-    );
+    vi.mocked(sendEmail).mockResolvedValue({ id: 'msg-abc' });
 
     const result = await sendCampaignEmail(baseParams);
 
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    const callArgs = mockSend.mock.calls[0][0];
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+    const callArgs = vi.mocked(sendEmail).mock.calls[0][0];
     expect(callArgs.subject).toBe('SUBJECT');
     expect(callArgs.react).toBe('RENDERED');
-    expect(callArgs.to).toEqual([baseParams.to]);
-    expect(callArgs.from).toBe('hello@example.com');
-    expect(callArgs.headers['List-Unsubscribe']).toBe(`<${baseParams.unsubscribeOneClickUrl}>`);
-    expect(callArgs.headers['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click');
+    expect(callArgs.to).toBe(baseParams.to);
+    expect(callArgs.headers?.['List-Unsubscribe']).toBe(`<${baseParams.unsubscribeOneClickUrl}>`);
+    expect(callArgs.headers?.['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click');
     expect(result).toEqual({ id: 'msg-abc', skipped: false });
 
-    // Template subject/render were called with correct args
     expect(fakeSubject).toHaveBeenCalledWith(baseParams.locale);
     expect(fakeRender).toHaveBeenCalledWith({
       name: baseParams.name,
@@ -129,17 +108,10 @@ describe('sendCampaignEmail', () => {
     });
   });
 
-  it('throws an Error when Resend returns an error', async () => {
+  it('propagates an error thrown by sendEmail', async () => {
     vi.mocked(lifecycleEmailsEnabled).mockReturnValue(true);
     vi.mocked(isMarketingUnsubscribed).mockResolvedValue(false);
-
-    const mockSend = vi.fn().mockResolvedValue({
-      data: null,
-      error: { message: 'Invalid API key', name: 'validation_error' },
-    });
-    vi.mocked(Resend).mockImplementationOnce(
-      () => ({ emails: { send: mockSend } }) as unknown as InstanceType<typeof Resend>
-    );
+    vi.mocked(sendEmail).mockRejectedValue(new Error('Resend send failed: Invalid API key'));
 
     await expect(sendCampaignEmail(baseParams)).rejects.toThrow(
       'Resend send failed: Invalid API key'
