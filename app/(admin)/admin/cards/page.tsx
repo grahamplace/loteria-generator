@@ -23,6 +23,7 @@ async function getCardsPage(page: number) {
         label: cards.label,
         status: cards.status,
         createdAt: cards.createdAt,
+        boardId: boards.id,
         boardName: boards.name,
         ownerEmail: user.email,
       })
@@ -79,10 +80,13 @@ export default async function AdminCardsPage({
         <>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {rows.map((card) => (
-              <li key={card.id}>
+              <li
+                key={card.id}
+                className="rounded-lg border border-border bg-card p-2 transition-colors focus-within:border-primary hover:border-primary"
+              >
                 <Link
                   href={`/admin/cards/${card.id}`}
-                  className="block rounded-lg border border-border bg-card p-2 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="grid grid-cols-2 gap-1.5">
                     <div className="space-y-1">
@@ -116,17 +120,22 @@ export default async function AdminCardsPage({
                   </div>
 
                   <div className="mt-2 flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-medium">
-                        #{card.number} — {card.label || 'Unlabeled'}
-                      </p>
-                      <p className="truncate text-[11px] text-muted-foreground">
-                        {card.ownerEmail}
-                      </p>
-                    </div>
+                    <p className="min-w-0 truncate text-xs font-medium">
+                      #{card.number} — {card.label || 'Unlabeled'}
+                    </p>
                     <StatusBadge status={card.status} />
                   </div>
                 </Link>
+
+                <div className="mt-1 space-y-0.5">
+                  <Link
+                    href={`/admin/boards/${card.boardId}`}
+                    className="block truncate text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {card.boardName}
+                  </Link>
+                  <p className="truncate text-[11px] text-muted-foreground">{card.ownerEmail}</p>
+                </div>
               </li>
             ))}
           </ul>
