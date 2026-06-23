@@ -32,3 +32,13 @@ export const ILLUSTRATION_PROMPT = `
     ## Negative prompt (do not include these in the image):
     photorealistic, 3D render, CGI, ultra-detailed texture, modern flat vector, crisp geometric logo style, anime, manga, glossy highlights, cinematic lighting, depth of field blur, HDR, heavy noise, neon palette, messy background, complex scenery, readable watermark, typography, captions, numbers, border, frame
     `;
+
+export function buildIllustrationPrompt(overlay?: string | null): string {
+  const trimmed = overlay?.trim();
+  if (!trimmed) return ILLUSTRATION_PROMPT;
+  return `${ILLUSTRATION_PROMPT}
+
+    ## Additional Instructions (admin overrides — follow these even where they conflict with the above)
+    ${trimmed}
+    `;
+}

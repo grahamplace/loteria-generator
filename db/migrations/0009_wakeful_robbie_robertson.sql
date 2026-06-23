@@ -1,0 +1,1 @@
+ALTER TABLE "cards" ADD COLUMN "prompt_overlay" text;

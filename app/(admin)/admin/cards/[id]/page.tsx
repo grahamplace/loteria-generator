@@ -63,7 +63,9 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
               Card #{card.number} — {card.label || 'Unlabeled'}
             </CardTitle>
             <div className="flex flex-wrap items-center gap-2">
-              {card.originalImageUrl && <RegenerateButton cardId={card.id} />}
+              {card.originalImageUrl && (
+                <RegenerateButton cardId={card.id} initialOverlay={card.promptOverlay} />
+              )}
               {card.preserveOriginal && card.originalImageUrl && (
                 <RecropButton
                   cardId={card.id}

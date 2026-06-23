@@ -21,5 +21,6 @@ export const illustrationRegenerateRequested = eventType('card/illustration.rege
     boardId: z.string().uuid(),
     userId: z.string(),
     originalImageUrl: z.string().url(),
+    promptOverlay: z.string().optional(),
   }),
 });
