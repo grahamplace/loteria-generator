@@ -20,6 +20,11 @@ async function getUsers() {
         sql<number>`(select count(*) from boards where boards.user_id = "user"."id" and boards.is_unlocked = true)`.as(
           'paid_board_count'
         ),
+      reengagementSentAt: sql<
+        string | null
+      >`(select sent_at::text from lifecycle_emails le where le.user_id = "user"."id" and le.type = 'reengagement' order by sent_at desc nulls last limit 1)`.as(
+        'reengagement_sent_at'
+      ),
     })
     .from(user)
     .orderBy(desc(user.createdAt));
@@ -30,6 +35,7 @@ async function getUsers() {
     cardCount: Number(u.cardCount),
     paidBoardCount: Number(u.paidBoardCount),
     createdAt: u.createdAt.toISOString(),
+    reengagementSentAt: u.reengagementSentAt,
   }));
 }
 
