@@ -8,7 +8,7 @@ import { REENGAGEMENT_EXPIRY_DAYS, SIGNUP_NUDGE_EXPIRY_DAYS } from '@/lib/consta
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code');
   const boardId = req.nextUrl.searchParams.get('boardId');
-  const dest = boardId ? `/boards/${boardId}` : '/boards';
+  const dest = boardId ? `/boards/${boardId}` : '/dashboard';
   const res = NextResponse.redirect(new URL(dest, req.nextUrl.origin));
   if (code) {
     res.cookies.set('loteria_promo', code, {
