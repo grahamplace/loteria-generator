@@ -25,8 +25,9 @@ export const illustrationRegenerateRequested = eventType('card/illustration.rege
   }),
 });
 
-export const reengagementEmailRequested = eventType('admin/reengagement-email.requested', {
+export const campaignEmailRequested = eventType('admin/campaign-email.requested', {
   schema: z.object({
+    templateKey: z.string(),
     userIds: z.array(z.string()).min(1),
   }),
 });
