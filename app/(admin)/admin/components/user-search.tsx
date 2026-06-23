@@ -22,10 +22,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { DollarSign, Loader2, MailCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import type { CampaignTemplateOption } from '@/lib/email/campaigns/registry';
 
 interface UserRow {
   id: string;
@@ -35,7 +43,7 @@ interface UserRow {
   cardCount: number;
   paidBoardCount: number;
   createdAt: string;
-  reengagementSentAt: string | null;
+  sentTemplateKeys: string[];
 }
 
 // Total column count: checkbox + Email + Name + Paid + Sent + Boards + Cards + Joined = 8
@@ -45,11 +53,18 @@ function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
 
-export function UserSearch({ users }: { users: UserRow[] }) {
+export function UserSearch({
+  users,
+  templateOptions,
+}: {
+  users: UserRow[];
+  templateOptions: CampaignTemplateOption[];
+}) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [selectedKey, setSelectedKey] = useState(templateOptions[0]?.key ?? '');
 
   const filtered = users.filter(
     (u) =>
@@ -63,6 +78,8 @@ export function UserSearch({ users }: { users: UserRow[] }) {
     filteredIds.length > 0 && selectedInFiltered.length === filteredIds.length;
   const someFilteredSelected =
     selectedInFiltered.length > 0 && selectedInFiltered.length < filteredIds.length;
+
+  const selectedLabel = templateOptions.find((t) => t.key === selectedKey)?.label ?? 'campaign';
 
   function toggleRow(id: string) {
     setSelected((prev) => {
@@ -97,25 +114,28 @@ export function UserSearch({ users }: { users: UserRow[] }) {
   function handleSend() {
     const userIds = Array.from(selected);
     const n = userIds.length;
+    const label = selectedLabel;
     setDialogOpen(false);
     startTransition(async () => {
       try {
-        const res = await fetch('/api/admin/users/send-reengagement', {
+        const res = await fetch('/api/admin/users/send-campaign', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userIds }),
+          body: JSON.stringify({ templateKey: selectedKey, userIds }),
         });
         if (res.ok) {
-          toast.success(`Queued re-engagement email for ${plural(n, 'user')}`);
+          toast.success(`Queued ${label} for ${plural(n, 'user')}`);
           setSelected(new Set());
         } else {
-          toast.error('Failed to queue re-engagement email');
+          toast.error(`Failed to queue ${label}`);
         }
       } catch {
-        toast.error('Failed to queue re-engagement email');
+        toast.error(`Failed to queue ${label}`);
       }
     });
   }
+
+  const hasTemplates = templateOptions.length > 0;
 
   return (
     <div className="space-y-4">
@@ -134,25 +154,50 @@ export function UserSearch({ users }: { users: UserRow[] }) {
             {plural(selected.size, 'selected')}
           </span>
 
+          {templateOptions.length > 1 && (
+            <div className="flex items-center gap-2">
+              <label htmlFor="campaign-template-select" className="text-sm text-muted-foreground">
+                Template
+              </label>
+              <Select value={selectedKey} onValueChange={setSelectedKey}>
+                <SelectTrigger
+                  id="campaign-template-select"
+                  size="sm"
+                  aria-label="Select campaign template"
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {templateOptions.map((opt) => (
+                    <SelectItem key={opt.key} value={opt.key}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <AlertDialogTrigger asChild>
               <Button
                 size="sm"
                 variant="default"
-                disabled={pending}
+                disabled={pending || !hasTemplates}
                 style={{ touchAction: 'manipulation' }}
-                aria-label={`Send re-engagement email to ${plural(selected.size, 'user')}`}
+                aria-label={`Send ${selectedLabel} campaign to ${plural(selected.size, 'user')}`}
               >
                 {pending && <Loader2 className="mr-1.5 size-3.5 animate-spin" aria-hidden />}
-                Send re-engagement email
+                Send campaign
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Send re-engagement email?</AlertDialogTitle>
+                <AlertDialogTitle>Send the {selectedLabel} campaign?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Send the re-engagement email with a 25% off code to{' '}
-                  {plural(selected.size, 'user')}? Already-sent users will be skipped automatically.
+                  Send the {selectedLabel} campaign to {plural(selected.size, 'user')}? Already-sent
+                  users will be skipped automatically.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -229,10 +274,10 @@ export function UserSearch({ users }: { users: UserRow[] }) {
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    {u.reengagementSentAt != null ? (
+                    {u.sentTemplateKeys.includes(selectedKey) ? (
                       <MailCheck
                         className="mx-auto size-4 text-muted-foreground"
-                        aria-label={`Re-engagement email sent ${new Date(u.reengagementSentAt).toLocaleDateString()}`}
+                        aria-label="Already received the selected campaign"
                       />
                     ) : (
                       <span className="sr-only">Not sent</span>

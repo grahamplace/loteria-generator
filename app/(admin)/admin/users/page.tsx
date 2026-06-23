@@ -2,6 +2,7 @@ import { db, user } from '@/db';
 import { desc, sql } from 'drizzle-orm';
 import { AdminBreadcrumb } from '../components/admin-breadcrumb';
 import { UserSearch } from '../components/user-search';
+import { campaignTemplateOptions } from '@/lib/email/campaigns/registry';
 
 async function getUsers() {
   const result = await db
@@ -20,10 +21,10 @@ async function getUsers() {
         sql<number>`(select count(*) from boards where boards.user_id = "user"."id" and boards.is_unlocked = true)`.as(
           'paid_board_count'
         ),
-      reengagementSentAt: sql<
-        string | null
-      >`(select sent_at::text from lifecycle_emails le where le.user_id = "user"."id" and le.type = 'reengagement' order by sent_at desc nulls last limit 1)`.as(
-        'reengagement_sent_at'
+      sentTemplateKeys: sql<
+        string[]
+      >`(select coalesce(array_agg(distinct le.type), '{}') from lifecycle_emails le where le.user_id = "user"."id")`.as(
+        'sent_template_keys'
       ),
     })
     .from(user)
@@ -35,7 +36,7 @@ async function getUsers() {
     cardCount: Number(u.cardCount),
     paidBoardCount: Number(u.paidBoardCount),
     createdAt: u.createdAt.toISOString(),
-    reengagementSentAt: u.reengagementSentAt,
+    sentTemplateKeys: Array.isArray(u.sentTemplateKeys) ? u.sentTemplateKeys : [],
   }));
 }
 
@@ -46,7 +47,7 @@ export default async function AdminUsersPage() {
     <div className="space-y-4">
       <AdminBreadcrumb items={[{ label: 'Users' }]} />
       <h2 className="text-lg font-semibold">Users ({users.length})</h2>
-      <UserSearch users={users} />
+      <UserSearch users={users} templateOptions={campaignTemplateOptions()} />
     </div>
   );
 }
