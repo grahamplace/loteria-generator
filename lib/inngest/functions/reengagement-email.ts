@@ -15,7 +15,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const reengagementEmail = inngest.createFunction(
   {
     id: 'reengagement-email',
-    triggers: [{ event: reengagementEmailRequested.name }],
+    triggers: [reengagementEmailRequested],
     retries: 1,
   },
   async ({ step, event }) => {

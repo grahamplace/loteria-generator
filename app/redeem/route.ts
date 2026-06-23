@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SIGNUP_NUDGE_EXPIRY_DAYS } from '@/lib/constants';
+import { REENGAGEMENT_EXPIRY_DAYS, SIGNUP_NUDGE_EXPIRY_DAYS } from '@/lib/constants';
 
 /**
  * GET /redeem?code=LOTERIA-XXXX&boardId=... — stores the promo code in a
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       httpOnly: true,
       sameSite: 'lax',
       path: '/',
-      maxAge: SIGNUP_NUDGE_EXPIRY_DAYS * 24 * 60 * 60,
+      maxAge: Math.max(SIGNUP_NUDGE_EXPIRY_DAYS, REENGAGEMENT_EXPIRY_DAYS) * 24 * 60 * 60,
       secure: process.env.NODE_ENV === 'production',
     });
   }

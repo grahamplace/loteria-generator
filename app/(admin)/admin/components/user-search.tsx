@@ -172,14 +172,8 @@ export function UserSearch({ users }: { users: UserRow[] }) {
             <TableRow>
               <TableHead className="w-10">
                 <Checkbox
-                  checked={allFilteredSelected}
-                  // indeterminate: no standard prop in Radix — set via data attribute pattern
-                  data-state={
-                    someFilteredSelected
-                      ? 'indeterminate'
-                      : allFilteredSelected
-                        ? 'checked'
-                        : 'unchecked'
+                  checked={
+                    allFilteredSelected ? true : someFilteredSelected ? 'indeterminate' : false
                   }
                   aria-label={allFilteredSelected ? 'Deselect all' : 'Select all'}
                   aria-checked={someFilteredSelected ? 'mixed' : allFilteredSelected}
