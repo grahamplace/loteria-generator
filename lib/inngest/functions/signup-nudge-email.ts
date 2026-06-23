@@ -5,6 +5,7 @@ import { findSignupNudgeRecipients } from '@/lib/marketing/signup-nudge';
 import { generateDiscountCode } from '@/lib/email/discount-code';
 import { createOneTimePromotionCode } from '@/lib/stripe-promotions';
 import { sendSignupNudgeEmail } from '@/lib/email/send-signup-nudge';
+import { isMarketingUnsubscribed, getOrCreateUnsubscribeToken } from '@/lib/email/unsubscribe';
 import { getPostHogClient } from '@/lib/posthog-server';
 import { LIFECYCLE_EMAIL_TYPE_SIGNUP_NUDGE, SIGNUP_NUDGE_EXPIRY_DAYS } from '@/lib/constants';
 
@@ -36,6 +37,15 @@ export const signupNudgeEmail = inngest.createFunction(
         if (claimed.length === 0) return { outcome: 'skipped' as const };
         const rowId = claimed[0].id;
 
+        // Respect marketing opt-out before spending a Stripe promo code on them.
+        if (await isMarketingUnsubscribed(r.id)) {
+          await db
+            .update(lifecycleEmails)
+            .set({ status: 'skipped', sentAt: new Date() })
+            .where(eq(lifecycleEmails.id, rowId));
+          return { outcome: 'skipped' as const };
+        }
+
         try {
           const code = generateDiscountCode();
           const expiresAt = new Date(Date.now() + SIGNUP_NUDGE_EXPIRY_DAYS * DAY_MS);
@@ -47,12 +57,23 @@ export const signupNudgeEmail = inngest.createFunction(
           }`;
           const locale: 'en' | 'es' = r.locale === 'es' ? 'es' : 'en';
 
+          const unsubscribeToken = await getOrCreateUnsubscribeToken(r.id);
+          const unsubscribeUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(
+            unsubscribeToken
+          )}&lang=${locale}`;
+          const unsubscribeOneClickUrl = `${appUrl}/api/unsubscribe?token=${encodeURIComponent(
+            unsubscribeToken
+          )}`;
+
           const send = await sendSignupNudgeEmail({
+            userId: r.id,
             to: r.email,
             name: r.name,
             locale,
             discountCode: code,
             redeemUrl,
+            unsubscribeUrl,
+            unsubscribeOneClickUrl,
           });
 
           await db

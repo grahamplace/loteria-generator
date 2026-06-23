@@ -20,6 +20,7 @@ export type SignupNudgeEmailProps = {
   locale: 'en' | 'es';
   discountCode: string;
   redeemUrl: string;
+  unsubscribeUrl: string;
 };
 
 const COLORS = {
@@ -39,8 +40,8 @@ const COPY = {
     discountLead: `As a thank-you, here is ${SIGNUP_NUDGE_DISCOUNT_PERCENT}% off, just for you:`,
     expires: `This code is one-time use and expires in ${SIGNUP_NUDGE_EXPIRY_DAYS} days.`,
     cta: `Unlock with ${SIGNUP_NUDGE_DISCOUNT_PERCENT}% off`,
-    footer:
-      'You are receiving this because you created a Lotería board. If you would rather not get these, just reply and let us know.',
+    footer: 'You are receiving this because you created a Lotería board.',
+    unsubscribe: 'Unsubscribe',
   },
   es: {
     preview: `Tu código de ${SIGNUP_NUDGE_DISCOUNT_PERCENT}% de descuento está adentro`,
@@ -50,8 +51,8 @@ const COPY = {
     discountLead: `Como agradecimiento, aquí tienes un ${SIGNUP_NUDGE_DISCOUNT_PERCENT}% de descuento, solo para ti:`,
     expires: `Este código es de un solo uso y vence en ${SIGNUP_NUDGE_EXPIRY_DAYS} días.`,
     cta: `Desbloquear con ${SIGNUP_NUDGE_DISCOUNT_PERCENT}% de descuento`,
-    footer:
-      'Recibes esto porque creaste una tabla de Lotería. Si prefieres no recibir estos correos, responde y avísanos.',
+    footer: 'Recibes esto porque creaste una tabla de Lotería.',
+    unsubscribe: 'Cancelar suscripción',
   },
 };
 
@@ -61,7 +62,13 @@ export function signupNudgeSubject(locale: 'en' | 'es'): string {
     : `🎉 ${SIGNUP_NUDGE_DISCOUNT_PERCENT}% off to finish your Lotería board`;
 }
 
-export function SignupNudgeEmail({ name, locale, discountCode, redeemUrl }: SignupNudgeEmailProps) {
+export function SignupNudgeEmail({
+  name,
+  locale,
+  discountCode,
+  redeemUrl,
+  unsubscribeUrl,
+}: SignupNudgeEmailProps) {
   const t = COPY[locale] ?? COPY.en;
   return (
     <Html lang={locale}>
@@ -147,11 +154,9 @@ export function SignupNudgeEmail({ name, locale, discountCode, redeemUrl }: Sign
             </Text>
             <Hr style={{ borderColor: COLORS.gold, margin: '24px 0' }} />
             <Text style={{ color: '#8a7a6a', fontSize: '12px', lineHeight: '18px' }}>
-              {t.footer}
-            </Text>
-            <Text style={{ color: '#8a7a6a', fontSize: '12px' }}>
-              <Link href={redeemUrl} style={{ color: COLORS.primary }}>
-                {redeemUrl}
+              {t.footer}{' '}
+              <Link href={unsubscribeUrl} style={{ color: '#8a7a6a', textDecoration: 'underline' }}>
+                {t.unsubscribe}
               </Link>
             </Text>
           </Section>

@@ -71,6 +71,10 @@ export const userProfiles = pgTable('user_profiles', {
     .references(() => user.id, { onDelete: 'cascade' }),
   stripeCustomerId: text('stripe_customer_id'),
   locale: text('locale'), // 'en' | 'es' | null — null means no preference set
+  // Marketing email opt-out. null = subscribed; timestamp = when they unsubscribed.
+  marketingUnsubscribedAt: timestamp('marketing_unsubscribed_at', { withTimezone: true }),
+  // Opaque per-user token used in unsubscribe links (no auth needed to act on it).
+  unsubscribeToken: text('unsubscribe_token').unique(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

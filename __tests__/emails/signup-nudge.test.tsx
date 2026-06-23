@@ -6,6 +6,7 @@ import { SignupNudgeEmail, signupNudgeSubject } from '@/emails/signup-nudge';
 const baseProps = {
   discountCode: 'LOTERIA-7KQ2M9',
   redeemUrl: 'https://example.com/redeem?code=LOTERIA-7KQ2M9&boardId=abc',
+  unsubscribeUrl: 'https://example.com/unsubscribe?token=tok123&lang=en',
 };
 
 describe('SignupNudgeEmail', () => {
@@ -24,5 +25,11 @@ describe('SignupNudgeEmail', () => {
 
   it('has distinct EN/ES subjects', () => {
     expect(signupNudgeSubject('en')).not.toBe(signupNudgeSubject('es'));
+  });
+
+  it('includes an unsubscribe link in the footer', async () => {
+    const html = await render(SignupNudgeEmail({ name: 'Ana', locale: 'en', ...baseProps }));
+    expect(html).toContain('unsubscribe?token=tok123');
+    expect(html.toLowerCase()).toContain('unsubscribe');
   });
 });
