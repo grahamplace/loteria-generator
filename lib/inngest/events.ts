@@ -24,3 +24,10 @@ export const illustrationRegenerateRequested = eventType('card/illustration.rege
     promptOverlay: z.string().optional(),
   }),
 });
+
+export const campaignEmailRequested = eventType('admin/campaign-email.requested', {
+  schema: z.object({
+    templateKey: z.string(),
+    userIds: z.array(z.string()).min(1),
+  }),
+});

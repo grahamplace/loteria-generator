@@ -1,4 +1,13 @@
-import { pgTable, text, timestamp, boolean, integer, json, uuid } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  json,
+  uuid,
+  unique,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 /**
@@ -62,6 +71,10 @@ export const userProfiles = pgTable('user_profiles', {
     .references(() => user.id, { onDelete: 'cascade' }),
   stripeCustomerId: text('stripe_customer_id'),
   locale: text('locale'), // 'en' | 'es' | null — null means no preference set
+  // Marketing email opt-out. null = subscribed; timestamp = when they unsubscribed.
+  marketingUnsubscribedAt: timestamp('marketing_unsubscribed_at', { withTimezone: true }),
+  // Opaque per-user token used in unsubscribe links (no auth needed to act on it).
+  unsubscribeToken: text('unsubscribe_token').unique(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -129,6 +142,25 @@ export const cards = pgTable('cards', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// Lifecycle / marketing emails — one row per (user, type). Claim-first for idempotency.
+export const lifecycleEmails = pgTable(
+  'lifecycle_emails',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    discountCode: text('discount_code'),
+    stripePromotionCodeId: text('stripe_promotion_code_id'),
+    resendMessageId: text('resend_message_id'),
+    status: text('status').notNull().default('pending'), // pending | sent | skipped | failed
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    sentAt: timestamp('sent_at'),
+  },
+  (table) => [unique('lifecycle_emails_user_id_type_unique').on(table.userId, table.type)]
+);
 
 // Relations
 export const userProfilesRelations = relations(userProfiles, ({ many }) => ({

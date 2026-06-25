@@ -12,9 +12,10 @@ const protectedRoutes = ['/dashboard', '/boards', '/account'];
 const authRoutes = ['/sign-in', '/sign-up'];
 
 // Top-level paths that live OUTSIDE the [locale] tree (e.g. their own route group
-// with its own root layout). next-intl middleware would otherwise rewrite these
-// into the [locale] segment and break routing.
-const nonLocalizedRoots = ['/admin'];
+// with its own root layout, or a bare route handler like /redeem). next-intl
+// middleware would otherwise rewrite these into the [locale] segment (e.g.
+// /redeem → /en/redeem) where nothing resolves, producing a 404.
+const nonLocalizedRoots = ['/admin', '/redeem', '/unsubscribe'];
 
 // The URL prefix for Spanish is always '/es', even though the locale token is 'es-MX'.
 const SPANISH_PREFIX = '/es';

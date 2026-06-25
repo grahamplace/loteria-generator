@@ -8,6 +8,13 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
 
 ---
 
+## Database
+
+- There is **no separate dev database** — dev and prod share one Neon database. The single developer accepts this for now.
+- CAUTION: `DATABASE_URL` in `.env.local` points at the same DB as production. Any `pnpm db:migrate` / `db:push`, seed, or destructive query you run locally hits **production data**. Treat every DB-mutating command as a production change.
+
+---
+
 ## Board Unlock Price
 
 - MUST: Change the unlock price by editing both constants in `lib/constants.ts`: `BOARD_UNLOCK_PRICE_CENTS` (integer cents, used by Stripe) and `BOARD_UNLOCK_PRICE_DISPLAY` (formatted string, e.g. `'$20'`, used in UI/FAQ copy). Keep the two values in sync.
