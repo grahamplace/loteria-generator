@@ -40,7 +40,7 @@ export const campaignEmail = inngest.createFunction(
           .onConflictDoNothing({ target: [lifecycleEmails.userId, lifecycleEmails.type] })
           .returning({ id: lifecycleEmails.id });
 
-        if (claimed.length === 0) return { outcome: 'skipped' as const };
+        if (claimed.length === 0) return { outcome: 'skipped - claimed' as const };
         const rowId = claimed[0].id;
 
         // Respect marketing opt-out before spending a Stripe promo code on them.
@@ -49,7 +49,7 @@ export const campaignEmail = inngest.createFunction(
             .update(lifecycleEmails)
             .set({ status: 'skipped', sentAt: new Date() })
             .where(eq(lifecycleEmails.id, rowId));
-          return { outcome: 'skipped' as const };
+          return { outcome: 'skipped - unsubscribed' as const };
         }
 
         try {
