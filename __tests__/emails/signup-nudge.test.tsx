@@ -7,6 +7,7 @@ const baseProps = {
   discountCode: 'LOTERIA-7KQ2M9',
   redeemUrl: 'https://example.com/redeem?code=LOTERIA-7KQ2M9&boardId=abc',
   unsubscribeUrl: 'https://example.com/unsubscribe?token=tok123&lang=en',
+  appUrl: 'https://example.com',
 };
 
 describe('SignupNudgeEmail', () => {
@@ -21,6 +22,20 @@ describe('SignupNudgeEmail', () => {
     const html = await render(SignupNudgeEmail({ name: 'Ana', locale: 'es', ...baseProps }));
     expect(html).toContain('LOTERIA-7KQ2M9');
     expect(html.toLowerCase()).toContain('descuento');
+  });
+
+  it('greets with only the first name when given a full name', async () => {
+    const html = await render(
+      SignupNudgeEmail({ name: 'Ana Maria Garcia', locale: 'en', ...baseProps })
+    );
+    expect(html).toContain('Hi Ana,');
+    expect(html).not.toContain('Ana Maria Garcia');
+  });
+
+  it('renders the shared wordmark and example images from appUrl', async () => {
+    const html = await render(SignupNudgeEmail({ name: 'Ana', locale: 'en', ...baseProps }));
+    expect(html).toContain('https://example.com/email/wordmark.png');
+    expect(html).toContain('https://example.com/email/loteria-process.png');
   });
 
   it('has distinct EN/ES subjects', () => {

@@ -52,6 +52,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         discountCode: p.discountCode ?? '',
         redeemUrl: p.redeemUrl ?? '',
         unsubscribeUrl: p.unsubscribeUrl,
+        appUrl: p.appUrl,
       }) as React.ReactElement,
     discount: {
       couponId: REENGAGEMENT_COUPON_ID,

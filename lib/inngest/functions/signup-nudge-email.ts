@@ -74,6 +74,7 @@ export const signupNudgeEmail = inngest.createFunction(
             redeemUrl,
             unsubscribeUrl,
             unsubscribeOneClickUrl,
+            appUrl,
           });
 
           await db

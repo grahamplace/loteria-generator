@@ -13,6 +13,7 @@ export async function sendSignupNudgeEmail(params: {
   redeemUrl: string;
   unsubscribeUrl: string;
   unsubscribeOneClickUrl: string;
+  appUrl: string;
 }): Promise<{ id: string | null; skipped: boolean }> {
   if (!lifecycleEmailsEnabled()) {
     return { id: null, skipped: true };
@@ -32,6 +33,7 @@ export async function sendSignupNudgeEmail(params: {
       discountCode: params.discountCode,
       redeemUrl: params.redeemUrl,
       unsubscribeUrl: params.unsubscribeUrl,
+      appUrl: params.appUrl,
     }),
     // RFC 8058 one-click unsubscribe (Gmail/Yahoo bulk-sender requirement). The
     // List-Unsubscribe URL must accept the one-click POST, so it points at the API
