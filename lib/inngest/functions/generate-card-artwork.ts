@@ -138,8 +138,7 @@ export const generateCardArtwork = inngest.createFunction(
         const sourceBuffer = cropData ? await extractCrop(buffer, cropData) : buffer;
         const normalized = await normalizeImageForOpenAI(sourceBuffer);
         const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
-        const illustrationModel =
-          process.env.NODE_ENV === 'production' ? 'gpt-image-2' : 'gpt-image-1-mini';
+        const illustrationModel = 'gpt-image-2';
         const result = await withAITrace(
           'generate-illustration',
           { userId, boardId, cardId, model: illustrationModel },
