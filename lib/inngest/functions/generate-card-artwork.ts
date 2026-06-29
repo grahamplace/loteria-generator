@@ -2,7 +2,7 @@ import OpenAI, { toFile } from 'openai';
 import { eq, sql } from 'drizzle-orm';
 import { db, boards, cards } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
-import { ILLUSTRATION_PROMPT } from '@/lib/illustration-prompt';
+import { buildIllustrationPrompt } from '@/lib/illustration-prompt';
 import { normalizeImageForOpenAI } from '@/lib/image-normalize';
 import { extractCrop } from '@/lib/crop-region';
 
@@ -147,7 +147,7 @@ export const generateCardArtwork = inngest.createFunction(
             openai.images.edit({
               model: illustrationModel,
               image: imageFile,
-              prompt: ILLUSTRATION_PROMPT,
+              prompt: buildIllustrationPrompt(),
               size: '1024x1536',
             })
         );
