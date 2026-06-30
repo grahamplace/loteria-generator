@@ -14,7 +14,6 @@ export type BackgroundColor = {
 export const BACKGROUND_COLORS: readonly BackgroundColor[] = [
   { name: 'lemon yellow', hex: '#F4EC5F' },
   { name: 'sky blue', hex: '#5F94D6' },
-  { name: 'paper white / warm off-white', hex: '#F3F2F2' },
   { name: 'dusty rose / mauve pink', hex: '#DAB5C9' },
 ];
 
