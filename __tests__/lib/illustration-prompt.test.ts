@@ -1,21 +1,51 @@
 import { describe, it, expect } from 'vitest';
-import { ILLUSTRATION_PROMPT, buildIllustrationPrompt } from '@/lib/illustration-prompt';
+import {
+  BACKGROUND_COLORS,
+  buildIllustrationPrompt,
+  pickBackgroundColor,
+  renderIllustrationPrompt,
+} from '@/lib/illustration-prompt';
+
+const YELLOW = BACKGROUND_COLORS[0];
+
+describe('pickBackgroundColor', () => {
+  it('always returns one of BACKGROUND_COLORS', () => {
+    for (let i = 0; i < 50; i++) {
+      expect(BACKGROUND_COLORS).toContain(pickBackgroundColor());
+    }
+  });
+});
+
+describe('renderIllustrationPrompt', () => {
+  it('renders the selected background color name and hex into the prompt', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain(YELLOW.name);
+    expect(prompt).toContain(YELLOW.hex);
+    expect(prompt).toContain('do not default to blue');
+  });
+});
 
 describe('buildIllustrationPrompt', () => {
-  it('returns the base prompt when no overlay is given', () => {
-    expect(buildIllustrationPrompt()).toBe(ILLUSTRATION_PROMPT);
-    expect(buildIllustrationPrompt(undefined)).toBe(ILLUSTRATION_PROMPT);
-    expect(buildIllustrationPrompt(null)).toBe(ILLUSTRATION_PROMPT);
+  it('returns the base prompt for the given background when no overlay is given', () => {
+    const base = renderIllustrationPrompt(YELLOW);
+    expect(buildIllustrationPrompt(undefined, YELLOW)).toBe(base);
+    expect(buildIllustrationPrompt(null, YELLOW)).toBe(base);
   });
 
   it('returns the base prompt for empty or whitespace-only overlays', () => {
-    expect(buildIllustrationPrompt('')).toBe(ILLUSTRATION_PROMPT);
-    expect(buildIllustrationPrompt('   \n  ')).toBe(ILLUSTRATION_PROMPT);
+    const base = renderIllustrationPrompt(YELLOW);
+    expect(buildIllustrationPrompt('', YELLOW)).toBe(base);
+    expect(buildIllustrationPrompt('   \n  ', YELLOW)).toBe(base);
+  });
+
+  it('uses a background from the pool when none is provided', () => {
+    const prompt = buildIllustrationPrompt();
+    expect(BACKGROUND_COLORS.some((c) => prompt.includes(c.hex))).toBe(true);
   });
 
   it('appends a trimmed overlay under an Additional Instructions heading', () => {
-    const result = buildIllustrationPrompt('  Make the background flat blue.  ');
-    expect(result).toContain(ILLUSTRATION_PROMPT);
+    const result = buildIllustrationPrompt('  Make the background flat blue.  ', YELLOW);
+    expect(result).toContain(renderIllustrationPrompt(YELLOW));
     expect(result).toContain('## Additional Instructions');
     expect(result).toContain('Make the background flat blue.');
     expect(result).not.toContain('  Make the background flat blue.  ');

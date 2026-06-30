@@ -1,4 +1,34 @@
-export const ILLUSTRATION_PROMPT = `
+export type BackgroundColor = {
+  /** Human-readable name rendered into the prompt instruction. */
+  name: string;
+  /** Hex value rendered into the prompt instruction. */
+  hex: string;
+};
+
+/**
+ * Background color options for card illustrations. We pick one at random per
+ * card (see {@link pickBackgroundColor}) and render an explicit instruction into
+ * the prompt, so boards get the varied yellow / blue / white / pink mix of
+ * classic Lotería boards instead of the model defaulting to blue every time.
+ */
+export const BACKGROUND_COLORS: readonly BackgroundColor[] = [
+  { name: 'lemon yellow', hex: '#F4EC5F' },
+  { name: 'sky blue', hex: '#5F94D6' },
+  { name: 'paper white / warm off-white', hex: '#F3F2F2' },
+  { name: 'dusty rose / mauve pink', hex: '#DAB5C9' },
+];
+
+/** Background used for the static {@link ILLUSTRATION_PROMPT} export (dev scripts). */
+const DEFAULT_BACKGROUND = BACKGROUND_COLORS[1]; // sky blue — the historical default
+
+/** Randomly select one background color from {@link BACKGROUND_COLORS}. */
+export function pickBackgroundColor(): BackgroundColor {
+  return BACKGROUND_COLORS[Math.floor(Math.random() * BACKGROUND_COLORS.length)];
+}
+
+/** Render the full illustration prompt for a specific background color. */
+export function renderIllustrationPrompt(background: BackgroundColor): string {
+  return `
     ## Instructions
     - Restyle the provided image into the **classic Mexican Lotería card illustration style**.
     - Keep the original subject, pose, and overall silhouette clearly recognizable, but **redraw everything as a vintage hand-painted print**.
@@ -6,8 +36,9 @@ export const ILLUSTRATION_PROMPT = `
     - Reduce tiny details; prioritize clean, iconic readability from a distance.
     - Add a subtle **aged paper texture** and light **ink grain/halftone speckling**, with a touch of **ink bleed** at edges.
     - Background should be **simple and graphic**: either a flat color field or a minimal sky/ground gradient, no complex scenery.
-      - For images featuring "plain objects" (e.g. a trumpet, or a bowl of ramen), use a simple background color (see colors section below).
-      - For images featuring a person or a more complex scene, use a sky/ground gradient.
+      - **This card's selected background color is ${background.name} (${background.hex}). Build the background around this color — do not default to blue.**
+      - For images featuring "plain objects" (e.g. a trumpet, or a bowl of ramen), use ${background.name} (${background.hex}) as a flat background color field.
+      - For images featuring a person or a more complex scene, use a soft sky/ground gradient tinted toward ${background.name} (${background.hex}).
     - Color treatment should match classic Lotería: **high contrast, saturated primaries**, minimal neutral tones, and a slightly warm vintage print cast.
     - Lighting should feel illustrative (not photographic): soft highlights, gentle shadows, and limited tonal steps.
     - **Do not look like modern vector art**—it should feel like a mid-century printed card illustration.
@@ -18,11 +49,8 @@ export const ILLUSTRATION_PROMPT = `
 
     ## Colors
     **Main colors / palette guidance (use these as dominant colors):**
+    - Selected background color: ${background.name} (${background.hex})
     - Off-white / paper: #F3F2F2
-    - Sky blue (background option 1): #5F94D6
-    - Lemon yellow (background option 2): #F4EC5F
-    - Cobalt / primary blue (background option 3): #3176CF
-    - Deep muted blue: #2F67A8
     - Near-black ink (outlines): #1E1F25
     - Brick red / vintage crimson (accents): #962C2D and/or #5C282C
     - Dusty pink / mauve gradient (atmosphere/ground accents): #DAB5C9 / #CAA2AE
@@ -32,11 +60,23 @@ export const ILLUSTRATION_PROMPT = `
     ## Negative prompt (do not include these in the image):
     photorealistic, 3D render, CGI, ultra-detailed texture, modern flat vector, crisp geometric logo style, anime, manga, glossy highlights, cinematic lighting, depth of field blur, HDR, heavy noise, neon palette, messy background, complex scenery, readable watermark, typography, captions, numbers, border, frame
     `;
+}
 
-export function buildIllustrationPrompt(overlay?: string | null): string {
+/**
+ * A static prompt rendered with the default background. Used by dev/example
+ * scripts that want a deterministic prompt. Production card generation should
+ * call {@link buildIllustrationPrompt} so each card gets a random background.
+ */
+export const ILLUSTRATION_PROMPT = renderIllustrationPrompt(DEFAULT_BACKGROUND);
+
+export function buildIllustrationPrompt(
+  overlay?: string | null,
+  background: BackgroundColor = pickBackgroundColor()
+): string {
+  const base = renderIllustrationPrompt(background);
   const trimmed = overlay?.trim();
-  if (!trimmed) return ILLUSTRATION_PROMPT;
-  return `${ILLUSTRATION_PROMPT}
+  if (!trimmed) return base;
+  return `${base}
 
     ## Additional Instructions (admin overrides — follow these even where they conflict with the above)
     ${trimmed}
