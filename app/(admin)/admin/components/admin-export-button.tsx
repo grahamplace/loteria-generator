@@ -9,6 +9,7 @@ import {
   type BoardStyleOptions,
   type LotteriaCard,
 } from '@/lib/generate-boards';
+import { adminCardImageSrc } from '@/lib/admin-card-image';
 import type { Card } from '@/db/schema';
 
 // Mirrors the consumer defaults in components/board-action-bar.tsx. Falls back to
@@ -45,15 +46,24 @@ export function AdminExportButton({
     setProgress('Starting export…');
 
     try {
-      const exportCards: LotteriaCard[] = exportableCards.map((c) => ({
-        id: c.id,
-        number: c.number,
-        label: c.label,
-        // Admin export goes through the admin image proxy (no owner scoping),
-        // matching admin-board-cards-grid.tsx.
-        illustration: `/api/admin/images/${c.id}/illustration`,
-        riddle: c.riddle,
-      }));
+      const exportCards: LotteriaCard[] = exportableCards.flatMap((c) => {
+        // Resolve the image src the same way the admin grid does: default
+        // ("classic") cards serve their public illustrationUrl directly, while
+        // user-uploaded cards go through the authenticated image proxy. Routing
+        // a relative /default-cards/*.webp path through the proxy 404s, which
+        // fails the whole PDF render (admin-board-cards-grid.tsx).
+        const illustration = adminCardImageSrc(c);
+        if (!illustration) return [];
+        return [
+          {
+            id: c.id,
+            number: c.number,
+            label: c.label,
+            illustration,
+            riddle: c.riddle,
+          },
+        ];
+      });
 
       const pdfBlob = await generateLoteriaSetPdf(
         exportCards,
