@@ -15,6 +15,7 @@ export const BACKGROUND_COLORS: readonly BackgroundColor[] = [
   { name: 'pale lemon yellow', hex: '#F5EDA0' },
   { name: 'sky blue', hex: '#5F94D6' },
   { name: 'dusty rose / mauve pink', hex: '#DAB5C9' },
+  { name: 'dusty pale orange', hex: '#F7B17E' },
 ];
 
 /** Background used for the static {@link ILLUSTRATION_PROMPT} export (dev scripts). */
