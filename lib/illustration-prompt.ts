@@ -12,7 +12,7 @@ export type BackgroundColor = {
  * classic Lotería boards instead of the model defaulting to blue every time.
  */
 export const BACKGROUND_COLORS: readonly BackgroundColor[] = [
-  { name: 'lemon yellow', hex: '#F4EC5F' },
+  { name: 'pale lemon yellow', hex: '#F5EDA0' },
   { name: 'sky blue', hex: '#5F94D6' },
   { name: 'dusty rose / mauve pink', hex: '#DAB5C9' },
 ];
