@@ -12,10 +12,10 @@ export type BackgroundColor = {
  * classic Lotería boards instead of the model defaulting to blue every time.
  */
 export const BACKGROUND_COLORS: readonly BackgroundColor[] = [
-  { name: 'lemon yellow', hex: '#F4EC5F' },
+  { name: 'pale lemon yellow', hex: '#F5EDA0' },
   { name: 'sky blue', hex: '#5F94D6' },
-  { name: 'paper white / warm off-white', hex: '#F3F2F2' },
   { name: 'dusty rose / mauve pink', hex: '#DAB5C9' },
+  { name: 'dusty pale orange', hex: '#F7B17E' },
 ];
 
 /** Background used for the static {@link ILLUSTRATION_PROMPT} export (dev scripts). */
