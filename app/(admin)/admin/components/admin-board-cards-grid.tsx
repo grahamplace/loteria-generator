@@ -7,6 +7,7 @@ import { useRealtime } from 'inngest/react';
 import { Badge } from '@/components/ui/badge';
 import { boardChannel, boardChannelTopics, type CardUpdatedPayload } from '@/lib/inngest/channels';
 import { getAdminBoardRealtimeToken } from '@/app/actions/admin-board-realtime';
+import { adminCardImageSrc } from '@/lib/admin-card-image';
 import type { Card } from '@/db/schema';
 
 export function AdminBoardCardsGrid({
@@ -75,49 +76,52 @@ export function AdminBoardCardsGrid({
         <p className="text-sm text-muted-foreground">No cards</p>
       ) : (
         <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8">
-          {cards.map((card) => (
-            <Link
-              key={card.id}
-              href={`/admin/cards/${card.id}`}
-              className="group rounded-lg border border-border p-2 transition-colors hover:border-primary"
-            >
-              <div className="relative mb-2 aspect-[2/3] overflow-hidden rounded bg-muted">
-                {card.illustrationUrl || card.originalImageUrl ? (
-                  <Image
-                    src={`/api/admin/images/${card.id}/${card.illustrationUrl ? 'illustration' : 'original'}`}
-                    alt={card.label || `Card ${card.number}`}
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                    No image
-                  </div>
-                )}
-                {card.status === 'error' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-destructive/20">
-                    <Badge variant="destructive" className="text-[10px]">
-                      Error
-                    </Badge>
-                  </div>
-                )}
-                {card.status === 'processing' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/40">
-                    <Badge variant="secondary" className="text-[10px]">
-                      Processing…
-                    </Badge>
-                  </div>
-                )}
-              </div>
-              <div className="text-center">
-                <p className="text-xs font-medium">#{card.number}</p>
-                <p className="truncate text-[10px] text-muted-foreground">
-                  {card.label || 'Unlabeled'}
-                </p>
-              </div>
-            </Link>
-          ))}
+          {cards.map((card) => {
+            const imageSrc = adminCardImageSrc(card);
+            return (
+              <Link
+                key={card.id}
+                href={`/admin/cards/${card.id}`}
+                className="group rounded-lg border border-border p-2 transition-colors hover:border-primary"
+              >
+                <div className="relative mb-2 aspect-[2/3] overflow-hidden rounded bg-muted">
+                  {imageSrc ? (
+                    <Image
+                      src={imageSrc}
+                      alt={card.label || `Card ${card.number}`}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                      No image
+                    </div>
+                  )}
+                  {card.status === 'error' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-destructive/20">
+                      <Badge variant="destructive" className="text-[10px]">
+                        Error
+                      </Badge>
+                    </div>
+                  )}
+                  {card.status === 'processing' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/40">
+                      <Badge variant="secondary" className="text-[10px]">
+                        Processing…
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+                <div className="text-center">
+                  <p className="text-xs font-medium">#{card.number}</p>
+                  <p className="truncate text-[10px] text-muted-foreground">
+                    {card.label || 'Unlabeled'}
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
