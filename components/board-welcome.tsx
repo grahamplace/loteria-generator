@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { HeroCard } from '@/components/hero-card';
 import { heroCards } from '@/lib/hero-cards';
 import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
+import { ANCHOR_GET_STARTED } from '@/components/onboarding/onboarding-steps';
 
 interface BoardWelcomeProps {
   onContinue: () => void;
@@ -61,6 +62,7 @@ export function BoardWelcome({ onContinue, onUnlock }: BoardWelcomeProps) {
 
         <div className="mt-7 flex flex-wrap justify-center gap-3.5">
           <Button
+            id={ANCHOR_GET_STARTED}
             size="lg"
             onClick={onContinue}
             className="h-auto rounded-full px-7 py-[12px] text-[15px] font-semibold shadow-[0_8px_18px_-10px_rgba(230,57,70,0.7)] hover:-translate-y-[1px] hover:shadow-[0_12px_22px_-10px_rgba(230,57,70,0.8)]"

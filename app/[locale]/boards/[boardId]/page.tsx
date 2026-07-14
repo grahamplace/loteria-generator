@@ -19,6 +19,15 @@ import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
 import { useTranslations } from 'next-intl';
 import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
+import {
+  OnboardingTrigger,
+  OnboardingCompleteWatcher,
+} from '@/components/onboarding/onboarding-trigger';
+import {
+  ANCHOR_ADD_CLASSIC,
+  TOUR_BOARD_INTRO,
+  TOUR_BOARD_ADD_CARD,
+} from '@/components/onboarding/onboarding-steps';
 
 export default function BoardEditorPage() {
   const t = useTranslations('BoardEditor.Page');
@@ -258,6 +267,12 @@ export default function BoardEditorPage() {
       </header>
 
       <main className="flex-1 flex flex-col">
+        <OnboardingTrigger tour={TOUR_BOARD_INTRO} enabled={!!showWelcome} />
+        <OnboardingTrigger
+          tour={TOUR_BOARD_ADD_CARD}
+          enabled={!showWelcome && cards.length === 0}
+        />
+        <OnboardingCompleteWatcher done={cards.length > 0} />
         {showWelcome ? (
           /* Welcome state for new locked boards */
           <BoardWelcome
@@ -325,6 +340,7 @@ export default function BoardEditorPage() {
                       {t('emptyStateCta')}
                     </button>
                     <button
+                      id={ANCHOR_ADD_CLASSIC}
                       onClick={() => setDefaultsPickerOpen(true)}
                       className="px-5 py-3 rounded-lg bg-secondary/15 border border-secondary/40 text-foreground text-sm font-semibold flex items-center gap-2 hover:bg-secondary/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >

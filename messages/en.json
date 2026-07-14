@@ -417,5 +417,26 @@
     "Errors": {},
     "Toasts": {}
   },
-  "Banner": {}
+  "Banner": {},
+  "Onboarding": {
+    "dashboardStart": {
+      "title": "Create your first board",
+      "content": "A board is your custom Lotería deck. Create one to start adding cards — it only takes a second."
+    },
+    "boardIntro": {
+      "title": "Start free",
+      "content": "No photos or payment needed yet. Tap “Get started” to begin building your deck."
+    },
+    "boardAddCard": {
+      "title": "Add your first card",
+      "content": "Add a ready-made classic card to see your board come to life — no photos required. You can upload your own photos anytime."
+    },
+    "controls": {
+      "skip": "Skip",
+      "back": "Back",
+      "next": "Next",
+      "done": "Got it",
+      "progress": "{current} of {total}"
+    }
+  }
 }

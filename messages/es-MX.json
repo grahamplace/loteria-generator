@@ -421,5 +421,26 @@
     "Errors": {},
     "Toasts": {}
   },
-  "Banner": {}
+  "Banner": {},
+  "Onboarding": {
+    "dashboardStart": {
+      "title": "Crea tu primera tabla",
+      "content": "Una tabla es tu Lotería personalizada. Crea una para empezar a agregar cartas — solo toma un segundo."
+    },
+    "boardIntro": {
+      "title": "Empieza gratis",
+      "content": "Aún no necesitas fotos ni pago. Toca «Empieza» para comenzar a armar tu Lotería."
+    },
+    "boardAddCard": {
+      "title": "Agrega tu primera carta",
+      "content": "Agrega una carta clásica ya lista para ver tu tabla cobrar vida — no necesitas fotos. Puedes subir tus propias fotos cuando quieras."
+    },
+    "controls": {
+      "skip": "Omitir",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "done": "Entendido",
+      "progress": "{current} de {total}"
+    }
+  }
 }

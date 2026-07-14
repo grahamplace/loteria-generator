@@ -1,0 +1,73 @@
+import { useTranslations } from 'next-intl';
+import type { Tour } from 'nextstepjs';
+
+// Tour identifiers — referenced by the per-page triggers.
+export const TOUR_DASHBOARD_START = 'dashboard-start';
+export const TOUR_BOARD_INTRO = 'board-intro';
+export const TOUR_BOARD_ADD_CARD = 'board-add-card';
+
+// Selector anchors — these ids live on the real CTAs in the existing UI.
+export const ANCHOR_CREATE_BOARD = 'onb-create-board';
+export const ANCHOR_GET_STARTED = 'onb-get-started';
+export const ANCHOR_ADD_CLASSIC = 'onb-add-classic';
+
+/**
+ * The onboarding is intentionally split into three single-step, per-screen
+ * coachmarks instead of one cross-route tour. Each step is self-contained on
+ * the page where its anchor lives, which keeps it robust across locale-prefixed
+ * routes and lets the user click the real CTA to advance naturally.
+ */
+export function useOnboardingTours(): Tour[] {
+  const t = useTranslations('Onboarding');
+
+  return [
+    {
+      tour: TOUR_DASHBOARD_START,
+      steps: [
+        {
+          icon: null,
+          title: t('dashboardStart.title'),
+          content: t('dashboardStart.content'),
+          selector: `#${ANCHOR_CREATE_BOARD}`,
+          side: 'bottom',
+          showControls: true,
+          showSkip: true,
+          pointerPadding: 8,
+          pointerRadius: 12,
+        },
+      ],
+    },
+    {
+      tour: TOUR_BOARD_INTRO,
+      steps: [
+        {
+          icon: null,
+          title: t('boardIntro.title'),
+          content: t('boardIntro.content'),
+          selector: `#${ANCHOR_GET_STARTED}`,
+          side: 'top',
+          showControls: true,
+          showSkip: true,
+          pointerPadding: 10,
+          pointerRadius: 999,
+        },
+      ],
+    },
+    {
+      tour: TOUR_BOARD_ADD_CARD,
+      steps: [
+        {
+          icon: null,
+          title: t('boardAddCard.title'),
+          content: t('boardAddCard.content'),
+          selector: `#${ANCHOR_ADD_CLASSIC}`,
+          side: 'top',
+          showControls: true,
+          showSkip: true,
+          pointerPadding: 8,
+          pointerRadius: 12,
+        },
+      ],
+    },
+  ];
+}
