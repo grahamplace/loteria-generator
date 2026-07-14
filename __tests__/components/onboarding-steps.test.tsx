@@ -7,10 +7,10 @@ import {
   useOnboardingTours,
   TOUR_DASHBOARD_START,
   TOUR_BOARD_INTRO,
-  TOUR_BOARD_ADD_CARD,
+  TOUR_BOARD_ADD_PHOTO,
   ANCHOR_CREATE_BOARD,
   ANCHOR_GET_STARTED,
-  ANCHOR_ADD_CLASSIC,
+  ANCHOR_UPLOAD,
 } from '@/components/onboarding/onboarding-steps';
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -33,7 +33,7 @@ describe('useOnboardingTours', () => {
     expect(tours.map((tour) => tour.tour)).toEqual([
       TOUR_DASHBOARD_START,
       TOUR_BOARD_INTRO,
-      TOUR_BOARD_ADD_CARD,
+      TOUR_BOARD_ADD_PHOTO,
     ]);
   });
 
@@ -43,7 +43,7 @@ describe('useOnboardingTours', () => {
     const expectedSelectors: Record<string, string> = {
       [TOUR_DASHBOARD_START]: `#${ANCHOR_CREATE_BOARD}`,
       [TOUR_BOARD_INTRO]: `#${ANCHOR_GET_STARTED}`,
-      [TOUR_BOARD_ADD_CARD]: `#${ANCHOR_ADD_CLASSIC}`,
+      [TOUR_BOARD_ADD_PHOTO]: `#${ANCHOR_UPLOAD}`,
     };
 
     for (const tour of tours) {

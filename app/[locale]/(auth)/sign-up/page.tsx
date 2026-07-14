@@ -57,7 +57,7 @@ export default function SignUpPage() {
           });
         }
         posthog.capture('signed_up', { method: 'email' });
-        router.push('/dashboard');
+        router.push('/start');
       }
     } catch (_err) {
       setError(t('errors.unexpectedError'));
@@ -73,7 +73,7 @@ export default function SignUpPage() {
     try {
       await signIn.social({
         provider: 'google',
-        callbackURL: '/dashboard',
+        callbackURL: '/start',
       });
     } catch (_err) {
       setError(t('errors.googleSignUpFailed'));

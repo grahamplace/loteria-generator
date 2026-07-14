@@ -1,6 +1,9 @@
 export const FREE_CARD_LIMIT = 4;
 export const TOTAL_CARD_COUNT = 54;
 
+// Default name for an auto-created board (new-user first board + dashboard "New Board").
+export const DEFAULT_BOARD_NAME = 'My Loteria Board';
+
 // Single source of truth for board unlock pricing. Update both values together.
 export const BOARD_UNLOCK_PRICE_CENTS = 2000;
 export const BOARD_UNLOCK_PRICE_DISPLAY = '$20';

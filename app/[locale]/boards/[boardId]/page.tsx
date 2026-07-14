@@ -24,9 +24,9 @@ import {
   OnboardingCompleteWatcher,
 } from '@/components/onboarding/onboarding-trigger';
 import {
-  ANCHOR_ADD_CLASSIC,
+  ANCHOR_UPLOAD,
   TOUR_BOARD_INTRO,
-  TOUR_BOARD_ADD_CARD,
+  TOUR_BOARD_ADD_PHOTO,
 } from '@/components/onboarding/onboarding-steps';
 
 export default function BoardEditorPage() {
@@ -269,7 +269,7 @@ export default function BoardEditorPage() {
       <main className="flex-1 flex flex-col">
         <OnboardingTrigger tour={TOUR_BOARD_INTRO} enabled={!!showWelcome} />
         <OnboardingTrigger
-          tour={TOUR_BOARD_ADD_CARD}
+          tour={TOUR_BOARD_ADD_PHOTO}
           enabled={!showWelcome && cards.length === 0}
         />
         <OnboardingCompleteWatcher done={cards.length > 0} />
@@ -333,6 +333,7 @@ export default function BoardEditorPage() {
                   <p className="text-sm text-muted-foreground mb-6">{t('emptyStateDesc')}</p>
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     <button
+                      id={ANCHOR_UPLOAD}
                       onClick={() => actionBarRef.current?.triggerFileSelect()}
                       className="px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
@@ -340,7 +341,6 @@ export default function BoardEditorPage() {
                       {t('emptyStateCta')}
                     </button>
                     <button
-                      id={ANCHOR_ADD_CLASSIC}
                       onClick={() => setDefaultsPickerOpen(true)}
                       className="px-5 py-3 rounded-lg bg-secondary/15 border border-secondary/40 text-foreground text-sm font-semibold flex items-center gap-2 hover:bg-secondary/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >

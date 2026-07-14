@@ -431,9 +431,9 @@
       "title": "Empieza gratis",
       "content": "Aún no necesitas fotos ni pago. Toca «Empieza» para comenzar a armar tu Lotería."
     },
-    "boardAddCard": {
-      "title": "Agrega tu primera carta",
-      "content": "Agrega una carta clásica ya lista para ver tu tabla cobrar vida — no necesitas fotos. Puedes subir tus propias fotos cuando quieras."
+    "boardAddPhoto": {
+      "title": "Agrega tu primera foto",
+      "content": "Sube la foto de alguien que quieras y la convertimos en una carta de Lotería personalizada — esa es la parte divertida."
     },
     "controls": {
       "skip": "Omitir",

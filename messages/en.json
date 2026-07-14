@@ -427,9 +427,9 @@
       "title": "Start free",
       "content": "No photos or payment needed yet. Tap “Get started” to begin building your deck."
     },
-    "boardAddCard": {
-      "title": "Add your first card",
-      "content": "Add a ready-made classic card to see your board come to life — no photos required. You can upload your own photos anytime."
+    "boardAddPhoto": {
+      "title": "Add your first photo",
+      "content": "Upload a photo of someone you love and we'll turn it into a custom Lotería card — that's the fun part."
     },
     "controls": {
       "skip": "Skip",
