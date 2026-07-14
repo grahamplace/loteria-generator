@@ -54,6 +54,14 @@ export function setPendingSignupConversion() {
   }
 }
 
+export function clearPendingSignupConversion() {
+  try {
+    sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+  } catch {
+    // Storage unavailable (private mode quota, disabled) — nothing to clear.
+  }
+}
+
 export function consumePendingSignupConversion() {
   try {
     if (sessionStorage.getItem(PENDING_SIGNUP_KEY) !== '1') {

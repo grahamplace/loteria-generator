@@ -4,6 +4,7 @@ import {
   firePurchaseConversion,
   setPendingSignupConversion,
   consumePendingSignupConversion,
+  clearPendingSignupConversion,
 } from '@/lib/google-ads';
 import { BOARD_UNLOCK_PRICE_CENTS } from '@/lib/constants';
 
@@ -83,6 +84,12 @@ describe('google-ads conversion helpers', () => {
       firePurchaseConversion('cs_test_abc');
       expect(gtagSpy).not.toHaveBeenCalled();
     });
+
+    it('no-ops when the purchase label is unset', () => {
+      vi.stubEnv('NEXT_PUBLIC_GOOGLE_ADS_ID', 'AW-123456');
+      firePurchaseConversion('x');
+      expect(gtagSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('gtag queue stub', () => {
@@ -110,6 +117,14 @@ describe('google-ads conversion helpers', () => {
 
     it('consumePendingSignupConversion no-ops when no flag is set', () => {
       stubAdsEnv();
+      consumePendingSignupConversion();
+      expect(gtagSpy).not.toHaveBeenCalled();
+    });
+
+    it('clearPendingSignupConversion removes the flag so a later consume fires nothing', () => {
+      stubAdsEnv();
+      setPendingSignupConversion();
+      clearPendingSignupConversion();
       consumePendingSignupConversion();
       expect(gtagSpy).not.toHaveBeenCalled();
     });

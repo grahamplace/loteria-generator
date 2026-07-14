@@ -12,7 +12,12 @@ campaign for keywords like "custom loteria".
   - **Sign-up** — email signups fire inline; Google-OAuth signups set a
     sessionStorage flag on the sign-up page and fire when the user lands on
     `/dashboard`. (Caveat: someone who clicks "Sign up with Google" but already
-    has an account is also counted — acceptable noise at this stage.)
+    has an account is also counted — acceptable noise at this stage. Two more:
+    if the user abandons the Google consent screen with the Back button, the
+    flag can be left stale for that tab session and may count a later
+    dashboard visit as a signup; and a brand-new user who instead uses "Sign in
+    with Google" on the `/sign-in` page is *not* counted as a signup
+    conversion.)
   - **Purchase** — fires on the Stripe success redirect back to the board page,
     with `value` = `BOARD_UNLOCK_PRICE_CENTS / 100` USD and `transaction_id` =
     the Stripe checkout session ID (so reloads don't double-count).
@@ -68,6 +73,11 @@ build time).
    production URL and confirm the `AW-` tag is detected.
 3. Sign up with a throwaway email and confirm the conversion appears in
    Google Ads (Goals → Conversions; can take a few hours to show).
+4. Perform a real test checkout in production (unlock a board), then confirm
+   the Board unlock conversion registers in Google Ads (Goals → Conversions)
+   with the expected value, and that Tag Assistant shows the conversion hit
+   on the success redirect. Don't trust campaign purchase data until you've
+   seen this working once.
 
 ## First campaign checklist ("custom loteria")
 

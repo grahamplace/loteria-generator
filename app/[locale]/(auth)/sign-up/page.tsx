@@ -6,7 +6,11 @@ import Link from 'next/link';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
 import { signUp, signIn } from '@/lib/auth-client';
-import { fireSignupConversion, setPendingSignupConversion } from '@/lib/google-ads';
+import {
+  fireSignupConversion,
+  setPendingSignupConversion,
+  clearPendingSignupConversion,
+} from '@/lib/google-ads';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,6 +85,7 @@ export default function SignUpPage() {
         callbackURL: '/dashboard',
       });
     } catch (_err) {
+      clearPendingSignupConversion();
       setError(t('errors.googleSignUpFailed'));
       setIsLoading(false);
     }
