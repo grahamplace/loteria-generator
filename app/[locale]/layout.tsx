@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/sonner';
+import { GoogleAdsTag } from '@/components/google-ads-tag';
 import { Agentation } from 'agentation';
 import { notFound, redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
@@ -136,6 +137,7 @@ export default async function LocaleLayout({
         </NextIntlClientProvider>
         <Toaster />
         <Analytics />
+        <GoogleAdsTag />
         {process.env.NODE_ENV === 'development' && <Agentation />}
       </body>
     </html>
