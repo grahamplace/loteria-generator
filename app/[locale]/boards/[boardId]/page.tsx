@@ -11,23 +11,18 @@ import { useBoard } from '@/hooks/use-boards';
 import { useBoardCards } from '@/hooks/use-board-cards';
 import { BoardActionBar, BoardActionBarRef } from '@/components/board-action-bar';
 import { BoardCardGrid } from '@/components/board-card-grid';
-import { BoardWelcome } from '@/components/board-welcome';
 import { UnlockPrompt } from '@/components/unlock-prompt';
 import { DefaultCardsPicker } from '@/components/default-cards-picker';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
 import { useTranslations } from 'next-intl';
-import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
+import { BOARD_UNLOCK_PRICE_DISPLAY, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 import {
   OnboardingTrigger,
   OnboardingCompleteWatcher,
 } from '@/components/onboarding/onboarding-trigger';
-import {
-  ANCHOR_UPLOAD,
-  TOUR_BOARD_INTRO,
-  TOUR_BOARD_ADD_PHOTO,
-} from '@/components/onboarding/onboarding-steps';
+import { ANCHOR_UPLOAD, TOUR_BOARD_ADD_PHOTO } from '@/components/onboarding/onboarding-steps';
 
 export default function BoardEditorPage() {
   const t = useTranslations('BoardEditor.Page');
@@ -54,7 +49,6 @@ export default function BoardEditorPage() {
   const [editedName, setEditedName] = useState('');
   const [unlockPromptOpen, setUnlockPromptOpen] = useState(false);
   const [defaultsPickerOpen, setDefaultsPickerOpen] = useState(false);
-  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const [unlockTrigger, setUnlockTrigger] = useState<'card_limit' | 'board_limit' | 'export'>(
     'card_limit'
   );
@@ -150,10 +144,6 @@ export default function BoardEditorPage() {
     cards.map((c) => c.defaultCardId).filter((id): id is string => !!id)
   );
   const remainingSlots = Math.max(0, cardLimit - cards.length);
-
-  // Show welcome state for new locked boards with no cards
-  const showWelcome =
-    !isLoading && board && cards.length === 0 && !board.isUnlocked && !welcomeDismissed;
 
   if (isLoading) {
     return (
@@ -267,92 +257,87 @@ export default function BoardEditorPage() {
       </header>
 
       <main className="flex-1 flex flex-col">
-        <OnboardingTrigger tour={TOUR_BOARD_INTRO} enabled={!!showWelcome} />
-        <OnboardingTrigger
-          tour={TOUR_BOARD_ADD_PHOTO}
-          enabled={!showWelcome && cards.length === 0}
-        />
+        <OnboardingTrigger tour={TOUR_BOARD_ADD_PHOTO} enabled={cards.length === 0} />
         <OnboardingCompleteWatcher done={cards.length > 0} />
-        {showWelcome ? (
-          /* Welcome state for new locked boards */
-          <BoardWelcome
-            onContinue={() => setWelcomeDismissed(true)}
-            onUnlock={() => openUnlockPrompt('card_limit')}
-          />
-        ) : (
-          <>
-            {/* Action bar — desktop: top of content; mobile: fixed bottom bar */}
-            <div className="max-w-[1400px] mx-auto w-full px-3 md:px-6 pt-3 md:pt-5 pb-3 md:pb-4">
-              <BoardActionBar
-                ref={actionBarRef}
-                onFilesSelected={handleFilesSelected}
-                cardCount={cards.length}
-                maxCards={cardLimit}
-                processedCount={processedCards.length}
-                processingCount={processingCards.length}
-                isUnlocked={board.isUnlocked}
+        <>
+          {/* Action bar — desktop: top of content; mobile: fixed bottom bar */}
+          <div className="max-w-[1400px] mx-auto w-full px-3 md:px-6 pt-3 md:pt-5 pb-3 md:pb-4">
+            <BoardActionBar
+              ref={actionBarRef}
+              onFilesSelected={handleFilesSelected}
+              cardCount={cards.length}
+              maxCards={cardLimit}
+              processedCount={processedCards.length}
+              processingCount={processingCards.length}
+              isUnlocked={board.isUnlocked}
+              cards={displayCards}
+              boardName={board.name}
+              onUnlockRequired={handleExportLimitReached}
+              onOpenDefaults={() => setDefaultsPickerOpen(true)}
+            />
+          </div>
+
+          {/* Cards */}
+          {cards.length > 0 ? (
+            <div className="flex-1 max-w-[1400px] w-full mx-auto px-3 md:px-6 pb-28 md:pb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  {t('yourCards')}
+                </h2>
+                <span className="text-[11px] font-mono text-muted-foreground hidden md:block">
+                  {t('dragToReorder')}
+                </span>
+              </div>
+              <BoardCardGrid
                 cards={displayCards}
-                boardName={board.name}
-                onUnlockRequired={handleExportLimitReached}
-                onOpenDefaults={() => setDefaultsPickerOpen(true)}
+                onDeleteCard={deleteCard}
+                onUpdateLabel={updateCardLabel}
+                onReorderCards={reorderCards}
+                onAddMore={() => actionBarRef.current?.triggerFileSelect()}
+                onAddClassic={() => setDefaultsPickerOpen(true)}
+                isLocked={!board.isUnlocked}
+                atCardLimit={atCardLimit}
+                maxCards={cardLimit}
+                onUnlockRequired={handleCardLimitReached}
               />
             </div>
-
-            {/* Cards */}
-            {cards.length > 0 ? (
-              <div className="flex-1 max-w-[1400px] w-full mx-auto px-3 md:px-6 pb-28 md:pb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    {t('yourCards')}
-                  </h2>
-                  <span className="text-[11px] font-mono text-muted-foreground hidden md:block">
-                    {t('dragToReorder')}
-                  </span>
+          ) : (
+            /* Empty state for boards with no cards */
+            <div className="flex-1 flex items-center justify-center px-6 py-10">
+              <div className="text-center max-w-sm">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Upload className="w-8 h-8 text-primary" />
                 </div>
-                <BoardCardGrid
-                  cards={displayCards}
-                  onDeleteCard={deleteCard}
-                  onUpdateLabel={updateCardLabel}
-                  onReorderCards={reorderCards}
-                  onAddMore={() => actionBarRef.current?.triggerFileSelect()}
-                  onAddClassic={() => setDefaultsPickerOpen(true)}
-                  isLocked={!board.isUnlocked}
-                  atCardLimit={atCardLimit}
-                  maxCards={cardLimit}
-                  onUnlockRequired={handleCardLimitReached}
-                />
-              </div>
-            ) : (
-              /* Empty state for boards with no cards */
-              <div className="flex-1 flex items-center justify-center px-6 py-10">
-                <div className="text-center max-w-sm">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Upload className="w-8 h-8 text-primary" />
-                  </div>
-                  <h2 className="text-xl font-bold mb-2">{t('emptyStateTitle')}</h2>
-                  <p className="text-sm text-muted-foreground mb-6">{t('emptyStateDesc')}</p>
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    <button
-                      id={ANCHOR_UPLOAD}
-                      onClick={() => actionBarRef.current?.triggerFileSelect()}
-                      className="px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    >
-                      <Upload className="w-4 h-4" />
-                      {t('emptyStateCta')}
-                    </button>
-                    <button
-                      onClick={() => setDefaultsPickerOpen(true)}
-                      className="px-5 py-3 rounded-lg bg-secondary/15 border border-secondary/40 text-foreground text-sm font-semibold flex items-center gap-2 hover:bg-secondary/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    >
-                      <Sparkles className="w-4 h-4" aria-hidden="true" />
-                      {t('emptyStateAddClassic')}
-                    </button>
-                  </div>
+                <h2 className="text-xl font-bold mb-2">{t('emptyStateTitle')}</h2>
+                <p className="text-sm text-muted-foreground mb-6">{t('emptyStateDesc')}</p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    id={ANCHOR_UPLOAD}
+                    onClick={() => actionBarRef.current?.triggerFileSelect()}
+                    className="px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {t('emptyStateCta')}
+                  </button>
+                  <button
+                    onClick={() => setDefaultsPickerOpen(true)}
+                    className="px-5 py-3 rounded-lg bg-secondary/15 border border-secondary/40 text-foreground text-sm font-semibold flex items-center gap-2 hover:bg-secondary/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    <Sparkles className="w-4 h-4" aria-hidden="true" />
+                    {t('emptyStateAddClassic')}
+                  </button>
                 </div>
+                <p className="mt-5 font-mono text-[11px] tracking-wider text-muted-foreground">
+                  {t('emptyStateFreePaidNote', {
+                    free: FREE_CARD_LIMIT,
+                    price: BOARD_UNLOCK_PRICE_DISPLAY,
+                    total: TOTAL_CARD_COUNT,
+                  })}
+                </p>
               </div>
-            )}
-          </>
-        )}
+            </div>
+          )}
+        </>
       </main>
 
       {/* Unlock Prompt */}

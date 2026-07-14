@@ -3,12 +3,10 @@ import type { Tour } from 'nextstepjs';
 
 // Tour identifiers — referenced by the per-page triggers.
 export const TOUR_DASHBOARD_START = 'dashboard-start';
-export const TOUR_BOARD_INTRO = 'board-intro';
 export const TOUR_BOARD_ADD_PHOTO = 'board-add-photo';
 
 // Selector anchors — these ids live on the real CTAs in the existing UI.
 export const ANCHOR_CREATE_BOARD = 'onb-create-board';
-export const ANCHOR_GET_STARTED = 'onb-get-started';
 export const ANCHOR_UPLOAD = 'onb-upload';
 
 /**
@@ -34,22 +32,6 @@ export function useOnboardingTours(): Tour[] {
           showSkip: true,
           pointerPadding: 8,
           pointerRadius: 12,
-        },
-      ],
-    },
-    {
-      tour: TOUR_BOARD_INTRO,
-      steps: [
-        {
-          icon: null,
-          title: t('boardIntro.title'),
-          content: t('boardIntro.content'),
-          selector: `#${ANCHOR_GET_STARTED}`,
-          side: 'top',
-          showControls: true,
-          showSkip: true,
-          pointerPadding: 10,
-          pointerRadius: 999,
         },
       ],
     },

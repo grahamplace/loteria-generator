@@ -258,6 +258,7 @@
       "emptyStateDesc": "Upload a photo or pick from the classic Lotería cards to start your free preview.",
       "emptyStateCta": "Upload photos",
       "emptyStateAddClassic": "Add classic card",
+      "emptyStateFreePaidNote": "Start free with {free} cards · {price} unlocks all {total}",
       "boardNotFoundTitle": "Board not found",
       "boardNotFoundCta": "Back to Dashboard",
       "toasts": {
@@ -422,10 +423,6 @@
     "dashboardStart": {
       "title": "Create your first board",
       "content": "A board is your custom Lotería deck. Create one to start adding cards — it only takes a second."
-    },
-    "boardIntro": {
-      "title": "Start free",
-      "content": "No photos or payment needed yet. Tap “Get started” to begin building your deck."
     },
     "boardAddPhoto": {
       "title": "Add your first photo",

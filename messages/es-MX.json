@@ -262,6 +262,7 @@
       "emptyStateDesc": "Sube una foto o elige una carta clásica de Lotería para empezar tu vista previa gratis.",
       "emptyStateCta": "Subir fotos",
       "emptyStateAddClassic": "Agregar clásica",
+      "emptyStateFreePaidNote": "Empieza gratis con {free} cartas · {price} desbloquea las {total}",
       "boardNotFoundTitle": "Tabla no encontrada",
       "boardNotFoundCta": "Volver al panel",
       "toasts": {
@@ -426,10 +427,6 @@
     "dashboardStart": {
       "title": "Crea tu primera tabla",
       "content": "Una tabla es tu Lotería personalizada. Crea una para empezar a agregar cartas — solo toma un segundo."
-    },
-    "boardIntro": {
-      "title": "Empieza gratis",
-      "content": "Aún no necesitas fotos ni pago. Toca «Empieza» para comenzar a armar tu Lotería."
     },
     "boardAddPhoto": {
       "title": "Agrega tu primera foto",

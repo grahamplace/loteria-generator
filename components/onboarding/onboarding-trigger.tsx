@@ -8,21 +8,31 @@ import { completeOnboarding, isOnboardingActive } from '@/lib/onboarding/state';
 /**
  * Starts a named tour once, when `enabled` is true and onboarding is still
  * active. Rendered on the page where the tour's anchor element lives.
+ *
+ * `firedRef` is flipped inside the timeout — i.e. only once the tour has
+ * *actually* started — never merely when scheduling. This survives React Strict
+ * Mode's dev double-invoke (mount → cleanup → mount): the cleanup clears the
+ * pending timeout, and because we haven't fired yet the second run reschedules
+ * it. `startNextStep` lives in a ref so it isn't an effect dependency.
  */
 export function OnboardingTrigger({ tour, enabled }: { tour: string; enabled: boolean }) {
   const { startNextStep } = useNextStep();
-  const startedRef = useRef(false);
+  const startRef = useRef(startNextStep);
+  startRef.current = startNextStep;
+  const firedRef = useRef(false);
 
   useEffect(() => {
-    if (!enabled || startedRef.current) return;
+    if (!enabled || firedRef.current) return;
     if (!isOnboardingActive()) return;
 
-    startedRef.current = true;
     // Small delay so the anchor element is painted and measurable before the
     // spotlight tries to position against it.
-    const id = window.setTimeout(() => startNextStep(tour), 400);
+    const id = window.setTimeout(() => {
+      firedRef.current = true;
+      startRef.current(tour);
+    }, 400);
     return () => window.clearTimeout(id);
-  }, [enabled, tour, startNextStep]);
+  }, [enabled, tour]);
 
   return null;
 }
@@ -33,6 +43,8 @@ export function OnboardingTrigger({ tour, enabled }: { tour: string; enabled: bo
  */
 export function OnboardingCompleteWatcher({ done }: { done: boolean }) {
   const { closeNextStep } = useNextStep();
+  const closeRef = useRef(closeNextStep);
+  closeRef.current = closeNextStep;
   const firedRef = useRef(false);
 
   useEffect(() => {
@@ -41,9 +53,9 @@ export function OnboardingCompleteWatcher({ done }: { done: boolean }) {
 
     firedRef.current = true;
     completeOnboarding();
-    closeNextStep();
+    closeRef.current();
     posthog.capture('onboarding_completed');
-  }, [done, closeNextStep]);
+  }, [done]);
 
   return null;
 }
