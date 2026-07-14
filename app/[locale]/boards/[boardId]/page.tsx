@@ -19,6 +19,7 @@ import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
 import { useTranslations } from 'next-intl';
 import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
+import { firePurchaseConversion } from '@/lib/google-ads';
 
 export default function BoardEditorPage() {
   const t = useTranslations('BoardEditor.Page');
@@ -54,6 +55,7 @@ export default function BoardEditorPage() {
   useEffect(() => {
     const payment = searchParams.get('payment');
     if (payment === 'success') {
+      firePurchaseConversion(searchParams.get('session_id') ?? undefined);
       toast.success(t('toasts.boardUnlockedTitle'), {
         description: t('toasts.boardUnlockedDesc'),
       });
