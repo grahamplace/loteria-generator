@@ -2,12 +2,13 @@
 
 import { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { Upload, Package, Plus, Unlock, Sparkles } from 'lucide-react';
-import { generateLoteriaSetPdf, BoardStyleOptions } from '@/lib/generate-boards';
+import { generateLoteriaSetPdf, clampBoardCount, BoardStyleOptions } from '@/lib/generate-boards';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
-import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
+import { BOARD_UNLOCK_PRICE_DISPLAY, DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
 import { partitionBySize, MAX_UPLOAD_DISPLAY } from '@/lib/upload-limits';
+import { BoardCountStepper } from '@/components/board-count-stepper';
 
 interface DisplayCard {
   id: string;
@@ -58,6 +59,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
     const [isExporting, setIsExporting] = useState(false);
     const [exportProgress, setExportProgress] = useState<string | null>(null);
     const [generatedCount, setGeneratedCount] = useState(0);
+    const [boardCount, setBoardCount] = useState(DEFAULT_EXPORT_BOARD_COUNT);
 
     const isMaxReached = cardCount >= maxCards;
     const canExport = processedCount >= 16;
@@ -145,11 +147,18 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
             riddle: c.riddle,
           }));
 
+        // The stepper propagates raw numeric input before its blur/Enter commit,
+        // so `boardCount` can briefly sit outside the supported range. Resolve it
+        // once here so the PDF, the analytics event, and the toast all report the
+        // same number the export actually contains.
+        const exportedBoardCount = clampBoardCount(boardCount);
+
         const pdfBlob = await generateLoteriaSetPdf(
           exportCards,
           boardStyleOptions,
           setExportProgress,
-          { title: t('callerSheetTitle') }
+          { title: t('callerSheetTitle') },
+          exportedBoardCount
         );
 
         const url = URL.createObjectURL(pdfBlob);
@@ -170,9 +179,10 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
           card_count: exportCards.length,
           board_name: boardName,
           is_unlocked: isUnlocked,
+          board_count: exportedBoardCount,
         });
         toast.success(t('toasts.exportSuccessTitle'), {
-          description: t('toasts.exportSuccessDesc'),
+          description: t('toasts.exportSuccessDesc', { count: exportedBoardCount }),
         });
       } catch (error) {
         console.error('Error exporting Loteria set:', error);
@@ -296,9 +306,39 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
               </div>
               <div className="flex-1 min-w-0">
                 <span className="font-semibold text-[15px] block">{t('exportTitle')}</span>
-                <span className="text-[11px] text-muted-foreground mt-0.5 block">
-                  {hasUsedFreeExport ? t('exportSubtitleUsed') : t('exportSubtitleDefault')}
-                </span>
+                {hasUsedFreeExport ? (
+                  <span className="text-[11px] text-muted-foreground mt-0.5 block">
+                    {t('exportSubtitleUsed')}
+                  </span>
+                ) : (
+                  // The stepper takes its own line so the subtitle keeps the full
+                  // text-block width. Sharing one line leaves the subtitle ~148px
+                  // against a ~162px natural width, which wraps and orphans "PDF".
+                  <div className="mt-1 space-y-1">
+                    {/* The unit noun sits against the stepper so the number is
+                        never orphaned from what it counts. */}
+                    {/* flex-wrap: "boards" is unbreakable, so at narrow widths it
+                        must drop under the stepper rather than overflow into the
+                        export button. */}
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                      <BoardCountStepper
+                        value={boardCount}
+                        onChange={setBoardCount}
+                        disabled={isExporting}
+                        label={t('boardCountLabel')}
+                        decreaseLabel={t('boardCountDecrease')}
+                        increaseLabel={t('boardCountIncrease')}
+                        size="sm"
+                      />
+                      <span className="text-xs font-medium text-foreground">
+                        {t('boardCountUnit')}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground block text-balance">
+                      {t('exportSubtitleDefault')}
+                    </span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={handleExport}
@@ -354,11 +394,25 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
 
         {/* ── Mobile bottom bar ── */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-background/95 backdrop-blur border-t border-border">
-          <div className="px-3 pt-3 pb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+          <div className="px-3 pt-3 pb-2 flex items-center justify-between gap-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
             <span className="tabular-nums">
               {t('mobileCardsStatus', { processed: processedCount, max: maxCards })}
             </span>
-            <span className="flex items-center gap-1">
+            {!hasUsedFreeExport && (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <BoardCountStepper
+                  value={boardCount}
+                  onChange={setBoardCount}
+                  disabled={isExporting}
+                  label={t('boardCountLabel')}
+                  decreaseLabel={t('boardCountDecrease')}
+                  increaseLabel={t('boardCountIncrease')}
+                  size="sm"
+                />
+                <span className="truncate">{t('boardCountUnit')}</span>
+              </div>
+            )}
+            <span className="flex items-center gap-1 shrink-0">
               {processingCount > 0 ? (
                 <>
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />

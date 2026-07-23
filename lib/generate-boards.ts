@@ -6,6 +6,11 @@ import {
   type CallerSheetLabels,
 } from './caller-sheet';
 import { fitRiddle } from './riddle-layout';
+import {
+  DEFAULT_EXPORT_BOARD_COUNT,
+  MIN_EXPORT_BOARD_COUNT,
+  MAX_EXPORT_BOARD_COUNT,
+} from '@/lib/constants';
 
 /**
  * JPEG quality (0–1) used when encoding each rendered page into the PDF.
@@ -56,10 +61,27 @@ function getBoardSignature(board: LotteriaCard[]): string {
 }
 
 /**
- * Generates 50 different boards, each with 16 randomly selected cards.
+ * Normalizes a requested board count into the supported range. This is the single
+ * place that decides what an out-of-range request becomes, so the generator never
+ * has to trust its caller.
+ */
+export function clampBoardCount(value: number): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_EXPORT_BOARD_COUNT;
+  }
+  return Math.min(MAX_EXPORT_BOARD_COUNT, Math.max(MIN_EXPORT_BOARD_COUNT, Math.floor(value)));
+}
+
+/**
+ * Generates the requested number of different boards, each with 16 randomly
+ * selected cards.
  * Ensures no two boards have the same arrangement to prevent multiple winners.
  */
-export function generateBoards(cards: LotteriaCard[], count: number = 50): LotteriaCard[][] {
+export function generateBoards(
+  cards: LotteriaCard[],
+  count: number = DEFAULT_EXPORT_BOARD_COUNT
+): LotteriaCard[][] {
+  const boardCount = clampBoardCount(count);
   const processedCards = cards.filter((c) => !c.isProcessing && !c.error);
 
   if (processedCards.length < 16) {
@@ -70,7 +92,7 @@ export function generateBoards(cards: LotteriaCard[], count: number = 50): Lotte
   const usedSignatures = new Set<string>();
   const maxAttempts = 100;
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < boardCount; i++) {
     let attempts = 0;
     let board: LotteriaCard[];
     let signature: string;
@@ -556,18 +578,20 @@ async function renderDeckPageToCanvas(
 }
 
 /**
- * Generates a complete Loteria set (50 boards + deck pages) as a single multi-page PDF
+ * Generates a complete Loteria set (the requested number of boards + deck pages)
+ * as a single multi-page PDF
  */
 export async function generateLoteriaSetPdf(
   cards: LotteriaCard[],
   styleOptions: BoardStyleOptions = {},
   onProgress?: (message: string) => void,
-  callerSheetLabels: CallerSheetLabels = { title: 'Caller Sheet' }
+  callerSheetLabels: CallerSheetLabels = { title: 'Caller Sheet' },
+  boardCount: number = DEFAULT_EXPORT_BOARD_COUNT
 ): Promise<Blob> {
-  const boards = generateBoards(cards, 50);
+  const boards = generateBoards(cards, clampBoardCount(boardCount));
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'in', format: 'letter' });
 
-  // Generate 50 board pages
+  // Generate the board pages
   for (let i = 0; i < boards.length; i++) {
     onProgress?.(`Generating board ${i + 1} of ${boards.length}…`);
     if (i > 0) pdf.addPage('letter', 'portrait');

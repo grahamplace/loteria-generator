@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { generateBoards } from '@/lib/generate-boards';
+import { generateBoards, clampBoardCount } from '@/lib/generate-boards';
+import {
+  DEFAULT_EXPORT_BOARD_COUNT,
+  MIN_EXPORT_BOARD_COUNT,
+  MAX_EXPORT_BOARD_COUNT,
+} from '@/lib/constants';
 
 // Mock card data
 const createMockCards = (count: number) => {
@@ -12,11 +17,11 @@ const createMockCards = (count: number) => {
 };
 
 describe('generateBoards', () => {
-  it('should generate 50 boards by default when given enough cards', () => {
+  it('should generate the default number of boards when given enough cards', () => {
     const cards = createMockCards(20);
     const boards = generateBoards(cards);
 
-    expect(boards).toHaveLength(50);
+    expect(boards).toHaveLength(DEFAULT_EXPORT_BOARD_COUNT);
   });
 
   it('should generate boards with 16 cards each', () => {
@@ -66,9 +71,54 @@ describe('generateBoards', () => {
     const cards = createMockCards(16);
     const boards = generateBoards(cards);
 
-    expect(boards).toHaveLength(50);
+    expect(boards).toHaveLength(DEFAULT_EXPORT_BOARD_COUNT);
     boards.forEach((board) => {
       expect(board).toHaveLength(16);
     });
+  });
+
+  it('should honor an explicit board count', () => {
+    const cards = createMockCards(20);
+
+    expect(generateBoards(cards, 7)).toHaveLength(7);
+    expect(generateBoards(cards, MAX_EXPORT_BOARD_COUNT)).toHaveLength(MAX_EXPORT_BOARD_COUNT);
+  });
+
+  it('should clamp an out-of-range board count', () => {
+    const cards = createMockCards(20);
+
+    expect(generateBoards(cards, 500)).toHaveLength(MAX_EXPORT_BOARD_COUNT);
+    expect(generateBoards(cards, 0)).toHaveLength(MIN_EXPORT_BOARD_COUNT);
+  });
+});
+
+describe('clampBoardCount', () => {
+  it('should clamp values below the minimum', () => {
+    expect(clampBoardCount(0)).toBe(MIN_EXPORT_BOARD_COUNT);
+    expect(clampBoardCount(-5)).toBe(MIN_EXPORT_BOARD_COUNT);
+  });
+
+  it('should clamp values above the maximum', () => {
+    expect(clampBoardCount(MAX_EXPORT_BOARD_COUNT + 1)).toBe(MAX_EXPORT_BOARD_COUNT);
+    expect(clampBoardCount(1000)).toBe(MAX_EXPORT_BOARD_COUNT);
+  });
+
+  it('should floor non-integer values', () => {
+    expect(clampBoardCount(DEFAULT_EXPORT_BOARD_COUNT + 0.7)).toBe(DEFAULT_EXPORT_BOARD_COUNT);
+    expect(clampBoardCount(3.2)).toBe(3);
+  });
+
+  it('should fall back to the default for NaN', () => {
+    expect(clampBoardCount(NaN)).toBe(DEFAULT_EXPORT_BOARD_COUNT);
+  });
+
+  it('should fall back to the default for Infinity', () => {
+    expect(clampBoardCount(Infinity)).toBe(DEFAULT_EXPORT_BOARD_COUNT);
+    expect(clampBoardCount(-Infinity)).toBe(DEFAULT_EXPORT_BOARD_COUNT);
+  });
+
+  it('should pass through in-range values unchanged', () => {
+    expect(clampBoardCount(DEFAULT_EXPORT_BOARD_COUNT)).toBe(DEFAULT_EXPORT_BOARD_COUNT);
+    expect(clampBoardCount(12)).toBe(12);
   });
 });
