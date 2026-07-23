@@ -5,11 +5,14 @@ import { toast } from 'sonner';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
+  clampBoardCount,
   generateLoteriaSetPdf,
   type BoardStyleOptions,
   type LotteriaCard,
 } from '@/lib/generate-boards';
 import { adminCardImageSrc } from '@/lib/admin-card-image';
+import { BoardCountStepper } from '@/components/board-count-stepper';
+import { DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
 import type { Card } from '@/db/schema';
 
 // Mirrors the consumer defaults in components/board-action-bar.tsx. Falls back to
@@ -34,6 +37,7 @@ export function AdminExportButton({
 }) {
   const [isExporting, setIsExporting] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
+  const [boardCount, setBoardCount] = useState(DEFAULT_EXPORT_BOARD_COUNT);
 
   // Only completed cards with an illustration can be rendered into the set.
   const exportableCards = cards.filter((c) => c.status === 'completed' && c.illustrationUrl);
@@ -68,7 +72,10 @@ export function AdminExportButton({
       const pdfBlob = await generateLoteriaSetPdf(
         exportCards,
         styleOptions ?? DEFAULT_STYLE_OPTIONS,
-        setProgress
+        setProgress,
+        // Keep the default caller-sheet labels — only the board count is overridden.
+        undefined,
+        boardCount
       );
 
       const url = URL.createObjectURL(pdfBlob);
@@ -84,8 +91,12 @@ export function AdminExportButton({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
+      // Report what actually rendered: generateLoteriaSetPdf clamps the count.
+      const exportedCount = clampBoardCount(boardCount);
       toast.success('Export ready', {
-        description: 'The Loteria set PDF has been downloaded.',
+        description: `The Loteria set PDF with ${exportedCount} ${
+          exportedCount === 1 ? 'board' : 'boards'
+        } has been downloaded.`,
       });
     } catch (error) {
       console.error('Error exporting Loteria set:', error);
@@ -99,23 +110,34 @@ export function AdminExportButton({
   };
 
   return (
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={handleExport}
-      disabled={!canExport || isExporting}
-      title={
-        canExport
-          ? undefined
-          : `Need at least ${MIN_EXPORT_CARDS} completed cards to export (${exportableCards.length} ready)`
-      }
-    >
-      {isExporting ? (
-        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-      ) : (
-        <Download className="mr-1.5 h-3.5 w-3.5" />
-      )}
-      {isExporting ? (progress ?? 'Exporting…') : 'Export'}
-    </Button>
+    <div className="inline-flex items-center gap-2">
+      <BoardCountStepper
+        value={boardCount}
+        onChange={setBoardCount}
+        disabled={isExporting || !canExport}
+        label="Number of boards"
+        decreaseLabel="Fewer boards"
+        increaseLabel="More boards"
+        size="sm"
+      />
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleExport}
+        disabled={!canExport || isExporting}
+        title={
+          canExport
+            ? undefined
+            : `Need at least ${MIN_EXPORT_CARDS} completed cards to export (${exportableCards.length} ready)`
+        }
+      >
+        {isExporting ? (
+          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Download className="mr-1.5 h-3.5 w-3.5" />
+        )}
+        {isExporting ? (progress ?? 'Exporting…') : 'Export'}
+      </Button>
+    </div>
   );
 }
