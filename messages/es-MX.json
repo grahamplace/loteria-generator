@@ -278,7 +278,7 @@
       "acceptedFormats": "PNG · JPG · WebP hasta {maxSize}",
       "select": "Seleccionar",
       "exportTitle": "Exportar Lotería",
-      "exportSubtitleDefault": "tablas únicas + mazo de cartas · PDF",
+      "exportSubtitleDefault": "todas diferentes · mazo de cartas · PDF",
       "exportSubtitleUsed": "Desbloquea para exportar de nuevo",
       "boardCountLabel": "Número de tablas",
       "boardCountDecrease": "Menos tablas",

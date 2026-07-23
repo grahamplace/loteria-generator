@@ -274,7 +274,7 @@
       "acceptedFormats": "PNG · JPG · WebP up to {maxSize}",
       "select": "Select",
       "exportTitle": "Export Loteria set",
-      "exportSubtitleDefault": "unique boards + card deck · PDF",
+      "exportSubtitleDefault": "each one unique · card deck · PDF",
       "exportSubtitleUsed": "Unlock to export again",
       "boardCountLabel": "Number of boards",
       "boardCountDecrease": "Fewer boards",

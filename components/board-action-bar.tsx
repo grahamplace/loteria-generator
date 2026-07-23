@@ -315,15 +315,25 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                   // text-block width. Sharing one line leaves the subtitle ~148px
                   // against a ~162px natural width, which wraps and orphans "PDF".
                   <div className="mt-1 space-y-1">
-                    <BoardCountStepper
-                      value={boardCount}
-                      onChange={setBoardCount}
-                      disabled={isExporting}
-                      label={t('boardCountLabel')}
-                      decreaseLabel={t('boardCountDecrease')}
-                      increaseLabel={t('boardCountIncrease')}
-                      size="sm"
-                    />
+                    {/* The unit noun sits against the stepper so the number is
+                        never orphaned from what it counts. */}
+                    {/* flex-wrap: "boards" is unbreakable, so at narrow widths it
+                        must drop under the stepper rather than overflow into the
+                        export button. */}
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                      <BoardCountStepper
+                        value={boardCount}
+                        onChange={setBoardCount}
+                        disabled={isExporting}
+                        label={t('boardCountLabel')}
+                        decreaseLabel={t('boardCountDecrease')}
+                        increaseLabel={t('boardCountIncrease')}
+                        size="sm"
+                      />
+                      <span className="text-xs font-medium text-foreground">
+                        {t('boardCountUnit')}
+                      </span>
+                    </div>
                     <span className="text-[11px] text-muted-foreground block text-balance">
                       {t('exportSubtitleDefault')}
                     </span>

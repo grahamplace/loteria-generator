@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { MIN_EXPORT_BOARD_COUNT, MAX_EXPORT_BOARD_COUNT } from '@/lib/constants';
 import { clampBoardCount } from '@/lib/generate-boards';
@@ -57,46 +57,45 @@ export function BoardCountStepper({
 }: BoardCountStepperProps) {
   const styles = SIZE_STYLES[size];
 
-  // Raw text lets the user type freely (transient '' or '1e' is allowed);
-  // it is only reconciled with the numeric value on blur/Enter.
-  const [raw, setRaw] = useState(() => String(value));
-  const rawRef = useRef(raw);
+  // Draft text exists only while the user is mid-edit, so free typing is never
+  // blocked (a transient '' or '1e' is fine). Outside an edit the input renders
+  // straight from `value`, which keeps the component honestly controlled — it
+  // can never display a number the parent has not accepted.
+  const [draft, setDraft] = useState<string | null>(null);
+  const display = draft ?? String(value);
 
-  const setRawText = useCallback((next: string) => {
-    rawRef.current = next;
-    setRaw(next);
-  }, []);
-
-  // Keep the displayed text in sync when `value` changes from outside.
-  useEffect(() => {
-    if (Number(rawRef.current) !== value) {
-      rawRef.current = String(value);
-      setRaw(String(value));
-    }
-  }, [value]);
+  // Latest count, tracked outside render state. Two −/+ clicks landing in the
+  // same tick both read the same stale `value` prop, so stepping from the prop
+  // alone turns a rapid double-click into a single increment. Assigning during
+  // render resyncs whenever the parent re-renders, including when a parent
+  // declines a change.
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
   const commit = useCallback(() => {
+    if (draft === null) return;
     // Empty text means "nothing entered", not zero — hand clampBoardCount a NaN
     // so it resolves to the default rather than the minimum.
-    const parsed = raw.trim() === '' ? NaN : Number(raw);
+    const parsed = draft.trim() === '' ? NaN : Number(draft);
     const resolved = clampBoardCount(parsed);
-    setRawText(String(resolved));
+    setDraft(null);
     if (resolved !== value) {
       onChange(resolved);
     }
-  }, [raw, value, onChange, setRawText]);
+  }, [draft, value, onChange]);
 
   const step = (delta: number) => {
-    const next = clampBoardCount(value + delta);
-    setRawText(String(next));
-    if (next !== value) {
-      onChange(next);
-    }
+    const current = valueRef.current;
+    const next = clampBoardCount(current + delta);
+    if (next === current) return;
+    valueRef.current = next;
+    setDraft(null);
+    onChange(next);
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const next = event.target.value;
-    setRawText(next);
+    setDraft(next);
     // Never block typing — only propagate once the text parses to a number.
     const parsed = Number(next);
     if (next.trim() !== '' && Number.isFinite(parsed)) {
@@ -136,7 +135,7 @@ export function BoardCountStepper({
         type="number"
         inputMode="numeric"
         aria-label={label}
-        value={raw}
+        value={display}
         onChange={handleInputChange}
         onBlur={commit}
         onKeyDown={handleKeyDown}

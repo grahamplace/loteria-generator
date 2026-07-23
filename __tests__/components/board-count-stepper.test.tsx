@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { useState } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BoardCountStepper } from '@/components/board-count-stepper';
 import {
@@ -8,6 +9,31 @@ import {
 } from '@/lib/constants';
 
 const LABEL = 'Number of boards';
+
+/**
+ * Mirrors how both real consumers use the stepper: the parent holds the count in
+ * state and applies every change. Tests that care about stepping behavior need
+ * this rather than a bare vi.fn(), which models a parent that drops changes.
+ */
+function ControlledStepper({
+  initialValue = DEFAULT_EXPORT_BOARD_COUNT,
+  onChange,
+}: {
+  initialValue?: number;
+  onChange?: (value: number) => void;
+}) {
+  const [value, setValue] = useState(initialValue);
+  return (
+    <BoardCountStepper
+      value={value}
+      onChange={(next) => {
+        setValue(next);
+        onChange?.(next);
+      }}
+      label={LABEL}
+    />
+  );
+}
 
 describe('BoardCountStepper', () => {
   const defaultProps = {
@@ -76,7 +102,7 @@ describe('BoardCountStepper', () => {
 
   it('should not block typing an out-of-range value and should clamp it on blur', () => {
     const onChange = vi.fn();
-    render(<BoardCountStepper {...defaultProps} onChange={onChange} />);
+    render(<ControlledStepper onChange={onChange} />);
 
     const input = screen.getByRole('spinbutton', { name: LABEL });
     const typed = MAX_EXPORT_BOARD_COUNT + 999;
@@ -95,9 +121,7 @@ describe('BoardCountStepper', () => {
 
   it('should allow a transient empty value and resolve it on blur', () => {
     const onChange = vi.fn();
-    render(
-      <BoardCountStepper {...defaultProps} value={MIN_EXPORT_BOARD_COUNT} onChange={onChange} />
-    );
+    render(<ControlledStepper initialValue={MIN_EXPORT_BOARD_COUNT} onChange={onChange} />);
 
     const input = screen.getByRole('spinbutton', { name: LABEL });
 
@@ -113,7 +137,7 @@ describe('BoardCountStepper', () => {
 
   it('should clamp on Enter', () => {
     const onChange = vi.fn();
-    render(<BoardCountStepper {...defaultProps} onChange={onChange} />);
+    render(<ControlledStepper onChange={onChange} />);
 
     const input = screen.getByRole('spinbutton', { name: LABEL });
 
@@ -122,6 +146,49 @@ describe('BoardCountStepper', () => {
 
     expect(onChange).toHaveBeenLastCalledWith(MIN_EXPORT_BOARD_COUNT);
     expect(input).toHaveValue(MIN_EXPORT_BOARD_COUNT);
+  });
+
+  it('should compound rapid clicks instead of coalescing them into one step', () => {
+    // Clicks can land before the parent re-renders with the new value. Stepping
+    // from the `value` prop would then read the same stale number every time and
+    // turn three clicks into a single increment.
+    const onChange = vi.fn();
+    render(<ControlledStepper onChange={onChange} />);
+
+    const increment = screen.getByRole('button', { name: `+ ${LABEL}` });
+    fireEvent.click(increment);
+    fireEvent.click(increment);
+    fireEvent.click(increment);
+
+    expect(onChange).toHaveBeenNthCalledWith(3, DEFAULT_EXPORT_BOARD_COUNT + 3);
+    expect(screen.getByRole('spinbutton', { name: LABEL })).toHaveValue(
+      DEFAULT_EXPORT_BOARD_COUNT + 3
+    );
+  });
+
+  it('should stop stepping at the ceiling no matter how many clicks arrive', () => {
+    const onChange = vi.fn();
+    render(<ControlledStepper initialValue={MAX_EXPORT_BOARD_COUNT - 1} onChange={onChange} />);
+
+    const increment = screen.getByRole('button', { name: `+ ${LABEL}` });
+    for (let i = 0; i < 10; i++) {
+      fireEvent.click(increment);
+    }
+
+    expect(onChange).not.toHaveBeenCalledWith(MAX_EXPORT_BOARD_COUNT + 1);
+    expect(screen.getByRole('spinbutton', { name: LABEL })).toHaveValue(MAX_EXPORT_BOARD_COUNT);
+  });
+
+  it('should leave the value alone when the parent ignores onChange', () => {
+    // Controlled-component semantics: the parent owns the value, so a parent
+    // that drops the change must not see the stepper drift on its own.
+    render(<BoardCountStepper {...defaultProps} onChange={vi.fn()} />);
+
+    const increment = screen.getByRole('button', { name: `+ ${LABEL}` });
+    fireEvent.click(increment);
+    fireEvent.click(increment);
+
+    expect(screen.getByRole('spinbutton', { name: LABEL })).toHaveValue(DEFAULT_EXPORT_BOARD_COUNT);
   });
 
   it('should sync the displayed text when the value prop changes from outside', () => {
