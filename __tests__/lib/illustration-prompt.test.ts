@@ -23,6 +23,24 @@ describe('renderIllustrationPrompt', () => {
     expect(prompt).toContain(YELLOW.hex);
     expect(prompt).toContain('do not default to blue');
   });
+
+  it('tells the model to keep and restyle backgrounds that carry meaning', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('Background IS meaningful');
+    expect(prompt).toContain('Keep it and restyle it in the same Lotería style');
+  });
+
+  it('tells the model to drop incidental backgrounds for a flat color field', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('Background is NOT meaningful');
+    expect(prompt).toContain('Drop it entirely');
+  });
+
+  it('no longer blanket-bans scenery, so meaningful settings survive', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).not.toContain('no complex scenery');
+    expect(prompt).not.toMatch(/negative[\s\S]*\bcomplex scenery\b/i);
+  });
 });
 
 describe('buildIllustrationPrompt', () => {
