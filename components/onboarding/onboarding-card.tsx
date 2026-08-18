@@ -23,7 +23,7 @@ export function OnboardingCard({
   const isLast = currentStep === totalSteps - 1;
 
   return (
-    <div className="relative max-w-[320px] rounded-2xl border border-black/10 bg-background p-5 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.35)]">
+    <div className="relative w-[320px] max-w-[calc(100vw-2rem)] rounded-2xl border border-black/10 bg-background p-5 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.35)]">
       {arrow}
 
       {step.icon ? <div className="mb-2 text-2xl">{step.icon}</div> : null}

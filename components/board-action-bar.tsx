@@ -6,7 +6,11 @@ import { generateLoteriaSetPdf, clampBoardCount, BoardStyleOptions } from '@/lib
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
-import { BOARD_UNLOCK_PRICE_DISPLAY, DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
+import {
+  MIN_EXPORT_CARD_COUNT,
+  BOARD_UNLOCK_PRICE_DISPLAY,
+  DEFAULT_EXPORT_BOARD_COUNT,
+} from '@/lib/constants';
 import { partitionBySize, MAX_UPLOAD_DISPLAY } from '@/lib/upload-limits';
 import { BoardCountStepper } from '@/components/board-count-stepper';
 
@@ -62,8 +66,10 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
     const [boardCount, setBoardCount] = useState(DEFAULT_EXPORT_BOARD_COUNT);
 
     const isMaxReached = cardCount >= maxCards;
-    const canExport = processedCount >= 16;
+    const canExport = processedCount >= MIN_EXPORT_CARD_COUNT;
     const hasUsedFreeExport = !isUnlocked && generatedCount >= 1;
+    // Nothing to export yet and no paid path open — the whole panel is inert.
+    const exportLocked = !canExport && !hasUsedFreeExport;
 
     useImperativeHandle(ref, () => ({
       triggerFileSelect: () => {
@@ -202,7 +208,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
         ? t('unlockExport', { price: BOARD_UNLOCK_PRICE_DISPLAY })
         : canExport
           ? t('exportButton')
-          : t('moreNeeded', { count: 16 - processedCount });
+          : t('moreNeeded', { count: MIN_EXPORT_CARD_COUNT - processedCount });
 
     return (
       <>
@@ -268,10 +274,11 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                 <button
                   onClick={() => inputRef.current?.click()}
                   disabled={isMaxReached}
-                  className="px-3 py-2 rounded-lg bg-white border border-border text-sm font-semibold flex items-center gap-1.5 hover:border-primary hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  className="px-3 py-2 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-1.5 shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   <Plus className="w-4 h-4" />
-                  {t('select')}
+                  <span className="lg:hidden">{t('choosePhotos')}</span>
+                  <span className="hidden lg:inline">{t('uploadPhotos')}</span>
                 </button>
                 <button
                   onClick={onOpenDefaults}
@@ -288,10 +295,18 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
 
             {/* Export section */}
             <div
-              className={`col-span-5 rounded-lg p-4 flex items-center gap-4 shadow-sm border relative ${
-                hasUsedFreeExport ? 'border-primary border-2' : 'border-primary/20'
+              className={`col-span-5 rounded-lg p-4 flex items-center gap-4 border relative ${
+                hasUsedFreeExport
+                  ? 'border-primary border-2 shadow-sm'
+                  : exportLocked
+                    ? 'border-border border-dashed bg-muted/40'
+                    : 'border-primary/20 shadow-sm'
               }`}
-              style={{ background: 'linear-gradient(135deg, #faf5e6 0%, #f2e6c8 100%)' }}
+              style={
+                exportLocked
+                  ? undefined
+                  : { background: 'linear-gradient(135deg, #faf5e6 0%, #f2e6c8 100%)' }
+              }
             >
               {hasUsedFreeExport && (
                 <div
@@ -301,11 +316,23 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                   {t('freeExportUsed')}
                 </div>
               )}
-              <div className="w-12 h-12 rounded-lg bg-primary text-white flex items-center justify-center shadow-sm shrink-0">
+              <div
+                className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${
+                  exportLocked
+                    ? 'bg-muted text-muted-foreground/70 border border-border'
+                    : 'bg-primary text-white shadow-sm'
+                }`}
+              >
                 <Package className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="font-semibold text-[15px] block">{t('exportTitle')}</span>
+                <span
+                  className={`font-semibold text-[15px] block ${
+                    exportLocked ? 'text-muted-foreground' : ''
+                  }`}
+                >
+                  {t('exportTitle')}
+                </span>
                 {hasUsedFreeExport ? (
                   <span className="text-[11px] text-muted-foreground mt-0.5 block">
                     {t('exportSubtitleUsed')}
@@ -324,7 +351,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                       <BoardCountStepper
                         value={boardCount}
                         onChange={setBoardCount}
-                        disabled={isExporting}
+                        disabled={isExporting || exportLocked}
                         label={t('boardCountLabel')}
                         decreaseLabel={t('boardCountDecrease')}
                         increaseLabel={t('boardCountIncrease')}
@@ -335,7 +362,12 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                       </span>
                     </div>
                     <span className="text-[11px] text-muted-foreground block text-balance">
-                      {t('exportSubtitleDefault')}
+                      {exportLocked
+                        ? t('exportSubtitleNeedsCards', {
+                            min: MIN_EXPORT_CARD_COUNT,
+                            have: processedCount,
+                          })
+                        : t('exportSubtitleDefault')}
                     </span>
                   </div>
                 )}
@@ -350,7 +382,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                       ? 'bg-primary text-white hover:bg-primary/90 shadow-sm'
                       : canExport
                         ? 'bg-primary text-white hover:bg-primary/90 shadow-sm'
-                        : 'bg-white/70 text-muted-foreground border border-border cursor-not-allowed'
+                        : 'bg-background/50 text-muted-foreground border border-border border-dashed cursor-not-allowed'
                 }`}
               >
                 {isExporting ? (
@@ -368,7 +400,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                     {t('exportButton')}
                   </>
                 ) : (
-                  t('moreNeeded', { count: 16 - processedCount })
+                  t('moreNeeded', { count: MIN_EXPORT_CARD_COUNT - processedCount })
                 )}
               </button>
             </div>
@@ -430,10 +462,10 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
             <button
               onClick={() => inputRef.current?.click()}
               disabled={isMaxReached}
-              className="flex-1 h-12 rounded-xl bg-white border border-border text-foreground font-semibold text-sm flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="flex-1 h-12 rounded-xl bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <Upload className="w-4 h-4" />
-              {t('mobileUpload')}
+              {t('choosePhotos')}
             </button>
             <button
               onClick={handleExport}

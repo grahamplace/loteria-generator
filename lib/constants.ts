@@ -9,6 +9,8 @@ export const BOARD_UNLOCK_PRICE_CENTS = 2000;
 export const BOARD_UNLOCK_PRICE_DISPLAY = '$20';
 
 // Single source of truth for export board counts. Never hardcode these elsewhere.
+/** Cards a board needs before its Lotería set can be generated. */
+export const MIN_EXPORT_CARD_COUNT = 16;
 export const DEFAULT_EXPORT_BOARD_COUNT = 50;
 export const MIN_EXPORT_BOARD_COUNT = 1;
 export const MAX_EXPORT_BOARD_COUNT = 100;

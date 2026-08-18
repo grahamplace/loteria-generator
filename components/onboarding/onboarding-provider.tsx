@@ -24,7 +24,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         shadowOpacity="0.55"
         onStart={(tour) => posthog.capture('onboarding_started', { tour })}
         onStepChange={(step, tour) => posthog.capture('onboarding_step_viewed', { tour, step })}
-        onComplete={(tour) => posthog.capture('onboarding_tour_completed', { tour })}
+        onComplete={(tour) => {
+          // Each tour is a single step, so "Got it" is the only dismissal there
+          // is — it has to persist, or the coachmark returns on every reload.
+          skipOnboarding();
+          posthog.capture('onboarding_tour_completed', { tour });
+        }}
         onSkip={(step, tour) => {
           skipOnboarding();
           posthog.capture('onboarding_skipped', { tour, step });

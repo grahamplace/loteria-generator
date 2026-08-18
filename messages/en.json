@@ -38,10 +38,26 @@
       "headlineLine2": "even more memorable.",
       "subtitle": "Surprise your friends and family with a custom Lotería set they'll love.",
       "items": [
-        { "tag": "Wedding", "title": "For the bride & groom", "copy": "Photos of the couple, the wedding party, both families. A celebration of two families coming together." },
-        { "tag": "Quinceañera", "title": "Made for her court", "copy": "The quinceañera, her chambelanes, damas, and padrinos — everyone gets their card." },
-        { "tag": "Reunion", "title": "Every primo & tía", "copy": "Celebrate the whole familia. From abuela to the new baby — everyone will love playing custom Lotería featuring their loved ones." },
-        { "tag": "Birthday", "title": "Make their birthday memorable", "copy": "Cake, candles, and the people who showed up to celebrate — a custom Lotería deck the birthday star will treasure." }
+        {
+          "tag": "Wedding",
+          "title": "For the bride & groom",
+          "copy": "Photos of the couple, the wedding party, both families. A celebration of two families coming together."
+        },
+        {
+          "tag": "Quinceañera",
+          "title": "Made for her court",
+          "copy": "The quinceañera, her chambelanes, damas, and padrinos — everyone gets their card."
+        },
+        {
+          "tag": "Reunion",
+          "title": "Every primo & tía",
+          "copy": "Celebrate the whole familia. From abuela to the new baby — everyone will love playing custom Lotería featuring their loved ones."
+        },
+        {
+          "tag": "Birthday",
+          "title": "Make their birthday memorable",
+          "copy": "Cake, candles, and the people who showed up to celebrate — a custom Lotería deck the birthday star will treasure."
+        }
       ]
     },
     "Pricing": {
@@ -156,11 +172,27 @@
       "howToName": "How to Create Custom Lotería Cards",
       "howToDescription": "Learn how to create personalized Mexican Lotería cards from your photos in just a few simple steps.",
       "howToSteps": [
-        { "name": "Sign Up", "text": "Create a free account to get started with your custom Lotería project.", "url": "/sign-up" },
-        { "name": "Upload Photos", "text": "Upload your favorite photos — people, pets, objects, or anything meaningful to you." },
-        { "name": "Illustration", "text": "Each photo is automatically transformed into a traditional Lotería-style illustration with a Spanish label." },
-        { "name": "Customize Cards", "text": "Edit labels and arrange your cards to your liking." },
-        { "name": "Generate Boards", "text": "Create randomized 4x4 bingo-style boards ready for printing and playing." }
+        {
+          "name": "Sign Up",
+          "text": "Create a free account to get started with your custom Lotería project.",
+          "url": "/sign-up"
+        },
+        {
+          "name": "Upload Photos",
+          "text": "Upload your favorite photos — people, pets, objects, or anything meaningful to you."
+        },
+        {
+          "name": "Illustration",
+          "text": "Each photo is automatically transformed into a traditional Lotería-style illustration with a Spanish label."
+        },
+        {
+          "name": "Customize Cards",
+          "text": "Edit labels and arrange your cards to your liking."
+        },
+        {
+          "name": "Generate Boards",
+          "text": "Create randomized 4x4 bingo-style boards ready for printing and playing."
+        }
       ]
     }
   },
@@ -257,6 +289,7 @@
       "emptyStateTitle": "Add your first card",
       "emptyStateDesc": "Upload a photo or pick from the classic Lotería cards to start your free preview.",
       "emptyStateCta": "Upload photos",
+      "emptyStateCtaShort": "Choose photos",
       "emptyStateAddClassic": "Add classic card",
       "emptyStateFreePaidNote": "Start free with {free} cards · {price} unlocks all {total}",
       "boardNotFoundTitle": "Board not found",
@@ -273,9 +306,11 @@
       "ready": "ready",
       "processing": "processing",
       "acceptedFormats": "PNG · JPG · WebP up to {maxSize}",
-      "select": "Select",
+      "choosePhotos": "Choose photos",
+      "uploadPhotos": "Upload photos",
       "exportTitle": "Export Loteria set",
       "exportSubtitleDefault": "each one unique · card deck · PDF",
+      "exportSubtitleNeedsCards": "Needs {min} cards to generate boards — you have {have}.",
       "exportSubtitleUsed": "Unlock to export again",
       "boardCountLabel": "Number of boards",
       "boardCountDecrease": "Fewer boards",
@@ -285,13 +320,12 @@
       "exportButton": "Export",
       "exportingButton": "Exporting…",
       "unlockExport": "Unlock · {price}",
-      "moreNeeded": "{count} more",
+      "moreNeeded": "{count} more cards",
       "bannerTitle": "Loved your first export?",
       "bannerDesc": "Unlock for unlimited exports and the full 54-card deck.",
       "bannerCta": "Unlock now →",
       "mobileCardsStatus": "{processed}/{max} cards",
       "mobileSaved": "Saved",
-      "mobileUpload": "Upload",
       "addClassic": "Add classic",
       "addClassicAriaLabel": "Add a classic Lotería card to this board",
       "addClassicDisabledTitle": "Card limit reached",

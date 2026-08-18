@@ -322,10 +322,11 @@ export default function BoardEditorPage() {
                   <button
                     id={ANCHOR_UPLOAD}
                     onClick={() => actionBarRef.current?.triggerFileSelect()}
-                    className="px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    className="attention-bounce px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     <Upload className="w-4 h-4" />
-                    {t('emptyStateCta')}
+                    <span className="lg:hidden">{t('emptyStateCtaShort')}</span>
+                    <span className="hidden lg:inline">{t('emptyStateCta')}</span>
                   </button>
                   <button
                     onClick={() => setDefaultsPickerOpen(true)}
