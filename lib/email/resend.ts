@@ -34,6 +34,8 @@ export type SendEmailParams = {
   react: React.ReactElement;
   /** Defaults to `EMAIL_FROM`. */
   from?: string;
+  /** Where replies go. Omit to let replies follow `from`. */
+  replyTo?: string;
   headers?: Record<string, string>;
 };
 
@@ -49,6 +51,7 @@ export async function sendEmail(params: SendEmailParams): Promise<{ id: string |
     to,
     subject: params.subject,
     react: params.react,
+    ...(params.replyTo ? { replyTo: params.replyTo } : {}),
     ...(params.headers ? { headers: params.headers } : {}),
   });
 

@@ -89,6 +89,14 @@ describe('sendEmail behavior', () => {
     expect(args.headers['List-Unsubscribe']).toBe('<x>');
   });
 
+  it('forwards replyTo when provided and omits it otherwise', async () => {
+    await sendEmail({ ...baseArgs(), replyTo: 'human@example.com' });
+    expect(sendMock.mock.calls[0][0].replyTo).toBe('human@example.com');
+
+    await sendEmail(baseArgs());
+    expect(sendMock.mock.calls[1][0]).not.toHaveProperty('replyTo');
+  });
+
   it('uses an explicit `from` when provided', async () => {
     await sendEmail({ ...baseArgs(), from: 'Other <other@example.com>' });
     expect(sendMock.mock.calls[0][0].from).toBe('Other <other@example.com>');
