@@ -31,12 +31,10 @@ export async function ensureFirstBoard(user: {
   }
 
   // Ensure the user profile row exists (mirrors POST /api/boards).
-  const profile = await db.query.userProfiles.findFirst({
-    where: eq(userProfiles.id, user.id),
-  });
-  if (!profile) {
-    await db.insert(userProfiles).values({ id: user.id });
-  }
+  // onConflictDoNothing because /start can render more than once for the same
+  // signup (redirect + RSC prefetch), and a bare insert loses that race with a
+  // duplicate-key 500 on the brand-new user's very first page.
+  await db.insert(userProfiles).values({ id: user.id }).onConflictDoNothing();
 
   const [board] = await db
     .insert(boards)

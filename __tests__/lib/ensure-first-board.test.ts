@@ -1,9 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DEFAULT_BOARD_NAME } from '@/lib/constants';
 
-const { boardsFindMany, profileFindFirst, insertValuesSpy } = vi.hoisted(() => ({
+const { boardsFindMany, insertValuesSpy } = vi.hoisted(() => ({
   boardsFindMany: vi.fn(),
-  profileFindFirst: vi.fn(),
   insertValuesSpy: vi.fn(),
 }));
 
@@ -11,12 +10,14 @@ vi.mock('@/db', () => ({
   db: {
     query: {
       boards: { findMany: (...a: unknown[]) => boardsFindMany(...a) },
-      userProfiles: { findFirst: (...a: unknown[]) => profileFindFirst(...a) },
     },
     insert: () => ({
       values: (v: Record<string, unknown>) => {
         insertValuesSpy(v);
-        return { returning: () => Promise.resolve([{ id: 'new-board', ...v }]) };
+        return {
+          returning: () => Promise.resolve([{ id: 'new-board', ...v }]),
+          onConflictDoNothing: () => Promise.resolve([]),
+        };
       },
     }),
   },
@@ -33,9 +34,12 @@ function boardInsertCall() {
   return insertValuesSpy.mock.calls.map((c) => c[0]).find((v) => 'name' in v);
 }
 
+function profileInsertCall() {
+  return insertValuesSpy.mock.calls.map((c) => c[0]).find((v) => !('name' in v));
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
-  profileFindFirst.mockResolvedValue({ id: 'x' });
 });
 
 describe('ensureFirstBoard', () => {
@@ -70,25 +74,13 @@ describe('ensureFirstBoard', () => {
     expect(boardInsertCall()).toMatchObject({ isUnlocked: true });
   });
 
-  it('creates the user profile first when none exists', async () => {
+  it('upserts the user profile before creating the board', async () => {
     boardsFindMany.mockResolvedValue([]);
-    profileFindFirst.mockResolvedValue(undefined);
 
     await ensureFirstBoard(USER);
 
     // Two inserts happened: the profile ({ id }) and the board ({ name, ... }).
-    const profileInsert = insertValuesSpy.mock.calls.map((c) => c[0]).find((v) => !('name' in v));
-    expect(profileInsert).toEqual({ id: 'user-1' });
+    expect(profileInsertCall()).toEqual({ id: 'user-1' });
     expect(boardInsertCall()).toBeDefined();
-  });
-
-  it('does not re-create the profile when it already exists', async () => {
-    boardsFindMany.mockResolvedValue([]);
-    profileFindFirst.mockResolvedValue({ id: 'user-1' });
-
-    await ensureFirstBoard(USER);
-
-    const profileInsert = insertValuesSpy.mock.calls.map((c) => c[0]).find((v) => !('name' in v));
-    expect(profileInsert).toBeUndefined();
   });
 });
