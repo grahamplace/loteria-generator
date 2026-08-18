@@ -39,7 +39,14 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
     - Restyle the provided image into the **classic Mexican Lotería card illustration style**.
     - Keep the original subject, pose, and overall silhouette clearly recognizable, but **redraw everything as a vintage hand-painted print**.
     - Use **bold black ink outlines (no outline at the card edges, only around the main subject)** (slightly irregular, hand-drawn), simplified shapes, and **soft airbrush/watercolor gradients** for shading.
-    - Reduce tiny details; prioritize clean, iconic readability from a distance.
+    - Reduce tiny details; prioritize clean, iconic readability from a distance — **except on faces, which are the one place detail must be preserved (see the likeness rule below)**.
+    - **LIKENESS IS THE SINGLE MOST IMPORTANT REQUIREMENT OF THIS ILLUSTRATION. Any face in the photo must be illustrated EXTREMELY ACCURATELY.** The people depicted will judge this card by whether it looks like them, and they are the harshest possible judges of their own faces.
+      - Reproduce each person's features exactly as they appear in the photo: face shape and proportions, eye shape, spacing and color, eyebrow shape and thickness, nose shape, mouth and lip shape, jawline, cheekbones, hairline, hair color, length, texture and part, facial hair, glasses, freckles, moles, dimples, scars, and any other distinguishing marks.
+      - Keep the head angle, gaze direction, and facial expression from the photo. Keep each person's apparent age.
+      - **Do not "improve" the face.** No idealizing, beautifying, slimming, smoothing, aging, or de-aging. Do not change apparent ethnicity, gender presentation, or body type. Skin tone must match the person in the photo — warmed slightly toward the vintage print palette, but never lightened or darkened.
+      - When several people appear, each one keeps their own distinct likeness. Do not blend them toward a common face.
+      - Render the face in the same Lotería language as the rest of the card (ink outline, flat blocking, limited tonal steps), but **never at the cost of resemblance**. Where simplification and likeness conflict, likeness wins — spend the extra lines and tonal steps on the face and simplify elsewhere.
+      - The person in the photo should recognize themselves instantly. A beautiful card that looks like someone else is a failed card.
     - Add a subtle **aged paper texture** and light **ink grain/halftone speckling**, with a touch of **ink bleed** at edges.
     - **First decide whether the background carries meaning.** Ask: does the setting tell you what is happening in this photo? If the subject were lifted onto a blank field, would the story be lost?
       - **Background IS meaningful** — e.g. the wave and spray behind a wakeboarder, the mountains behind a hiking couple, the snow under a kid on a snowboard, the ocean behind a child on the beach. **Keep it and restyle it in the same Lotería style as the subject**: same bold ink outlines, same flat saturated color blocking, same limited tonal steps. Simplify it into a few iconic shapes — a stylized wave, a ridgeline of peaks, a band of surf — rather than reproducing every photographic detail. It is scenery reduced to an emblem, not a painted landscape.
@@ -65,10 +72,10 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
     - Brick red / vintage crimson (accents): #962C2D and/or #5C282C
     - Dusty pink / mauve gradient (atmosphere/ground accents): #DAB5C9 / #CAA2AE
     - Deep green (foliage accents): #284D38
-      - If browns/tans are needed (wood, skin, leather), keep them warm and slightly muted (burnt umber / tan), not photorealistic.
+      - If browns/tans are needed (wood, leather), keep them warm and slightly muted (burnt umber / tan), not photorealistic. **Skin follows the likeness rule above** — match the person's actual tone, warmed slightly toward this palette, never lightened or darkened to fit it.
 
     ## Negative prompt (do not include these in the image):
-    photorealistic, 3D render, CGI, ultra-detailed texture, modern flat vector, crisp geometric logo style, anime, manga, glossy highlights, cinematic lighting, depth of field blur, HDR, heavy noise, neon palette, messy background, cluttered incidental background detail, photographic scenery pasted behind the subject, readable watermark, typography, captions, numbers, border, frame
+    photorealistic, 3D render, CGI, ultra-detailed texture, modern flat vector, crisp geometric logo style, anime, manga, glossy highlights, cinematic lighting, depth of field blur, HDR, heavy noise, neon palette, generic face, idealized or beautified face, symmetrical doll-like features, wrong person, altered facial features, changed skin tone, changed apparent age, blended or interchangeable faces, messy background, cluttered incidental background detail, photographic scenery pasted behind the subject, readable watermark, typography, captions, numbers, border, frame
     `;
 }
 
