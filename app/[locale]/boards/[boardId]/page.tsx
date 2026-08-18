@@ -23,6 +23,7 @@ import {
   OnboardingCompleteWatcher,
 } from '@/components/onboarding/onboarding-trigger';
 import { ANCHOR_UPLOAD, TOUR_BOARD_ADD_PHOTO } from '@/components/onboarding/onboarding-steps';
+import { firePurchaseConversion, consumePendingSignupConversion } from '@/lib/google-ads';
 
 export default function BoardEditorPage() {
   const t = useTranslations('BoardEditor.Page');
@@ -53,10 +54,17 @@ export default function BoardEditorPage() {
     'card_limit'
   );
 
+  // Completes the Google-OAuth signup conversion started on the sign-up page:
+  // new users land here via /start, so the dashboard never sees them.
+  useEffect(() => {
+    consumePendingSignupConversion();
+  }, []);
+
   // Handle payment success/cancel from Stripe redirect
   useEffect(() => {
     const payment = searchParams.get('payment');
     if (payment === 'success') {
+      firePurchaseConversion(searchParams.get('session_id') ?? undefined);
       toast.success(t('toasts.boardUnlockedTitle'), {
         description: t('toasts.boardUnlockedDesc'),
       });

@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       userEmail: session.user.email,
       boardName: board.name,
-      successUrl: `${baseUrl}/boards/${boardId}?payment=success`,
+      successUrl: `${baseUrl}/boards/${boardId}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${baseUrl}/boards/${boardId}?payment=cancelled`,
       promotionCodeId,
     });

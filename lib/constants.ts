@@ -8,6 +8,11 @@ export const DEFAULT_BOARD_NAME = 'My Loteria Board';
 export const BOARD_UNLOCK_PRICE_CENTS = 2000;
 export const BOARD_UNLOCK_PRICE_DISPLAY = '$20';
 
+// Single source of truth for export board counts. Never hardcode these elsewhere.
+export const DEFAULT_EXPORT_BOARD_COUNT = 50;
+export const MIN_EXPORT_BOARD_COUNT = 1;
+export const MAX_EXPORT_BOARD_COUNT = 100;
+
 // Signup nudge lifecycle email + discount
 export const SIGNUP_NUDGE_COUPON_ID = 'signup-nudge-25';
 export const SIGNUP_NUDGE_DISCOUNT_PERCENT = 25;

@@ -23,6 +23,66 @@ describe('renderIllustrationPrompt', () => {
     expect(prompt).toContain(YELLOW.hex);
     expect(prompt).toContain('do not default to blue');
   });
+
+  it('tells the model to keep and restyle backgrounds that carry meaning', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('Background IS meaningful');
+    expect(prompt).toContain('Keep it and restyle it in the same Lotería style');
+  });
+
+  it('tells the model to drop incidental backgrounds for a flat color field', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('Background is NOT meaningful');
+    expect(prompt).toContain('Drop it entirely');
+  });
+
+  it('makes accurate facial likeness the top priority', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('LIKENESS IS THE SINGLE MOST IMPORTANT REQUIREMENT');
+    expect(prompt).toContain('illustrated EXTREMELY ACCURATELY');
+  });
+
+  it('exempts faces from the simplification instruction', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toMatch(/Reduce tiny details;[^\n]*except on faces/);
+    expect(prompt).toContain('likeness wins');
+  });
+
+  it('forbids idealizing or altering the person', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('Do not "improve" the face');
+    expect(prompt).toContain('never lightened or darkened');
+  });
+
+  it('keeps each person distinct when several appear', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('Do not blend them toward a common face');
+  });
+
+  it('negative-prompts the failure modes of inaccurate faces', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    for (const term of [
+      'generic face',
+      'idealized or beautified face',
+      'wrong person',
+      'altered facial features',
+      'changed skin tone',
+    ]) {
+      expect(prompt).toContain(term);
+    }
+  });
+
+  it('no longer lumps skin in with the muted brown palette note', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).not.toContain('(wood, skin, leather)');
+    expect(prompt).toContain('**Skin follows the likeness rule above**');
+  });
+
+  it('no longer blanket-bans scenery, so meaningful settings survive', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).not.toContain('no complex scenery');
+    expect(prompt).not.toMatch(/negative[\s\S]*\bcomplex scenery\b/i);
+  });
 });
 
 describe('buildIllustrationPrompt', () => {

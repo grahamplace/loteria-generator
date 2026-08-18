@@ -6,7 +6,7 @@
 // state is acceptable. Promote to a user_profiles column later if we want
 // cross-device persistence.
 
-const STORAGE_KEY = 'loteria.onboarding.v1';
+export const ONBOARDING_STORAGE_KEY = 'loteria.onboarding.v1';
 
 export type OnboardingStatus = 'active' | 'completed' | 'skipped';
 
@@ -17,7 +17,7 @@ interface OnboardingRecord {
 function read(): OnboardingRecord | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<OnboardingRecord>;
     if (
@@ -36,7 +36,7 @@ function read(): OnboardingRecord | null {
 function write(status: OnboardingStatus): void {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ status }));
+    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify({ status }));
   } catch {
     // Ignore write failures — the tour simply won't be suppressed next load.
   }

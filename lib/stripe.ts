@@ -1,10 +1,16 @@
 import Stripe from 'stripe';
 import { BOARD_UNLOCK_PRICE_CENTS } from '@/lib/constants';
+import { lazyClient, requireEnv } from '@/lib/lazy-client';
 
-// Server-side Stripe client
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  typescript: true,
-});
+// Server-side Stripe client. Constructed on first use, not at module scope —
+// the Stripe constructor throws without an API key, which would fail
+// `next build` while it collects page data. See lib/lazy-client.ts.
+export const stripe = lazyClient(
+  () =>
+    new Stripe(requireEnv('STRIPE_SECRET_KEY', 'the Stripe client'), {
+      typescript: true,
+    })
+);
 
 /**
  * Create a Stripe checkout session for unlocking a board

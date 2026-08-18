@@ -6,6 +6,11 @@ import Link from 'next/link';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
 import { signUp, signIn } from '@/lib/auth-client';
+import {
+  fireSignupConversion,
+  setPendingSignupConversion,
+  clearPendingSignupConversion,
+} from '@/lib/google-ads';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -57,6 +62,7 @@ export default function SignUpPage() {
           });
         }
         posthog.capture('signed_up', { method: 'email' });
+        fireSignupConversion();
         router.push('/start');
       }
     } catch (_err) {
@@ -71,11 +77,15 @@ export default function SignUpPage() {
     setError('');
 
     try {
+      // The OAuth redirect leaves the page before gtag could fire; whichever
+      // page /start lands on (board editor or dashboard) consumes this flag.
+      setPendingSignupConversion();
       await signIn.social({
         provider: 'google',
         callbackURL: '/start',
       });
     } catch (_err) {
+      clearPendingSignupConversion();
       setError(t('errors.googleSignUpFailed'));
       setIsLoading(false);
     }

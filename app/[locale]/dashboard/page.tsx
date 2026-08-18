@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Plus, MoreVertical, Trash2, Lock, Unlock, User, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
 import { useTranslations } from 'next-intl';
@@ -36,6 +36,7 @@ import {
   ANCHOR_CREATE_BOARD,
   TOUR_DASHBOARD_START,
 } from '@/components/onboarding/onboarding-steps';
+import { consumePendingSignupConversion } from '@/lib/google-ads';
 
 export default function DashboardPage() {
   const t = useTranslations('Dashboard');
@@ -46,6 +47,11 @@ export default function DashboardPage() {
   const [isCreating, setIsCreating] = useState(false);
 
   const canCreateBoard = limits?.canCreateBoard ?? true;
+
+  // Completes the Google-OAuth signup conversion started on the sign-up page.
+  useEffect(() => {
+    consumePendingSignupConversion();
+  }, []);
 
   async function handleCreateBoard() {
     setIsCreating(true);
