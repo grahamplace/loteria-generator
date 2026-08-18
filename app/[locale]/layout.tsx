@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/sonner';
+import { OnboardingProvider } from '@/components/onboarding/onboarding-provider';
 import { GoogleAdsTag } from '@/components/google-ads-tag';
 import { Agentation } from 'agentation';
 import { notFound, redirect } from 'next/navigation';
@@ -133,7 +134,7 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className={`font-sans antialiased ${fontVariables}`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <OnboardingProvider>{children}</OnboardingProvider>
         </NextIntlClientProvider>
         <Toaster />
         <Analytics />

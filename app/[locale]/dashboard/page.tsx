@@ -31,6 +31,11 @@ import { useEffect, useState } from 'react';
 import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
 import { useTranslations } from 'next-intl';
+import { OnboardingTrigger } from '@/components/onboarding/onboarding-trigger';
+import {
+  ANCHOR_CREATE_BOARD,
+  TOUR_DASHBOARD_START,
+} from '@/components/onboarding/onboarding-steps';
 import { consumePendingSignupConversion } from '@/lib/google-ads';
 
 export default function DashboardPage() {
@@ -128,6 +133,10 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        <OnboardingTrigger
+          tour={TOUR_DASHBOARD_START}
+          enabled={!isLoading && boards.length === 0}
+        />
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl font-bold">{t('title')}</h2>
@@ -164,7 +173,11 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">{t('emptyState.title')}</h3>
               <p className="text-muted-foreground mb-4">{t('emptyState.description')}</p>
-              <Button onClick={handleCreateBoard} disabled={isCreating || !canCreateBoard}>
+              <Button
+                id={ANCHOR_CREATE_BOARD}
+                onClick={handleCreateBoard}
+                disabled={isCreating || !canCreateBoard}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 {t('emptyState.cta')}
               </Button>

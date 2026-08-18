@@ -134,6 +134,27 @@ export function LoteriaEmailLayout({
   );
 }
 
+/** The one primary action in an email: full-width, brand red. */
+export const ctaButtonStyle = {
+  backgroundColor: EMAIL_COLORS.primary,
+  color: '#ffffff',
+  borderRadius: '12px',
+  padding: '14px 24px',
+  fontSize: '16px',
+  fontWeight: 'bold',
+  textDecoration: 'none',
+  display: 'block',
+  textAlign: 'center' as const,
+} as const;
+
+export function CtaButton({ href, label }: { href: string; label: string }) {
+  return (
+    <Button href={href} style={ctaButtonStyle}>
+      {label}
+    </Button>
+  );
+}
+
 export type DiscountCalloutProps = {
   discountCode: string;
   redeemUrl: string;
@@ -168,22 +189,7 @@ export function DiscountCallout({ discountCode, redeemUrl, cta, expires }: Disco
           {discountCode}
         </Text>
       </Section>
-      <Button
-        href={redeemUrl}
-        style={{
-          backgroundColor: EMAIL_COLORS.primary,
-          color: '#ffffff',
-          borderRadius: '12px',
-          padding: '14px 24px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          textDecoration: 'none',
-          display: 'block',
-          textAlign: 'center' as const,
-        }}
-      >
-        {cta}
-      </Button>
+      <CtaButton href={redeemUrl} label={cta} />
       <Text
         style={{
           color: EMAIL_COLORS.brown,

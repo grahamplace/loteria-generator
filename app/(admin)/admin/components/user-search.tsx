@@ -31,9 +31,10 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { DollarSign, Loader2, MailCheck } from 'lucide-react';
+import { DollarSign, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { CampaignTemplateOption } from '@/lib/email/campaigns/registry';
+import { SentEmailsCell, type SentEmail } from './sent-emails-cell';
 
 interface UserRow {
   id: string;
@@ -43,7 +44,7 @@ interface UserRow {
   cardCount: number;
   paidBoardCount: number;
   createdAt: string;
-  sentTemplateKeys: string[];
+  sentEmails: SentEmail[];
 }
 
 // Total column count: checkbox + Email + Name + Paid + Sent + Boards + Cards + Joined = 8
@@ -272,14 +273,7 @@ export function UserSearch({
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    {u.sentTemplateKeys.includes(selectedKey) ? (
-                      <MailCheck
-                        className="mx-auto size-4 text-muted-foreground"
-                        aria-label="Already received the selected campaign"
-                      />
-                    ) : (
-                      <span className="sr-only">Not sent</span>
-                    )}
+                    <SentEmailsCell emails={u.sentEmails} selectedTemplateKey={selectedKey} />
                   </TableCell>
                   <TableCell className="text-sm tabular-nums">{u.boardCount}</TableCell>
                   <TableCell className="text-sm tabular-nums">{u.cardCount}</TableCell>

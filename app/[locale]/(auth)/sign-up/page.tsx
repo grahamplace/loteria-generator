@@ -63,7 +63,7 @@ export default function SignUpPage() {
         }
         posthog.capture('signed_up', { method: 'email' });
         fireSignupConversion();
-        router.push('/dashboard');
+        router.push('/start');
       }
     } catch (_err) {
       setError(t('errors.unexpectedError'));
@@ -77,12 +77,12 @@ export default function SignUpPage() {
     setError('');
 
     try {
-      // The OAuth redirect leaves the page before gtag could fire; the
-      // dashboard consumes this flag on landing.
+      // The OAuth redirect leaves the page before gtag could fire; whichever
+      // page /start lands on (board editor or dashboard) consumes this flag.
       setPendingSignupConversion();
       await signIn.social({
         provider: 'google',
-        callbackURL: '/dashboard',
+        callbackURL: '/start',
       });
     } catch (_err) {
       clearPendingSignupConversion();

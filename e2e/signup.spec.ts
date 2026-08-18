@@ -19,7 +19,7 @@ test.describe('sign up', () => {
     }
   });
 
-  test('new user can sign up with email and lands on dashboard', async ({ page }) => {
+  test('new user can sign up with email and lands in their first board', async ({ page }) => {
     const email = `signup-${Date.now()}@example.com`;
     createdEmail = email;
 
@@ -31,6 +31,8 @@ test.describe('sign up', () => {
 
     await page.getByRole('button', { name: /sign up|create account/i }).click();
 
-    await expect(page).toHaveURL(/\/(en\/)?dashboard/, { timeout: 10_000 });
+    // Signup routes through /start, which auto-creates the user's first board
+    // and drops them straight into it — the empty dashboard is skipped.
+    await expect(page).toHaveURL(/\/(en\/)?boards\/[0-9a-f-]+/, { timeout: 15_000 });
   });
 });

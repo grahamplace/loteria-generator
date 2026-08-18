@@ -187,3 +187,56 @@
     animation-duration: 60s;
   }
 }
+
+/* nextstepjs gives the coachmark's wrapper an inline `max-width: 100%`, and
+   that wrapper is sized to the highlighted element — so anchoring a step to a
+   narrow button squeezed the card into a single column of words. Let the card
+   set its own width instead; OnboardingCard caps itself at 320px and at the
+   viewport. */
+[data-name='nextstep-card'] {
+  max-width: none !important;
+}
+
+/* Attention bounce for a primary CTA that is the only thing worth clicking
+   (e.g. the upload button on a board with zero cards). Transform-only, so it
+   stays on the compositor and never reflows its neighbours. The long flat
+   stretch in the keyframes is deliberate: it hops twice, then rests, rather
+   than jiggling continuously. */
+.attention-bounce {
+  transform-origin: center bottom;
+  animation: attention-bounce 2.8s ease-in-out infinite;
+}
+
+/* A bouncing button is a moving click target — hold still once it is aimed at. */
+.attention-bounce:hover,
+.attention-bounce:focus-visible {
+  animation-play-state: paused;
+}
+
+@keyframes attention-bounce {
+  0%,
+  62%,
+  100% {
+    transform: translateY(0);
+  }
+  71% {
+    transform: translateY(-9px);
+  }
+  80% {
+    transform: translateY(0);
+  }
+  88% {
+    transform: translateY(-4px);
+  }
+  95% {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the emphasis, drop the motion: a steady ring instead of a hop. */
+  .attention-bounce {
+    animation: none;
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 35%, transparent);
+  }
+}

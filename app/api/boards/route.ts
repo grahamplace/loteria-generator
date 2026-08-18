@@ -5,6 +5,7 @@ import { db, boards, userProfiles } from '@/db';
 import { eq, desc } from 'drizzle-orm';
 import { createBoardSchema } from '@/lib/validations';
 import { isAdminEmail } from '@/lib/admin';
+import { DEFAULT_BOARD_NAME } from '@/lib/constants';
 
 /**
  * GET /api/boards - List all boards for the current user
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
       .insert(boards)
       .values({
         userId: session.user.id,
-        name: name || 'My Loteria Board',
+        name: name || DEFAULT_BOARD_NAME,
         isUnlocked: isAdmin,
       })
       .returning();
