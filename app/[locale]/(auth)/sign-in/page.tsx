@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import posthog from 'posthog-js';
@@ -27,6 +27,19 @@ export default function SignInPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // Read after mount rather than via useSearchParams (which would force this
+  // whole page into a Suspense boundary for a single cosmetic banner) and
+  // rather than a lazy useState initializer (whose first client render runs
+  // in-browser during hydration, where `window` already exists — mismatching
+  // the server's render and triggering a hydration error). A useEffect runs
+  // only after the initial hydration pass, so the server and first client
+  // render both start false.
+  const [showResetSuccess, setShowResetSuccess] = useState(false);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('reset') === 'success') {
+      setShowResetSuccess(true);
+    }
+  }, []);
 
   async function handleEmailSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -84,6 +97,15 @@ export default function SignInPage() {
           <CardDescription>{t('cardDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {showResetSuccess && (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-sm text-accent text-center rounded-md bg-accent/10 px-3 py-2"
+            >
+              {t('resetSuccess')}
+            </p>
+          )}
           <Button
             variant="outline"
             className="w-full"
@@ -132,7 +154,15 @@ export default function SignInPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">{t('passwordLabel')}</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="password">{t('passwordLabel')}</Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-primary hover:underline font-medium"
+                >
+                  {t('forgotPasswordCta')}
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
