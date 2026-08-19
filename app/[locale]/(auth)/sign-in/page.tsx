@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import posthog from 'posthog-js';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import { LanguageSwitch } from '@/components/language-switch';
 
 export default function SignInPage() {
   const t = useTranslations('Auth.SignIn');
+  const locale = useLocale();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -157,7 +158,7 @@ export default function SignInPage() {
               <div className="flex items-center justify-between gap-2">
                 <Label htmlFor="password">{t('passwordLabel')}</Label>
                 <Link
-                  href="/forgot-password"
+                  href={locale === 'en' ? '/forgot-password' : '/es/forgot-password'}
                   className="text-sm text-primary hover:underline font-medium"
                 >
                   {t('forgotPasswordCta')}

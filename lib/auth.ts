@@ -1,3 +1,4 @@
+import { after } from 'next/server';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/db';
@@ -17,10 +18,24 @@ export const auth = betterAuth({
     // to the account.
     resetPasswordTokenExpiresIn: 60 * 60, // 1 hour, in seconds
     // A reset is how you recover a compromised account, so every other session
-    // has to go with it.
+    // has to go with it. Note the 5-minute cookieCache below still lets a
+    // stolen session ride for up to that long after a reset — this only
+    // guarantees the session *rows* are gone, not that every cached cookie
+    // stops working instantly.
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       await sendPasswordResetEmail({ to: user.email, name: user.name, url });
+    },
+  },
+  advanced: {
+    backgroundTasks: {
+      // Without this, better-auth awaits sendResetPassword (and therefore the
+      // Resend HTTP call) before responding. That makes the request-reset
+      // endpoint slower for a known email than an unknown one, leaking account
+      // existence through response timing. Handing the promise to Next's
+      // after() lets the response return immediately while the email still
+      // sends in the background.
+      handler: (promise: Promise<unknown>) => after(promise),
     },
   },
   socialProviders: {

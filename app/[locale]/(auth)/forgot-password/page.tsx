@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import posthog from 'posthog-js';
 import { useLocale, useTranslations } from 'next-intl';
@@ -25,6 +25,16 @@ export default function ForgotPasswordPage() {
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const confirmHeadingRef = useRef<HTMLDivElement>(null);
+  const signInHref = locale === 'en' ? '/sign-in' : '/es/sign-in';
+
+  // Move focus to the confirmation panel's heading when the form is replaced,
+  // so screen-reader users get an announcement that something happened.
+  useEffect(() => {
+    if (sentTo) {
+      confirmHeadingRef.current?.focus();
+    }
+  }, [sentTo]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -64,8 +74,10 @@ export default function ForgotPasswordPage() {
       <Card className="w-full max-w-md">
         {sentTo ? (
           <>
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold">{t('sentTitle')}</CardTitle>
+            <CardHeader className="text-center" role="status" aria-live="polite">
+              <CardTitle className="text-2xl font-bold" tabIndex={-1} ref={confirmHeadingRef}>
+                {t('sentTitle')}
+              </CardTitle>
               <CardDescription className="break-words">
                 {t('sentBody', { email: sentTo })}
               </CardDescription>
@@ -118,7 +130,7 @@ export default function ForgotPasswordPage() {
           </>
         )}
         <CardFooter className="flex justify-center">
-          <Link href="/sign-in" className="text-sm text-primary hover:underline font-medium">
+          <Link href={signInHref} className="text-sm text-primary hover:underline font-medium">
             {t('backToSignIn')}
           </Link>
         </CardFooter>

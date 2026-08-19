@@ -11,6 +11,7 @@ import {
   setPendingSignupConversion,
   clearPendingSignupConversion,
 } from '@/lib/google-ads';
+import { MIN_PASSWORD_LENGTH } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,7 +40,7 @@ export default function SignUpPage() {
     setIsLoading(true);
     setError('');
 
-    if (password.length < 8) {
+    if (password.length < MIN_PASSWORD_LENGTH) {
       setError(t('errors.weakPassword'));
       setIsLoading(false);
       return;
@@ -171,7 +172,7 @@ export default function SignUpPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                minLength={8}
+                minLength={MIN_PASSWORD_LENGTH}
               />
             </div>
 

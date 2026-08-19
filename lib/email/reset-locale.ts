@@ -20,6 +20,8 @@ export function localeFromResetUrl(url: string): 'en' | 'es' {
     return 'en';
   }
   if (!callbackURL) return 'en';
-  const path = decodeURIComponent(callbackURL);
-  return path === '/es' || path.startsWith('/es/') ? 'es' : 'en';
+  // searchParams.get() has already percent-decoded this value once — decoding
+  // it again would throw URIError on a value containing a bare `%` (e.g. a
+  // redirectTo of `/reset-password?x=100%`).
+  return callbackURL === '/es' || callbackURL.startsWith('/es/') ? 'es' : 'en';
 }

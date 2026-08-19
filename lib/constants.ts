@@ -22,6 +22,10 @@ export const SIGNUP_NUDGE_CODE_PREFIX = 'LOTERIA';
 export const SIGNUP_NUDGE_EXPIRY_DAYS = 7;
 export const LIFECYCLE_EMAIL_TYPE_SIGNUP_NUDGE = 'signup_nudge';
 
+// Password reset. Must stay in sync with better-auth's own `minPasswordLength`
+// default (1.6.9) — we duplicate it here only to share one value across pages.
+export const MIN_PASSWORD_LENGTH = 8;
+
 // Re-engagement lifecycle email + discount
 export const REENGAGEMENT_COUPON_ID = 'reengagement-25';
 export const REENGAGEMENT_DISCOUNT_PERCENT = 25;

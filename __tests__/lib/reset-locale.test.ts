@@ -37,4 +37,13 @@ describe('localeFromResetUrl', () => {
   it('returns en for a malformed url instead of throwing', () => {
     expect(localeFromResetUrl('not a url at all')).toBe('en');
   });
+
+  it('returns en instead of throwing when the decoded callbackURL contains a bare percent', () => {
+    // searchParams.get() already decodes once; a second decodeURIComponent
+    // call on a value like `/reset-password?x=100%` would throw URIError.
+    const url =
+      'https://app.example.com/api/auth/reset-password/tok1?callbackURL=' +
+      encodeURIComponent('/reset-password?x=100%');
+    expect(localeFromResetUrl(url)).toBe('en');
+  });
 });

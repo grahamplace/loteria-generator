@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import posthog from 'posthog-js';
@@ -18,8 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { LanguageSwitch } from '@/components/language-switch';
-
-const MIN_PASSWORD_LENGTH = 8;
+import { MIN_PASSWORD_LENGTH } from '@/lib/constants';
 
 function ResetPasswordForm() {
   const t = useTranslations('Auth.ResetPassword');
@@ -28,9 +27,15 @@ function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const passwordRef = useRef<HTMLInputElement>(null);
   const confirmRef = useRef<HTMLInputElement>(null);
+  const expiredHeadingRef = useRef<HTMLDivElement>(null);
 
-  const token = searchParams.get('token');
-  const callbackError = searchParams.get('error');
+  // Captured once on mount rather than read fresh from useSearchParams() on
+  // every render: the token gets scrubbed out of the visible URL below (so it
+  // never rides along on a PostHog pageview capture), and the component must
+  // keep working from this snapshot afterwards instead of falling back to the
+  // expired state just because the URL no longer has it.
+  const [token] = useState(() => searchParams.get('token'));
+  const [callbackError] = useState(() => searchParams.get('error'));
 
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -46,6 +51,27 @@ function ResetPasswordForm() {
 
   const signInHref = locale === 'en' ? '/sign-in' : '/es/sign-in';
   const isDead = !token || !!callbackError || tokenRejected;
+
+  // A live reset token sitting in the URL rides along on every PostHog
+  // pageview capture (posthog-js's 2026-01-30 defaults track history changes)
+  // and on the password_reset_completed capture below, handing anyone with
+  // PostHog read access a working reset token. Strip it from the address bar
+  // once it's safely in state above. Using history.replaceState directly
+  // (rather than router.replace) avoids a Next.js navigation/re-render that
+  // could otherwise disturb this component's state.
+  useEffect(() => {
+    if (token) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, [token]);
+
+  // Move focus to the expired-state heading when the form is replaced, so
+  // screen-reader users get an announcement that something happened.
+  useEffect(() => {
+    if (isDead) {
+      expiredHeadingRef.current?.focus();
+    }
+  }, [isDead]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,8 +102,18 @@ function ResetPasswordForm() {
         return;
       }
       posthog.capture('password_reset_completed');
-      // revokeSessionsOnPasswordReset is on, so there is no session to land in —
-      // send them to sign in with the new password.
+      // revokeSessionsOnPasswordReset only deletes the session row — better-auth
+      // never clears the browser's session cookie the way sign-out does, and the
+      // 5-minute cookieCache means a still-cookied browser can look signed in
+      // for a few minutes after this. Explicitly sign out so /sign-in actually
+      // reaches sign-in instead of proxy.ts bouncing it to /dashboard. The
+      // session row is already gone, so this call may itself error — that's
+      // fine, it must never block the redirect.
+      try {
+        await authClient.signOut();
+      } catch {
+        // Ignored — see comment above.
+      }
       router.push(`${signInHref}?reset=success`);
     } catch {
       setFormError(t('errors.unexpectedError'));
@@ -89,8 +125,10 @@ function ResetPasswordForm() {
   if (isDead) {
     return (
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">{t('expiredTitle')}</CardTitle>
+        <CardHeader className="text-center" role="status" aria-live="polite">
+          <CardTitle className="text-2xl font-bold" tabIndex={-1} ref={expiredHeadingRef}>
+            {t('expiredTitle')}
+          </CardTitle>
           <CardDescription>{t('expiredBody')}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -132,6 +170,7 @@ function ResetPasswordForm() {
               aria-invalid={fieldError?.field === 'password'}
               aria-describedby={fieldError?.field === 'password' ? 'password-error' : undefined}
               disabled={isLoading}
+              maxLength={128}
             />
             {fieldError?.field === 'password' && (
               <p id="password-error" role="alert" className="text-sm text-destructive">
@@ -154,6 +193,7 @@ function ResetPasswordForm() {
               aria-invalid={fieldError?.field === 'confirm'}
               aria-describedby={fieldError?.field === 'confirm' ? 'confirm-error' : undefined}
               disabled={isLoading}
+              maxLength={128}
             />
             {fieldError?.field === 'confirm' && (
               <p id="confirm-error" role="alert" className="text-sm text-destructive">
