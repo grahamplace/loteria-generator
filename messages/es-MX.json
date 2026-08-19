@@ -212,6 +212,8 @@
       "submitButtonLoading": "Iniciando sesión…",
       "noAccountPrompt": "¿No tienes cuenta?",
       "noAccountCta": "Regístrate",
+      "forgotPasswordCta": "¿Olvidaste tu contraseña?",
+      "resetSuccess": "Contraseña actualizada. Inicia sesión con tu nueva contraseña.",
       "errors": {
         "unexpectedError": "Ocurrió un error inesperado",
         "googleSignInFailed": "No se pudo iniciar sesión con Google"
@@ -238,6 +240,45 @@
         "weakPassword": "La contraseña debe tener al menos 8 caracteres",
         "unexpectedError": "Ocurrió un error inesperado",
         "googleSignUpFailed": "No se pudo registrar con Google"
+      }
+    },
+    "ForgotPassword": {
+      "metaTitle": "Restablecer Contraseña — Lotería Generator",
+      "metaDescription": "Solicita un enlace para restablecer tu contraseña de Lotería Generator.",
+      "cardTitle": "¿Olvidaste tu contraseña?",
+      "cardDescription": "Escribe tu correo y te enviaremos un enlace para crear una nueva.",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "submitButton": "Enviar enlace",
+      "submitButtonLoading": "Enviando…",
+      "sentTitle": "Revisa tu correo",
+      "sentBody": "Si existe una cuenta con {email}, te enviamos un enlace para crear una nueva contraseña. El enlace vence en una hora.",
+      "sentHint": "¿No lo ves? Revisa tu carpeta de spam.",
+      "backToSignIn": "Volver a iniciar sesión",
+      "errors": {
+        "rateLimited": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+        "unexpectedError": "Ocurrió un error inesperado"
+      }
+    },
+    "ResetPassword": {
+      "metaTitle": "Crear Nueva Contraseña — Lotería Generator",
+      "metaDescription": "Elige una nueva contraseña para tu cuenta de Lotería Generator.",
+      "cardTitle": "Crea una nueva contraseña",
+      "cardDescription": "Elige una contraseña que no hayas usado antes.",
+      "passwordLabel": "Nueva contraseña",
+      "passwordPlaceholder": "Al menos 8 caracteres",
+      "confirmLabel": "Confirma la nueva contraseña",
+      "confirmPlaceholder": "Escribe de nuevo tu nueva contraseña",
+      "submitButton": "Actualizar contraseña",
+      "submitButtonLoading": "Actualizando…",
+      "expiredTitle": "Este enlace ya venció",
+      "expiredBody": "Los enlaces duran una hora y solo se pueden usar una vez. Solicita uno nuevo y te lo enviamos de inmediato.",
+      "requestNewLink": "Solicitar un enlace nuevo",
+      "backToSignIn": "Volver a iniciar sesión",
+      "errors": {
+        "tooShort": "La contraseña debe tener al menos 8 caracteres",
+        "mismatch": "Las contraseñas no coinciden",
+        "unexpectedError": "Ocurrió un error inesperado"
       }
     }
   },
