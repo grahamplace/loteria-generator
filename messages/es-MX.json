@@ -252,7 +252,7 @@
       "submitButton": "Enviar enlace",
       "submitButtonLoading": "Enviando…",
       "sentTitle": "Revisa tu correo",
-      "sentBody": "Si existe una cuenta con {email}, te enviamos un enlace para crear una nueva contraseña. El enlace vence en una hora.",
+      "sentBody": "Si existe una cuenta asociada a {email}, te enviamos un enlace para crear una nueva contraseña. El enlace vence en una hora.",
       "sentHint": "¿No lo ves? Revisa tu carpeta de spam.",
       "backToSignIn": "Volver a iniciar sesión",
       "errors": {
@@ -266,7 +266,7 @@
       "cardTitle": "Crea una nueva contraseña",
       "cardDescription": "Elige una contraseña que no hayas usado antes.",
       "passwordLabel": "Nueva contraseña",
-      "passwordPlaceholder": "Al menos 8 caracteres",
+      "passwordPlaceholder": "Mínimo 8 caracteres",
       "confirmLabel": "Confirma la nueva contraseña",
       "confirmPlaceholder": "Escribe de nuevo tu nueva contraseña",
       "submitButton": "Actualizar contraseña",

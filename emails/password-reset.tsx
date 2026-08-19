@@ -46,8 +46,7 @@ const COPY = {
     cta: 'Restablecer mi contraseña',
     fallbackIntro: 'Si el botón no funciona, copia y pega este enlace en tu navegador:',
     expiry: 'Este enlace vence en una hora y solo se puede usar una vez.',
-    ignore:
-      'Si no lo solicitaste, puedes ignorar este correo — tu contraseña seguirá siendo la misma.',
+    ignore: 'Si no lo solicitaste, puedes ignorar este correo — tu contraseña no cambiará.',
     footer:
       'Recibes esto porque alguien solicitó restablecer la contraseña de tu cuenta de Lotería Generator.',
   },
