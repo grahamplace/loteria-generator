@@ -6,29 +6,12 @@ import { eq, and } from 'drizzle-orm';
 import { getPrivateBlob } from '@/lib/blob';
 import sharp from 'sharp';
 import { cropExtractRegion } from '@/lib/crop-math';
-
-// Upper bound on the on-the-fly resize width. Stored illustrations are
-// 1024×1536 PNGs (~2-4MB); the board grid only renders them ~180px wide, so a
-// `?w=` thumbnail request collapses that to a few KB of webp.
-const MAX_RESIZE_WIDTH = 1536;
-
-function parseResizeWidth(raw: string | null): number | null {
-  if (!raw) return null;
-  const n = Number.parseInt(raw, 10);
-  if (!Number.isFinite(n) || n < 16) return null;
-  return Math.min(n, MAX_RESIZE_WIDTH);
-}
-
-async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
-  const reader = stream.getReader();
-  const chunks: Uint8Array[] = [];
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) chunks.push(value);
-  }
-  return Buffer.concat(chunks);
-}
+import {
+  parseResizeWidth,
+  streamToBuffer,
+  derivedImageEtag,
+  DERIVED_IMAGE_CACHE_CONTROL,
+} from '@/lib/image-proxy';
 
 /**
  * Private image proxy - serves images from Vercel Blob with auth check
@@ -103,15 +86,11 @@ export async function GET(
         type === 'illustration' && card.preserveOriginal && card.cropData ? card.cropData : null;
 
       if (resizeWidth || cropRect) {
-        const cropSig = cropRect
-          ? `-crop${cropRect.x}-${cropRect.y}-${cropRect.width}-${cropRect.height}`
-          : '';
-        const widthSig = resizeWidth ? `-w${resizeWidth}-webp` : '';
-        const etag = `"${result.blob.etag}${cropSig}${widthSig}"`;
+        const etag = derivedImageEtag(result.blob.etag, cropRect, resizeWidth);
         if (request.headers.get('if-none-match') === etag) {
           return new NextResponse(null, {
             status: 304,
-            headers: { ETag: etag, 'Cache-Control': 'private, no-cache' },
+            headers: { ETag: etag, 'Cache-Control': DERIVED_IMAGE_CACHE_CONTROL },
           });
         }
 
@@ -133,7 +112,7 @@ export async function GET(
           headers: {
             'Content-Type': resizeWidth ? 'image/webp' : 'image/png',
             'X-Content-Type-Options': 'nosniff',
-            'Cache-Control': 'private, no-cache',
+            'Cache-Control': DERIVED_IMAGE_CACHE_CONTROL,
             ETag: etag,
           },
         });

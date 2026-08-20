@@ -7,17 +7,12 @@ import { eq } from 'drizzle-orm';
 import { getPrivateBlob } from '@/lib/blob';
 import sharp from 'sharp';
 import { cropExtractRegion } from '@/lib/crop-math';
-
-async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
-  const reader = stream.getReader();
-  const chunks: Uint8Array[] = [];
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) chunks.push(value);
-  }
-  return Buffer.concat(chunks);
-}
+import {
+  parseResizeWidth,
+  streamToBuffer,
+  derivedImageEtag,
+  DERIVED_IMAGE_CACHE_CONTROL,
+} from '@/lib/image-proxy';
 
 export async function GET(
   request: NextRequest,
@@ -61,33 +56,41 @@ export async function GET(
         return new NextResponse('Not found', { status: 404 });
       }
 
+      const resizeWidth = parseResizeWidth(request.nextUrl.searchParams.get('w'));
       const cropRect =
         type === 'illustration' && card.preserveOriginal && card.cropData ? card.cropData : null;
 
-      if (cropRect) {
-        const etag = `"${result.blob.etag}-crop${cropRect.x}-${cropRect.y}-${cropRect.width}-${cropRect.height}"`;
+      if (resizeWidth || cropRect) {
+        const etag = derivedImageEtag(result.blob.etag, cropRect, resizeWidth);
         if (request.headers.get('if-none-match') === etag) {
           return new NextResponse(null, {
             status: 304,
-            headers: { ETag: etag, 'Cache-Control': 'private, no-cache' },
+            headers: { ETag: etag, 'Cache-Control': DERIVED_IMAGE_CACHE_CONTROL },
           });
         }
         if (!result.stream) {
           return new NextResponse('Not found', { status: 404 });
         }
         const source = await streamToBuffer(result.stream);
-        const meta = await sharp(source).metadata();
-        const region = cropExtractRegion(cropRect, meta.width ?? 0, meta.height ?? 0);
-        // Always re-encode to PNG so the Content-Type below is accurate even on
-        // the degenerate-crop fallback (stored originals may be JPEG).
-        const out = region
-          ? await sharp(source).rotate().extract(region).png().toBuffer()
-          : await sharp(source).png().toBuffer();
+        let pipeline = sharp(source).rotate();
+        if (cropRect) {
+          const meta = await sharp(source).metadata();
+          const region = cropExtractRegion(cropRect, meta.width ?? 0, meta.height ?? 0);
+          if (region) pipeline = pipeline.extract(region);
+        }
+        if (resizeWidth) {
+          pipeline = pipeline.resize({ width: resizeWidth, withoutEnlargement: true });
+        }
+        // Always re-encode so the Content-Type below is accurate even on the
+        // degenerate-crop fallback (stored originals may be JPEG).
+        const out = resizeWidth
+          ? await pipeline.webp({ quality: 75 }).toBuffer()
+          : await pipeline.png().toBuffer();
         return new NextResponse(new Uint8Array(out), {
           headers: {
-            'Content-Type': 'image/png',
+            'Content-Type': resizeWidth ? 'image/webp' : 'image/png',
             'X-Content-Type-Options': 'nosniff',
-            'Cache-Control': 'private, no-cache',
+            'Cache-Control': DERIVED_IMAGE_CACHE_CONTROL,
             ETag: etag,
           },
         });

@@ -57,7 +57,9 @@ export async function LandingHero() {
                   alt=""
                   fill
                   sizes="88px"
+                  quality={50}
                   placeholder="blur"
+                  loading="eager"
                   className="object-cover"
                 />
               </div>
@@ -83,7 +85,7 @@ export async function LandingHero() {
             if (!card) return null;
             return (
               <div key={card.id} className={`-mx-6 ${fannedRotations[i]} ${fannedOffsets[i]}`}>
-                <HeroCard card={card} duplicate />
+                <HeroCard card={card} duplicate eager />
               </div>
             );
           })}

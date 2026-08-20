@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotteriaCard } from '@/lib/generate-boards';
+import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
 
@@ -72,11 +73,10 @@ export function CardEditModal({
                 <p className="text-xs text-muted-foreground text-center">{t('originalLabel')}</p>
                 <div className="relative w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                   <Image
-                    src={originalImage}
+                    {...cardImageProps(originalImage, CARD_GRID_THUMB_WIDTH)}
                     alt={t('originalLabel')}
                     fill
                     sizes="(max-width: 768px) 128px, 160px"
-                    unoptimized
                     className="object-cover"
                   />
                 </div>
@@ -90,11 +90,13 @@ export function CardEditModal({
               )}
               <div className="relative w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                 <Image
-                  src={card.illustration || '/placeholder.svg'}
+                  {...cardImageProps(
+                    card.illustration || '/placeholder.svg',
+                    CARD_GRID_THUMB_WIDTH
+                  )}
                   alt={card.label}
                   fill
                   sizes="(max-width: 768px) 128px, 160px"
-                  unoptimized
                   className="object-cover"
                 />
               </div>

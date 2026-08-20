@@ -5,10 +5,19 @@ export function HeroCard({
   card,
   duplicate = false,
   tilt,
+  eager = false,
 }: {
   card: HeroCardData;
   duplicate?: boolean;
   tilt?: number;
+  /**
+   * Opt the illustration out of lazy loading. Set on the above-the-fold hero
+   * fan only — which of those images is the LCP element depends on viewport
+   * (the photo fan and tabla stack are breakpoint-gated), so the docs favour
+   * `loading="eager"` here over a `preload` <link> that could back the wrong
+   * candidate.
+   */
+  eager?: boolean;
 }) {
   return (
     <div
@@ -35,6 +44,8 @@ export function HeroCard({
           fill
           sizes="120px"
           placeholder="blur"
+          loading={eager ? 'eager' : 'lazy'}
+          fetchPriority={eager ? 'high' : undefined}
           className="object-cover"
         />
       </div>

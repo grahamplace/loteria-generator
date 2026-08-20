@@ -103,6 +103,10 @@ export default function DashboardPage() {
                       alt={user.name || t('userAvatarAlt')}
                       width={32}
                       height={32}
+                      // OAuth avatars arrive pre-sized (~3KB) from a CDN that
+                      // already caches them. Routing them through /_next/image
+                      // buys nothing and bills a transformation per user.
+                      unoptimized
                       className="h-8 w-8 rounded-full object-cover"
                       referrerPolicy="no-referrer"
                     />

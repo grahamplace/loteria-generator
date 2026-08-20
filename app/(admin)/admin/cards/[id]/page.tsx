@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
+import { cardImageProps, CARD_DETAIL_THUMB_WIDTH } from '@/lib/card-image';
 import Link from 'next/link';
 import { Grid2X2 } from 'lucide-react';
 import { RegenerateButton } from '../../components/regenerate-button';
@@ -128,10 +129,13 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
               <div className="space-y-2">
                 <div className="relative aspect-[2/3] overflow-hidden rounded border border-border bg-muted">
                   <Image
-                    src={`/api/admin/images/${card.id}/original`}
+                    {...cardImageProps(
+                      `/api/admin/images/${card.id}/original`,
+                      CARD_DETAIL_THUMB_WIDTH
+                    )}
                     alt="Original upload"
                     fill
-                    unoptimized
+                    sizes="(max-width: 640px) 100vw, 50vw"
                     className="object-cover"
                   />
                 </div>
@@ -157,14 +161,15 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
               <div className="space-y-2">
                 <div className="relative aspect-[2/3] overflow-hidden rounded border border-border bg-muted">
                   <Image
-                    src={
+                    {...cardImageProps(
                       card.isDefault
                         ? card.illustrationUrl
-                        : `/api/admin/images/${card.id}/illustration`
-                    }
+                        : `/api/admin/images/${card.id}/illustration`,
+                      CARD_DETAIL_THUMB_WIDTH
+                    )}
                     alt="AI illustration"
                     fill
-                    unoptimized
+                    sizes="(max-width: 640px) 100vw, 50vw"
                     className="object-cover"
                   />
                 </div>

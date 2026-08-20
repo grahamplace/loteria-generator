@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { boardChannel, boardChannelTopics, type CardUpdatedPayload } from '@/lib/inngest/channels';
 import { getAdminBoardRealtimeToken } from '@/app/actions/admin-board-realtime';
 import { adminCardImageSrc } from '@/lib/admin-card-image';
+import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import type { Card } from '@/db/schema';
 
 export function AdminBoardCardsGrid({
@@ -87,10 +88,10 @@ export function AdminBoardCardsGrid({
                 <div className="relative mb-2 aspect-[2/3] overflow-hidden rounded bg-muted">
                   {imageSrc ? (
                     <Image
-                      src={imageSrc}
+                      {...cardImageProps(imageSrc, CARD_GRID_THUMB_WIDTH)}
                       alt={card.label || `Card ${card.number}`}
                       fill
-                      unoptimized
+                      sizes="(max-width: 640px) 25vw, (max-width: 1024px) 17vw, 130px"
                       className="object-cover"
                     />
                   ) : (
