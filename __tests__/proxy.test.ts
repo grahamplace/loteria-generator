@@ -40,20 +40,88 @@ describe('proxy locale-aware auth redirects', () => {
     expect(path).toBe('/sign-in');
   });
 
-  it('redirects authenticated /es/sign-in to /es/dashboard', async () => {
+  // Authenticated users on an auth route funnel through /start, not /dashboard:
+  // /start is idempotent (ensures a board) and drops a single-board user into
+  // their board.
+  it('redirects authenticated /es/sign-in to /es/start', async () => {
     const res = await proxy(makeRequest('/es/sign-in', { authed: true }));
     expect(res.status).toBe(307);
     const location = res.headers.get('location')!;
     const path = new URL(location, 'http://localhost').pathname;
-    expect(path).toBe('/es/dashboard');
+    expect(path).toBe('/es/start');
   });
 
-  it('redirects authenticated /sign-in to /dashboard (no prefix)', async () => {
+  it('redirects authenticated /sign-in to /start (no prefix)', async () => {
     const res = await proxy(makeRequest('/sign-in', { authed: true }));
     expect(res.status).toBe(307);
     const location = res.headers.get('location')!;
     const path = new URL(location, 'http://localhost').pathname;
-    expect(path).toBe('/dashboard');
+    expect(path).toBe('/start');
+  });
+
+  it('redirects authenticated /es/sign-up to /es/start', async () => {
+    const res = await proxy(makeRequest('/es/sign-up', { authed: true }));
+    expect(res.status).toBe(307);
+    const location = res.headers.get('location')!;
+    const path = new URL(location, 'http://localhost').pathname;
+    expect(path).toBe('/es/start');
+  });
+
+  it('redirects authenticated /sign-up to /start (no prefix)', async () => {
+    const res = await proxy(makeRequest('/sign-up', { authed: true }));
+    expect(res.status).toBe(307);
+    const location = res.headers.get('location')!;
+    const path = new URL(location, 'http://localhost').pathname;
+    expect(path).toBe('/start');
+  });
+
+  it('redirects unauthenticated /start to /sign-in with a callbackUrl', async () => {
+    const res = await proxy(makeRequest('/start'));
+    expect(res.status).toBe(307);
+    const location = res.headers.get('location')!;
+    const url = new URL(location, 'http://localhost');
+    expect(url.pathname).toBe('/sign-in');
+    expect(url.searchParams.get('callbackUrl')).toBe('/start');
+  });
+
+  it('redirects unauthenticated /es/start to /es/sign-in with a locale-prefixed callbackUrl', async () => {
+    const res = await proxy(makeRequest('/es/start'));
+    expect(res.status).toBe(307);
+    const location = res.headers.get('location')!;
+    const url = new URL(location, 'http://localhost');
+    expect(url.pathname).toBe('/es/sign-in');
+    expect(url.searchParams.get('callbackUrl')).toBe('/es/start');
+  });
+
+  it('lets an authenticated /start request through to intl routing', async () => {
+    const res = await proxy(makeRequest('/start', { authed: true }));
+    expect(res.status).not.toBe(307);
+    expect(res.status).not.toBe(401);
+  });
+
+  // Loop breaker. The proxy can only see that a session COOKIE EXISTS — it can't
+  // tell a live session from an expired/revoked one. /start is where the token
+  // is actually validated, so when it comes back dead /start redirects to
+  // /sign-in?from=start. Without the exemption below, the proxy would bounce
+  // that right back to /start and the pair would ping-pong until the browser
+  // gives up with ERR_TOO_MANY_REDIRECTS.
+  it('does NOT bounce a cookie-bearing /sign-in?from=start back to /start', async () => {
+    const res = await proxy(makeRequest('/sign-in?from=start', { authed: true }));
+    expect(res.status).not.toBe(307);
+    expect(res.headers.get('location')).toBeNull();
+  });
+
+  it('does NOT bounce a cookie-bearing /es/sign-in?from=start back to /es/start', async () => {
+    const res = await proxy(makeRequest('/es/sign-in?from=start', { authed: true }));
+    expect(res.status).not.toBe(307);
+    expect(res.headers.get('location')).toBeNull();
+  });
+
+  it('still bounces a cookie-bearing /sign-in carrying an unrelated param', async () => {
+    const res = await proxy(makeRequest('/sign-in?from=elsewhere', { authed: true }));
+    expect(res.status).toBe(307);
+    const path = new URL(res.headers.get('location')!, 'http://localhost').pathname;
+    expect(path).toBe('/start');
   });
 
   it('blocks unauthenticated /api/boards with 401', async () => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
@@ -19,10 +19,17 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { LanguageSwitch } from '@/components/language-switch';
+import { safeRedirectPath } from '@/lib/safe-redirect';
 
 export default function SignInPage() {
   const t = useTranslations('Auth.SignIn');
   const router = useRouter();
+  // The proxy sets ?callbackUrl= when it bounces an unauthenticated visitor off
+  // a protected route, so a deep link to a board survives the sign-in detour.
+  // The value is attacker-controlled — sanitize before redirecting to it.
+  // The <Suspense> boundary this hook requires lives in ./layout.tsx.
+  const searchParams = useSearchParams();
+  const safeTarget = safeRedirectPath(searchParams.get('callbackUrl'), '/start');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -49,7 +56,7 @@ export default function SignInPage() {
           });
         }
         posthog.capture('signed_in', { method: 'email' });
-        router.push('/dashboard');
+        router.push(safeTarget);
       }
     } catch (_err) {
       setError(t('errors.unexpectedError'));
@@ -65,7 +72,7 @@ export default function SignInPage() {
     try {
       await signIn.social({
         provider: 'google',
-        callbackURL: '/dashboard',
+        callbackURL: safeTarget,
       });
     } catch (_err) {
       setError(t('errors.googleSignInFailed'));

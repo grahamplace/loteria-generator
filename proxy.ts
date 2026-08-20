@@ -2,13 +2,16 @@ import createNextIntlMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { routing } from '@/i18n/routing';
+import { SIGN_IN_LOOP_BREAKER_PARAM, SIGN_IN_LOOP_BREAKER_VALUE } from '@/lib/safe-redirect';
 
 const intlMiddleware = createNextIntlMiddleware(routing);
 
-// Paths (without locale prefix) that require authentication
-const protectedRoutes = ['/dashboard', '/boards', '/account'];
+// Paths (without locale prefix) that require authentication.
+// '/start' is the post-auth funnel: it needs a session to ensure a board, so an
+// anonymous hit should bounce to sign-in rather than render.
+const protectedRoutes = ['/dashboard', '/boards', '/account', '/start'];
 
-// Paths (without locale prefix) that redirect to dashboard if already authenticated
+// Paths (without locale prefix) that redirect to /start if already authenticated
 const authRoutes = ['/sign-in', '/sign-up'];
 
 // Top-level paths that live OUTSIDE the [locale] tree (e.g. their own route group
@@ -21,6 +24,14 @@ const nonLocalizedRoots = ['/admin', '/redeem', '/unsubscribe'];
 const SPANISH_PREFIX = '/es';
 const SPANISH_LOCALE = 'es-MX' as const;
 
+/**
+ * Whether the request carries a session cookie.
+ *
+ * NOTE: presence, not validity. The proxy runs at the edge and deliberately does
+ * not hit the DB, so it cannot tell a live session from an expired or revoked
+ * one. Everything here is a routing convenience; the real check happens in the
+ * route/page via `auth.api.getSession()`.
+ */
 function getSessionToken(request: NextRequest): string | undefined {
   return (
     request.cookies.get('better-auth.session_token')?.value ||
@@ -95,8 +106,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL(withLocale('/dashboard', locale), request.url));
+  // `/start` sets this when it found the session cookie to be stale — see
+  // SIGN_IN_LOOP_BREAKER_PARAM. Without it, bouncing a cookie-bearing request
+  // off /sign-in back to /start ping-pongs forever, because only /start can see
+  // that the session is dead and only the proxy decides where /sign-in goes.
+  const isReturningFromDeadSession =
+    request.nextUrl.searchParams.get(SIGN_IN_LOOP_BREAKER_PARAM) === SIGN_IN_LOOP_BREAKER_VALUE;
+
+  if (isAuthRoute && isAuthenticated && !isReturningFromDeadSession) {
+    // '/start' rather than '/dashboard': it is idempotent (ensures the user has
+    // a board) and drops a single-board user straight into their board.
+    return NextResponse.redirect(new URL(withLocale('/start', locale), request.url));
   }
 
   // --- next-intl locale routing ---

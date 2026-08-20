@@ -7,15 +7,25 @@ export interface EnsureFirstBoardResult {
   boardId: string;
   /** True when a board was just created, false when the user already had one. */
   created: boolean;
+  /**
+   * How many boards the user has *after* this call. `created: true` always
+   * implies `boardCount: 1`. Callers use it to decide where to send the user:
+   * exactly one board means "drop them straight into it".
+   */
+  boardCount: number;
 }
 
 /**
  * Find-or-create the user's first board.
  *
- * Used by the `/start` landing route so a brand-new signup is dropped straight
- * into a board (skipping the empty dashboard, a known drop-off point). Idempotent:
- * if the user already has boards, it returns their most recent one and creates
- * nothing — so it's safe to hit on any post-auth redirect.
+ * Called from two places:
+ * - `lib/auth.ts` `databaseHooks.user.create.after` — the invariant. A board
+ *   exists the instant the user row does, whatever redirect or provider follows.
+ * - the `/start` landing route — the idempotent repair, which also covers users
+ *   who signed up before the hook existed.
+ *
+ * Idempotent: if the user already has boards it returns their most recent one
+ * and creates nothing, so it is safe to hit on any post-auth redirect.
  */
 export async function ensureFirstBoard(user: {
   id: string;
@@ -27,7 +37,7 @@ export async function ensureFirstBoard(user: {
   });
 
   if (existing.length > 0) {
-    return { boardId: existing[0].id, created: false };
+    return { boardId: existing[0].id, created: false, boardCount: existing.length };
   }
 
   // Ensure the user profile row exists (mirrors POST /api/boards).
@@ -45,5 +55,5 @@ export async function ensureFirstBoard(user: {
     })
     .returning();
 
-  return { boardId: board.id, created: true };
+  return { boardId: board.id, created: true, boardCount: 1 };
 }

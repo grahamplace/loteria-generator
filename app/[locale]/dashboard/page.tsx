@@ -66,9 +66,17 @@ export default function DashboardPage() {
 
   async function handleDeleteBoard() {
     if (!deletingBoardId) return;
-    await deleteBoard(deletingBoardId);
+    // Capture this BEFORE awaiting: useBoards refetches after a delete, so
+    // boards.length is stale/updated by the time the await resolves.
+    const wasLastBoard = boards.length === 1;
+    const deleted = await deleteBoard(deletingBoardId);
     posthog.capture('board_deleted', { board_id: deletingBoardId });
     setDeletingBoardId(null);
+    // Deleting your only board would strand you on the empty state. '/start'
+    // creates a fresh board and drops you into it.
+    if (deleted && wasLastBoard) {
+      router.push('/start');
+    }
   }
 
   async function handleSignOut() {

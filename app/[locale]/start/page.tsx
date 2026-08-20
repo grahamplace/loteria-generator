@@ -1,15 +1,23 @@
-import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { setRequestLocale } from 'next-intl/server';
+import { redirect } from '@/i18n/navigation';
 import { auth } from '@/lib/auth';
 import { ensureFirstBoard } from '@/lib/boards/ensure-first-board';
+import { SIGN_IN_LOOP_BREAKER_PARAM, SIGN_IN_LOOP_BREAKER_VALUE } from '@/lib/safe-redirect';
 
 /**
- * Post-signup landing route. Drops a brand-new user straight into their first
- * board (auto-creating it) so they skip the empty dashboard entirely. Returning
- * users who already have boards fall through to the dashboard.
+ * The universal post-auth funnel. Signup, sign-in, and the proxy's bounce of an
+ * already-authenticated user off `/sign-in` / `/sign-up` all land here.
  *
- * Signup (email + Google) redirects here; sign-in still goes to /dashboard.
+ * It guarantees a board exists (`ensureFirstBoard` is idempotent, so this also
+ * repairs users who somehow ended up with zero) and then routes by board count:
+ * a user with exactly one board goes straight into it — nobody sees an empty
+ * dashboard, a known drop-off point. Only multi-board users get the dashboard.
+ *
+ * Every redirect below goes through next-intl's locale-aware `redirect` so a
+ * Spanish visitor stays on `/es/…`. Since this route is now on the path of every
+ * sign-in, a plain `next/navigation` redirect here would drop `es-MX` users into
+ * the English tree on every single login.
  */
 export default async function StartPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -17,9 +25,26 @@ export default async function StartPage({ params }: { params: Promise<{ locale: 
 
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) {
-    redirect('/sign-in');
+    // Reaching this branch means the proxy saw a session cookie (that is all it
+    // can see at the edge) but the token behind it is expired or revoked. A bare
+    // `/sign-in` redirect would be bounced straight back here by the proxy's
+    // auth-route rule, looping until the browser gives up — so tag it.
+    redirect({
+      href: {
+        pathname: '/sign-in',
+        query: { [SIGN_IN_LOOP_BREAKER_PARAM]: SIGN_IN_LOOP_BREAKER_VALUE },
+      },
+      locale,
+    });
+    // Unreachable — `redirect` throws. next-intl's `redirect` is a destructured
+    // const rather than a declared function, so TypeScript won't treat its
+    // `never` return as terminating the branch; this return does the narrowing.
+    return null;
   }
 
-  const { boardId, created } = await ensureFirstBoard(session.user);
-  redirect(created ? `/boards/${boardId}` : '/dashboard');
+  const { boardId, created, boardCount } = await ensureFirstBoard(session.user);
+  redirect({
+    href: created || boardCount === 1 ? `/boards/${boardId}` : '/dashboard',
+    locale,
+  });
 }

@@ -48,7 +48,16 @@ describe('ensureFirstBoard', () => {
 
     const result = await ensureFirstBoard(USER);
 
-    expect(result).toEqual({ boardId: 'board-newest', created: false });
+    expect(result).toEqual({ boardId: 'board-newest', created: false, boardCount: 2 });
+    expect(insertValuesSpy).not.toHaveBeenCalled();
+  });
+
+  it('reports boardCount 1 for a user who already has exactly one board', async () => {
+    boardsFindMany.mockResolvedValue([{ id: 'board-only' }]);
+
+    const result = await ensureFirstBoard(USER);
+
+    expect(result).toEqual({ boardId: 'board-only', created: false, boardCount: 1 });
     expect(insertValuesSpy).not.toHaveBeenCalled();
   });
 
@@ -57,7 +66,7 @@ describe('ensureFirstBoard', () => {
 
     const result = await ensureFirstBoard(USER);
 
-    expect(result).toEqual({ boardId: 'new-board', created: true });
+    expect(result).toEqual({ boardId: 'new-board', created: true, boardCount: 1 });
     expect(boardInsertCall()).toMatchObject({
       userId: 'user-1',
       name: DEFAULT_BOARD_NAME,
@@ -71,6 +80,7 @@ describe('ensureFirstBoard', () => {
     const result = await ensureFirstBoard(ADMIN);
 
     expect(result.created).toBe(true);
+    expect(result.boardCount).toBe(1);
     expect(boardInsertCall()).toMatchObject({ isUnlocked: true });
   });
 
