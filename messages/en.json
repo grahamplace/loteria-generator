@@ -215,6 +215,8 @@
       "forgotPasswordCta": "Forgot password?",
       "resetSuccess": "Password updated. Sign in with your new password.",
       "errors": {
+        "invalidCredentials": "Incorrect email or password.",
+        "rateLimited": "Too many attempts. Wait a minute and try again.",
         "unexpectedError": "An unexpected error occurred",
         "googleSignInFailed": "Failed to sign in with Google"
       }
@@ -238,6 +240,8 @@
       "haveAccountCta": "Sign in",
       "errors": {
         "weakPassword": "Password must be at least 8 characters",
+        "signUpFailed": "We couldn't create your account. Check your details and try again, or sign in if you already have one.",
+        "rateLimited": "Too many attempts. Wait a minute and try again.",
         "unexpectedError": "An unexpected error occurred",
         "googleSignUpFailed": "Failed to sign up with Google"
       }

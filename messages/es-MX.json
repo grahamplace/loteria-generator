@@ -215,6 +215,8 @@
       "forgotPasswordCta": "¿Olvidaste tu contraseña?",
       "resetSuccess": "Contraseña actualizada. Inicia sesión con tu nueva contraseña.",
       "errors": {
+        "invalidCredentials": "Correo o contraseña incorrectos.",
+        "rateLimited": "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
         "unexpectedError": "Ocurrió un error inesperado",
         "googleSignInFailed": "No se pudo iniciar sesión con Google"
       }
@@ -238,6 +240,8 @@
       "haveAccountCta": "Inicia sesión",
       "errors": {
         "weakPassword": "La contraseña debe tener al menos 8 caracteres",
+        "signUpFailed": "No pudimos crear tu cuenta. Revisa tus datos e inténtalo de nuevo, o inicia sesión si ya tienes una.",
+        "rateLimited": "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
         "unexpectedError": "Ocurrió un error inesperado",
         "googleSignUpFailed": "No se pudo registrar con Google"
       }
