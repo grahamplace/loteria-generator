@@ -6,6 +6,7 @@
  */
 
 import { auth } from '@/lib/auth';
+import { GENERIC_SIGN_UP_ERROR_CODE } from '@/lib/signup-enumeration-guard';
 
 const TEST_EMAIL = 'e2etest@example.com';
 const TEST_NAME = 'E2E Test';
@@ -21,7 +22,17 @@ async function main(): Promise<void> {
     process.stderr.write(`seeded ${TEST_EMAIL}\n`);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    if (/already exists|USER_EXISTS|already registered/i.test(message)) {
+    // lib/signup-enumeration-guard.ts intercepts direct auth.api.signUpEmail
+    // calls (hooks.before is global, not HTTP-endpoint-specific) and replaces
+    // better-auth's own "already exists" prose with GENERIC_SIGN_UP_ERROR_CODE
+    // before this script ever sees it. Match the code first; keep the prose
+    // patterns as a fallback for a better-auth upgrade that changes the code,
+    // or for a run against a build that predates the guard.
+    const code = (err as { body?: { code?: string } })?.body?.code;
+    if (
+      code === GENERIC_SIGN_UP_ERROR_CODE ||
+      /already exists|USER_EXISTS|already registered/i.test(message)
+    ) {
       process.stderr.write(`${TEST_EMAIL} already exists — ok\n`);
       return;
     }
