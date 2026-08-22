@@ -5,7 +5,6 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-et
 const indexedRoutes = [
   { path: '/', changeFrequency: 'weekly' as const, priority: 1 },
   { path: '/faq', changeFrequency: 'monthly' as const, priority: 0.8 },
-  { path: '/sign-up', changeFrequency: 'yearly' as const, priority: 0.5 },
 ];
 
 function localized(path: string, locale: 'en' | 'es') {
@@ -19,6 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const languages = {
       en: localized(path, 'en'),
       'es-MX': localized(path, 'es'),
+      'x-default': localized(path, 'en'),
     };
     return [
       {
