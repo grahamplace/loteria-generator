@@ -69,6 +69,7 @@ describe('sign-in page error handling', () => {
     await waitFor(() => {
       expect(screen.getByText(/incorrect email or password/i)).toBeInTheDocument();
     });
+    expect(screen.queryByText(/invalid email or password/i)).not.toBeInTheDocument();
   });
 
   it('does not distinguish an unknown account from a wrong password', async () => {
