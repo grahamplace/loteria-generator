@@ -10,8 +10,18 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
 
 ## Database
 
-- There is **no separate dev database** — dev and prod share one Neon database. The single developer accepts this for now.
-- CAUTION: `DATABASE_URL` in `.env.local` points at the same DB as production. Any `pnpm db:migrate` / `db:push`, seed, or destructive query you run locally hits **production data**. Treat every DB-mutating command as a production change.
+- There **is** a separate dev database: a Neon branch, distinct from the production branch. `DATABASE_URL` in `.env.local` points at it, so `pnpm db:migrate` / `db:push`, seeds, and destructive queries run locally hit dev data, not customers.
+- Before any DB-mutating command, confirm which branch you are actually on — a stale `.env.local` copied from an older checkout is the way this goes wrong:
+
+  ```bash
+  grep '^DATABASE_URL' .env.local | sed -E 's|.*@([^/]*)/([^?]*).*|host=\1 db=\2|'
+  ```
+
+  Compare the host against the dev branch's endpoint in the Neon console. If it matches the production branch, stop and repoint before running anything.
+
+- New worktrees do not inherit `.env.local` — copy it from an existing checkout (along with `.npmrc` and, for e2e, `.env.test`).
+- Schema changes still reach production the usual way, through a deploy. A migration that is correct against dev is not automatically safe against production data: check for rows that violate a new constraint before shipping.
+- The e2e suite is separately isolated — `scripts/e2e-run.ts` provisions a throwaway Neon branch per run, migrates and seeds it, and destroys it afterwards. It touches neither dev nor production.
 
 ---
 

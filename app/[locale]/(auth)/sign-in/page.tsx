@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import posthog from 'posthog-js';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,7 @@ import { safeRedirectPath } from '@/lib/safe-redirect';
 
 export default function SignInPage() {
   const t = useTranslations('Auth.SignIn');
+  const locale = useLocale();
   const router = useRouter();
   // The proxy sets ?callbackUrl= when it bounces an unauthenticated visitor off
   // a protected route, so a deep link to a board survives the sign-in detour.
@@ -34,6 +35,11 @@ export default function SignInPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // Was read from window.location in a useEffect to keep this page out of a
+  // Suspense boundary. It is inside one now (for ?callbackUrl= above), so the
+  // banner can just read the param directly — no post-mount state needed, and
+  // no hydration mismatch, because the boundary's fallback is what prerenders.
+  const showResetSuccess = searchParams.get('reset') === 'success';
 
   async function handleEmailSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -91,6 +97,15 @@ export default function SignInPage() {
           <CardDescription>{t('cardDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {showResetSuccess && (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-sm text-accent text-center rounded-md bg-accent/10 px-3 py-2"
+            >
+              {t('resetSuccess')}
+            </p>
+          )}
           <Button
             variant="outline"
             className="w-full"
@@ -139,7 +154,15 @@ export default function SignInPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">{t('passwordLabel')}</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="password">{t('passwordLabel')}</Label>
+                <Link
+                  href={locale === 'en' ? '/forgot-password' : '/es/forgot-password'}
+                  className="text-sm text-primary hover:underline font-medium"
+                >
+                  {t('forgotPasswordCta')}
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"

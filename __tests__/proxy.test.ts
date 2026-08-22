@@ -135,6 +135,33 @@ describe('proxy locale-aware auth redirects', () => {
     expect(res.status).not.toBe(307);
     expect(res.status).not.toBe(401);
   });
+
+  it('redirects an authenticated user away from /forgot-password', async () => {
+    const res = await proxy(makeRequest('/forgot-password', { authed: true }));
+    expect(res.status).toBe(307);
+    expect(new URL(res.headers.get('location')!, 'http://localhost').pathname).toBe('/start');
+  });
+
+  it('redirects an authenticated user away from /es/forgot-password to the Spanish funnel', async () => {
+    const res = await proxy(makeRequest('/es/forgot-password', { authed: true }));
+    expect(res.status).toBe(307);
+    expect(new URL(res.headers.get('location')!, 'http://localhost').pathname).toBe('/es/start');
+  });
+
+  it('lets a signed-out user reach /forgot-password', async () => {
+    const res = await proxy(makeRequest('/forgot-password'));
+    expect(res.status).not.toBe(307);
+  });
+
+  it('lets an authenticated user reach /reset-password so an emailed link still works', async () => {
+    const res = await proxy(makeRequest('/reset-password?token=tok1', { authed: true }));
+    expect(res.status).not.toBe(307);
+  });
+
+  it('lets a signed-out user reach /reset-password', async () => {
+    const res = await proxy(makeRequest('/reset-password?token=tok1'));
+    expect(res.status).not.toBe(307);
+  });
 });
 
 describe('proxy matcher', () => {

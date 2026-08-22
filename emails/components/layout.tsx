@@ -52,9 +52,10 @@ export type LoteriaEmailLayoutProps = {
   preview: string;
   /** Absolute base URL (e.g. https://…) used to build public asset URLs. */
   appUrl: string;
-  unsubscribeUrl: string;
+  /** Omit for transactional email, which must not offer an unsubscribe link. */
+  unsubscribeUrl?: string;
   footerText: string;
-  unsubscribeLabel: string;
+  unsubscribeLabel?: string;
   /** Render the "how it works" example image at the bottom of the card. */
   showExampleImage?: boolean;
   children: React.ReactNode;
@@ -119,13 +120,18 @@ export function LoteriaEmailLayout({
             )}
             <Hr style={{ borderColor: EMAIL_COLORS.gold, margin: '24px 0' }} />
             <Text style={{ color: EMAIL_COLORS.muted, fontSize: '12px', lineHeight: '18px' }}>
-              {footerText}{' '}
-              <Link
-                href={unsubscribeUrl}
-                style={{ color: EMAIL_COLORS.muted, textDecoration: 'underline' }}
-              >
-                {unsubscribeLabel}
-              </Link>
+              {footerText}
+              {unsubscribeUrl && (
+                <>
+                  {' '}
+                  <Link
+                    href={unsubscribeUrl}
+                    style={{ color: EMAIL_COLORS.muted, textDecoration: 'underline' }}
+                  >
+                    {unsubscribeLabel}
+                  </Link>
+                </>
+              )}
             </Text>
           </Section>
         </Container>
