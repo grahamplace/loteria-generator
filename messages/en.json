@@ -212,6 +212,8 @@
       "submitButtonLoading": "Signing in...",
       "noAccountPrompt": "Don't have an account?",
       "noAccountCta": "Sign up",
+      "forgotPasswordCta": "Forgot password?",
+      "resetSuccess": "Password updated. Sign in with your new password.",
       "errors": {
         "unexpectedError": "An unexpected error occurred",
         "googleSignInFailed": "Failed to sign in with Google"
@@ -238,6 +240,45 @@
         "weakPassword": "Password must be at least 8 characters",
         "unexpectedError": "An unexpected error occurred",
         "googleSignUpFailed": "Failed to sign up with Google"
+      }
+    },
+    "ForgotPassword": {
+      "metaTitle": "Reset Password — Lotería Generator",
+      "metaDescription": "Request a link to reset your Lotería Generator password.",
+      "cardTitle": "Forgot your password?",
+      "cardDescription": "Enter your email and we’ll send you a link to set a new one.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submitButton": "Send reset link",
+      "submitButtonLoading": "Sending…",
+      "sentTitle": "Check your email",
+      "sentBody": "If an account exists for {email}, we’ve sent a link to set a new password. The link expires in one hour.",
+      "sentHint": "Don’t see it? Check your spam folder.",
+      "backToSignIn": "Back to sign in",
+      "errors": {
+        "rateLimited": "Too many requests. Wait a few minutes and try again.",
+        "unexpectedError": "An unexpected error occurred"
+      }
+    },
+    "ResetPassword": {
+      "metaTitle": "Set a New Password — Lotería Generator",
+      "metaDescription": "Choose a new password for your Lotería Generator account.",
+      "cardTitle": "Set a new password",
+      "cardDescription": "Choose a password you haven’t used before.",
+      "passwordLabel": "New password",
+      "passwordPlaceholder": "At least 8 characters",
+      "confirmLabel": "Confirm new password",
+      "confirmPlaceholder": "Re-enter your new password",
+      "submitButton": "Update password",
+      "submitButtonLoading": "Updating…",
+      "expiredTitle": "This link has expired",
+      "expiredBody": "Reset links last one hour and can only be used once. Request a new one and we’ll email it right away.",
+      "requestNewLink": "Request a new link",
+      "backToSignIn": "Back to sign in",
+      "errors": {
+        "tooShort": "Password must be at least 8 characters",
+        "mismatch": "Passwords don’t match",
+        "unexpectedError": "An unexpected error occurred"
       }
     }
   },

@@ -8,8 +8,10 @@ const intlMiddleware = createNextIntlMiddleware(routing);
 // Paths (without locale prefix) that require authentication
 const protectedRoutes = ['/dashboard', '/boards', '/account'];
 
-// Paths (without locale prefix) that redirect to dashboard if already authenticated
-const authRoutes = ['/sign-in', '/sign-up'];
+// Paths (without locale prefix) that redirect to dashboard if already authenticated.
+// `/reset-password` is deliberately absent: a user with a live session in this
+// browser must still be able to complete a reset link from their email.
+const authRoutes = ['/sign-in', '/sign-up', '/forgot-password'];
 
 // Top-level paths that live OUTSIDE the [locale] tree (e.g. their own route group
 // with its own root layout, or a bare route handler like /redeem). next-intl
