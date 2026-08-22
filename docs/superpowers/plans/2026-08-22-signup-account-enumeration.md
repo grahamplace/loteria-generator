@@ -518,8 +518,12 @@ git commit -m "Stop sign-up page from leaking account existence"
   `Auth.SignIn.errors.invalidCredentials` / `.rateLimited` / `.unexpectedError`.
 - Produces: nothing for later tasks.
 
-Read the file before editing — it has a `resetSuccess` banner driven by
-`useSearchParams`, which the shared `vitest.setup.ts` already mocks.
+Read the file before editing. Notes from reading it already: it imports only
+`signIn` from `@/lib/auth-client` (no `signUp`), does **not** import
+`@/lib/google-ads`, and reads `useSearchParams()` for `?callbackUrl=` and
+`?reset=success` — the shared `vitest.setup.ts` already mocks that hook to return
+`{ get: vi.fn() }`, so both features are inert in tests. Its error paragraph is at
+roughly line 177.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -537,12 +541,6 @@ vi.mock('@/lib/auth-client', () => ({
 
 vi.mock('posthog-js', () => ({
   default: { identify: vi.fn(), capture: vi.fn() },
-}));
-
-vi.mock('@/lib/google-ads', () => ({
-  fireSignupConversion: vi.fn(),
-  setPendingSignupConversion: vi.fn(),
-  clearPendingSignupConversion: vi.fn(),
 }));
 
 vi.mock('@/components/language-switch', () => ({
