@@ -184,6 +184,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
                             alt=""
                             fill
                             sizes="80px"
+                            quality={50}
                             placeholder="blur"
                             className="object-cover"
                           />
@@ -215,6 +216,8 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
                           alt={tHowItWorks('step2GrandpaPhotoAlt')}
                           fill
                           sizes="84px"
+                          quality={50}
+                          placeholder="blur"
                           className="object-cover"
                         />
                       </div>

@@ -5,6 +5,7 @@ import { db, cards, boards, user } from '@/db';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AdminBreadcrumb } from '../components/admin-breadcrumb';
+import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 
 const PAGE_SIZE = 20;
 
@@ -92,10 +93,13 @@ export default async function AdminCardsPage({
                     <div className="space-y-1">
                       <div className="relative aspect-[2/3] overflow-hidden rounded border border-border bg-muted">
                         <Image
-                          src={`/api/admin/images/${card.id}/original`}
+                          {...cardImageProps(
+                            `/api/admin/images/${card.id}/original`,
+                            CARD_GRID_THUMB_WIDTH
+                          )}
                           alt={`Original upload for card #${card.number}`}
                           fill
-                          unoptimized
+                          sizes="(max-width: 640px) 45vw, 200px"
                           className="object-cover"
                         />
                       </div>
@@ -106,10 +110,13 @@ export default async function AdminCardsPage({
                     <div className="space-y-1">
                       <div className="relative aspect-[2/3] overflow-hidden rounded border border-border bg-muted">
                         <Image
-                          src={`/api/admin/images/${card.id}/illustration`}
+                          {...cardImageProps(
+                            `/api/admin/images/${card.id}/illustration`,
+                            CARD_GRID_THUMB_WIDTH
+                          )}
                           alt={`AI illustration for card #${card.number}`}
                           fill
-                          unoptimized
+                          sizes="(max-width: 640px) 45vw, 200px"
                           className="object-cover"
                         />
                       </div>

@@ -84,6 +84,9 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 alt=""
                 width={40}
                 height={40}
+                // Already CDN-cached and pre-sized — see dashboard avatar.
+                unoptimized
+                referrerPolicy="no-referrer"
                 className="h-10 w-10 rounded-full"
               />
             )}

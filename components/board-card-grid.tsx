@@ -38,6 +38,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
+import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 
 interface DisplayCard {
   id: string;
@@ -156,18 +157,13 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
           </div>
         ) : card.illustration ? (
           <Image
-            src={
-              // Cards render ~180px wide (360px at 2x). Request a webp thumbnail
-              // from the image proxy instead of the full-size ~2-4MB source PNG.
-              // Default cards already point at small public webp, so leave them.
-              card.illustration.startsWith('/api/images/')
-                ? `${card.illustration}?w=400`
-                : card.illustration
-            }
+            // Cards render ~180px wide (360px at 2x). Private illustrations get
+            // a webp thumbnail from the proxy instead of the full-size ~2-4MB
+            // source PNG; public default-card art goes through /_next/image.
+            {...cardImageProps(card.illustration, CARD_GRID_THUMB_WIDTH)}
             alt={card.label}
             fill
-            sizes="(max-width: 768px) 30vw, 180px"
-            unoptimized
+            sizes="(max-width: 768px) 32vw, 200px"
             className="object-cover pointer-events-none"
             draggable={false}
           />

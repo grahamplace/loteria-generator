@@ -35,6 +35,9 @@ function TablaCell({ card }: { card: HeroCardData }) {
           alt=""
           fill
           sizes="40px"
+          // 40px decorative thumbnails — 16 per board, three boards stacked in
+          // the hero. Indistinguishable from q75 at this size.
+          quality={50}
           placeholder="blur"
           className="object-cover"
         />

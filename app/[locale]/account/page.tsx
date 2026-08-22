@@ -80,6 +80,9 @@ export default function AccountPage() {
                       alt={user.name || t('profile.imageAlt')}
                       width={64}
                       height={64}
+                      // Already CDN-cached and pre-sized — see dashboard avatar.
+                      unoptimized
+                      referrerPolicy="no-referrer"
                       className="w-16 h-16 rounded-full object-cover"
                     />
                   ) : (
