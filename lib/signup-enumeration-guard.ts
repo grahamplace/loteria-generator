@@ -13,9 +13,16 @@ import { APIError } from 'better-auth/api';
  *
  * So we intercept first and answer with a code that names nothing. This removes
  * the outright disclosure from the response body; it does NOT make sign-up
- * non-enumerable — a duplicate still returns 422 where a fresh address returns
- * 200 with a session. Closing that gap requires gating sign-up behind email
- * verification, which is a product change.
+ * non-enumerable — two signals still residually distinguish a duplicate from a
+ * fresh address:
+ *   1. status: a duplicate returns 422 where a fresh address returns 200 with
+ *      a session;
+ *   2. code: GENERIC_SIGN_UP_ERROR_CODE is emitted on exactly this one path,
+ *      so — unlike the 422 status, which better-auth also returns for
+ *      unrelated failures such as FAILED_TO_CREATE_USER — the code alone is
+ *      actually a cleaner oracle than the status it rides alongside.
+ * Closing either gap requires gating sign-up behind email verification, which
+ * is a product change.
  *
  * Deliberately no decoy password hash: with the status codes still differing,
  * timing equalization buys nothing, and hashing on the duplicate path would let
@@ -33,7 +40,11 @@ export async function assertSignUpEmailIsAvailable(
 ): Promise<void> {
   if (typeof email !== 'string') return;
   // better-auth lowercases before its own lookup (sign-up.mjs:163); match it or
-  // the guard misses "Taken@Example.com".
+  // the guard misses "Taken@Example.com". The .trim() is ours, not
+  // better-auth's — its z.email().safeParse rejects padded input outright
+  // (sign-up.mjs:147) instead of trimming it. Trimming here is strictly
+  // safer: it never lets a padded-but-legitimate address falsely collide,
+  // and it only widens what we treat as "taken", never narrows it.
   const normalized = email.trim().toLowerCase();
   if (!normalized) return;
 
