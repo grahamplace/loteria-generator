@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 
 const signUpEmail = vi.fn();
 
@@ -61,7 +61,12 @@ async function submitSignUp() {
   fireEvent.change(screen.getByLabelText(/password/i), {
     target: { value: 'TestPassword123!' },
   });
-  fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+  // Wrap the click in an async act() so the handler's post-await state
+  // updates (setError / setIsLoading) flush before the test asserts,
+  // instead of leaking into a later, unwrapped microtask tick.
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+  });
 }
 
 beforeEach(() => {
