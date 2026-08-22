@@ -106,7 +106,7 @@ function ResetPasswordForm() {
       // never clears the browser's session cookie the way sign-out does, and the
       // 5-minute cookieCache means a still-cookied browser can look signed in
       // for a few minutes after this. Explicitly sign out so /sign-in actually
-      // reaches sign-in instead of proxy.ts bouncing it to /dashboard. The
+      // reaches sign-in instead of proxy.ts bouncing it to /start. The
       // session row is already gone, so this call may itself error — that's
       // fine, it must never block the redirect.
       try {

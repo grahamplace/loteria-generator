@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import posthog from 'posthog-js';
 import { useLocale, useTranslations } from 'next-intl';
@@ -19,28 +19,27 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { LanguageSwitch } from '@/components/language-switch';
+import { safeRedirectPath } from '@/lib/safe-redirect';
 
 export default function SignInPage() {
   const t = useTranslations('Auth.SignIn');
   const locale = useLocale();
   const router = useRouter();
+  // The proxy sets ?callbackUrl= when it bounces an unauthenticated visitor off
+  // a protected route, so a deep link to a board survives the sign-in detour.
+  // The value is attacker-controlled — sanitize before redirecting to it.
+  // The <Suspense> boundary this hook requires lives in ./layout.tsx.
+  const searchParams = useSearchParams();
+  const safeTarget = safeRedirectPath(searchParams.get('callbackUrl'), '/start');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // Read after mount rather than via useSearchParams (which would force this
-  // whole page into a Suspense boundary for a single cosmetic banner) and
-  // rather than a lazy useState initializer (whose first client render runs
-  // in-browser during hydration, where `window` already exists — mismatching
-  // the server's render and triggering a hydration error). A useEffect runs
-  // only after the initial hydration pass, so the server and first client
-  // render both start false.
-  const [showResetSuccess, setShowResetSuccess] = useState(false);
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('reset') === 'success') {
-      setShowResetSuccess(true);
-    }
-  }, []);
+  // Was read from window.location in a useEffect to keep this page out of a
+  // Suspense boundary. It is inside one now (for ?callbackUrl= above), so the
+  // banner can just read the param directly — no post-mount state needed, and
+  // no hydration mismatch, because the boundary's fallback is what prerenders.
+  const showResetSuccess = searchParams.get('reset') === 'success';
 
   async function handleEmailSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -63,7 +62,7 @@ export default function SignInPage() {
           });
         }
         posthog.capture('signed_in', { method: 'email' });
-        router.push('/dashboard');
+        router.push(safeTarget);
       }
     } catch (_err) {
       setError(t('errors.unexpectedError'));
@@ -79,7 +78,7 @@ export default function SignInPage() {
     try {
       await signIn.social({
         provider: 'google',
-        callbackURL: '/dashboard',
+        callbackURL: safeTarget,
       });
     } catch (_err) {
       setError(t('errors.googleSignInFailed'));

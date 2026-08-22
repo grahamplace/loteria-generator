@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { redirect as localeRedirect } from '@/i18n/navigation';
 import Link from 'next/link';
 import { LocaleBanner } from '@/components/locale-banner';
 import Image from 'next/image';
@@ -83,7 +84,16 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (session?.user) {
-    redirect(isAdminEmail(session.user.email) ? '/admin' : '/dashboard');
+    if (isAdminEmail(session.user.email)) {
+      // '/admin' lives outside the [locale] tree, so it must stay unprefixed.
+      redirect('/admin');
+    }
+    // '/start' (not '/dashboard'): it ensures the user has a board and drops a
+    // single-board user straight into it. Locale-aware on purpose — a bare
+    // '/start' would land in the English tree, and for a user whose saved
+    // profile locale is es-MX the [locale] layout's DB→cookie locale sync then
+    // redirects back to '/es', which redirects here again: an infinite bounce.
+    localeRedirect({ href: '/start', locale });
   }
 
   const tHowItWorks = await getTranslations('Marketing.HowItWorks');
