@@ -20,4 +20,25 @@ describe('firstName', () => {
     expect(firstName(undefined)).toBe('');
     expect(firstName('   ')).toBe('');
   });
+
+  it('normalizes an all-caps name to title case', () => {
+    expect(firstName('MONICA')).toBe('Monica');
+    expect(firstName('MONICA GARCIA')).toBe('Monica');
+  });
+
+  it('capitalizes an all-lowercase name', () => {
+    expect(firstName('monica')).toBe('Monica');
+  });
+
+  it('title-cases hyphenated and apostrophe compounds', () => {
+    expect(firstName('MARY-ANNE')).toBe('Mary-Anne');
+    expect(firstName("o'brien")).toBe("O'Brien");
+    expect(firstName('MARÍA')).toBe('María');
+  });
+
+  it('leaves deliberate internal capitals alone', () => {
+    expect(firstName('McKenna')).toBe('McKenna');
+    expect(firstName('DeAndre')).toBe('DeAndre');
+    expect(firstName('Ana')).toBe('Ana');
+  });
 });
