@@ -35,4 +35,48 @@ test.describe('sign up', () => {
     // and drops them straight into it — the empty dashboard is skipped.
     await expect(page).toHaveURL(/\/(en\/)?boards\/[0-9a-f-]+/, { timeout: 15_000 });
   });
+
+  test('signing up with an address that already has an account reveals nothing', async ({
+    page,
+  }) => {
+    await page.goto('/sign-up');
+
+    await page.locator('#name').fill('Impostor');
+    // Seeded by scripts/e2e-seed-user.ts, so this address always exists.
+    await page.locator('#email').fill('e2etest@example.com');
+    await page.locator('#password').fill('SomeOtherPassword123!');
+
+    await page.getByRole('button', { name: /sign up|create account/i }).click();
+
+    await expect(page.getByText(/we couldn’t create your account/i)).toBeVisible({
+      timeout: 15_000,
+    });
+    // The response must not name the cause, anywhere on the page.
+    await expect(page.getByText(/already exists/i)).toHaveCount(0);
+    await expect(page.getByText(/another email/i)).toHaveCount(0);
+    // And we must not have signed anyone in or navigated away.
+    await expect(page).toHaveURL(/\/(en\/)?sign-up/);
+  });
+
+  test('sign-up API response never names the cause of the failure', async ({ page }) => {
+    // The rendered-page assertions above only exercise auth-errors.ts (layer
+    // 1): that layer alone maps every server error to the same neutral copy,
+    // so those assertions would still pass with `hooks.before` deleted from
+    // lib/auth.ts — nothing would falsify a regression in
+    // signup-enumeration-guard.ts (layer 2), which is what actually keeps
+    // the phrase out of the API response itself. Assert on the response
+    // directly so removing the guard fails this test.
+    //
+    // Deliberately not assigned to createdEmail: e2etest@example.com is the
+    // shared seed user from scripts/e2e-seed-user.ts, and afterEach above
+    // deletes whatever createdEmail names — it must never be deleted.
+    const res = await page.request.post('/api/auth/sign-up/email', {
+      data: { email: 'e2etest@example.com', password: 'SomeOtherPassword123!', name: 'Impostor' },
+    });
+
+    expect(res.status()).toBe(422);
+    const body = await res.text();
+    expect(body).not.toMatch(/already exists/i);
+    expect(body).not.toMatch(/another email/i);
+  });
 });

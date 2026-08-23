@@ -1,9 +1,11 @@
 import { after } from 'next/server';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { createAuthMiddleware } from 'better-auth/api';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { sendPasswordResetEmail } from '@/lib/email/send-password-reset';
+import { assertSignUpEmailIsAvailable } from '@/lib/signup-enumeration-guard';
 
 /**
  * Give every brand-new user a board, immediately.
@@ -70,6 +72,17 @@ export const auth = betterAuth({
       // sends in the background.
       handler: (promise: Promise<unknown>) => after(promise),
     },
+  },
+  hooks: {
+    // `hooks.before` is a single global middleware in better-auth 1.6.9 — it runs
+    // for every endpoint, so filter by path (dist/api/to-auth-endpoints.mjs:268).
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== '/sign-up/email') return;
+      const body = ctx.body as { email?: unknown } | undefined;
+      await assertSignUpEmailIsAvailable(body?.email, (email) =>
+        ctx.context.internalAdapter.findUserByEmail(email)
+      );
+    }),
   },
   socialProviders: {
     google: {

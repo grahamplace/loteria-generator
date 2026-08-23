@@ -97,7 +97,13 @@ function ResetPasswordForm() {
         if (code.includes('TOKEN')) {
           setTokenRejected(true);
         } else {
-          setFormError(result.error.message || t('errors.unexpectedError'));
+          // Never render result.error.message — see auth-errors.ts. Both
+          // password inputs are capped at maxLength={128} and the length
+          // floor above already matches better-auth's own minimum, so every
+          // code that reaches here (network failure, an uncategorized
+          // server error) is genuinely unexpected; there's no case-specific
+          // detail worth surfacing.
+          setFormError(t('errors.unexpectedError'));
         }
         return;
       }

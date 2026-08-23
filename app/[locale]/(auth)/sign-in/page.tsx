@@ -6,6 +6,7 @@ import Link from 'next/link';
 import posthog from 'posthog-js';
 import { useLocale, useTranslations } from 'next-intl';
 import { signIn } from '@/lib/auth-client';
+import { signInErrorKey } from '@/lib/auth-errors';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -53,7 +54,9 @@ export default function SignInPage() {
       });
 
       if (result.error) {
-        setError(result.error.message || 'Failed to sign in');
+        // Localized, and identical for "no such account" and "wrong password" —
+        // see lib/auth-errors.ts. Never render result.error.message.
+        setError(t(`errors.${signInErrorKey(result.error)}`));
       } else {
         if (result.data?.user) {
           posthog.identify(result.data.user.id, {
@@ -174,7 +177,11 @@ export default function SignInPage() {
               />
             </div>
 
-            {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+            {error && (
+              <p role="alert" aria-live="polite" className="text-sm text-destructive text-center">
+                {error}
+              </p>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? t('submitButtonLoading') : t('submitButton')}
