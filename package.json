@@ -30,7 +30,8 @@
     "db:studio": "drizzle-kit studio",
     "prepare": "husky",
     "secrets:pull": "vercel env pull .env.local",
-    "generate:examples": "tsx --env-file=.env.local scripts/example-images/generate-illustrations.ts"
+    "generate:examples": "tsx --env-file=.env.local scripts/example-images/generate-illustrations.ts",
+    "generate:og": "tsx scripts/generate-og-image.tsx"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

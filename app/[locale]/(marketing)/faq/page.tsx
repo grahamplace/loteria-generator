@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { LandingFaq } from '@/components/landing-faq';
 import { FAQJsonLd, BreadcrumbJsonLd } from '@/components/json-ld';
 import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
-
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-eta.vercel.app';
+import { OG_IMAGE_PATH, SITE_URL, ogImages } from '@/lib/site-metadata';
 
 export async function generateMetadata({
   params,
@@ -39,10 +38,17 @@ export async function generateMetadata({
       type: 'website',
       locale: ogLocale,
       alternateLocale: ogAlternateLocale,
-      url: `${siteUrl}${canonical}`,
+      url: `${SITE_URL}${canonical}`,
       siteName: tMeta('siteName'),
       title: t('metaTitle'),
       description: t('metaDescription'),
+      images: ogImages(tMeta('ogImageAlt')),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('metaTitle'),
+      description: t('metaDescription'),
+      images: [OG_IMAGE_PATH],
     },
   };
 }
@@ -63,8 +69,8 @@ export default async function FAQPage({ params }: { params: Promise<{ locale: st
       <FAQJsonLd faqs={faqs} />
       <BreadcrumbJsonLd
         items={[
-          { name: 'Home', url: siteUrl },
-          { name: 'FAQ', url: `${siteUrl}/faq` },
+          { name: 'Home', url: SITE_URL },
+          { name: 'FAQ', url: `${SITE_URL}/faq` },
         ]}
       />
 
