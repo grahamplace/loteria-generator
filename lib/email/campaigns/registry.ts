@@ -3,7 +3,11 @@ import * as React from 'react';
 import { ReengagementEmail, reengagementSubject } from '@/emails/reengagement';
 import { NoBoardNudgeEmail, noBoardNudgeSubject } from '@/emails/no-board-nudge';
 import { EmptyBoardNudgeEmail, emptyBoardNudgeSubject } from '@/emails/empty-board-nudge';
-import { getOrCreateReengagementCoupon, getOrCreateNoBoardCoupon } from '@/lib/stripe-promotions';
+import {
+  getOrCreateReengagementCoupon,
+  getOrCreateNoBoardCoupon,
+  getOrCreateEmptyBoardCoupon,
+} from '@/lib/stripe-promotions';
 import {
   REENGAGEMENT_COUPON_ID,
   REENGAGEMENT_DISCOUNT_PERCENT,
@@ -14,6 +18,9 @@ import {
   NO_BOARD_EXPIRY_DAYS,
   LIFECYCLE_EMAIL_TYPE_NO_BOARD,
   LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE,
+  EMPTY_BOARD_COUPON_ID,
+  EMPTY_BOARD_DISCOUNT_PERCENT,
+  EMPTY_BOARD_EXPIRY_DAYS,
   SUPPORT_REPLY_TO_EMAIL,
 } from '@/lib/constants';
 
@@ -106,8 +113,9 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     // the same `lifecycle_emails` type, so a manual send to someone the cron
     // already mailed is skipped by the claim-first insert rather than duplicated.
     key: LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE,
-    label: 'Board but no cards',
-    description: 'Has a board and has never made a card. No discount — the ask is "try it".',
+    label: `Board but no cards (${EMPTY_BOARD_DISCOUNT_PERCENT}% off)`,
+    description:
+      'Has a board and has never made a card. Manual sends carry a discount; the cron sending the same email does not.',
     subject: emptyBoardNudgeSubject,
     render: (p: CampaignEmailProps): React.ReactElement =>
       EmptyBoardNudgeEmail({
@@ -116,7 +124,17 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         boardUrl: p.boardUrl,
         unsubscribeUrl: p.unsubscribeUrl,
         appUrl: p.appUrl,
+        // Present only on this path — the cron omits them and the email falls
+        // back to its plain CTA.
+        discountCode: p.discountCode,
+        redeemUrl: p.redeemUrl,
       }) as React.ReactElement,
+    discount: {
+      couponId: EMPTY_BOARD_COUPON_ID,
+      percent: EMPTY_BOARD_DISCOUNT_PERCENT,
+      expiryDays: EMPTY_BOARD_EXPIRY_DAYS,
+      ensureCoupon: getOrCreateEmptyBoardCoupon,
+    },
     replyTo: SUPPORT_REPLY_TO_EMAIL,
   },
 ];

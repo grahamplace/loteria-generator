@@ -79,7 +79,13 @@ export const campaignEmail = inngest.createFunction(
             const promo = await createOneTimePromotionCode({ code, expiresAt, couponId });
             discountCode = code;
             promoId = promo.id;
-            redeemUrl = `${appUrl}/redeem?code=${encodeURIComponent(code)}`;
+            // Carry the board through so /redeem drops them straight into it
+            // with the promo cookie set, rather than routing via /start.
+            redeemUrl = r.boardId
+              ? `${appUrl}/redeem?code=${encodeURIComponent(code)}&boardId=${encodeURIComponent(
+                  r.boardId
+                )}`
+              : `${appUrl}/redeem?code=${encodeURIComponent(code)}`;
           }
 
           const send = await sendCampaignEmail({

@@ -7,6 +7,8 @@ import {
   REENGAGEMENT_DISCOUNT_PERCENT,
   NO_BOARD_COUPON_ID,
   NO_BOARD_DISCOUNT_PERCENT,
+  EMPTY_BOARD_COUPON_ID,
+  EMPTY_BOARD_DISCOUNT_PERCENT,
 } from '@/lib/constants';
 
 function defaultClient(): Stripe {
@@ -72,6 +74,17 @@ export async function getOrCreateNoBoardCoupon(client: Stripe = defaultClient())
     id: NO_BOARD_COUPON_ID,
     percentOff: NO_BOARD_DISCOUNT_PERCENT,
     name: `No Board Yet ${NO_BOARD_DISCOUNT_PERCENT}% Off`,
+  });
+}
+
+/** Idempotently ensure the reusable empty-board coupon exists; returns its id. */
+export async function getOrCreateEmptyBoardCoupon(
+  client: Stripe = defaultClient()
+): Promise<string> {
+  return getOrCreateCoupon(client, {
+    id: EMPTY_BOARD_COUPON_ID,
+    percentOff: EMPTY_BOARD_DISCOUNT_PERCENT,
+    name: `Empty Board ${EMPTY_BOARD_DISCOUNT_PERCENT}% Off`,
   });
 }
 
