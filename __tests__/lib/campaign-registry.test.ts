@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { render } from '@react-email/render';
 import { getCampaignTemplate, campaignTemplateOptions } from '@/lib/email/campaigns/registry';
 import {
   REENGAGEMENT_DISCOUNT_PERCENT,
@@ -8,6 +9,9 @@ import {
   NO_BOARD_EXPIRY_DAYS,
   LIFECYCLE_EMAIL_TYPE_NO_BOARD,
   LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE,
+  EMPTY_BOARD_COUPON_ID,
+  EMPTY_BOARD_DISCOUNT_PERCENT,
+  EMPTY_BOARD_EXPIRY_DAYS,
   SUPPORT_REPLY_TO_EMAIL,
 } from '@/lib/constants';
 
@@ -41,13 +45,40 @@ describe('getCampaignTemplate', () => {
     );
   });
 
-  it('exposes the empty-board nudge for manual sends, with no discount', () => {
+  it('gives the manual empty-board campaign a discount', () => {
     const template = getCampaignTemplate(LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE);
     expect(template).toBeDefined();
-    // The ask is "come try it", not "come buy it" — a discount here would also
-    // mint a Stripe promo code per recipient for nothing.
-    expect(template!.discount).toBeUndefined();
+    expect(template!.discount!.percent).toBe(EMPTY_BOARD_DISCOUNT_PERCENT);
+    expect(template!.discount!.expiryDays).toBe(EMPTY_BOARD_EXPIRY_DAYS);
     expect(template!.replyTo).toBe(SUPPORT_REPLY_TO_EMAIL);
+  });
+
+  it('gives every discounted campaign its own coupon, so redemptions stay attributable', () => {
+    const couponIds = [
+      'reengagement',
+      LIFECYCLE_EMAIL_TYPE_NO_BOARD,
+      LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE,
+    ].map((k) => getCampaignTemplate(k)!.discount!.couponId);
+    expect(couponIds).toContain(EMPTY_BOARD_COUPON_ID);
+    expect(new Set(couponIds).size).toBe(couponIds.length);
+  });
+
+  it('wires the discount into the empty-board email, which the cron renders without', async () => {
+    // The same email component serves both senders; only this path fills these in,
+    // so the wiring is what needs asserting, not the component's own branching.
+    const html = await render(
+      getCampaignTemplate(LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE)!.render({
+        name: 'Ana',
+        locale: 'en',
+        appUrl: 'https://example.com',
+        unsubscribeUrl: 'https://example.com/unsubscribe?token=t',
+        boardUrl: 'https://example.com/boards/b1',
+        discountCode: 'LOTERIA-ABC123',
+        redeemUrl: 'https://example.com/redeem?code=LOTERIA-ABC123&boardId=b1',
+      })
+    );
+    expect(html).toContain('LOTERIA-ABC123');
+    expect(html).toContain('boardId=b1');
   });
 
   it('keys the empty-board campaign to the same type its cron writes, so the two dedupe', () => {
@@ -75,8 +106,8 @@ describe('campaignTemplateOptions', () => {
       },
       {
         key: LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE,
-        label: 'Board but no cards',
-        hasDiscount: false,
+        label: `Board but no cards (${EMPTY_BOARD_DISCOUNT_PERCENT}% off)`,
+        hasDiscount: true,
       },
     ]);
   });

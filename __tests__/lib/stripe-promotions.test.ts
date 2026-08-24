@@ -6,6 +6,7 @@ import {
   getOrCreateNudgeCoupon,
   getOrCreateReengagementCoupon,
   getOrCreateNoBoardCoupon,
+  getOrCreateEmptyBoardCoupon,
   createOneTimePromotionCode,
 } from '@/lib/stripe-promotions';
 import {
@@ -13,6 +14,8 @@ import {
   REENGAGEMENT_COUPON_ID,
   NO_BOARD_COUPON_ID,
   NO_BOARD_DISCOUNT_PERCENT,
+  EMPTY_BOARD_COUPON_ID,
+  EMPTY_BOARD_DISCOUNT_PERCENT,
 } from '@/lib/constants';
 
 // ---------------------------------------------------------------------------
@@ -214,6 +217,41 @@ describe('getOrCreateNoBoardCoupon', () => {
   it('re-throws non-resource_missing errors rather than minting a coupon', async () => {
     const client = fakeStripeWithCoupons({ retrieveResult: { code: 'api_error' } });
     await expect(getOrCreateNoBoardCoupon(client)).rejects.toMatchObject({ code: 'api_error' });
+    expect(client._mocks.couponsCreate).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getOrCreateEmptyBoardCoupon
+// ---------------------------------------------------------------------------
+
+describe('getOrCreateEmptyBoardCoupon', () => {
+  it('returns the existing coupon id when Stripe already has it', async () => {
+    const client = fakeStripeWithCoupons({ retrieveResult: { id: EMPTY_BOARD_COUPON_ID } });
+    const id = await getOrCreateEmptyBoardCoupon(client);
+    expect(id).toBe(EMPTY_BOARD_COUPON_ID);
+    expect(client._mocks.couponsCreate).not.toHaveBeenCalled();
+  });
+
+  it('creates the coupon on resource_missing with its own id and percent', async () => {
+    const client = fakeStripeWithCoupons({
+      retrieveResult: { code: 'resource_missing' },
+      createCouponResult: { id: EMPTY_BOARD_COUPON_ID },
+    });
+    const id = await getOrCreateEmptyBoardCoupon(client);
+    expect(id).toBe(EMPTY_BOARD_COUPON_ID);
+    expect(client._mocks.couponsCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: EMPTY_BOARD_COUPON_ID,
+        percent_off: EMPTY_BOARD_DISCOUNT_PERCENT,
+        duration: 'once',
+      })
+    );
+  });
+
+  it('re-throws non-resource_missing errors rather than minting a coupon', async () => {
+    const client = fakeStripeWithCoupons({ retrieveResult: { code: 'api_error' } });
+    await expect(getOrCreateEmptyBoardCoupon(client)).rejects.toMatchObject({ code: 'api_error' });
     expect(client._mocks.couponsCreate).not.toHaveBeenCalled();
   });
 });

@@ -14,6 +14,9 @@ import {
 
 const LABELS: Record<string, string> = {
   [LIFECYCLE_EMAIL_TYPE_SIGNUP_NUDGE]: 'Signup nudge (25% off)',
+  // Deliberately without the "(25% off)" the campaign dropdown carries: the
+  // hourly cron writes this same type with no discount, so a row in the Sent
+  // column cannot promise one.
   [LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE]: 'Board but no cards',
   [LIFECYCLE_EMAIL_TYPE_REENGAGEMENT]: 'Re-engagement (25% off)',
   [LIFECYCLE_EMAIL_TYPE_NO_BOARD]: `No board yet (${NO_BOARD_DISCOUNT_PERCENT}% off)`,

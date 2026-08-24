@@ -33,8 +33,15 @@ export const REENGAGEMENT_EXPIRY_DAYS = 30;
 export const LIFECYCLE_EMAIL_TYPE_REENGAGEMENT = 'reengagement';
 
 // Empty-board nudge lifecycle email (signed up, has a board, made zero cards).
-// No discount — the ask is "try it", not "buy it".
+//
+// The discount is carried by the *manual* campaign only. The hourly cron mails
+// people 24-48h after signup, where the ask is still "try it", not "buy it" —
+// and minting a Stripe promo code for every stalled new signup, hourly, buys
+// nothing. Manual sends chase a much older backlog, who need the incentive.
 export const LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE = 'empty_board_nudge';
+export const EMPTY_BOARD_COUPON_ID = 'empty-board-25';
+export const EMPTY_BOARD_DISCOUNT_PERCENT = 25;
+export const EMPTY_BOARD_EXPIRY_DAYS = 30;
 
 // No-board nudge campaign + discount (signed up, never created a board at all).
 // These users predate the auto-created first board, so they never saw the editor.
