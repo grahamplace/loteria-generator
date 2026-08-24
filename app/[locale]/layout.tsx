@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/sonner';
 import { OnboardingProvider } from '@/components/onboarding/onboarding-provider';
@@ -15,8 +15,11 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { userProfiles } from '@/db/schema';
 import { fontVariables } from '@/lib/fonts';
+import { SITE_URL, THEME_COLOR, ogImages } from '@/lib/site-metadata';
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-eta.vercel.app';
+export function generateViewport(): Viewport {
+  return { themeColor: THEME_COLOR };
+}
 
 export async function generateMetadata({
   params,
@@ -31,7 +34,7 @@ export async function generateMetadata({
   const canonical = localePathRoot || '/';
 
   return {
-    metadataBase: new URL(siteUrl),
+    metadataBase: new URL(SITE_URL),
     title: { default: t('title'), template: `%s | ${t('siteName')}` },
     description: t('description'),
     keywords: t.raw('keywords') as string[],
@@ -51,15 +54,17 @@ export async function generateMetadata({
       type: 'website',
       locale: locale === 'en' ? 'en_US' : 'es_MX',
       alternateLocale: locale === 'en' ? 'es_MX' : 'en_US',
-      url: `${siteUrl}${canonical}`,
+      url: `${SITE_URL}${canonical}`,
       siteName: t('siteName'),
       title: t('ogTitle'),
       description: t('ogDescription'),
+      images: ogImages(t('ogImageAlt'), locale),
     },
     twitter: {
       card: 'summary_large_image',
       title: t('twitterTitle'),
       description: t('twitterDescription'),
+      images: ogImages(t('ogImageAlt'), locale),
     },
     robots: {
       index: true,
@@ -73,6 +78,7 @@ export async function generateMetadata({
       },
     },
     icons: { icon: '/icon.ico' },
+    appleWebApp: { capable: true, title: t('siteName'), statusBarStyle: 'default' },
     verification: {
       google: process.env.GOOGLE_SITE_VERIFICATION,
       yandex: process.env.YANDEX_VERIFICATION,

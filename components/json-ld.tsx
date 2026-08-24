@@ -1,4 +1,4 @@
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-eta.vercel.app';
+import { OG_IMAGE_PATH, SITE_URL } from '@/lib/site-metadata';
 
 interface FAQItem {
   question: string;
@@ -19,13 +19,13 @@ export function WebsiteJsonLd({
     '@type': 'WebSite',
     name,
     alternateName,
-    url: siteUrl,
+    url: SITE_URL,
     description,
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+        urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },
@@ -44,8 +44,8 @@ export function OrganizationJsonLd({ name }: { name: string }) {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name,
-    url: siteUrl,
-    logo: `${siteUrl}/icon.ico`,
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon.ico`,
     sameAs: [],
     contactPoint: {
       '@type': 'ContactPoint',
@@ -153,7 +153,7 @@ export function HowToJsonLd({
     '@type': 'HowTo',
     name,
     description,
-    image: `${siteUrl}/opengraph-image`,
+    image: `${SITE_URL}${OG_IMAGE_PATH}`,
     totalTime: 'PT10M',
     estimatedCost: {
       '@type': 'MonetaryAmount',

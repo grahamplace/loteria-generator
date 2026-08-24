@@ -34,7 +34,9 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const canonical = locale === 'en' ? '/' : `/${locale}`;
+  // URL prefix is '/es', not the raw 'es-MX' locale token — see i18n/routing.ts
+  // (`localePrefix.prefixes`). Emitting `/es-MX` here pointed the canonical at a 404.
+  const canonical = locale === 'en' ? '/' : '/es';
   return {
     alternates: {
       canonical,
