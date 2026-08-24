@@ -22,7 +22,7 @@ describe('SentEmailsCell', () => {
 
   it('shows the icon for a cron email that is not a campaign template', () => {
     render(<SentEmailsCell emails={[sent(LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE)]} />);
-    expect(screen.getByRole('button').getAttribute('aria-label')).toContain('Empty board nudge');
+    expect(screen.getByRole('button').getAttribute('aria-label')).toContain('Board but no cards');
   });
 
   it('names every email sent, not just the selected campaign', () => {
@@ -39,7 +39,7 @@ describe('SentEmailsCell', () => {
     const label = screen.getByRole('button').getAttribute('aria-label') ?? '';
     expect(label).toContain('Re-engagement');
     expect(label).toContain('Signup nudge');
-    expect(label).toContain('Empty board nudge');
+    expect(label).toContain('Board but no cards');
     expect(label).toContain('3 lifecycle emails');
   });
 

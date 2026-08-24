@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { DollarSign, Loader2 } from 'lucide-react';
+import { Check, DollarSign, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { CampaignTemplateOption } from '@/lib/email/campaigns/registry';
 import { SentEmailsCell, type SentEmail } from './sent-emails-cell';
@@ -50,6 +50,28 @@ interface UserRow {
 // Total column count: checkbox + Email + Name + Paid + Sent + Boards + Cards + Joined = 8
 const COLUMN_COUNT = 8;
 
+/**
+ * One-click audiences matching the manual campaigns, so "select all" picks the
+ * campaign's intended recipients instead of hand-checking rows out of the full
+ * user list. Mutually exclusive — a user cannot be in two of them at once.
+ */
+const AUDIENCES = [
+  {
+    key: 'no-boards',
+    label: 'No boards',
+    empty: 'No users without a board',
+    match: (u: UserRow) => u.boardCount === 0,
+  },
+  {
+    key: 'no-cards',
+    label: 'Board, no cards',
+    empty: 'No users with a board and no cards',
+    match: (u: UserRow) => u.boardCount > 0 && u.cardCount === 0,
+  },
+] as const;
+
+type AudienceKey = (typeof AUDIENCES)[number]['key'];
+
 function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
@@ -66,11 +88,21 @@ export function UserSearch({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [selectedKey, setSelectedKey] = useState(templateOptions[0]?.key ?? '');
+  const [audience, setAudience] = useState<AudienceKey | null>(null);
+
+  // Counted off the full list so a chip keeps reading the same number once its
+  // own filter narrows the table.
+  const audienceCounts = Object.fromEntries(
+    AUDIENCES.map((a) => [a.key, users.filter(a.match).length])
+  ) as Record<AudienceKey, number>;
+
+  const activeAudience = AUDIENCES.find((a) => a.key === audience);
 
   const filtered = users.filter(
     (u) =>
-      u.email.toLowerCase().includes(query.toLowerCase()) ||
-      u.name.toLowerCase().includes(query.toLowerCase())
+      (!activeAudience || activeAudience.match(u)) &&
+      (u.email.toLowerCase().includes(query.toLowerCase()) ||
+        u.name.toLowerCase().includes(query.toLowerCase()))
   );
 
   const filteredIds = filtered.map((u) => u.id);
@@ -140,19 +172,41 @@ export function UserSearch({
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Search by email or name…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="max-w-sm"
-        spellCheck={false}
-      />
+      <div className="flex flex-wrap items-center gap-3">
+        <Input
+          placeholder="Search by email or name…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="max-w-sm"
+          spellCheck={false}
+        />
+        {AUDIENCES.map((a) => {
+          const active = audience === a.key;
+          return (
+            <Button
+              key={a.key}
+              type="button"
+              size="sm"
+              variant={active ? 'default' : 'outline'}
+              aria-pressed={active}
+              onClick={() => setAudience(active ? null : a.key)}
+              style={{ touchAction: 'manipulation' }}
+            >
+              {/* Redundant with the filled variant so the active state is never
+                  signalled by colour alone. */}
+              {active && <Check className="mr-1.5 size-3.5" aria-hidden />}
+              {a.label}
+              <span className="ml-1.5 tabular-nums opacity-70">{audienceCounts[a.key]}</span>
+            </Button>
+          );
+        })}
+      </div>
 
       {/* Sticky action bar — shown only when rows are selected */}
       {selected.size > 0 && (
         <div className="bg-background sticky top-0 z-10 flex items-center gap-3 rounded-md border px-4 py-2.5 shadow-sm">
           <span className="text-sm tabular-nums text-muted-foreground">
-            {plural(selected.size, 'selected')}
+            {selected.size} selected
           </span>
 
           <div className="flex items-center gap-2">
@@ -242,7 +296,7 @@ export function UserSearch({
                   colSpan={COLUMN_COUNT}
                   className="text-center text-sm text-muted-foreground"
                 >
-                  No users found
+                  {activeAudience ? activeAudience.empty : 'No users found'}
                 </TableCell>
               </TableRow>
             ) : (

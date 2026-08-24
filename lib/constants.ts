@@ -36,6 +36,15 @@ export const LIFECYCLE_EMAIL_TYPE_REENGAGEMENT = 'reengagement';
 // No discount — the ask is "try it", not "buy it".
 export const LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE = 'empty_board_nudge';
 
+// No-board nudge campaign + discount (signed up, never created a board at all).
+// These users predate the auto-created first board, so they never saw the editor.
+// Its own Stripe coupon rather than sharing the re-engagement one, so redemptions
+// stay attributable per campaign in the Stripe dashboard.
+export const NO_BOARD_COUPON_ID = 'no-board-25';
+export const NO_BOARD_DISCOUNT_PERCENT = 25;
+export const NO_BOARD_EXPIRY_DAYS = 30;
+export const LIFECYCLE_EMAIL_TYPE_NO_BOARD = 'no_board_nudge';
+
 // Reply-to for lifecycle email that invites a human reply. Replies land in a real
 // inbox, so this must stay an address someone actually reads.
 export const SUPPORT_REPLY_TO_EMAIL = 'graham@stonecutterlabs.com';

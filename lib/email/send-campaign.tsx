@@ -15,6 +15,7 @@ export async function sendCampaignEmail(params: {
   unsubscribeOneClickUrl: string;
   discountCode?: string;
   redeemUrl?: string;
+  boardUrl: string;
 }): Promise<{ id: string | null; skipped: boolean }> {
   const template = getCampaignTemplate(params.templateKey);
   if (!template) {
@@ -32,6 +33,9 @@ export async function sendCampaignEmail(params: {
 
   const { id } = await sendEmail({
     to: params.to,
+    // Templates whose copy invites a reply declare where it should land; the rest
+    // fall through to `EMAIL_FROM`.
+    ...(template.replyTo ? { replyTo: template.replyTo } : {}),
     subject: template.subject(params.locale),
     react: template.render({
       name: params.name,
@@ -40,6 +44,7 @@ export async function sendCampaignEmail(params: {
       unsubscribeUrl: params.unsubscribeUrl,
       discountCode: params.discountCode,
       redeemUrl: params.redeemUrl,
+      boardUrl: params.boardUrl,
     }),
     // RFC 8058 one-click unsubscribe (Gmail/Yahoo bulk-sender requirement). The
     // List-Unsubscribe URL must accept the one-click POST, so it points at the API
