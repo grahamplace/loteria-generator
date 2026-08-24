@@ -5,9 +5,15 @@ import {
   resolvePromotionCode,
   getOrCreateNudgeCoupon,
   getOrCreateReengagementCoupon,
+  getOrCreateNoBoardCoupon,
   createOneTimePromotionCode,
 } from '@/lib/stripe-promotions';
-import { SIGNUP_NUDGE_COUPON_ID, REENGAGEMENT_COUPON_ID } from '@/lib/constants';
+import {
+  SIGNUP_NUDGE_COUPON_ID,
+  REENGAGEMENT_COUPON_ID,
+  NO_BOARD_COUPON_ID,
+  NO_BOARD_DISCOUNT_PERCENT,
+} from '@/lib/constants';
 
 // ---------------------------------------------------------------------------
 // Fake Stripe helpers
@@ -174,6 +180,41 @@ describe('getOrCreateReengagementCoupon', () => {
     await expect(getOrCreateReengagementCoupon(client)).rejects.toMatchObject({
       code: 'api_error',
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getOrCreateNoBoardCoupon
+// ---------------------------------------------------------------------------
+
+describe('getOrCreateNoBoardCoupon', () => {
+  it('returns the existing coupon id when Stripe already has it', async () => {
+    const client = fakeStripeWithCoupons({ retrieveResult: { id: NO_BOARD_COUPON_ID } });
+    const id = await getOrCreateNoBoardCoupon(client);
+    expect(id).toBe(NO_BOARD_COUPON_ID);
+    expect(client._mocks.couponsCreate).not.toHaveBeenCalled();
+  });
+
+  it('creates the coupon on resource_missing with its own id and percent', async () => {
+    const client = fakeStripeWithCoupons({
+      retrieveResult: { code: 'resource_missing' },
+      createCouponResult: { id: NO_BOARD_COUPON_ID },
+    });
+    const id = await getOrCreateNoBoardCoupon(client);
+    expect(id).toBe(NO_BOARD_COUPON_ID);
+    expect(client._mocks.couponsCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: NO_BOARD_COUPON_ID,
+        percent_off: NO_BOARD_DISCOUNT_PERCENT,
+        duration: 'once',
+      })
+    );
+  });
+
+  it('re-throws non-resource_missing errors rather than minting a coupon', async () => {
+    const client = fakeStripeWithCoupons({ retrieveResult: { code: 'api_error' } });
+    await expect(getOrCreateNoBoardCoupon(client)).rejects.toMatchObject({ code: 'api_error' });
+    expect(client._mocks.couponsCreate).not.toHaveBeenCalled();
   });
 });
 

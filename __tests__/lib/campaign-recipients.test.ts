@@ -18,6 +18,11 @@ vi.mock('@/db', () => {
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn(),
   inArray: vi.fn(),
+  // The boardId subquery is a tagged template; `.as()` is chained onto its result.
+  sql: Object.assign(
+    vi.fn(() => ({ as: vi.fn(() => ({})) })),
+    { raw: vi.fn() }
+  ),
 }));
 
 import { db } from '@/db';
@@ -39,8 +44,10 @@ describe('getCampaignRecipients', () => {
 
   it('returns the rows resolved by the db mock for a non-empty userIds list', async () => {
     const fakeRows: CampaignRecipient[] = [
-      { id: 'u1', email: 'alice@example.com', name: 'Alice', locale: 'en' },
-      { id: 'u2', email: 'bob@example.com', name: 'Bob', locale: null },
+      { id: 'u1', email: 'alice@example.com', name: 'Alice', locale: 'en', boardId: 'board_1' },
+      // boardId is null for a user who never created a board — the audience the
+      // no-board campaign targets.
+      { id: 'u2', email: 'bob@example.com', name: 'Bob', locale: null, boardId: null },
     ];
     state.where = fakeRows;
 

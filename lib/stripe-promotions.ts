@@ -5,6 +5,8 @@ import {
   SIGNUP_NUDGE_DISCOUNT_PERCENT,
   REENGAGEMENT_COUPON_ID,
   REENGAGEMENT_DISCOUNT_PERCENT,
+  NO_BOARD_COUPON_ID,
+  NO_BOARD_DISCOUNT_PERCENT,
 } from '@/lib/constants';
 
 function defaultClient(): Stripe {
@@ -13,19 +15,30 @@ function defaultClient(): Stripe {
   return require('./stripe').stripe as Stripe;
 }
 
-/** Idempotently ensure the reusable 25%-off coupon exists; returns its id. */
-export async function getOrCreateNudgeCoupon(client: Stripe = defaultClient()): Promise<string> {
+/**
+ * Idempotently ensure a fixed-id percent-off coupon exists; returns its id.
+ *
+ * Retrieve-then-create rather than create-then-swallow: Stripe coupon ids are
+ * caller-supplied here, so a second `create` with the same id is an error, not
+ * a no-op. Only `resource_missing` is treated as "not there yet" — every other
+ * Stripe error propagates, because silently minting a coupon after, say, an auth
+ * failure would attach the wrong discount to a live promotion code.
+ */
+async function getOrCreateCoupon(
+  client: Stripe,
+  { id, percentOff, name }: { id: string; percentOff: number; name: string }
+): Promise<string> {
   try {
-    const coupon = await client.coupons.retrieve(SIGNUP_NUDGE_COUPON_ID);
+    const coupon = await client.coupons.retrieve(id);
     return coupon.id;
   } catch (err) {
     const code = (err as { code?: string })?.code;
     if (code === 'resource_missing') {
       const created = await client.coupons.create({
-        id: SIGNUP_NUDGE_COUPON_ID,
-        percent_off: SIGNUP_NUDGE_DISCOUNT_PERCENT,
+        id,
+        percent_off: percentOff,
         duration: 'once',
-        name: `Signup Nudge ${SIGNUP_NUDGE_DISCOUNT_PERCENT}% Off`,
+        name,
       });
       return created.id;
     }
@@ -33,26 +46,33 @@ export async function getOrCreateNudgeCoupon(client: Stripe = defaultClient()): 
   }
 }
 
-/** Idempotently ensure the reusable 25%-off re-engagement coupon exists; returns its id. */
+/** Idempotently ensure the reusable signup-nudge coupon exists; returns its id. */
+export async function getOrCreateNudgeCoupon(client: Stripe = defaultClient()): Promise<string> {
+  return getOrCreateCoupon(client, {
+    id: SIGNUP_NUDGE_COUPON_ID,
+    percentOff: SIGNUP_NUDGE_DISCOUNT_PERCENT,
+    name: `Signup Nudge ${SIGNUP_NUDGE_DISCOUNT_PERCENT}% Off`,
+  });
+}
+
+/** Idempotently ensure the reusable re-engagement coupon exists; returns its id. */
 export async function getOrCreateReengagementCoupon(
   client: Stripe = defaultClient()
 ): Promise<string> {
-  try {
-    const coupon = await client.coupons.retrieve(REENGAGEMENT_COUPON_ID);
-    return coupon.id;
-  } catch (err) {
-    const code = (err as { code?: string })?.code;
-    if (code === 'resource_missing') {
-      const created = await client.coupons.create({
-        id: REENGAGEMENT_COUPON_ID,
-        percent_off: REENGAGEMENT_DISCOUNT_PERCENT,
-        duration: 'once',
-        name: `Re-engagement ${REENGAGEMENT_DISCOUNT_PERCENT}% Off`,
-      });
-      return created.id;
-    }
-    throw err;
-  }
+  return getOrCreateCoupon(client, {
+    id: REENGAGEMENT_COUPON_ID,
+    percentOff: REENGAGEMENT_DISCOUNT_PERCENT,
+    name: `Re-engagement ${REENGAGEMENT_DISCOUNT_PERCENT}% Off`,
+  });
+}
+
+/** Idempotently ensure the reusable no-board-yet coupon exists; returns its id. */
+export async function getOrCreateNoBoardCoupon(client: Stripe = defaultClient()): Promise<string> {
+  return getOrCreateCoupon(client, {
+    id: NO_BOARD_COUPON_ID,
+    percentOff: NO_BOARD_DISCOUNT_PERCENT,
+    name: `No Board Yet ${NO_BOARD_DISCOUNT_PERCENT}% Off`,
+  });
 }
 
 /** Create a single-use promotion code that expires at `expiresAt`.

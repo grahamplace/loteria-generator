@@ -22,6 +22,15 @@ vi.mock('@/lib/email/campaigns/registry', () => ({
     if (key === 'fake-template') {
       return { key: 'fake-template', label: 'Fake', subject: fakeSubject, render: fakeRender };
     }
+    if (key === 'reply-template') {
+      return {
+        key: 'reply-template',
+        label: 'Reply',
+        subject: fakeSubject,
+        render: fakeRender,
+        replyTo: 'human@example.com',
+      };
+    }
     return undefined;
   }),
 }));
@@ -42,6 +51,7 @@ const baseParams = {
   unsubscribeOneClickUrl: 'https://example.com/api/unsubscribe?token=tok456',
   discountCode: 'FAKE-CODE',
   redeemUrl: 'https://example.com/redeem?code=FAKE-CODE',
+  boardUrl: 'https://example.com/boards/board_1',
 };
 
 describe('sendCampaignEmail', () => {
@@ -105,7 +115,28 @@ describe('sendCampaignEmail', () => {
       unsubscribeUrl: baseParams.unsubscribeUrl,
       discountCode: baseParams.discountCode,
       redeemUrl: baseParams.redeemUrl,
+      boardUrl: baseParams.boardUrl,
     });
+  });
+
+  it('omits replyTo for a template that does not declare one', async () => {
+    vi.mocked(lifecycleEmailsEnabled).mockReturnValue(true);
+    vi.mocked(isMarketingUnsubscribed).mockResolvedValue(false);
+    vi.mocked(sendEmail).mockResolvedValue({ id: 'msg-abc' });
+
+    await sendCampaignEmail(baseParams);
+
+    expect(vi.mocked(sendEmail).mock.calls[0][0]).not.toHaveProperty('replyTo');
+  });
+
+  it("passes the template's replyTo through so replies reach a human", async () => {
+    vi.mocked(lifecycleEmailsEnabled).mockReturnValue(true);
+    vi.mocked(isMarketingUnsubscribed).mockResolvedValue(false);
+    vi.mocked(sendEmail).mockResolvedValue({ id: 'msg-abc' });
+
+    await sendCampaignEmail({ ...baseParams, templateKey: 'reply-template' });
+
+    expect(vi.mocked(sendEmail).mock.calls[0][0].replyTo).toBe('human@example.com');
   });
 
   it('propagates an error thrown by sendEmail', async () => {

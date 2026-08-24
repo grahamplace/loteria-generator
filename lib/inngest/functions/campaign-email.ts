@@ -55,6 +55,10 @@ export const campaignEmail = inngest.createFunction(
         try {
           const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3006';
           const locale: 'en' | 'es' = r.locale === 'es' ? 'es' : 'en';
+          // Templates that deep-link into the product need somewhere to point.
+          // With no board, `/start` creates one and lands them in it — never the
+          // empty dashboard.
+          const boardUrl = r.boardId ? `${appUrl}/boards/${r.boardId}` : `${appUrl}/start`;
 
           const unsubscribeToken = await getOrCreateUnsubscribeToken(r.id);
           const unsubscribeUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(
@@ -89,6 +93,7 @@ export const campaignEmail = inngest.createFunction(
             unsubscribeOneClickUrl,
             discountCode,
             redeemUrl,
+            boardUrl,
           });
 
           await db
