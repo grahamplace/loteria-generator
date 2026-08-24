@@ -9,10 +9,10 @@ async function fetchHtml(path: string): Promise<string> {
 }
 
 const cases = [
-  { path: '/', lang: 'en', canonicalSuffix: '/' },
-  { path: '/es', lang: 'es-MX', canonicalSuffix: '/es' },
-  { path: '/faq', lang: 'en', canonicalSuffix: '/faq' },
-  { path: '/es/faq', lang: 'es-MX', canonicalSuffix: '/es/faq' },
+  { path: '/', lang: 'en', canonicalSuffix: '/', ogImage: '/og-image.png' },
+  { path: '/es', lang: 'es-MX', canonicalSuffix: '/es', ogImage: '/og-image-es.png' },
+  { path: '/faq', lang: 'en', canonicalSuffix: '/faq', ogImage: '/og-image.png' },
+  { path: '/es/faq', lang: 'es-MX', canonicalSuffix: '/es/faq', ogImage: '/og-image-es.png' },
 ] as const;
 
 describe.skipIf(!BASE)('SEO tags on indexed marketing pages', () => {
@@ -57,28 +57,35 @@ describe.skipIf(!BASE)('SEO tags on indexed marketing pages', () => {
     expect(html).toMatch(/<meta[^>]+property="og:locale:alternate"[^>]+content="en_US"/);
   });
 
-  it.each(cases)('$path advertises a shareable Open Graph image', async ({ path }) => {
-    const html = await fetchHtml(path);
+  it.each(cases)(
+    "$path advertises its locale's Open Graph image",
+    async ({ path, ogImage: expected }) => {
+      const html = await fetchHtml(path);
 
-    // og:image must be absolute — Facebook/Slack/iMessage reject relative URLs.
-    const ogImage = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/);
-    expect(ogImage, `og:image on ${path}`).toBeTruthy();
-    expect(() => new URL(ogImage![1])).not.toThrow();
+      // og:image must be absolute — Facebook/Slack/iMessage reject relative URLs.
+      const ogImage = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/);
+      expect(ogImage, `og:image on ${path}`).toBeTruthy();
+      // Each locale ships its own card: the copy is baked into the artwork.
+      expect(new URL(ogImage![1]).pathname).toBe(expected);
 
-    // Dimensions let crawlers render the card before the image has downloaded.
-    expect(html).toMatch(/<meta[^>]+property="og:image:width"[^>]+content="1200"/);
-    expect(html).toMatch(/<meta[^>]+property="og:image:height"[^>]+content="630"/);
-    expect(html).toMatch(/<meta[^>]+property="og:image:alt"[^>]+content="[^"]+"/);
-  });
+      // Dimensions let crawlers render the card before the image has downloaded.
+      expect(html).toMatch(/<meta[^>]+property="og:image:width"[^>]+content="1200"/);
+      expect(html).toMatch(/<meta[^>]+property="og:image:height"[^>]+content="630"/);
+      expect(html).toMatch(/<meta[^>]+property="og:image:alt"[^>]+content="[^"]+"/);
+    }
+  );
 
-  it.each(cases)('$path advertises a large Twitter card image', async ({ path }) => {
-    const html = await fetchHtml(path);
+  it.each(cases)(
+    '$path advertises a large Twitter card image',
+    async ({ path, ogImage: expected }) => {
+      const html = await fetchHtml(path);
 
-    expect(html).toMatch(/<meta[^>]+name="twitter:card"[^>]+content="summary_large_image"/);
-    const twitterImage = html.match(/<meta[^>]+name="twitter:image"[^>]+content="([^"]+)"/);
-    expect(twitterImage, `twitter:image on ${path}`).toBeTruthy();
-    expect(() => new URL(twitterImage![1])).not.toThrow();
-  });
+      expect(html).toMatch(/<meta[^>]+name="twitter:card"[^>]+content="summary_large_image"/);
+      const twitterImage = html.match(/<meta[^>]+name="twitter:image"[^>]+content="([^"]+)"/);
+      expect(twitterImage, `twitter:image on ${path}`).toBeTruthy();
+      expect(new URL(twitterImage![1]).pathname).toBe(expected);
+    }
+  );
 
   it.each(cases)('$path serves the OG image it advertises', async ({ path }) => {
     const html = await fetchHtml(path);

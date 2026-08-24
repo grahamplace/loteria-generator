@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { LandingFaq } from '@/components/landing-faq';
 import { FAQJsonLd, BreadcrumbJsonLd } from '@/components/json-ld';
 import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
-import { OG_IMAGE_PATH, SITE_URL, ogImages } from '@/lib/site-metadata';
+import { SITE_URL, ogImages } from '@/lib/site-metadata';
 
 export async function generateMetadata({
   params,
@@ -42,13 +42,13 @@ export async function generateMetadata({
       siteName: tMeta('siteName'),
       title: t('metaTitle'),
       description: t('metaDescription'),
-      images: ogImages(tMeta('ogImageAlt')),
+      images: ogImages(tMeta('ogImageAlt'), locale),
     },
     twitter: {
       card: 'summary_large_image',
       title: t('metaTitle'),
       description: t('metaDescription'),
-      images: [OG_IMAGE_PATH],
+      images: ogImages(tMeta('ogImageAlt'), locale),
     },
   };
 }

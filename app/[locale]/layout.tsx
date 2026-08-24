@@ -15,7 +15,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { userProfiles } from '@/db/schema';
 import { fontVariables } from '@/lib/fonts';
-import { OG_IMAGE_PATH, SITE_URL, THEME_COLOR, ogImages } from '@/lib/site-metadata';
+import { SITE_URL, THEME_COLOR, ogImages } from '@/lib/site-metadata';
 
 export function generateViewport(): Viewport {
   return { themeColor: THEME_COLOR };
@@ -58,13 +58,13 @@ export async function generateMetadata({
       siteName: t('siteName'),
       title: t('ogTitle'),
       description: t('ogDescription'),
-      images: ogImages(t('ogImageAlt')),
+      images: ogImages(t('ogImageAlt'), locale),
     },
     twitter: {
       card: 'summary_large_image',
       title: t('twitterTitle'),
       description: t('twitterDescription'),
-      images: [OG_IMAGE_PATH],
+      images: ogImages(t('ogImageAlt'), locale),
     },
     robots: {
       index: true,
