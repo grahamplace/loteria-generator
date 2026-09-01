@@ -55,3 +55,13 @@ export const LIFECYCLE_EMAIL_TYPE_NO_BOARD = 'no_board_nudge';
 // Reply-to for lifecycle email that invites a human reply. Replies land in a real
 // inbox, so this must stay an address someone actually reads.
 export const SUPPORT_REPLY_TO_EMAIL = 'graham@stonecutterlabs.com';
+
+// Extra print-safe margin, in inches, added to every edge of every generated
+// PDF page. Consumer inkjets have an unprintable border (often ~0.25"+ at the
+// bottom, where the paper feed grips), so a layout that runs closer than that
+// to the paper edge gets clipped. Reported by a customer whose board bottoms
+// were cut off; raise this if more printers turn out to need it.
+export const PRINT_SAFE_MARGIN_IN = 0.125;
+
+/** Same margin in canvas pixels. Pages render at 300 DPI (2550×3300 = 8.5"×11"). */
+export const PRINT_SAFE_MARGIN_PX = PRINT_SAFE_MARGIN_IN * 300;

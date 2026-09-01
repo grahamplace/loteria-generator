@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { PRINT_SAFE_MARGIN_IN } from '@/lib/constants';
 import type { LotteriaCard } from './generate-boards';
 
 export interface CallerSheetEntry {
@@ -48,7 +49,7 @@ export function addCallerSheetPages(
 
   const PAGE_WIDTH = 8.5;
   const PAGE_HEIGHT = 11;
-  const MARGIN = 0.75;
+  const MARGIN = 0.75 + PRINT_SAFE_MARGIN_IN;
   const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
   const BOTTOM = PAGE_HEIGHT - MARGIN;
   const RIDDLE_INDENT = 0.25;
