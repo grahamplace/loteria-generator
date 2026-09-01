@@ -10,6 +10,7 @@ import {
   DEFAULT_EXPORT_BOARD_COUNT,
   MIN_EXPORT_BOARD_COUNT,
   MAX_EXPORT_BOARD_COUNT,
+  PRINT_SAFE_MARGIN_PX,
 } from '@/lib/constants';
 
 /**
@@ -414,7 +415,9 @@ async function renderBoardToCanvas(
 
   const rows = 4;
   const cols = 4;
-  const padding = 60;
+  // The 4×4 grid is height-constrained, so this padding is the printed top and
+  // bottom margin verbatim — 0.2" before the print-safe margin was added.
+  const padding = 60 + PRINT_SAFE_MARGIN_PX;
   const cardSpacing = 20;
 
   const availableWidth = width - padding * 2 - cardSpacing * (cols - 1);
@@ -502,8 +505,10 @@ async function renderDeckPageToCanvas(
   const rows = 2;
   const cols = 2;
   const cardSpacing = 40;
-  const headerHeight = 120;
-  const bottomMargin = 60;
+  // Deck cards are a fixed 3"×5", so margin can't come out of the card size the
+  // way it does on a board page. Instead the grid is anchored to the bottom
+  // margin and the header rides above it.
+  const bottomMargin = 100 + PRINT_SAFE_MARGIN_PX;
 
   // Cards print at exactly 3" × 5" (standard index card). The full canvas is
   // placed 1:1 onto the 8.5"×11" page (see addImage at 0,0,8.5,11), and the
@@ -512,19 +517,18 @@ async function renderDeckPageToCanvas(
   const cardWidth = 900; // 3" at 300 DPI
   const cardHeight = 1500; // 5" at 300 DPI
 
-  const availableHeight = height - headerHeight - bottomMargin;
-
   const gridWidth = cardWidth * cols + cardSpacing * (cols - 1);
   const gridHeight = cardHeight * rows + cardSpacing * (rows - 1);
   const offsetX = (width - gridWidth) / 2;
-  const offsetY = headerHeight + (availableHeight - gridHeight) / 2;
+  const offsetY = height - bottomMargin - gridHeight;
 
-  // Draw header label
+  // Draw header label, sitting a fixed gap above the grid rather than centred in
+  // a top band, so it moves down (away from the paper edge) with the grid.
   ctx.fillStyle = '#9ca3af';
   ctx.font = '500 48px Arial, Helvetica, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('✂  Cut along lines to make individual cards', width / 2, headerHeight / 2);
+  ctx.fillText('✂  Cut along lines to make individual cards', width / 2, offsetY - 44);
 
   await loadGoogleFont(
     'Caveat',
