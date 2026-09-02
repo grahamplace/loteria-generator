@@ -5,6 +5,7 @@ import { and, eq, ne, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { boards, cards, gamePlayers, games, type GamePattern } from '@/db/schema';
+import { getPostHogClient } from '@/lib/posthog-server';
 import { generateGameCode, isValidGameCodeFormat } from '@/lib/live-game/game-code';
 import { boardKeyFor, drawBoard } from '@/lib/live-game/board';
 import { mintTicket } from '@/lib/live-game/ticket';
@@ -94,6 +95,23 @@ export async function createGame(
       .returning({ id: games.id, code: games.code });
 
     if (row) {
+      const ph = getPostHogClient();
+      if (ph) {
+        ph.capture({
+          distinctId: session.user.id,
+          event: 'game_created',
+          properties: {
+            game_id: row.id,
+            board_id: setId,
+            pattern,
+            card_count: cardCount,
+            auto_advance_seconds: autoAdvanceSeconds,
+            small_set: cardCount < SMALL_SET_ADVISORY_CARD_COUNT,
+          },
+        });
+        await ph.shutdown();
+      }
+
       return {
         ok: true,
         code: row.code,
@@ -187,8 +205,13 @@ export async function joinGame(
       boardId: games.boardId,
       status: games.status,
       joinsLocked: games.joinsLocked,
+      // The Caller. Players are anonymous, so joins are attributed to the
+      // person whose Game it is — otherwise every player would mint a
+      // throwaway PostHog profile that is never seen again.
+      ownerId: boards.userId,
     })
     .from(games)
+    .innerJoin(boards, eq(games.boardId, boards.id))
     .where(eq(games.code, code))
     .limit(1);
 
@@ -257,6 +280,22 @@ export async function joinGame(
       .returning({ id: gamePlayers.id });
 
     if (row) {
+      // Only a real join. A reconnect returns above, so this counts people
+      // rather than tunnels.
+      const ph = getPostHogClient();
+      if (ph) {
+        ph.capture({
+          distinctId: game.ownerId,
+          event: 'player_joined',
+          properties: {
+            game_id: game.id,
+            game_status: game.status,
+            player_number: playerCount + 1,
+          },
+        });
+        await ph.shutdown();
+      }
+
       return {
         ok: true,
         gameCode: game.code,

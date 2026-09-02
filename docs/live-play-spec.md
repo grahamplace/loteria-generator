@@ -294,8 +294,32 @@ Decided nothing about these; they are listed so nobody assumes they were missed.
 - **Spectator / TV view** — whether one is needed at all, now that the Caller's
   large-width layout is built to be cast. What would remain is a controls-free
   variant of the same screen.
-- **PostHog events for play** — `game_created`, `player_joined`, `card_called`,
-  `win_verified` and friends.
+- **How live play is measured.** `game_created` and `player_joined` are captured
+  from the Next.js server actions, both attributed to the Caller's user id —
+  Players are anonymous, so a per-player distinct id would mint a throwaway
+  profile never seen again.
+
+  Deliberately **not** captured: `card_called`, `win_verified`, `game_ended`.
+  Two reasons. At ~54 Calls a Game the first is noise, and all three already
+  live in Postgres with more detail than an event would carry, so PostHog would
+  be a lossy duplicate. More importantly it would put a network dependency
+  inside the one process whose job is to be a reliable single arbiter.
+
+  Completion and win data is a query, not an event:
+
+  ```sql
+  select g.status, g.end_reason,
+         count(distinct p.id)  as players,
+         count(distinct c.id)  as calls,
+         count(distinct w.id)  as winners,
+         g.ended_at - g.started_at as duration
+  from games g
+  left join game_players p on p.game_id = g.id
+  left join game_calls   c on c.game_id = g.id
+  left join game_wins    w on w.game_id = g.id
+  group by g.id;
+  ```
+
 - **Where "Play" lives** on the existing Set page, and whether unlock upsell
   copy mentions play.
 - **How e2e reaches a socket server** — `scripts/e2e-run.ts` provisions a
