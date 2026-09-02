@@ -52,7 +52,9 @@ control plane.
 - **Database driver:** `pg` + `drizzle-orm/node-postgres` on the pooled
   connection string — _not_ `@neondatabase/serverless`, whose HTTP driver has no
   transaction support. `pool.on('error', …)` is mandatory; an unhandled pool
-  error crashes Node.
+  error crashes Node. `idleTimeoutMillis` is **long** (10 min): measured warm
+  queries are 2–3 ms while a reconnect costs 25–400 ms, so a short timeout would
+  make nearly every Call pay a TLS handshake. See ADR 0001's amendment.
 - **Code location:** `socket/` in the root package, bundled with tsup.
   `Dockerfile` and `fly.toml` at the repo root. A third process in `pnpm dev`.
 

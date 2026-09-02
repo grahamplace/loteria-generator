@@ -52,8 +52,9 @@ broadcast, reconnect and graceful-shutdown code by hand.
 - **Database driver.** The `ws` server uses `pg` + `drizzle-orm/node-postgres`
   on the **pooled** connection string — not `@neondatabase/serverless`, whose
   HTTP driver has no transaction support. Neon is on the **Launch** plan, so
-  scale-to-zero is disabled; even so the pool needs `pool.on('error', …)` (an
-  unhandled pool error crashes Node) and a short `idleTimeoutMillis`.
+  scale-to-zero is disabled; even so the pool needs `pool.on('error', …)` — an
+  unhandled pool error crashes Node. ~~And a short `idleTimeoutMillis`.~~
+  **Superseded — see the amendment below.**
 - **Auto-advance timer.** In-process `setTimeout` next to the Game object.
   `next_call_due_at` is persisted with the Call that sets it; on boot the timer
   re-arms at `max(persisted deadline, now + 15s)` so it cannot fire into a room
@@ -83,6 +84,35 @@ broadcast, reconnect and graceful-shutdown code by hand.
   not broadcast rooms.
 - **Redis as a hot store.** Unnecessary while one process owns every Game;
   it would add a second store to keep consistent for no gain at this scale.
+
+## Amendment: hold pool connections open (2026-09-02)
+
+The original text asked for "a short `idleTimeoutMillis`". Measuring the
+deployed spike from `iad` against Neon `us-east-1` shows that is wrong for this
+workload:
+
+|                                         |                                             |
+| --------------------------------------- | ------------------------------------------- |
+| Warm query                              | **2–3 ms**                                  |
+| After a reconnect                       | 25–40 ms typical, **414 ms** worst observed |
+| Cold start (first query of the process) | 446 ms                                      |
+
+A manual-draw game leaves gaps of seconds to minutes between Calls. At a 10s
+idle timeout the pool evicts its connection between almost every Call, so each
+Call pays a fresh TLS handshake instead of a query — a 10x–100x penalty on the
+critical path, in exchange for conserving a connection nothing else wants. The
+server is always-on and Neon's scale-to-zero is disabled, so an open connection
+costs nothing.
+
+`idleTimeoutMillis` is now 10 minutes: comfortably longer than any gap between
+Calls, and well inside the 60-minute inactivity expiry that ends an abandoned
+Game.
+
+Worth noting how this was nearly missed. The spike's own `/health` reported a
+37 ms p50, which looked like a plausible same-region round trip and would have
+been believed. It was wrong for the same reason the setting was: the background
+sampler ran every 30s against a 10s idle timeout, so it was timing reconnects,
+not queries. The real number only appeared when queries were sent back to back.
 
 ## Operational hazard found while deploying (2026-09-02)
 

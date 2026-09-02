@@ -30,14 +30,29 @@ const startedAt = Date.now();
 
 /**
  * `pg`, not `@neondatabase/serverless`: the HTTP driver has no transaction
- * support, which the real server needs. A short idle timeout keeps the pool
- * from holding connections Neon would rather reclaim, and the `error` handler
- * is not optional — an unhandled pool error takes the process down.
+ * support, which the real server needs. The `error` handler is not optional —
+ * an unhandled pool error takes the process down.
+ *
+ * `idleTimeoutMillis` is deliberately long. Measured from `iad` against Neon
+ * `us-east-1`:
+ *
+ *   warm query        2-3 ms
+ *   after a reconnect 25-40 ms typical, 414 ms worst observed
+ *
+ * A manual-draw game leaves gaps of seconds to minutes between Calls, so a
+ * short timeout would evict the connection between almost every Call and make
+ * each one pay a fresh TLS handshake — a 10x-100x penalty on the critical path,
+ * to conserve a connection nothing else wants. The server is always-on and
+ * Neon's scale-to-zero is disabled, so holding a few open costs nothing.
+ *
+ * This overrides ADR 0001's "short idleTimeoutMillis"; see the amendment there.
  */
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   max: 4,
-  idleTimeoutMillis: 10_000,
+  // Comfortably longer than any gap between Calls, including a Caller who
+  // wanders off mid-game. Well inside the 60-minute inactivity expiry.
+  idleTimeoutMillis: 10 * 60_000,
   connectionTimeoutMillis: 5_000,
 });
 
@@ -207,7 +222,14 @@ const heartbeat = setInterval(() => {
   }
 }, HEARTBEAT_MS);
 
-/** Background RTT sampling, so /health has data without a client asking. */
+/**
+ * Background RTT sampling, so /health has data without a client asking.
+ *
+ * Now that the pool holds connections open, this measures what a Call actually
+ * pays. It did not before: at a 10s idle timeout the connection was evicted
+ * between 30s samples, so every sample was timing a reconnect and /health
+ * reported ~37ms for what is really a 2-3ms query.
+ */
 const rttTimer = setInterval(sampleRtt, 30_000);
 
 httpServer.listen(PORT, () => {
