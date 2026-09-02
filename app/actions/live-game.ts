@@ -4,8 +4,10 @@ import { headers } from 'next/headers';
 import { and, eq, ne, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db } from '@/db';
-import { boards, cards, games, type GamePattern } from '@/db/schema';
-import { generateGameCode } from '@/lib/live-game/game-code';
+import { boards, cards, gamePlayers, games, type GamePattern } from '@/db/schema';
+import { generateGameCode, isValidGameCodeFormat } from '@/lib/live-game/game-code';
+import { boardKeyFor, drawBoard } from '@/lib/live-game/board';
+import { mintTicket } from '@/lib/live-game/ticket';
 import { isGamePattern } from '@/lib/live-game/patterns';
 import {
   GAME_CODE_MAX_ATTEMPTS,
@@ -121,4 +123,157 @@ export async function createGame(
   }
 
   return { ok: false, reason: 'code_generation_failed' };
+}
+
+// ---------------------------------------------------------------------------
+// Joining
+// ---------------------------------------------------------------------------
+
+export type JoinGameResult =
+  | {
+      ok: true;
+      gameCode: string;
+      playerId: string;
+      nickname: string;
+      /** 16 card ids in order: position i is grid cell i. */
+      boardCardIds: string[];
+      /** Short-lived HMAC ticket for the socket handshake. */
+      ticket: string;
+      /** True when this device already held a seat and got it back. */
+      restored: boolean;
+    }
+  | {
+      ok: false;
+      reason:
+        | 'invalid_code'
+        | 'no_such_game'
+        | 'game_ended'
+        | 'joins_locked'
+        | 'game_full'
+        | 'nickname_taken'
+        | 'nickname_invalid'
+        | 'board_assignment_failed';
+    };
+
+const MAX_NICKNAME_LENGTH = 16;
+const BOARD_DRAW_MAX_ATTEMPTS = 8;
+
+/**
+ * Joining a Game. No account: identity is the per-device token.
+ *
+ * Returning with a token this Game has seen restores the same seat, Board and
+ * Marks — a Player is never dropped, so reconnecting is a lookup, not a rejoin.
+ * That is also why nothing here is destructive: a second call with the same
+ * token must not deal a new Board.
+ */
+export async function joinGame(
+  code: string,
+  nickname: string,
+  deviceToken: string
+): Promise<JoinGameResult> {
+  if (!isValidGameCodeFormat(code)) return { ok: false, reason: 'invalid_code' };
+
+  const trimmed = nickname.trim();
+  if (trimmed.length === 0 || trimmed.length > MAX_NICKNAME_LENGTH) {
+    return { ok: false, reason: 'nickname_invalid' };
+  }
+
+  const [game] = await db
+    .select({
+      id: games.id,
+      code: games.code,
+      boardId: games.boardId,
+      status: games.status,
+      joinsLocked: games.joinsLocked,
+    })
+    .from(games)
+    .where(eq(games.code, code))
+    .limit(1);
+
+  // Distinct from `game_ended` on purpose: Codes are never reused, so an old
+  // link can say "this Game has ended" rather than "no such Game", which is
+  // both true and a better next step.
+  if (!game) return { ok: false, reason: 'no_such_game' };
+  if (game.status === 'ended') return { ok: false, reason: 'game_ended' };
+
+  // Reconnect first, before any capacity or lock check: someone already in the
+  // Game must be able to get back in even after the Caller locks joins or the
+  // Game fills up. They are not joining, they are returning.
+  const [existing] = await db
+    .select({
+      id: gamePlayers.id,
+      nickname: gamePlayers.nickname,
+      boardCardIds: gamePlayers.boardCardIds,
+    })
+    .from(gamePlayers)
+    .where(and(eq(gamePlayers.gameId, game.id), eq(gamePlayers.playerToken, deviceToken)))
+    .limit(1);
+
+  if (existing) {
+    return {
+      ok: true,
+      gameCode: game.code,
+      playerId: existing.id,
+      nickname: existing.nickname,
+      boardCardIds: existing.boardCardIds,
+      ticket: mintTicket({ gameCode: game.code, role: 'player', playerId: existing.id }),
+      restored: true,
+    };
+  }
+
+  if (game.joinsLocked) return { ok: false, reason: 'joins_locked' };
+
+  const [{ count: playerCount }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(gamePlayers)
+    .where(eq(gamePlayers.gameId, game.id));
+  if (playerCount >= MAX_PLAYERS_PER_GAME) return { ok: false, reason: 'game_full' };
+
+  const setCards = await db
+    .select({ id: cards.id })
+    .from(cards)
+    .where(and(eq(cards.boardId, game.boardId), eq(cards.status, 'completed')));
+  const cardIds = setCards.map((c) => c.id);
+
+  // Draw, try to claim, redraw on collision. The unique index on
+  // (game_id, board_key) is the arbiter here, not a pre-flight SELECT — two
+  // simultaneous joins would both pass a check and then collide.
+  for (let attempt = 0; attempt < BOARD_DRAW_MAX_ATTEMPTS; attempt++) {
+    const boardCardIds = drawBoard(cardIds);
+    const [row] = await db
+      .insert(gamePlayers)
+      .values({
+        gameId: game.id,
+        playerToken: deviceToken,
+        nickname: trimmed,
+        boardCardIds,
+        boardKey: boardKeyFor(boardCardIds),
+      })
+      .onConflictDoNothing()
+      .returning({ id: gamePlayers.id });
+
+    if (row) {
+      return {
+        ok: true,
+        gameCode: game.code,
+        playerId: row.id,
+        nickname: trimmed,
+        boardCardIds,
+        ticket: mintTicket({ gameCode: game.code, role: 'player', playerId: row.id }),
+        restored: false,
+      };
+    }
+
+    // A conflict is a duplicate Board (redraw fixes it, and at ~10^-14 per draw
+    // it essentially never happens) or a taken nickname (redrawing never will).
+    // Ask which, so the Player gets "that name is taken" instead of a retry.
+    const [nameTaken] = await db
+      .select({ id: gamePlayers.id })
+      .from(gamePlayers)
+      .where(and(eq(gamePlayers.gameId, game.id), eq(gamePlayers.nickname, trimmed)))
+      .limit(1);
+    if (nameTaken) return { ok: false, reason: 'nickname_taken' };
+  }
+
+  return { ok: false, reason: 'board_assignment_failed' };
 }
