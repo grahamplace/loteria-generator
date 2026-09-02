@@ -15,7 +15,7 @@ One image plus its label inside a Set.
 _Avoid_: Image, tile
 
 **Deck**:
-The full ordered stack of a Set's cards used for calling during play or printed as calling cards.
+A Set's cards as the source of Calls during play, or printed as calling cards. In a Game the Deck has no order set in advance — the order is the order the cards happen to be Called in, and what remains is whatever has not been Called yet.
 _Avoid_: Calling cards, call stack
 
 **Board**:
