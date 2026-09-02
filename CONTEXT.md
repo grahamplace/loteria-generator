@@ -25,10 +25,11 @@ _Avoid_: Tabla, grid, player card
 ### Play
 
 **Game**:
-One live session of Lotería started from an unlocked Set, reachable by a Game Code.
+One live session of Lotería started from an unlocked Set, reachable by a Game Code. A Game is gathering Players (**lobby**), running (**playing**), or over (**ended**); ended is final. A Set hosts at most one Game that is not ended.
+_Avoid_: Room, session, match, round
 
 **Game Code**:
-The short public code a player types to join a Game.
+The short public code a Player types to join a Game. It identifies one Game for good — an ended Game keeps its Code rather than returning it for another Game to use.
 _Avoid_: Shortcode, room code, PIN
 
 **Caller**:
