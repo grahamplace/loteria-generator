@@ -11,10 +11,12 @@ export function PrototypeSwitcher({
   variants,
   current,
   names,
+  extra,
 }: {
   variants: string[];
   current: string;
   names: Record<string, string>;
+  extra?: React.ReactNode;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -59,7 +61,7 @@ export function PrototypeSwitcher({
       >
         ←
       </button>
-      <span className="min-w-0 px-2 text-xs font-medium whitespace-nowrap">
+      <span className="px-2 text-xs font-medium whitespace-nowrap">
         {current} · {names[current]}
       </span>
       <button
@@ -69,6 +71,7 @@ export function PrototypeSwitcher({
       >
         →
       </button>
+      {extra && <span className="ml-1 border-l border-white/20 pl-2">{extra}</span>}
     </div>
   );
 }
