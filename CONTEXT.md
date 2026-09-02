@@ -47,9 +47,17 @@ A player's tap on a card on their Board indicating it has been called.
 _Avoid_: Bean, frijol, chip, check
 
 **Pattern**:
-The shape of Marks on a Board that wins a Game (full board, a row, four corners, and so on), chosen by the Caller when the Game is created.
+The shape on a Board that wins a Game (full board, a row, four corners, and so on), chosen by the Caller when the Game is created and fixed for that Game. A Pattern has one or more **instances** — "any row" is four of them — and completing any single instance wins.
 _Avoid_: Mode, rule, variant
 
+**Claim**:
+A Player's "¡Lotería!" assertion that they have won. The server either verifies it into a Win or rejects it; a Claim is not a Win until it is verified.
+_Avoid_: Bingo, shout, call (a Call is the Caller's, a Claim is the Player's)
+
 **Win**:
-A Player's "¡Lotería!" claim that the server has verified: every card in the Pattern is both Marked and Called.
-_Avoid_: Bingo, claim (a claim is unverified)
+A Claim the server has verified: every card in one instance of the Pattern is both Marked and Called.
+_Avoid_: Bingo, claim (a Claim is unverified)
+
+**Claim Window**:
+The period after the first Win during which no further Calls happen and later Claims can still be verified. Every Player who wins inside it wins the Game.
+_Avoid_: Grace period, overtime, tiebreak (there is no tiebreak — all winners win)
