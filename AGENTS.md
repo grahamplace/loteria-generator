@@ -20,7 +20,23 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
   Compare the host against the dev branch's endpoint in the Neon console. If it matches the production branch, stop and repoint before running anything.
 
 - New worktrees do not inherit `.env.local` — copy it from an existing checkout (along with `.npmrc` and, for e2e, `.env.test`).
-- Schema changes still reach production the usual way, through a deploy. A migration that is correct against dev is not automatically safe against production data: check for rows that violate a new constraint before shipping.
+- Schema changes reach an environment **through its own deploy**: `vercel.json`
+  sets `buildCommand` to `pnpm db:migrate && pnpm build`, so the deployment that
+  carries the code runs the migration first, against that environment's own
+  `DATABASE_URL`. Preview and Production each migrate their own branch. The
+  ordering is guaranteed by construction — there is no second pipeline that
+  could deploy code ahead of the schema it needs.
+- A failed migration therefore **fails the build**, which is the intended
+  behaviour: better a deployment that never goes live than one serving traffic
+  against a schema it does not have.
+- A migration that is correct against dev is not automatically safe against
+  production data: check for rows that violate a new constraint before shipping.
+- **`drizzle-kit migrate` needs a populated journal.** A database built with
+  `db:push` records nothing in `drizzle.__drizzle_migrations`, so `migrate`
+  tries to replay from 0000 and fails on "relation already exists" — with the
+  error hidden behind a spinner. `pnpm db:journal --through <tag>` marks
+  already-applied migrations without running their SQL; it is a dry run until
+  you pass `--yes`. Needed once per database that predates this setup.
 - The e2e suite is separately isolated — `scripts/e2e-run.ts` provisions a throwaway Neon branch per run, migrates and seeds it, and destroys it afterwards. It touches neither dev nor production.
 
 ---
