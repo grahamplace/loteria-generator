@@ -14,10 +14,31 @@
  */
 import { createServer } from 'node:http';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { verifyTicket, type TicketRole } from '@/lib/live-game/ticket';
-import { getGame, liveGameCount, type LiveGame } from './game-registry';
+import { verifyTicket } from '@/lib/live-game/ticket';
+import { getGame, liveGameCount } from './game-registry';
 import { callerSnapshot, playerSnapshot } from './snapshot';
 import { pool } from './db';
+import {
+  addConn,
+  broadcast,
+  connCount,
+  recountConnections,
+  removeConn,
+  send,
+  type Conn,
+} from './broadcast';
+import {
+  broadcastPresence,
+  handleCallNext,
+  handleClaim,
+  handleEndGame,
+  handleLockJoins,
+  handleMark,
+  handleRename,
+  handleSetAutoAdvance,
+  handleStartGame,
+} from './commands';
+import { armedCount, clearAllTimers, reschedule } from './timers';
 
 const PORT = Number(process.env.PORT ?? 8080);
 const HEARTBEAT_MS = 25_000;
@@ -76,18 +97,6 @@ function rttStats() {
 // Connections
 // ---------------------------------------------------------------------------
 
-type Live = {
-  id: number;
-  openedAt: number;
-  missedPongs: number;
-  /** Wall-clock ms since this connection last sent or received anything. */
-  lastTrafficAt: number;
-  gameCode: string;
-  role: TicketRole;
-  /** null for the Caller, who holds no Board and cannot Claim. */
-  playerId: string | null;
-};
-
 type Closed = {
   id: number;
   /** How long it stayed open. The number question 1 turns on. */
@@ -99,9 +108,7 @@ type Closed = {
   closedAt: string;
 };
 
-const live = new Map<WebSocket, Live>();
 const closed: Closed[] = [];
-let nextId = 1;
 
 const httpServer = createServer((req, res) => {
   if (req.url?.startsWith('/health')) {
@@ -114,6 +121,8 @@ const httpServer = createServer((req, res) => {
           region: process.env.FLY_REGION ?? 'local',
           machine: process.env.FLY_MACHINE_ID ?? null,
           liveGames: liveGameCount(),
+          connections: connCount(),
+          armedTimers: armedCount(),
           neonColdStartMs: coldStartMs,
           neonRttMs: rttStats(),
           liveConnections: [...live.values()].map((c) => ({
@@ -136,133 +145,204 @@ const httpServer = createServer((req, res) => {
 
 const wss = new WebSocketServer({ server: httpServer });
 
-const send = (ws: WebSocket, msg: unknown) => {
-  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
-};
+/** Live connections, keyed by socket, for the heartbeat and /health. */
+const live = new Map<WebSocket, Conn>();
+let nextId = 1;
 
-/**
- * Every connection an identity holds, so Calls and Marks fan out to all of
- * them. A Caller can cast a laptop to the TV and draw from their phone; losing
- * a tab is never losing your seat, so a connection is a disposable view of an
- * identity rather than the identity itself.
- */
-const connectionsByGame = new Map<string, Set<WebSocket>>();
+/** Commands only the Caller may send. A Player sending one gets an error, not silence. */
+const CALLER_ONLY = new Set([
+  'start_game',
+  'call_next',
+  'set_auto_advance',
+  'lock_joins',
+  'end_game',
+]);
 
-function register(ws: WebSocket, code: string) {
-  let set = connectionsByGame.get(code);
-  if (!set) connectionsByGame.set(code, (set = new Set()));
-  set.add(ws);
-}
-
-function unregister(ws: WebSocket, code: string) {
-  const set = connectionsByGame.get(code);
-  if (!set) return;
-  set.delete(ws);
-  if (set.size === 0) connectionsByGame.delete(code);
-}
-
-/** Recount a Player's live sockets so the roster's online flag stays honest. */
-function recountConnections(game: LiveGame) {
-  for (const player of game.players.values()) player.connections = 0;
-  for (const ws of connectionsByGame.get(game.code) ?? []) {
-    const c = live.get(ws);
-    if (!c?.playerId) continue;
-    const player = game.players.get(c.playerId);
-    if (player) player.connections++;
-  }
-}
-
-wss.on('connection', async (ws, req) => {
+wss.on('connection', (ws, req) => {
   const id = nextId++;
   const now = Date.now();
 
-  // The ticket is the entire handshake. It rides in the query string because
-  // browsers cannot set headers on a WebSocket upgrade, and it is short-lived
-  // precisely because a URL is the leakiest place to put a credential.
-  const url = new URL(req.url ?? '/', 'http://localhost');
-  const ticket = url.searchParams.get('ticket') ?? '';
-  const verified = verifyTicket(ticket);
+  /**
+   * Listeners are attached SYNCHRONOUSLY, before any await.
+   *
+   * Setting the Game up means rehydrating from Postgres, and a client that
+   * sends a command the instant the socket opens — a `resync`, say — would
+   * arrive during that gap. `ws` emits to whoever is listening at the time and
+   * drops the message otherwise, so the command would vanish with no error at
+   * either end. Buffer until ready, then drain in order.
+   */
+  const pending: string[] = [];
+  let deliver = (raw: string) => {
+    pending.push(raw);
+  };
+  ws.on('message', (raw) => deliver(raw.toString()));
 
-  if (!verified.ok) {
-    console.log(`[ws] reject #${id}: ticket ${verified.reason}`);
-    send(ws, { type: 'error', code: 'bad_ticket', reason: verified.reason });
-    // 1008 policy violation, and a reason the client can show rather than a
-    // silent drop it would retry forever.
-    ws.close(1008, verified.reason);
-    return;
-  }
+  let onClose: ((code: number, reason: Buffer) => void) | null = null;
+  ws.on('close', (code, reason) => onClose?.(code, reason));
 
-  const { gameCode, role, playerId } = verified.payload;
-  const game = await getGame(gameCode);
-  if (!game) {
-    send(ws, { type: 'error', code: 'no_such_game' });
-    ws.close(1008, 'no_such_game');
-    return;
-  }
-  if (role === 'player' && (!playerId || !game.players.has(playerId))) {
-    // A signed ticket naming a Player this Game does not have means the row was
-    // deleted between minting and connecting. Do not invent a seat.
-    send(ws, { type: 'error', code: 'no_such_player' });
-    ws.close(1008, 'no_such_player');
-    return;
-  }
+  void (async () => {
+    // The ticket rides in the query string because browsers cannot set headers on
+    // a WebSocket upgrade, and it lives sixty seconds precisely because a URL is
+    // the leakiest place to put a credential.
+    const url = new URL(req.url ?? '/', 'http://localhost');
+    const verified = verifyTicket(url.searchParams.get('ticket') ?? '');
 
-  live.set(ws, { id, openedAt: now, missedPongs: 0, lastTrafficAt: now, gameCode, role, playerId });
-  register(ws, gameCode);
-  recountConnections(game);
-  console.log(`[ws] open #${id} ${role} game=${gameCode} (${live.size} live)`);
-
-  send(ws, role === 'caller' ? callerSnapshot(game) : playerSnapshot(game, playerId!));
-
-  ws.on('pong', () => {
-    const c = live.get(ws);
-    if (c) c.missedPongs = 0;
-  });
-
-  ws.on('message', async (raw) => {
-    const c = live.get(ws);
-    if (c) c.lastTrafficAt = Date.now();
-    let msg: { type?: string };
-    try {
-      msg = JSON.parse(raw.toString());
-    } catch {
-      send(ws, { type: 'error', code: 'malformed' });
+    if (!verified.ok) {
+      console.log(`[ws] reject #${id}: ticket ${verified.reason}`);
+      ws.send(JSON.stringify({ type: 'error', code: 'bad_ticket', reason: verified.reason }));
+      ws.close(1008, verified.reason);
       return;
     }
 
-    // Commands land here next. Resync is the one that already matters: it is
-    // how a client recovers when it spots a gap in the version sequence.
-    if (msg.type === 'resync') {
-      const fresh = await getGame(gameCode);
-      if (fresh) {
-        send(ws, role === 'caller' ? callerSnapshot(fresh) : playerSnapshot(fresh, playerId!));
+    const { gameCode, role, playerId } = verified.payload;
+    const game = await getGame(gameCode);
+    if (!game) {
+      ws.send(JSON.stringify({ type: 'error', code: 'no_such_game' }));
+      ws.close(1008, 'no_such_game');
+      return;
+    }
+    if (role === 'player' && (!playerId || !game.players.has(playerId))) {
+      // A signed ticket naming a Player this Game does not have means the row went
+      // away between minting and connecting. Do not invent a seat.
+      ws.send(JSON.stringify({ type: 'error', code: 'no_such_player' }));
+      ws.close(1008, 'no_such_player');
+      return;
+    }
+
+    const conn: Conn = {
+      id,
+      ws,
+      gameCode,
+      role,
+      playerId,
+      openedAt: now,
+      lastTrafficAt: now,
+      missedPongs: 0,
+    };
+    live.set(ws, conn);
+    addConn(conn);
+    recountConnections(game);
+    console.log(`[ws] open #${id} ${role} game=${gameCode} (${live.size} live)`);
+
+    send(conn, role === 'caller' ? callerSnapshot(game) : playerSnapshot(game, playerId!));
+    if (playerId) broadcastPresence(game, playerId);
+    // A Game can come back mid-flight after a deploy; boot grace keeps the
+    // re-armed clock from firing into a room still reconnecting.
+    reschedule(game, { boot: true });
+
+    ws.on('pong', () => {
+      conn.missedPongs = 0;
+    });
+
+    const handleMessage = async (raw: string) => {
+      conn.lastTrafficAt = Date.now();
+
+      let msg: { type?: string; [k: string]: unknown };
+      try {
+        msg = JSON.parse(raw.toString());
+      } catch {
+        send(conn, { type: 'error', code: 'malformed' });
+        return;
       }
-      return;
-    }
 
-    send(ws, { type: 'error', code: 'unknown_command', received: msg.type ?? null });
-  });
+      const current = await getGame(gameCode);
+      if (!current) {
+        send(conn, { type: 'error', code: 'no_such_game' });
+        return;
+      }
 
-  ws.on('close', (code, reasonBuf) => {
-    const c = live.get(ws);
-    if (c) {
+      if (msg.type && CALLER_ONLY.has(msg.type) && role !== 'caller') {
+        send(conn, { type: 'error', code: 'forbidden', command: msg.type });
+        return;
+      }
+
+      switch (msg.type) {
+        case 'resync':
+          send(
+            conn,
+            role === 'caller' ? callerSnapshot(current) : playerSnapshot(current, playerId!)
+          );
+          return;
+
+        case 'mark':
+          if (!playerId || typeof msg.cardId !== 'string') return;
+          await handleMark(current, playerId, msg.cardId, msg.marked !== false);
+          return;
+
+        case 'claim':
+          if (!playerId) return;
+          await handleClaim(current, playerId, conn);
+          reschedule(current);
+          return;
+
+        case 'rename':
+          if (!playerId || typeof msg.nickname !== 'string') return;
+          await handleRename(current, playerId, msg.nickname);
+          return;
+
+        case 'start_game':
+          await handleStartGame(current);
+          reschedule(current);
+          return;
+
+        case 'call_next':
+          await handleCallNext(current);
+          reschedule(current);
+          return;
+
+        case 'set_auto_advance': {
+          const seconds = msg.seconds === null ? null : Number(msg.seconds);
+          if (seconds !== null && (!Number.isFinite(seconds) || seconds < 2 || seconds > 60)) {
+            send(conn, { type: 'error', code: 'invalid_interval' });
+            return;
+          }
+          await handleSetAutoAdvance(current, seconds);
+          reschedule(current);
+          return;
+        }
+
+        case 'lock_joins':
+          await handleLockJoins(current, msg.locked !== false);
+          return;
+
+        case 'end_game':
+          await handleEndGame(current, 'caller_ended');
+          reschedule(current);
+          return;
+
+        default:
+          send(conn, { type: 'error', code: 'unknown_command', received: msg.type ?? null });
+      }
+    };
+
+    // Ready: take new messages directly, then replay anything that arrived while
+    // the Game was loading, in the order it was sent.
+    deliver = (raw) => void handleMessage(raw);
+    for (const raw of pending.splice(0)) await handleMessage(raw);
+
+    onClose = (code, reasonBuf) => {
       closed.push({
-        id: c.id,
-        heldForSeconds: Math.round((Date.now() - c.openedAt) / 1000),
-        idleForSeconds: Math.round((Date.now() - c.lastTrafficAt) / 1000),
+        id: conn.id,
+        heldForSeconds: Math.round((Date.now() - conn.openedAt) / 1000),
+        idleForSeconds: Math.round((Date.now() - conn.lastTrafficAt) / 1000),
         code,
         reason: reasonBuf.toString() || '(none)',
         closedAt: new Date().toISOString(),
       });
       if (closed.length > 100) closed.shift();
-      console.log(`[ws] close #${c.id} code=${code} held=${closed.at(-1)!.heldForSeconds}s`);
-    }
-    live.delete(ws);
-    unregister(ws, gameCode);
-    // The Player stays in the Game — going offline is not leaving. Only the
-    // online flag changes.
-    void getGame(gameCode).then((g) => g && recountConnections(g));
-  });
+      console.log(`[ws] close #${conn.id} code=${code} held=${closed.at(-1)!.heldForSeconds}s`);
+
+      live.delete(ws);
+      removeConn(conn);
+      // Going offline is not leaving: the Player keeps their seat, their Board and
+      // their Marks. Only the roster's online flag changes.
+      void getGame(gameCode).then((g) => {
+        if (!g) return;
+        recountConnections(g);
+        if (conn.playerId) broadcastPresence(g, conn.playerId);
+      });
+    };
+  })();
 });
 
 /**
@@ -309,6 +389,14 @@ function shutdown(signal: string) {
   console.log(`[socket] ${signal} — closing ${live.size} connections`);
   clearInterval(heartbeat);
   clearInterval(rttTimer);
+  // A pending auto-advance would keep the event loop alive past the drain
+  // window, and Fly would kill the process instead of letting it close sockets.
+  clearAllTimers();
+  // Tell every Game a restart is coming before the 1001s land, so clients can
+  // show "reconnecting" rather than inferring it from a dropped socket.
+  for (const code of new Set([...live.values()].map((c) => c.gameCode))) {
+    broadcast(code, { type: 'server_restarting' });
+  }
   for (const ws of live.keys()) ws.close(1001, 'server restarting');
   httpServer.close(() => {
     void pool.end().finally(() => process.exit(0));
