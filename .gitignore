@@ -41,7 +41,6 @@ local-data/
 .DS_Store
 .superpowers/
 .worktrees/
-docs/
 
 # example illustration outputs — full-resolution PNGs and run manifest from
 # the generator script. Optimized webp copies live in
