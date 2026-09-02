@@ -65,13 +65,31 @@ async function main() {
   process.stderr.write(`database: ${host}\n`);
   process.stderr.write(`mode    : ${write ? 'WRITE' : 'dry run (pass --yes to apply)'}\n\n`);
 
-  await pool.query('create schema if not exists drizzle');
-  await pool.query(
-    'create table if not exists drizzle.__drizzle_migrations (id serial primary key, hash text not null, created_at bigint)'
-  );
+  // A dry run must not write, not even the journal table — this tool exists to
+  // be pointed at a database whose state you are unsure of.
+  const journalExists =
+    (
+      await pool.query(
+        "select 1 from information_schema.tables where table_schema='drizzle' and table_name='__drizzle_migrations'"
+      )
+    ).rowCount === 1;
+
+  if (!journalExists) {
+    process.stderr.write('journal table does not exist yet\n');
+    if (!write) {
+      process.stderr.write('dry run — it would be created. Re-run with --yes.\n');
+      return;
+    }
+    await pool.query('create schema if not exists drizzle');
+    await pool.query(
+      'create table if not exists drizzle.__drizzle_migrations (id serial primary key, hash text not null, created_at bigint)'
+    );
+  }
 
   const existing = new Set(
-    (await pool.query('select hash from drizzle.__drizzle_migrations')).rows.map((r) => r.hash)
+    journalExists
+      ? (await pool.query('select hash from drizzle.__drizzle_migrations')).rows.map((r) => r.hash)
+      : []
   );
 
   const wanted = journal.entries.slice(0, cutoff + 1);
