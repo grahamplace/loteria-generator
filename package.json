@@ -5,8 +5,8 @@
   "packageManager": "pnpm@9.15.9",
   "scripts": {
     "build": "next build",
-    "dev": "pnpm secrets:pull && concurrently --names next,inngest --prefix-colors cyan,magenta \"next dev --port 3006\" \"inngest-cli dev --no-discovery --port 8288 -u http://localhost:3006/api/inngest\"",
-    "socket:dev": "tsx watch socket/index.ts",
+    "dev": "pnpm secrets:pull && concurrently --names next,inngest,socket --prefix-colors cyan,magenta,green \"next dev --port 3006\" \"inngest-cli dev --no-discovery --port 8288 -u http://localhost:3006/api/inngest\" \"pnpm socket:dev\"",
+    "socket:dev": "PORT=3055 tsx watch socket/dev.ts",
     "socket:build": "tsup",
     "socket:probe": "tsx scripts/socket-idle-probe.ts",
     "dev:next": "next dev --port 3006",
