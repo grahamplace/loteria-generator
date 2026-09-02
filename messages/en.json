@@ -579,6 +579,26 @@
       "any_diagonal": "Any diagonal",
       "four_corners": "Four corners",
       "centre": "Centre"
+    },
+    "start": {
+      "button": "Play live",
+      "title": "Start a live game",
+      "patternLabel": "What wins?",
+      "paceLabel": "Pace",
+      "start": "Start",
+      "starting": "Starting…",
+      "needMoreCards": "A live game needs more than 16 cards. This set has {count}.",
+      "smallSetAdvisory": "With {count} cards every board will be nearly identical. Add more for a better game.",
+      "errors": {
+        "unauthenticated": "Sign in to start a game.",
+        "not_your_set": "That set isn't yours.",
+        "set_locked": "Unlock this set to play live.",
+        "too_few_cards": "A live game needs more than 16 cards. This set has {count}.",
+        "game_already_running": "This set already has a game running — code {code}.",
+        "invalid_pattern": "Pick a winning pattern.",
+        "code_generation_failed": "Couldn't start a game. Try again."
+      },
+      "resume": "Resume game {code}"
     }
   }
 }

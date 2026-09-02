@@ -18,6 +18,7 @@ import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
 import { useTranslations } from 'next-intl';
 import { BOARD_UNLOCK_PRICE_DISPLAY, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
+import { StartGameButton } from '@/components/live-game/start-game-button';
 import {
   OnboardingTrigger,
   OnboardingCompleteWatcher,
@@ -250,6 +251,14 @@ export default function BoardEditorPage() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <LanguageSwitch />
+            {/* Renders nothing unless the Set is unlocked and holds more than
+                16 completed cards — the two things a Game needs. */}
+            {board.isUnlocked && (
+              <StartGameButton
+                setId={boardId}
+                completedCardCount={cards.filter((c) => c.status === 'completed').length}
+              />
+            )}
             {!board.isUnlocked && (
               <button
                 onClick={() => openUnlockPrompt('card_limit')}
