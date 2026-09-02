@@ -519,5 +519,66 @@
       "done": "Entendido",
       "progress": "{current} de {total}"
     }
+  },
+  "LiveGame": {
+    "join": {
+      "title": "Únete a un juego",
+      "codeLabel": "Código de juego",
+      "codePlaceholder": "482913…",
+      "nicknameLabel": "Tu nombre",
+      "nicknamePlaceholder": "Ana…",
+      "submit": "Entrar",
+      "joining": "Entrando…",
+      "errors": {
+        "invalid_code": "Ese código no tiene seis dígitos.",
+        "no_such_game": "No hay juego con ese código. Pídele al cantor el código de su pantalla.",
+        "game_ended": "Este juego ya terminó.",
+        "joins_locked": "El cantor cerró este juego a nuevos jugadores.",
+        "game_full": "Este juego está lleno.",
+        "nickname_taken": "Ese nombre ya está tomado — prueba otro.",
+        "nickname_invalid": "Elige un nombre de 1 a 16 caracteres.",
+        "board_assignment_failed": "No se pudo repartir tu tabla. Inténtalo de nuevo."
+      }
+    },
+    "player": {
+      "lastCalled": "Última carta",
+      "waitingToStart": "Esperando a que el cantor empiece…",
+      "stats": "{called} cantadas · {players} jugadores · {oneAway} a una",
+      "lot": "¡Lotería!",
+      "checking": "Revisando…",
+      "won": "¡Lotería! Ganaste.",
+      "rejectedNotCalled": "Todavía no — esas cartas no han salido todas.",
+      "rejectedNotMarked": "Todavía no — no has marcado todas las cartas del patrón.",
+      "reconnecting": "Reconectando…",
+      "ended": "Juego terminado",
+      "youWon": "¡Ganaste!",
+      "someoneWon": "Ganó {nickname}."
+    },
+    "caller": {
+      "joinAt": "Entra en",
+      "start": "Empezar juego",
+      "drawNext": "Siguiente carta",
+      "endGame": "Terminar juego",
+      "showBoards": "Mostrar tablas",
+      "hideBoards": "Ocultar tablas",
+      "lockJoins": "Cerrar entradas",
+      "manual": "Manual",
+      "everySeconds": "Cada {seconds}s",
+      "playersOnline": "{online}/{total} en línea",
+      "cardsLeft": "{count} cartas restantes",
+      "oneAway": "{count} jugadores a una",
+      "waitingForPlayers": "Esperando jugadores",
+      "claimWindow": "¡Lotería! — gana {nickname}",
+      "claimWindowHint": "Las cartas están pausadas. Quien cante ahora también gana.",
+      "castWarning": "Las tablas están ocultas por defecto — esta pantalla puede estar en una TV."
+    },
+    "patterns": {
+      "full_board": "Tabla llena",
+      "any_row": "Línea horizontal",
+      "any_column": "Línea vertical",
+      "any_diagonal": "Diagonal",
+      "four_corners": "Cuatro esquinas",
+      "centre": "El pozo"
+    }
   }
 }

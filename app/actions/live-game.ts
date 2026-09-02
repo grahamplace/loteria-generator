@@ -137,6 +137,8 @@ export type JoinGameResult =
       nickname: string;
       /** 16 card ids in order: position i is grid cell i. */
       boardCardIds: string[];
+      /** Marks already made — a returning Player must get their beans back. */
+      markedCardIds: string[];
       /** Short-lived HMAC ticket for the socket handshake. */
       ticket: string;
       /** True when this device already held a seat and got it back. */
@@ -204,6 +206,7 @@ export async function joinGame(
       id: gamePlayers.id,
       nickname: gamePlayers.nickname,
       boardCardIds: gamePlayers.boardCardIds,
+      markedCardIds: gamePlayers.markedCardIds,
     })
     .from(gamePlayers)
     .where(and(eq(gamePlayers.gameId, game.id), eq(gamePlayers.playerToken, deviceToken)))
@@ -216,6 +219,7 @@ export async function joinGame(
       playerId: existing.id,
       nickname: existing.nickname,
       boardCardIds: existing.boardCardIds,
+      markedCardIds: existing.markedCardIds,
       ticket: mintTicket({ gameCode: game.code, role: 'player', playerId: existing.id }),
       restored: true,
     };
@@ -259,6 +263,7 @@ export async function joinGame(
         playerId: row.id,
         nickname: trimmed,
         boardCardIds,
+        markedCardIds: [],
         ticket: mintTicket({ gameCode: game.code, role: 'player', playerId: row.id }),
         restored: false,
       };
@@ -276,4 +281,34 @@ export async function joinGame(
   }
 
   return { ok: false, reason: 'board_assignment_failed' };
+}
+
+// ---------------------------------------------------------------------------
+// Tickets
+// ---------------------------------------------------------------------------
+
+/**
+ * A fresh Caller ticket.
+ *
+ * Tickets live ~60 seconds, so every reconnect needs a new one — which is also
+ * the point at which the Caller's ownership is re-checked. A stolen ticket buys
+ * a minute; a revoked session buys nothing.
+ */
+export async function getCallerTicket(
+  code: string
+): Promise<{ ok: true; ticket: string } | { ok: false; reason: 'unauthenticated' | 'not_caller' }> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) return { ok: false, reason: 'unauthenticated' };
+
+  // The Caller is the Set's owner. Joined rather than trusted from the ticket,
+  // because the ticket is what we are about to mint.
+  const [row] = await db
+    .select({ code: games.code })
+    .from(games)
+    .innerJoin(boards, eq(games.boardId, boards.id))
+    .where(and(eq(games.code, code), eq(boards.userId, session.user.id)))
+    .limit(1);
+
+  if (!row) return { ok: false, reason: 'not_caller' };
+  return { ok: true, ticket: mintTicket({ gameCode: row.code, role: 'caller', playerId: null }) };
 }
