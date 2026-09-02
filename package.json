@@ -30,6 +30,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:journal": "tsx scripts/backfill-migration-journal.ts",
+    "seed:live-game": "tsx scripts/seed-live-game.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "prepare": "husky",
