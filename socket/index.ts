@@ -1,22 +1,23 @@
 /**
- * Live game socket server — SPIKE.
+ * Live game socket server.
  *
- * Not the real server. This exists to answer the two questions ticket 11
- * deferred, because both can invalidate
- * `docs/adr/0001-live-game-realtime-architecture.md`:
+ * ADR 0001 makes this process the sole arbiter for every Game it holds, and
+ * ADR 0002 defines what crosses the wire: one role-scoped snapshot on connect,
+ * then versioned deltas.
  *
- *   1. Does Fly's proxy kill a WebSocket that goes idle? A manual-draw Lotería
- *      game can sit silent for minutes between Calls. If the proxy hangs up,
- *      the architecture needs revisiting.
- *   2. What is the Fly `iad` → Neon `us-east-1` round trip? Every Call is a
- *      write-through, so this lands on the critical path of the whole game.
+ * There is no HTTP from Next.js. A Game reaches this server because a client
+ * arrives holding a ticket that names its Code, and the Game is materialised
+ * from Postgres on the spot.
  *
- * It holds no game state and speaks no protocol. `GET /health` reports what it
- * has observed so the answers can be read off a URL instead of a log tail.
+ * `GET /health` also reports what the spike measured — Neon RTT and connection
+ * lifetimes — because both answers stay useful in production.
  */
 import { createServer } from 'node:http';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { Pool } from 'pg';
+import { verifyTicket, type TicketRole } from '@/lib/live-game/ticket';
+import { getGame, liveGameCount, type LiveGame } from './game-registry';
+import { callerSnapshot, playerSnapshot } from './snapshot';
+import { pool } from './db';
 
 const PORT = Number(process.env.PORT ?? 8080);
 const HEARTBEAT_MS = 25_000;
@@ -27,38 +28,6 @@ const startedAt = Date.now();
 // ---------------------------------------------------------------------------
 // Neon
 // ---------------------------------------------------------------------------
-
-/**
- * `pg`, not `@neondatabase/serverless`: the HTTP driver has no transaction
- * support, which the real server needs. The `error` handler is not optional —
- * an unhandled pool error takes the process down.
- *
- * `idleTimeoutMillis` is deliberately long. Measured from `iad` against Neon
- * `us-east-1`:
- *
- *   warm query        2-3 ms
- *   after a reconnect 25-40 ms typical, 414 ms worst observed
- *
- * A manual-draw game leaves gaps of seconds to minutes between Calls, so a
- * short timeout would evict the connection between almost every Call and make
- * each one pay a fresh TLS handshake — a 10x-100x penalty on the critical path,
- * to conserve a connection nothing else wants. The server is always-on and
- * Neon's scale-to-zero is disabled, so holding a few open costs nothing.
- *
- * This overrides ADR 0001's "short idleTimeoutMillis"; see the amendment there.
- */
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 4,
-  // Comfortably longer than any gap between Calls, including a Caller who
-  // wanders off mid-game. Well inside the 60-minute inactivity expiry.
-  idleTimeoutMillis: 10 * 60_000,
-  connectionTimeoutMillis: 5_000,
-});
-
-pool.on('error', (err) => {
-  console.error('[pool] idle client error', err.message);
-});
 
 type RttSample = { at: string; ms: number };
 const rttSamples: RttSample[] = [];
@@ -113,6 +82,10 @@ type Live = {
   missedPongs: number;
   /** Wall-clock ms since this connection last sent or received anything. */
   lastTrafficAt: number;
+  gameCode: string;
+  role: TicketRole;
+  /** null for the Caller, who holds no Board and cannot Claim. */
+  playerId: string | null;
 };
 
 type Closed = {
@@ -140,6 +113,7 @@ const httpServer = createServer((req, res) => {
           uptimeSeconds: Math.round((Date.now() - startedAt) / 1000),
           region: process.env.FLY_REGION ?? 'local',
           machine: process.env.FLY_MACHINE_ID ?? null,
+          liveGames: liveGameCount(),
           neonColdStartMs: coldStartMs,
           neonRttMs: rttStats(),
           liveConnections: [...live.values()].map((c) => ({
@@ -162,13 +136,83 @@ const httpServer = createServer((req, res) => {
 
 const wss = new WebSocketServer({ server: httpServer });
 
-wss.on('connection', (ws, req) => {
+const send = (ws: WebSocket, msg: unknown) => {
+  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
+};
+
+/**
+ * Every connection an identity holds, so Calls and Marks fan out to all of
+ * them. A Caller can cast a laptop to the TV and draw from their phone; losing
+ * a tab is never losing your seat, so a connection is a disposable view of an
+ * identity rather than the identity itself.
+ */
+const connectionsByGame = new Map<string, Set<WebSocket>>();
+
+function register(ws: WebSocket, code: string) {
+  let set = connectionsByGame.get(code);
+  if (!set) connectionsByGame.set(code, (set = new Set()));
+  set.add(ws);
+}
+
+function unregister(ws: WebSocket, code: string) {
+  const set = connectionsByGame.get(code);
+  if (!set) return;
+  set.delete(ws);
+  if (set.size === 0) connectionsByGame.delete(code);
+}
+
+/** Recount a Player's live sockets so the roster's online flag stays honest. */
+function recountConnections(game: LiveGame) {
+  for (const player of game.players.values()) player.connections = 0;
+  for (const ws of connectionsByGame.get(game.code) ?? []) {
+    const c = live.get(ws);
+    if (!c?.playerId) continue;
+    const player = game.players.get(c.playerId);
+    if (player) player.connections++;
+  }
+}
+
+wss.on('connection', async (ws, req) => {
   const id = nextId++;
   const now = Date.now();
-  live.set(ws, { id, openedAt: now, missedPongs: 0, lastTrafficAt: now });
-  console.log(`[ws] open #${id} from ${req.socket.remoteAddress} (${live.size} live)`);
 
-  ws.send(JSON.stringify({ type: 'hello', id, serverNow: new Date().toISOString() }));
+  // The ticket is the entire handshake. It rides in the query string because
+  // browsers cannot set headers on a WebSocket upgrade, and it is short-lived
+  // precisely because a URL is the leakiest place to put a credential.
+  const url = new URL(req.url ?? '/', 'http://localhost');
+  const ticket = url.searchParams.get('ticket') ?? '';
+  const verified = verifyTicket(ticket);
+
+  if (!verified.ok) {
+    console.log(`[ws] reject #${id}: ticket ${verified.reason}`);
+    send(ws, { type: 'error', code: 'bad_ticket', reason: verified.reason });
+    // 1008 policy violation, and a reason the client can show rather than a
+    // silent drop it would retry forever.
+    ws.close(1008, verified.reason);
+    return;
+  }
+
+  const { gameCode, role, playerId } = verified.payload;
+  const game = await getGame(gameCode);
+  if (!game) {
+    send(ws, { type: 'error', code: 'no_such_game' });
+    ws.close(1008, 'no_such_game');
+    return;
+  }
+  if (role === 'player' && (!playerId || !game.players.has(playerId))) {
+    // A signed ticket naming a Player this Game does not have means the row was
+    // deleted between minting and connecting. Do not invent a seat.
+    send(ws, { type: 'error', code: 'no_such_player' });
+    ws.close(1008, 'no_such_player');
+    return;
+  }
+
+  live.set(ws, { id, openedAt: now, missedPongs: 0, lastTrafficAt: now, gameCode, role, playerId });
+  register(ws, gameCode);
+  recountConnections(game);
+  console.log(`[ws] open #${id} ${role} game=${gameCode} (${live.size} live)`);
+
+  send(ws, role === 'caller' ? callerSnapshot(game) : playerSnapshot(game, playerId!));
 
   ws.on('pong', () => {
     const c = live.get(ws);
@@ -178,11 +222,25 @@ wss.on('connection', (ws, req) => {
   ws.on('message', async (raw) => {
     const c = live.get(ws);
     if (c) c.lastTrafficAt = Date.now();
-    // One command, so the RTT can be sampled on demand from a client.
-    if (raw.toString().trim() === 'rtt') {
-      const ms = await sampleRtt();
-      ws.send(JSON.stringify({ type: 'rtt', ms }));
+    let msg: { type?: string };
+    try {
+      msg = JSON.parse(raw.toString());
+    } catch {
+      send(ws, { type: 'error', code: 'malformed' });
+      return;
     }
+
+    // Commands land here next. Resync is the one that already matters: it is
+    // how a client recovers when it spots a gap in the version sequence.
+    if (msg.type === 'resync') {
+      const fresh = await getGame(gameCode);
+      if (fresh) {
+        send(ws, role === 'caller' ? callerSnapshot(fresh) : playerSnapshot(fresh, playerId!));
+      }
+      return;
+    }
+
+    send(ws, { type: 'error', code: 'unknown_command', received: msg.type ?? null });
   });
 
   ws.on('close', (code, reasonBuf) => {
@@ -200,6 +258,10 @@ wss.on('connection', (ws, req) => {
       console.log(`[ws] close #${c.id} code=${code} held=${closed.at(-1)!.heldForSeconds}s`);
     }
     live.delete(ws);
+    unregister(ws, gameCode);
+    // The Player stays in the Game — going offline is not leaving. Only the
+    // online flag changes.
+    void getGame(gameCode).then((g) => g && recountConnections(g));
   });
 });
 
