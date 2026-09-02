@@ -25,6 +25,30 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
 
 ---
 
+## Live Game socket server
+
+- The realtime socket server is a **second deployable** on Fly.io, app
+  `loteria-live-game` (region `iad`), configured by `fly.toml` at the repo root.
+  Architecture and rationale: `docs/adr/0001-live-game-realtime-architecture.md`.
+- Two environment variables belong to it. Both live in **Vercel** — `pnpm dev`
+  runs `vercel env pull .env.local`, so a value written only to `.env.local` is
+  wiped on the next dev run. Set them with `vercel env add <NAME> <target>
+--force`, never by hand-editing `.env.local`.
+  - `NEXT_PUBLIC_WS_URL` — `wss://loteria-live-game.fly.dev` in production and
+    preview, `ws://localhost:3055` in development.
+  - `LIVE_GAME_TICKET_SECRET` — shared HMAC key for the ~60s handshake ticket
+    Next.js mints and the socket server verifies. Production and preview share
+    one value with Fly (`fly secrets set --app loteria-live-game`); development
+    has its own, so a leaked dev secret is worthless against production.
+- New worktrees pick both up through `pnpm secrets:pull`, along with everything
+  else in `.env.local`.
+- Reading a non-development value back (`vercel env pull --environment=…`)
+  returns `[SENSITIVE]`, not the real string. Rotate rather than try to recover.
+- Provisioning was done by `.scratch/live-game/provision-fly.sh`; it is
+  idempotent and safe to re-run.
+
+---
+
 ## Board Unlock Price
 
 - MUST: Change the unlock price by editing both constants in `lib/constants.ts`: `BOARD_UNLOCK_PRICE_CENTS` (integer cents, used by Stripe) and `BOARD_UNLOCK_PRICE_DISPLAY` (formatted string, e.g. `'$20'`, used in UI/FAQ copy). Keep the two values in sync.

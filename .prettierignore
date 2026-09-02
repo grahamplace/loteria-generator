@@ -10,3 +10,10 @@ pnpm-lock.yaml
 package-lock.json
 yarn.lock
 db/migrations
+
+# Generated planning artifacts from past agent sessions, not maintained prose.
+# Tracked (they predate docs/ being un-ignored) but never hand-edited.
+docs/superpowers
+
+# Wayfinder maps and tickets — working notes, not shipped prose.
+.scratch

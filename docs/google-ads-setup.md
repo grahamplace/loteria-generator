@@ -16,7 +16,7 @@ campaign for keywords like "custom loteria".
     if the user abandons the Google consent screen with the Back button, the
     flag can be left stale for that tab session and may count a later
     dashboard visit as a signup; and a brand-new user who instead uses "Sign in
-    with Google" on the `/sign-in` page is *not* counted as a signup
+    with Google" on the `/sign-in` page is _not_ counted as a signup
     conversion.)
   - **Purchase** — fires on the Stripe success redirect back to the board page,
     with `value` = `BOARD_UNLOCK_PRICE_CENTS / 100` USD and `transaction_id` =
@@ -39,13 +39,13 @@ campaign for keywords like "custom loteria".
 In Google Ads: **Goals → Conversions → New conversion action → Website**, enter
 the production domain, and create both actions manually:
 
-| Setting | Sign-up action | Purchase action |
-| --- | --- | --- |
-| Goal category | Sign-up | Purchase |
-| Conversion name | `Sign-up` | `Board unlock` |
-| Value | Don't use a value | Use different values for each conversion |
-| Count | One | Every |
-| Attribution | Data-driven (default) | Data-driven (default) |
+| Setting         | Sign-up action        | Purchase action                          |
+| --------------- | --------------------- | ---------------------------------------- |
+| Goal category   | Sign-up               | Purchase                                 |
+| Conversion name | `Sign-up`             | `Board unlock`                           |
+| Value           | Don't use a value     | Use different values for each conversion |
+| Count           | One                   | Every                                    |
+| Attribution     | Data-driven (default) | Data-driven (default)                    |
 
 For each action, choose **"Install the tag yourself"** and note:
 
@@ -87,7 +87,7 @@ build time).
   to gather data; switch to Maximize Conversions once ~30 days / enough
   conversions accumulate.
 - **Keywords to start:** phrase-match `"custom loteria"`, `"custom loteria
-  cards"`, `"personalized loteria"`, `"loteria maker"`, `"custom loteria game"`.
+cards"`, `"personalized loteria"`, `"loteria maker"`, `"custom loteria game"`.
   Add exact-match variants of whatever converts.
 - **Negative keywords:** `free printable`, `rules`, `how to play`, `meaning` —
   informational queries that won't convert.
