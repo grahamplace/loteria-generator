@@ -17,3 +17,4 @@ docs/superpowers
 
 # Wayfinder maps and tickets — working notes, not shipped prose.
 .scratch
+socket/dist

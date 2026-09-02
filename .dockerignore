@@ -1,0 +1,27 @@
+# Only the socket server ships in this image. Everything the Next.js app needs
+# stays out, both for build speed and because `fly deploy` uploads this context.
+.git
+node_modules
+.next
+socket/dist
+coverage
+playwright-report
+test-results
+
+# Machine-local: pins pnpm's store to a macOS path that does not exist here.
+.npmrc
+
+# Secrets never enter the image; they arrive as Fly secrets at runtime.
+.env
+.env.*
+
+# Next.js app surface — not built here.
+app
+components
+public
+messages
+db/migrations
+e2e
+docs
+.scratch
+.claude

@@ -13,6 +13,9 @@ export default tseslint.config(
       '.next/**',
       'out/**',
       'dist/**',
+      // Bundled socket-server output. The top-level 'dist/**' above only matches
+      // a dist at the repo root, so nested build output needs its own entry.
+      '**/dist/**',
       'build/**',
       'coverage/**',
       '*.config.js',
@@ -80,6 +83,15 @@ export default tseslint.config(
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       'no-var': 'error',
+    },
+  },
+
+  // Long-running Node processes and CLI scripts: stdout is the interface, not
+  // a debugging leftover. Fly captures console output as the service's logs.
+  {
+    files: ['socket/**/*.ts', 'scripts/**/*.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 
