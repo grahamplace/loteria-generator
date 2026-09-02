@@ -37,14 +37,15 @@ The person controlling a Game who draws cards from the Deck.
 _Avoid_: Host, announcer, cantor
 
 **Player**:
-Anyone who joined a Game with a Game Code and holds one Board.
+Anyone who joined a Game with a Game Code and holds one Board. Membership lasts the whole Game and does not depend on being connected: a Player who closes the tab is offline, not gone, and keeps their Board.
+_Avoid_: Guest, participant, attendee
 
 **Call**:
 One card drawn from the Deck during a Game. A card is called at most once per Game.
 _Avoid_: Draw, pick
 
 **Mark**:
-A player's tap on a card on their Board indicating it has been called.
+A Player's tap on a card on their Board asserting it has been Called. The Game records every Mark without judging it — a Player may Mark a card that was never Called, and only a Claim is checked.
 _Avoid_: Bean, frijol, chip, check
 
 **Pattern**:
