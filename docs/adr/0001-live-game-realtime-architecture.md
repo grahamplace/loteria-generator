@@ -84,6 +84,19 @@ broadcast, reconnect and graceful-shutdown code by hand.
 - **Redis as a hot store.** Unnecessary while one process owns every Game;
   it would add a second store to keep consistent for no gain at this scale.
 
+## Operational hazard found while deploying (2026-09-02)
+
+`fly deploy` defaults to High Availability and creates a **second machine**
+without asking. The first deploy of the spike did exactly that. Two instances
+means two arbiters, which is the failure this ADR's whole design avoids — and
+the failure the unique indexes above exist to catch, not to tolerate.
+
+`min_machines_running = 1` does not prevent it; it is a floor, not a ceiling,
+and there is no fly.toml key that disables HA. Every deploy must pass
+`--ha=false`, and `fly machines list` must show exactly one machine afterwards.
+Recorded in `fly.toml` as well, next to the setting that looks like it should
+have covered this.
+
 ## Consequences
 
 - **Learning value is the leading criterion here, ahead of cost and ops.** This

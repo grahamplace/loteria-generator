@@ -67,6 +67,8 @@ Ticket: _Provision the Fly.io socket service and wire the secrets_ — **already
 done**, not pending work.
 
 - Fly app **`loteria-live-game`** (`iad`), one shared-cpu-1x 512 MB Machine.
+  **Deploy with `fly deploy --ha=false`** — Fly's HA default creates a second
+  machine, which breaks single-arbiter arbitration. See ADR 0001.
   `fly.toml` at the repo root: `min_machines_running = 1`,
   `auto_stop_machines = "off"`, `kill_signal = "SIGTERM"` with a 30s drain so
   open sockets close cleanly, `/health` check. **Created but never deployed** —
