@@ -7,8 +7,10 @@ import {
   json,
   uuid,
   unique,
+  uniqueIndex,
+  index,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 /**
  * Better Auth core tables (required by the Drizzle adapter).
@@ -162,6 +164,157 @@ export const lifecycleEmails = pgTable(
   (table) => [unique('lifecycle_emails_user_id_type_unique').on(table.userId, table.type)]
 );
 
+// ---------------------------------------------------------------------------
+// Live play. See docs/live-play-spec.md and docs/adr/0001, docs/adr/0002.
+//
+// A `games.board_id` points at a Set — the `boards` table is a Set, legacy
+// naming the glossary records and this effort deliberately does not rename.
+// ---------------------------------------------------------------------------
+
+/** Which shape wins a Game. Instances are a static table in code, not data. */
+export type GamePattern =
+  | 'full_board'
+  | 'any_row'
+  | 'any_column'
+  | 'any_diagonal'
+  | 'four_corners'
+  | 'centre';
+
+export type GameStatus = 'lobby' | 'playing' | 'ended';
+
+/** Why a Game ended, for the result screen a reconnecting Player lands on. */
+export type GameEndReason = 'won' | 'deck_exhausted' | 'caller_ended' | 'expired';
+
+export const games = pgTable(
+  'games',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    /** The Set this Game is played from. Its owner is the Caller. */
+    boardId: uuid('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    /** Six digits. Never reused, so this is unique across all Games forever. */
+    code: text('code').notNull(),
+    status: text('status').$type<GameStatus>().notNull().default('lobby'),
+    pattern: text('pattern').$type<GamePattern>().notNull(),
+    joinsLocked: boolean('joins_locked').notNull().default(false),
+    /** null means the Caller draws manually. */
+    autoAdvanceSeconds: integer('auto_advance_seconds'),
+    /**
+     * Persisted so auto-advance survives a restart. On boot the timer re-arms
+     * at max(this, now + 15s) so it cannot fire into a room still reconnecting.
+     */
+    nextCallDueAt: timestamp('next_call_due_at'),
+    /** Set when the first Win freezes Calls. null in manual mode — the Caller ends it. */
+    claimWindowClosesAt: timestamp('claim_window_closes_at'),
+    /**
+     * Monotonic per Game. Every broadcast every client sees carries it, and so
+     * does the snapshot, so a client can tell a stale snapshot from a fresh
+     * event. Marks deliberately do NOT bump it — see docs/adr/0002.
+     */
+    version: integer('version').notNull().default(0),
+    endReason: text('end_reason').$type<GameEndReason>(),
+    startedAt: timestamp('started_at'),
+    endedAt: timestamp('ended_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    unique('games_code_unique').on(table.code),
+    /**
+     * One active Game per Set. Partial, so ended Games do not block a new one —
+     * the rule is "at most one Game that is not ended", not "one ever".
+     */
+    uniqueIndex('games_one_active_per_set')
+      .on(table.boardId)
+      .where(sql`status <> 'ended'`),
+    index('games_status_idx').on(table.status),
+  ]
+);
+
+export const gamePlayers = pgTable(
+  'game_players',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    /** The seat. Identity is this token, never the nickname. */
+    playerToken: text('player_token').notNull(),
+    nickname: text('nickname').notNull(),
+    /** 16 card ids in display order: position i is grid cell i. */
+    boardCardIds: uuid('board_card_ids').array().notNull(),
+    /**
+     * SHA-256 of the ORDERED card ids. Two Boards are the same only if they
+     * hold the same cards in the same positions — positional Patterns are
+     * arrangement-sensitive, so a shuffle is a different Board.
+     */
+    boardKey: text('board_key').notNull(),
+    /** Honor-system: recorded without judging, only a Claim is checked. */
+    markedCardIds: uuid('marked_card_ids')
+      .array()
+      .notNull()
+      .default(sql`ARRAY[]::uuid[]`),
+    /** Drives "12 players · 2 offline". A Player is never dropped from a Game. */
+    lastSeenAt: timestamp('last_seen_at').defaultNow().notNull(),
+    joinedAt: timestamp('joined_at').defaultNow().notNull(),
+  },
+  (table) => [
+    /**
+     * The backstop ADR 0001 asked the database for. The event loop is the
+     * arbiter; this exists to turn a second server instance from silently
+     * duplicated Boards into a loud constraint violation.
+     */
+    unique('game_players_board_unique').on(table.gameId, table.boardKey),
+    unique('game_players_nickname_unique').on(table.gameId, table.nickname),
+    /** Reconnect looks a Player up by their token. */
+    unique('game_players_token_unique').on(table.gameId, table.playerToken),
+  ]
+);
+
+export const gameCalls = pgTable(
+  'game_calls',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    cardId: uuid('card_id')
+      .notNull()
+      .references(() => cards.id, { onDelete: 'cascade' }),
+    /** 1-based draw order. Wins record which Call they landed on. */
+    sequence: integer('sequence').notNull(),
+    calledAt: timestamp('called_at').defaultNow().notNull(),
+  },
+  (table) => [
+    /** "A card is called at most once per Game" — the glossary's rule, enforced. */
+    unique('game_calls_card_unique').on(table.gameId, table.cardId),
+    unique('game_calls_sequence_unique').on(table.gameId, table.sequence),
+  ]
+);
+
+export const gameWins = pgTable(
+  'game_wins',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    playerId: uuid('player_id')
+      .notNull()
+      .references(() => gamePlayers.id, { onDelete: 'cascade' }),
+    /** Which instance of the Pattern completed — e.g. which row. */
+    patternInstance: integer('pattern_instance').notNull(),
+    /** The Call this Win was verified against. Everyone in one Claim Window shares it. */
+    wonOnSequence: integer('won_on_sequence').notNull(),
+    wonAt: timestamp('won_at').defaultNow().notNull(),
+  },
+  (table) => [
+    /** Stops a Player winning twice inside the Claim Window. */
+    unique('game_wins_player_unique').on(table.gameId, table.playerId),
+  ]
+);
+
 // Relations
 export const userProfilesRelations = relations(userProfiles, ({ many }) => ({
   boards: many(boards),
@@ -186,6 +339,46 @@ export const cardsRelations = relations(cards, ({ one }) => ({
   }),
 }));
 
+export const gamesRelations = relations(games, ({ one, many }) => ({
+  set: one(boards, {
+    fields: [games.boardId],
+    references: [boards.id],
+  }),
+  players: many(gamePlayers),
+  calls: many(gameCalls),
+  wins: many(gameWins),
+}));
+
+export const gamePlayersRelations = relations(gamePlayers, ({ one, many }) => ({
+  game: one(games, {
+    fields: [gamePlayers.gameId],
+    references: [games.id],
+  }),
+  wins: many(gameWins),
+}));
+
+export const gameCallsRelations = relations(gameCalls, ({ one }) => ({
+  game: one(games, {
+    fields: [gameCalls.gameId],
+    references: [games.id],
+  }),
+  card: one(cards, {
+    fields: [gameCalls.cardId],
+    references: [cards.id],
+  }),
+}));
+
+export const gameWinsRelations = relations(gameWins, ({ one }) => ({
+  game: one(games, {
+    fields: [gameWins.gameId],
+    references: [games.id],
+  }),
+  player: one(gamePlayers, {
+    fields: [gameWins.playerId],
+    references: [gamePlayers.id],
+  }),
+}));
+
 // Type exports for use in application
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type NewUserProfile = typeof userProfiles.$inferInsert;
@@ -193,3 +386,11 @@ export type Board = typeof boards.$inferSelect;
 export type NewBoard = typeof boards.$inferInsert;
 export type Card = typeof cards.$inferSelect;
 export type NewCard = typeof cards.$inferInsert;
+export type Game = typeof games.$inferSelect;
+export type NewGame = typeof games.$inferInsert;
+export type GamePlayer = typeof gamePlayers.$inferSelect;
+export type NewGamePlayer = typeof gamePlayers.$inferInsert;
+export type GameCall = typeof gameCalls.$inferSelect;
+export type NewGameCall = typeof gameCalls.$inferInsert;
+export type GameWin = typeof gameWins.$inferSelect;
+export type NewGameWin = typeof gameWins.$inferInsert;
