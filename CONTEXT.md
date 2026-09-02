@@ -1,0 +1,55 @@
+# Lotería Generator
+
+Custom Lotería (Mexican bingo) sets built from a user's own images, printable as PDFs and playable live over the web.
+
+## Language
+
+### Content
+
+**Set**:
+A user's collection of up to 54 unique images from which boards and a deck are produced. The unit that is unlocked by payment.
+_Avoid_: Board (the code currently names this table `boards`; that is legacy), project, collection
+
+**Card**:
+One image plus its label inside a Set.
+_Avoid_: Image, tile
+
+**Deck**:
+The full ordered stack of a Set's cards used for calling during play or printed as calling cards.
+_Avoid_: Calling cards, call stack
+
+**Board**:
+A 4×4 grid of 16 distinct cards drawn from one Set, held by one Player. Two Boards are the same only if they hold the same 16 cards in the same positions; the same cards in a different arrangement are different Boards.
+_Avoid_: Tabla, grid, player card
+
+### Play
+
+**Game**:
+One live session of Lotería started from an unlocked Set, reachable by a Game Code.
+
+**Game Code**:
+The short public code a player types to join a Game.
+_Avoid_: Shortcode, room code, PIN
+
+**Caller**:
+The person controlling a Game who draws cards from the Deck.
+_Avoid_: Host, announcer, cantor
+
+**Player**:
+Anyone who joined a Game with a Game Code and holds one Board.
+
+**Call**:
+One card drawn from the Deck during a Game. A card is called at most once per Game.
+_Avoid_: Draw, pick
+
+**Mark**:
+A player's tap on a card on their Board indicating it has been called.
+_Avoid_: Bean, frijol, chip, check
+
+**Pattern**:
+The shape of Marks on a Board that wins a Game (full board, a row, four corners, and so on), chosen by the Caller when the Game is created.
+_Avoid_: Mode, rule, variant
+
+**Win**:
+A Player's "¡Lotería!" claim that the server has verified: every card in the Pattern is both Marked and Called.
+_Avoid_: Bingo, claim (a claim is unverified)
