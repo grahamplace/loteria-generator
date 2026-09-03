@@ -57,3 +57,6 @@ test-results/
 
 # react-email preview server
 .react-email/
+
+# Bundled socket server output (pnpm socket:build)
+socket/dist

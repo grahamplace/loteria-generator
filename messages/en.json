@@ -519,5 +519,86 @@
       "done": "Got it",
       "progress": "{current} of {total}"
     }
+  },
+  "LiveGame": {
+    "join": {
+      "title": "Join a game",
+      "codeLabel": "Game code",
+      "codePlaceholder": "482913…",
+      "nicknameLabel": "Your name",
+      "nicknamePlaceholder": "Ana…",
+      "submit": "Join",
+      "joining": "Joining…",
+      "errors": {
+        "invalid_code": "That code isn't six digits.",
+        "no_such_game": "No game with that code. Ask the caller for the code on their screen.",
+        "game_ended": "This game has ended.",
+        "joins_locked": "The caller has closed this game to new players.",
+        "game_full": "This game is full.",
+        "nickname_taken": "That name's taken — try another.",
+        "nickname_invalid": "Pick a name between 1 and 16 characters.",
+        "board_assignment_failed": "Couldn't deal you a board. Try again."
+      }
+    },
+    "player": {
+      "lastCalled": "Last called",
+      "waitingToStart": "Waiting for the caller to start…",
+      "stats": "{called} called · {players} players · {oneAway} one away",
+      "lot": "¡Lotería!",
+      "checking": "Checking…",
+      "won": "¡Lotería! You won.",
+      "rejectedNotCalled": "Not yet — those cards haven't all been called.",
+      "rejectedNotMarked": "Not yet — you haven't marked every card in the pattern.",
+      "reconnecting": "Reconnecting…",
+      "ended": "Game over",
+      "youWon": "You won!",
+      "someoneWon": "{nickname} won."
+    },
+    "caller": {
+      "joinAt": "Join at",
+      "start": "Start game",
+      "drawNext": "Draw next",
+      "endGame": "End game",
+      "showBoards": "Show boards",
+      "hideBoards": "Hide boards",
+      "lockJoins": "Lock joins",
+      "manual": "Manual",
+      "everySeconds": "Every {seconds}s",
+      "playersOnline": "{online}/{total} online",
+      "cardsLeft": "{count} cards left",
+      "oneAway": "{count} players one away",
+      "waitingForPlayers": "Waiting for players",
+      "claimWindow": "¡Lotería! — {nickname} wins",
+      "claimWindowHint": "Calls are paused. Anyone else who claims now also wins.",
+      "castWarning": "Boards are hidden by default — this screen may be on a TV."
+    },
+    "patterns": {
+      "full_board": "Full board",
+      "any_row": "Any row",
+      "any_column": "Any column",
+      "any_diagonal": "Any diagonal",
+      "four_corners": "Four corners",
+      "centre": "Centre"
+    },
+    "start": {
+      "button": "Play live",
+      "title": "Start a live game",
+      "patternLabel": "What wins?",
+      "paceLabel": "Pace",
+      "start": "Start",
+      "starting": "Starting…",
+      "needMoreCards": "A live game needs more than 16 cards. This set has {count}.",
+      "smallSetAdvisory": "With {count} cards every board will be nearly identical. Add more for a better game.",
+      "errors": {
+        "unauthenticated": "Sign in to start a game.",
+        "not_your_set": "That set isn't yours.",
+        "set_locked": "Unlock this set to play live.",
+        "too_few_cards": "A live game needs more than 16 cards. This set has {count}.",
+        "game_already_running": "This set already has a game running — code {code}.",
+        "invalid_pattern": "Pick a winning pattern.",
+        "code_generation_failed": "Couldn't start a game. Try again."
+      },
+      "resume": "Resume game {code}"
+    }
   }
 }

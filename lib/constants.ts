@@ -65,3 +65,37 @@ export const PRINT_SAFE_MARGIN_IN = 0.125;
 
 /** Same margin in canvas pixels. Pages render at 300 DPI (2550×3300 = 8.5"×11"). */
 export const PRINT_SAFE_MARGIN_PX = PRINT_SAFE_MARGIN_IN * 300;
+
+// ---------------------------------------------------------------------------
+// Live play. See docs/live-play-spec.md.
+// ---------------------------------------------------------------------------
+
+/** Cards a Set needs before it can host a Game — strictly more than one Board. */
+export const MIN_GAME_CARD_COUNT = 17;
+
+/**
+ * Hard cap on Players. Not a combinatorial limit: a 17-card Set still yields
+ * 3.6e14 distinct Boards, because two Boards differ if the same cards sit in
+ * different positions.
+ */
+export const MAX_PLAYERS_PER_GAME = 50;
+
+/**
+ * Below this, warn the Caller that Boards will be near-identical. A 20-card Set
+ * gives every pair of Boards ~13 of 16 cards in common, so the Game is decided
+ * by luck of arrangement rather than by the draw. Advisory, never a block.
+ */
+export const SMALL_SET_ADVISORY_CARD_COUNT = 24;
+
+/** Six digits: 1,000,000 codes, and a keypad on every phone. */
+export const GAME_CODE_LENGTH = 6;
+
+/** Codes are never reused, so generation retries against the unique index. */
+export const GAME_CODE_MAX_ATTEMPTS = 5;
+
+/** Lobby that never starts expires; a Game with no Call for this long ends. */
+export const GAME_LOBBY_EXPIRY_MINUTES = 120;
+export const GAME_IDLE_EXPIRY_MINUTES = 60;
+
+/** Claim Window after the first Win. Manual mode has none — the Caller ends it. */
+export const CLAIM_WINDOW_SECONDS = 20;

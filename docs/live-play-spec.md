@@ -52,7 +52,9 @@ control plane.
 - **Database driver:** `pg` + `drizzle-orm/node-postgres` on the pooled
   connection string — _not_ `@neondatabase/serverless`, whose HTTP driver has no
   transaction support. `pool.on('error', …)` is mandatory; an unhandled pool
-  error crashes Node.
+  error crashes Node. `idleTimeoutMillis` is **long** (10 min): measured warm
+  queries are 2–3 ms while a reconnect costs 25–400 ms, so a short timeout would
+  make nearly every Call pay a TLS handshake. See ADR 0001's amendment.
 - **Code location:** `socket/` in the root package, bundled with tsup.
   `Dockerfile` and `fly.toml` at the repo root. A third process in `pnpm dev`.
 
@@ -67,6 +69,8 @@ Ticket: _Provision the Fly.io socket service and wire the secrets_ — **already
 done**, not pending work.
 
 - Fly app **`loteria-live-game`** (`iad`), one shared-cpu-1x 512 MB Machine.
+  **Deploy with `fly deploy --ha=false`** — Fly's HA default creates a second
+  machine, which breaks single-arbiter arbitration. See ADR 0001.
   `fly.toml` at the repo root: `min_machines_running = 1`,
   `auto_stop_machines = "off"`, `kill_signal = "SIGTERM"` with a 30s drain so
   open sockets close cleanly, `/health` check. **Created but never deployed** —
@@ -290,13 +294,44 @@ Decided nothing about these; they are listed so nobody assumes they were missed.
 - **Spectator / TV view** — whether one is needed at all, now that the Caller's
   large-width layout is built to be cast. What would remain is a controls-free
   variant of the same screen.
-- **PostHog events for play** — `game_created`, `player_joined`, `card_called`,
-  `win_verified` and friends.
+- **How live play is measured.** `game_created` and `player_joined` are captured
+  from the Next.js server actions, both attributed to the Caller's user id —
+  Players are anonymous, so a per-player distinct id would mint a throwaway
+  profile never seen again.
+
+  Deliberately **not** captured: `card_called`, `win_verified`, `game_ended`.
+  Two reasons. At ~54 Calls a Game the first is noise, and all three already
+  live in Postgres with more detail than an event would carry, so PostHog would
+  be a lossy duplicate. More importantly it would put a network dependency
+  inside the one process whose job is to be a reliable single arbiter.
+
+  Completion and win data is a query, not an event:
+
+  ```sql
+  select g.status, g.end_reason,
+         count(distinct p.id)  as players,
+         count(distinct c.id)  as calls,
+         count(distinct w.id)  as winners,
+         g.ended_at - g.started_at as duration
+  from games g
+  left join game_players p on p.game_id = g.id
+  left join game_calls   c on c.game_id = g.id
+  left join game_wins    w on w.game_id = g.id
+  group by g.id;
+  ```
+
 - **Where "Play" lives** on the existing Set page, and whether unlock upsell
   copy mentions play.
-- **How e2e reaches a socket server** — `scripts/e2e-run.ts` provisions a
-  throwaway Neon branch per run; whether it also boots a real socket server,
-  stubs one, or leaves play to unit tests.
+- ~~How e2e reaches a socket server~~ — **decided: a real one, per run.**
+  `playwright.config.ts` starts it alongside `next dev`, against the same
+  throwaway Neon branch. No new CI secret: the ticket secret only has to match
+  between the process that mints and the one that verifies, and both are ours,
+  so it is a fixed dummy exactly like `STRIPE_WEBHOOK_SECRET`.
+
+  A stub was rejected because it is precisely the half that cannot fail.
+  Everything interesting lives in the handshake — a ticket that will not verify,
+  a snapshot that never arrives, a Player the cached Game has never heard of.
+
 - **Fly `iad` → Neon `us-east-1` RTT**, and whether Fly's proxy idle timeouts
   interfere with open sockets. Both need a running Machine, so they were
   deferred out of provisioning to the first build ticket.
