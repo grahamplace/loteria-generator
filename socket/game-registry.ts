@@ -129,6 +129,50 @@ export async function getGame(code: string): Promise<LiveGame | null> {
   return promise;
 }
 
+/**
+ * Load a Player the cached Game has not seen.
+ *
+ * Joining happens in Next.js — it inserts a `game_players` row and mints a
+ * ticket — and ADR 0001 makes Postgres the only interface between the two, so
+ * there is no message telling this server a new seat exists. A Game cached
+ * before someone joined therefore does not know them, and their socket would be
+ * rejected as `no_such_player` even though the row is right there.
+ *
+ * The ticket naming them is signed, so it is trustworthy; the cache is simply
+ * stale. Pull the row rather than being pushed to, which keeps the boundary
+ * intact.
+ *
+ * Returns null when the Player genuinely does not exist — a ticket for a
+ * deleted row, or for another Game.
+ */
+export async function ensurePlayer(game: LiveGame, playerId: string): Promise<LivePlayer | null> {
+  const known = game.players.get(playerId);
+  if (known) return known;
+
+  const [row] = await db
+    .select()
+    .from(gamePlayers)
+    .where(and(eq(gamePlayers.id, playerId), eq(gamePlayers.gameId, game.id)))
+    .limit(1);
+  if (!row) return null;
+
+  // Re-check after the await: another connection for the same Player may have
+  // loaded them while this one was waiting, and two entries would mean two
+  // Boards for one seat.
+  const raced = game.players.get(playerId);
+  if (raced) return raced;
+
+  const player: LivePlayer = {
+    id: row.id,
+    nickname: row.nickname,
+    boardCardIds: row.boardCardIds,
+    markedCardIds: new Set(row.markedCardIds),
+    connections: 0,
+  };
+  game.players.set(playerId, player);
+  return player;
+}
+
 /** Drop a finished Game so it stops occupying memory. */
 export function forgetGame(code: string): void {
   byCode.delete(code);

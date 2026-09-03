@@ -168,6 +168,17 @@ export function useGameSocket({ url, getTicket }: Options) {
           next.game.claimWindowClosesAt = null;
           next.game.winnerIds = msg.winnerIds as string[];
           break;
+        case 'player_joined':
+          next.roster = [
+            ...prev.roster,
+            {
+              playerId: msg.playerId as string,
+              nickname: msg.nickname as string,
+              online: true,
+            },
+          ];
+          next.game.playerCount = msg.playerCount as number;
+          break;
         case 'player_presence_changed':
           next.roster = prev.roster.map((r) =>
             r.playerId === msg.playerId ? { ...r, online: msg.online as boolean } : r

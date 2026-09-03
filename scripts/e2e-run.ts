@@ -15,6 +15,9 @@ import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { config as loadDotenv } from 'dotenv';
 import { existsSync } from 'node:fs';
 
+/** Matches NEXT_PUBLIC_WS_URL in development so the same port is used everywhere. */
+const SOCKET_PORT = 3055;
+
 /** Kill any process listening on a port so Playwright can start a fresh server. */
 function freePort(port: number): void {
   if (process.env.E2E_SKIP_PORT_FREE === '1') {
@@ -112,6 +115,15 @@ async function main(): Promise<number> {
       DATABASE_URL: branch.databaseUrl,
       BETTER_AUTH_SECRET:
         process.env.E2E_BETTER_AUTH_SECRET ?? process.env.BETTER_AUTH_SECRET ?? '',
+      // Live play needs a real socket server, which Playwright starts alongside
+      // the dev server. The ticket secret only has to match between the process
+      // that mints and the one that verifies, and both are ours here — so a
+      // fixed dummy, exactly like STRIPE_WEBHOOK_SECRET. No new CI secret.
+      LIVE_GAME_TICKET_SECRET:
+        process.env.LIVE_GAME_TICKET_SECRET ?? 'e2e-ticket-secret-not-a-real-one',
+      NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL ?? `ws://localhost:${SOCKET_PORT}`,
+      // Not PORT: that is shared with `next dev`, which also reads it. The
+      // socket server gets its port on its own command line instead.
     };
 
     process.stderr.write('running migrations…\n');
@@ -122,9 +134,10 @@ async function main(): Promise<number> {
     const seedStatus = runInherit('pnpm', ['exec', 'tsx', 'scripts/e2e-seed-user.ts'], childEnv);
     if (seedStatus !== 0) return seedStatus;
 
-    // Ensure Playwright can start a fresh server with the correct DATABASE_URL.
-    // A dev server may already be running on this port pointing at the wrong DB.
+    // Ensure Playwright can start fresh servers with the correct DATABASE_URL.
+    // Either port may already hold a dev server pointing at the wrong branch.
     freePort(3006);
+    freePort(SOCKET_PORT);
 
     process.stderr.write('running Playwright…\n');
     exitCode = runInherit('pnpm', ['exec', 'playwright', 'test'], childEnv);

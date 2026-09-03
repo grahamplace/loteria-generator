@@ -343,6 +343,26 @@ export async function openClaimWindow(
   });
 }
 
+/**
+ * A Player nobody in this Game has seen before.
+ *
+ * Distinct from presence: presence toggles a flag on someone already on the
+ * roster, this adds them to it. The Caller's lobby count depends on it, and so
+ * does every Player's "N players" line.
+ */
+export function broadcastPlayerJoined(game: LiveGame, playerId: string): void {
+  const player = game.players.get(playerId);
+  if (!player) return;
+  nextVersion(game);
+  broadcast(game.code, {
+    type: 'player_joined',
+    version: game.version,
+    playerId,
+    nickname: player.nickname,
+    playerCount: game.players.size,
+  });
+}
+
 /** Presence changed for one Player — the roster's online flag, nothing else. */
 export function broadcastPresence(game: LiveGame, playerId: string): void {
   const player = game.players.get(playerId);

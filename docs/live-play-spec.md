@@ -322,9 +322,16 @@ Decided nothing about these; they are listed so nobody assumes they were missed.
 
 - **Where "Play" lives** on the existing Set page, and whether unlock upsell
   copy mentions play.
-- **How e2e reaches a socket server** — `scripts/e2e-run.ts` provisions a
-  throwaway Neon branch per run; whether it also boots a real socket server,
-  stubs one, or leaves play to unit tests.
+- ~~How e2e reaches a socket server~~ — **decided: a real one, per run.**
+  `playwright.config.ts` starts it alongside `next dev`, against the same
+  throwaway Neon branch. No new CI secret: the ticket secret only has to match
+  between the process that mints and the one that verifies, and both are ours,
+  so it is a fixed dummy exactly like `STRIPE_WEBHOOK_SECRET`.
+
+  A stub was rejected because it is precisely the half that cannot fail.
+  Everything interesting lives in the handshake — a ticket that will not verify,
+  a snapshot that never arrives, a Player the cached Game has never heard of.
+
 - **Fly `iad` → Neon `us-east-1` RTT**, and whether Fly's proxy idle timeouts
   interfere with open sockets. Both need a running Machine, so they were
   deferred out of provisioning to the first build ticket.

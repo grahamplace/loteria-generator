@@ -15,7 +15,7 @@
 import { createServer } from 'node:http';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { verifyTicket } from '@/lib/live-game/ticket';
-import { getGame, liveGameCount } from './game-registry';
+import { ensurePlayer, getGame, liveGameCount } from './game-registry';
 import { callerSnapshot, playerSnapshot } from './snapshot';
 import { pool } from './db';
 import {
@@ -28,6 +28,7 @@ import {
   type Conn,
 } from './broadcast';
 import {
+  broadcastPlayerJoined,
   broadcastPresence,
   handleCallNext,
   handleClaim,
@@ -201,12 +202,25 @@ wss.on('connection', (ws, req) => {
       ws.close(1008, 'no_such_game');
       return;
     }
-    if (role === 'player' && (!playerId || !game.players.has(playerId))) {
-      // A signed ticket naming a Player this Game does not have means the row went
-      // away between minting and connecting. Do not invent a seat.
-      ws.send(JSON.stringify({ type: 'error', code: 'no_such_player' }));
-      ws.close(1008, 'no_such_player');
-      return;
+    // Whether this connection is the first anyone has seen of this Player.
+    // Joining is a Postgres insert in Next.js, so a Game cached before they
+    // joined does not know them yet — that is staleness, not an intruder.
+    let isNewToTheGame = false;
+    if (role === 'player') {
+      if (!playerId) {
+        ws.send(JSON.stringify({ type: 'error', code: 'no_such_player' }));
+        ws.close(1008, 'no_such_player');
+        return;
+      }
+      isNewToTheGame = !game.players.has(playerId);
+      const player = await ensurePlayer(game, playerId);
+      if (!player) {
+        // Genuinely gone: the row was deleted between minting and connecting.
+        // Do not invent a seat.
+        ws.send(JSON.stringify({ type: 'error', code: 'no_such_player' }));
+        ws.close(1008, 'no_such_player');
+        return;
+      }
     }
 
     const conn: Conn = {
@@ -225,7 +239,10 @@ wss.on('connection', (ws, req) => {
     console.log(`[ws] open #${id} ${role} game=${gameCode} (${live.size} live)`);
 
     send(conn, role === 'caller' ? callerSnapshot(game) : playerSnapshot(game, playerId!));
-    if (playerId) broadcastPresence(game, playerId);
+    // A brand-new Player is an event everyone needs — without it the Caller's
+    // lobby count never moves off whatever it was when their snapshot was built.
+    if (isNewToTheGame) broadcastPlayerJoined(game, playerId!);
+    else if (playerId) broadcastPresence(game, playerId);
     // A Game can come back mid-flight after a deploy; boot grace keeps the
     // re-armed clock from firing into a room still reconnecting.
     reschedule(game, { boot: true });
