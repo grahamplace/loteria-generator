@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { partitionBySize, MAX_UPLOAD_BYTES } from '@/lib/upload-limits';
+import {
+  partitionBySize,
+  describeUploadFailure,
+  requestBodyLimitError,
+  MAX_UPLOAD_BYTES,
+  MAX_REQUEST_BODY_BYTES,
+  MAX_REQUEST_BODY_DISPLAY,
+} from '@/lib/upload-limits';
 
 const file = (name: string, size: number) => ({ name, size });
 
@@ -45,5 +52,48 @@ describe('partitionBySize', () => {
 
     expect(valid).toEqual([underLimit]);
     expect(oversized).toEqual([overLimit]);
+  });
+});
+
+describe('requestBodyLimitError', () => {
+  it('returns null for a body at or under the platform limit', () => {
+    expect(requestBodyLimitError(1000)).toBeNull();
+    expect(requestBodyLimitError(MAX_REQUEST_BODY_BYTES)).toBeNull();
+  });
+
+  it('names the actual size and the limit for an oversized body', () => {
+    const message = requestBodyLimitError(5_000_000);
+    expect(message).toMatch(/too large/i);
+    expect(message).toContain('5.0MB');
+    expect(message).toContain(MAX_REQUEST_BODY_DISPLAY);
+  });
+});
+
+describe('describeUploadFailure', () => {
+  it('explains a 413 from the platform as a size problem', () => {
+    const message = describeUploadFailure(413, null);
+    expect(message).toMatch(/too large/i);
+    expect(message).toContain(MAX_REQUEST_BODY_DISPLAY);
+  });
+
+  it('surfaces the image field error from a validation failure', () => {
+    const body = {
+      error: 'Invalid request',
+      details: { fieldErrors: { originalImageBase64: ['Image exceeds maximum size of 10MB'] } },
+    };
+    expect(describeUploadFailure(400, body)).toBe('Image exceeds maximum size of 10MB');
+  });
+
+  it('prefers the human-readable message over the error code', () => {
+    const body = { error: 'Card limit reached', message: 'Maximum of 54 cards allowed' };
+    expect(describeUploadFailure(403, body)).toBe('Maximum of 54 cards allowed');
+  });
+
+  it('falls back to the error field', () => {
+    expect(describeUploadFailure(404, { error: 'Board not found' })).toBe('Board not found');
+  });
+
+  it('falls back to the HTTP status when the body has nothing useful', () => {
+    expect(describeUploadFailure(502, 'Bad Gateway')).toBe('Upload failed (HTTP 502)');
   });
 });
