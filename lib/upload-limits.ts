@@ -39,3 +39,43 @@ export function partitionBySize<T extends { size: number }>(
   }
   return { valid, oversized };
 }
+
+/**
+ * Vercel's platform cap on a request body. A request over it gets a bare 413
+ * before our handler runs, so the response carries no JSON error to show.
+ * Decimal megabytes: the stricter reading of Vercel's "4.5MB".
+ */
+export const MAX_REQUEST_BODY_BYTES = 4_500_000;
+export const MAX_REQUEST_BODY_DISPLAY = '4.5MB';
+
+function formatMegabytes(bytes: number): string {
+  return `${(bytes / 1_000_000).toFixed(1)}MB`;
+}
+
+/** Error message for a request body over the platform cap, or null if it fits. */
+export function requestBodyLimitError(bytes: number): string | null {
+  if (bytes <= MAX_REQUEST_BODY_BYTES) return null;
+  return `Too large to upload: ${formatMegabytes(bytes)}, over the ${MAX_REQUEST_BODY_DISPLAY} limit. Resize the photo and try again.`;
+}
+
+/**
+ * Turns a failed upload response into a message worth showing: the platform's
+ * bare 413, a Zod field error on the image, or the API's own message/error.
+ */
+export function describeUploadFailure(status: number, body: unknown): string {
+  if (status === 413) {
+    return `Too large to upload: over the ${MAX_REQUEST_BODY_DISPLAY} limit. Resize the photo and try again.`;
+  }
+  if (body && typeof body === 'object') {
+    const { message, error, details } = body as {
+      message?: unknown;
+      error?: unknown;
+      details?: { fieldErrors?: { originalImageBase64?: unknown } };
+    };
+    const imageErrors = details?.fieldErrors?.originalImageBase64;
+    if (Array.isArray(imageErrors) && typeof imageErrors[0] === 'string') return imageErrors[0];
+    if (typeof message === 'string') return message;
+    if (typeof error === 'string') return error;
+  }
+  return `Upload failed (HTTP ${status})`;
+}
