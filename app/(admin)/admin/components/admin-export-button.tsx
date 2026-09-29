@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   clampBoardCount,
   generateLoteriaSetPdf,
@@ -38,6 +39,7 @@ export function AdminExportButton({
   const [isExporting, setIsExporting] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
   const [boardCount, setBoardCount] = useState(DEFAULT_EXPORT_BOARD_COUNT);
+  const [includeTitle, setIncludeTitle] = useState(false);
 
   // Only completed cards with an illustration can be rendered into the set.
   const exportableCards = cards.filter((c) => c.status === 'completed' && c.illustrationUrl);
@@ -75,7 +77,8 @@ export function AdminExportButton({
         setProgress,
         // Keep the default caller-sheet labels — only the board count is overridden.
         undefined,
-        boardCount
+        boardCount,
+        { boardTitle: includeTitle ? boardName : undefined }
       );
 
       const url = URL.createObjectURL(pdfBlob);
@@ -120,6 +123,14 @@ export function AdminExportButton({
         increaseLabel="More boards"
         size="sm"
       />
+      <label className="inline-flex min-h-6 cursor-pointer items-center gap-1.5 text-sm has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
+        <Checkbox
+          checked={includeTitle}
+          onCheckedChange={(checked) => setIncludeTitle(checked === true)}
+          disabled={isExporting || !canExport}
+        />
+        Include board title
+      </label>
       <Button
         size="sm"
         variant="outline"
