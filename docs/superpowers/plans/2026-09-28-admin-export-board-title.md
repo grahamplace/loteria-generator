@@ -293,12 +293,12 @@ git commit -m "feat(export): pure board layout with optional title band"
 
 **Interfaces:**
 
-- Consumes: `computeBoardLayout`, `fitBoardTitle`, `BOARD_TITLE_BAND_PX`, `BOARD_TITLE_MAX_FONT_PX`, `BOARD_TITLE_MIN_FONT_PX` from `@/lib/board-layout` (Task 1).
+- Consumes: `computeBoardLayout`, `fitBoardTitle`, `BOARD_TITLE_BAND_PX`, `BOARD_TITLE_MAX_FONT_PX`, `BOARD_TITLE_MIN_FONT_PX` from `./board-layout` (Task 1).
 - Produces:
-  - `export interface LoteriaSetPdfOptions { /** Printed at the top of every player board page when non-blank. */ boardTitle?: string }`
+  - `export interface LoteriaSetPdfOptions { boardTitle?: string }` — printed at the top of every player board page when non-blank.
   - `generateLoteriaSetPdf(cards, styleOptions?, onProgress?, callerSheetLabels?, boardCount?, options?: LoteriaSetPdfOptions)` — new trailing param, default `{}`.
 
-Canvas is not available in jsdom, so this task is verified by typecheck, the existing test suite, and the manual check in Task 3.
+Canvas is not available in jsdom, so this task is verified by typecheck, lint, the existing tests, and the controller's manual check (Task 4).
 
 - [ ] **Step 1: Import the layout module** — add near the other imports in `lib/generate-boards.ts`:
 
@@ -314,362 +314,15 @@ import {
 
 `PRINT_SAFE_MARGIN_PX` stays imported — `renderDeckPageToCanvas` still uses it.
 
-- [ ] **Step 2: Replace `renderBoardToCanvas`** with this version (signature gains `title`; grid maths moves to `computeBoardLayout`; fonts load before the title is measured):
+- [ ] **Step 2: Rewrite `renderBoardToCanvas`**
+
+Signature gains `title?: string` as a third param. Keep the canvas setup and background fill as-is. Then, in this order:
+
+1. Move the two `loadGoogleFont(...)` calls (Caveat, Jost — same URLs as today) up to directly after the background fill, with the comment `// Loaded before any text is measured so the title fits against real Jost metrics.`
+2. Replace the inline grid maths (`rows`/`cols`/`padding`/`cardSpacing`/`availableWidth`… through `offsetY`) with:
 
 ```ts
-/**
- * Renders a single board onto a canvas.
- * Board dimensions: 8.5" × 11" (US Letter) at 300 DPI = 2550 × 3300 pixels.
- * A non-blank title is drawn in a band above the grid; the cards shrink to
- * make room so the page margins are unchanged.
- */
-async function renderBoardToCanvas(
-  board: LotteriaCard[],
-  styleOptions: BoardStyleOptions = {},
-  title?: string
-): Promise<HTMLCanvasElement> {
-  const {
-    backgroundColor = '#ffffff',
-    badgeColor = '#ff6b35',
-    labelColor = '#1f2937',
-  } = styleOptions;
-
-  const width = 2550;
-  const height = 3300;
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) {
-    throw new Error('Could not get canvas context');
-  }
-
-  ctx.fillStyle = backgroundColor;
-  ctx.fillRect(0, 0, width, height);
-
-  // Loaded before any text is measured so the title fits against real Jost
-  // metrics, not the fallback font's.
-  await loadGoogleFont(
-    'Caveat',
-    'https://fonts.gstatic.com/s/caveat/v18/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9eIWpYQ.woff2'
-  );
-  await loadGoogleFont(
-    'Jost',
-    'https://fonts.gstatic.com/s/jost/v20/92zPtBhPNqw79Ij1E865zBUv7myjJTVBNIgun_HKOEo.woff2'
-  );
-
-  const titleFont = (fontPx: number) => `normal ${fontPx}px 'Jost', Arial, Helvetica, sans-serif`;
-  const measureAtFont = (fontPx: number, s: string) => {
-    ctx.font = titleFont(fontPx);
-    return ctx.measureText(s).width;
-  };
   const hasTitle = (title ?? '').trim() !== '';
-
-  const layout = computeBoardLayout({ width: W, height: H });
-    expect(layout.cardWidth).toBeCloseTo(507.5, 5);
-    expect(layout.cardHeight).toBeCloseTo(761.25, 5);
-    expect(layout.cardSpacing).toBe(20);
-    expect(layout.offsetY).toBeCloseTo(PADDING, 5);
-    expect(layout.offsetX).toBeCloseTo((W - layout.gridWidth) / 2, 5);
-    expect(layout.titleBand).toBeNull();
-  });
-
-  it('treats a zero band as no title', () => {
-    expect(computeBoardLayout({ width: W, height: H, titleBandHeight: 0 }).titleBand).toBeNull();
-  });
-
-  it('reserves a title band above a smaller grid inside the same margins', () => {
-    const plain = computeBoardLayout({ width: W, height: H });
-    const titled = computeBoardLayout({ width: W, height: H, titleBandHeight: BOARD_TITLE_BAND_PX });
-
-    expect(titled.titleBand).not.toBeNull();
-    expect(titled.titleBand!.top).toBeCloseTo(PADDING, 5);
-    expect(titled.titleBand!.height).toBe(BOARD_TITLE_BAND_PX);
-    expect(titled.offsetY).toBeCloseTo(PADDING + BOARD_TITLE_BAND_PX, 5);
-    expect(titled.offsetY + titled.gridHeight).toBeLessThanOrEqual(H - PADDING + 1e-6);
-    expect(titled.cardHeight).toBeLessThan(plain.cardHeight);
-    expect(titled.cardWidth / titled.cardHeight).toBeCloseTo(2 / 3, 5);
-    expect(titled.offsetX).toBeCloseTo((W - titled.gridWidth) / 2, 5);
-  });
-});
-
-describe('fitBoardTitle', () => {
-  const base = {
-    maxWidth: 2000,
-    maxFontPx: BOARD_TITLE_MAX_FONT_PX,
-    minFontPx: BOARD_TITLE_MIN_FONT_PX,
-    measureAtFont,
-  };
-
-  it('returns null for blank text', () => {
-    expect(fitBoardTitle({ ...base, text: '' })).toBeNull();
-    expect(fitBoardTitle({ ...base, text: '   \n ' })).toBeNull();
-  });
-
-  it('trims, uppercases, and caps a short title at the max font size', () => {
-    expect(fitBoardTitle({ ...base, text: '  Boda  ' })).toEqual({
-      fontPx: BOARD_TITLE_MAX_FONT_PX,
-      text: 'BODA',
-    });
-  });
-
-  it('keeps accented characters when uppercasing', () => {
-    expect(fitBoardTitle({ ...base, text: 'fiesta de Ñoño' })!.text).toBe('FIESTA DE ÑOÑO');
-  });
-
-  it('shrinks the font until the title fits', () => {
-    // 30 chars: fits at 111px (30*111*0.6 = 1998) but not at 112px.
-    const fit = fitBoardTitle({ ...base, text: 'a'.repeat(30) })!;
-    expect(fit.fontPx).toBe(111);
-    expect(fit.text).toBe('A'.repeat(30));
-    expect(measureAtFont(fit.fontPx, fit.text)).toBeLessThanOrEqual(base.maxWidth);
-  });
-
-  it('ellipsizes at the min font size when shrinking is not enough', () => {
-    const fit = fitBoardTitle({ ...base, text: 'x'.repeat(120) })!;
-    expect(fit.fontPx).toBe(BOARD_TITLE_MIN_FONT_PX);
-    expect(fit.text.endsWith('…')).toBe(true);
-    expect(measureAtFont(fit.fontPx, fit.text)).toBeLessThanOrEqual(base.maxWidth);
-    // 2000 / (60*0.6) = 55.5 → 54 x's + "…"
-    expect(fit.text).toBe('X'.repeat(54) + '…');
-  });
-
-  it('does not leave a trailing space before the ellipsis', () => {
-    const text = 'word '.repeat(40);
-    const fit = fitBoardTitle({ ...base, text })!;
-    expect(fit.text).not.toMatch(/\s…$/);
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `pnpm vitest run __tests__/lib/board-layout.test.ts`
-Expected: FAIL — cannot resolve `@/lib/board-layout`.
-
-- [ ] **Step 3: Write the implementation** — `lib/board-layout.ts`
-
-```ts
-/**
- * Pure layout helpers for a 4×4 player board page. Kept free of canvas so the
- * grid maths and title fitting can be unit tested with an injected measurer.
- */
-import { PRINT_SAFE_MARGIN_PX } from '@/lib/constants';
-
-/** Height (px at 300 DPI, 0.7") reserved above the grid for a board title. */
-export const BOARD_TITLE_BAND_PX = 210;
-export const BOARD_TITLE_MAX_FONT_PX = 130;
-export const BOARD_TITLE_MIN_FONT_PX = 60;
-
-const ROWS = 4;
-const COLS = 4;
-const CARD_SPACING = 20;
-const CARD_ASPECT_RATIO = 2 / 3;
-// The 4×4 grid is height-constrained, so this padding is the printed top and
-// bottom margin verbatim — 0.2" before the print-safe margin was added.
-const PADDING = 60 + PRINT_SAFE_MARGIN_PX;
-
-export interface BoardLayout {
-  cardWidth: number;
-  cardHeight: number;
-  cardSpacing: number;
-  /** Left edge of the grid. */
-  offsetX: number;
-  /** Top edge of the grid. */
-  offsetY: number;
-  gridWidth: number;
-  gridHeight: number;
-  /** Band above the grid for the board title, or null when untitled. */
-  titleBand: { top: number; height: number } | null;
-}
-
-/**
- * Sizes and positions the 4×4 card grid on a page. A title band comes off the
- * available height, so cards shrink (keeping 2:3) rather than the margins; the
- * band + grid block is centred vertically with the band on top.
- */
-export function computeBoardLayout({
-  width,
-  height,
-  titleBandHeight = 0,
-}: {
-  width: number;
-  height: number;
-  titleBandHeight?: number;
-}): BoardLayout {
-  const band = Math.max(0, titleBandHeight);
-  const availableWidth = width - PADDING * 2 - CARD_SPACING * (COLS - 1);
-  const availableHeight = height - PADDING * 2 - CARD_SPACING * (ROWS - 1) - band;
-
-  const maxCardWidth = availableWidth / COLS;
-  const maxCardHeight = availableHeight / ROWS;
-
-  let cardWidth: number;
-  let cardHeight: number;
-  if (maxCardWidth / maxCardHeight < CARD_ASPECT_RATIO) {
-    cardWidth = maxCardWidth;
-    cardHeight = cardWidth / CARD_ASPECT_RATIO;
-  } else {
-    cardHeight = maxCardHeight;
-    cardWidth = cardHeight * CARD_ASPECT_RATIO;
-  }
-
-  const gridWidth = cardWidth * COLS + CARD_SPACING * (COLS - 1);
-  const gridHeight = cardHeight * ROWS + CARD_SPACING * (ROWS - 1);
-  const blockTop = (height - (band + gridHeight)) / 2;
-
-  return {
-    cardWidth,
-    cardHeight,
-    cardSpacing: CARD_SPACING,
-    offsetX: (width - gridWidth) / 2,
-    offsetY: blockTop + band,
-    gridWidth,
-    gridHeight,
-    titleBand: band > 0 ? { top: blockTop, height: band } : null,
-  };
-}
-
-/**
- * Fits a board title onto one line: uppercases it, shrinks the font 1px at a
- * time down to minFontPx, then truncates with "…" if it still overflows.
- * Returns null for blank text, meaning "draw no title".
- */
-export function fitBoardTitle({
-  text,
-  maxWidth,
-  maxFontPx,
-  minFontPx,
-  measureAtFont,
-}: {
-  text: string;
-  maxWidth: number;
-  maxFontPx: number;
-  minFontPx: number;
-  measureAtFont: (fontPx: number, text: string) => number;
-}): { fontPx: number; text: string } | null {
-  const title = text.trim().replace(/\s+/g, ' ').toUpperCase();
-  if (title === '') return null;
-
-  for (let fontPx = maxFontPx; fontPx >= minFontPx; fontPx--) {
-    if (measureAtFont(fontPx, title) <= maxWidth) return { fontPx, text: title };
-  }
-
-  const chars = [...title];
-  for (let n = chars.length - 1; n > 0; n--) {
-    const candidate = chars.slice(0, n).join('').trimEnd() + '…';
-    if (measureAtFont(minFontPx, candidate) <= maxWidth) {
-      return { fontPx: minFontPx, text: candidate };
-    }
-  }
-  return { fontPx: minFontPx, text: '…' };
-}
-```
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `pnpm vitest run __tests__/lib/board-layout.test.ts`
-Expected: PASS (all tests).
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add lib/board-layout.ts __tests__/lib/board-layout.test.ts
-git commit -m "feat(export): pure board layout with optional title band"
-```
-
----
-
-### Task 2: Render the title on board pages
-
-**Files:**
-
-- Modify: `lib/generate-boards.ts` (`renderBoardToCanvas`, `generateLoteriaSetPdf`)
-
-**Interfaces:**
-
-- Consumes: `computeBoardLayout`, `fitBoardTitle`, `BOARD_TITLE_BAND_PX`, `BOARD_TITLE_MAX_FONT_PX`, `BOARD_TITLE_MIN_FONT_PX` from `@/lib/board-layout` (Task 1).
-- Produces:
-  - `export interface LoteriaSetPdfOptions { /** Printed at the top of every player board page when non-blank. */ boardTitle?: string }`
-  - `generateLoteriaSetPdf(cards, styleOptions?, onProgress?, callerSheetLabels?, boardCount?, options?: LoteriaSetPdfOptions)` — new trailing param, default `{}`.
-
-Canvas is not available in jsdom, so this task is verified by typecheck, the existing test suite, and the manual check in Task 3.
-
-- [ ] **Step 1: Import the layout module** — add near the other imports in `lib/generate-boards.ts`:
-
-```ts
-import {
-  computeBoardLayout,
-  fitBoardTitle,
-  BOARD_TITLE_BAND_PX,
-  BOARD_TITLE_MAX_FONT_PX,
-  BOARD_TITLE_MIN_FONT_PX,
-} from './board-layout';
-```
-
-`PRINT_SAFE_MARGIN_PX` stays imported — `renderDeckPageToCanvas` still uses it.
-
-- [ ] **Step 2: Replace `renderBoardToCanvas`** with this version (signature gains `title`; grid maths moves to `computeBoardLayout`; fonts load before the title is measured):
-
-```ts
-/**
- * Renders a single board onto a canvas.
- * Board dimensions: 8.5" × 11" (US Letter) at 300 DPI = 2550 × 3300 pixels.
- * A non-blank title is drawn in a band above the grid; the cards shrink to
- * make room so the page margins are unchanged.
- */
-async function renderBoardToCanvas(
-  board: LotteriaCard[],
-  styleOptions: BoardStyleOptions = {},
-  title?: string
-): Promise<HTMLCanvasElement> {
-  const {
-    backgroundColor = '#ffffff',
-    badgeColor = '#ff6b35',
-    labelColor = '#1f2937',
-  } = styleOptions;
-
-  const width = 2550;
-  const height = 3300;
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) {
-    throw new Error('Could not get canvas context');
-  }
-
-  ctx.fillStyle = backgroundColor;
-  ctx.fillRect(0, 0, width, height);
-
-  // Loaded before any text is measured so the title fits against real Jost
-  // metrics, not the fallback font's.
-  await loadGoogleFont(
-    'Caveat',
-    'https://fonts.gstatic.com/s/caveat/v18/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9eIWpYQ.woff2'
-  );
-  await loadGoogleFont(
-    'Jost',
-    'https://fonts.gstatic.com/s/jost/v20/92zPtBhPNqw79Ij1E865zBUv7myjJTVBNIgun_HKOEo.woff2'
-  );
-
-  const titleFont = (fontPx: number) => `normal ${fontPx}px 'Jost', Arial, Helvetica, sans-serif`;
-  // Size against the untitled grid width first; the titled grid is narrower,
-  // so fit again against the final width once the band is known.
-  const measureAtFont = (fontPx: number, s: string) => {
-    ctx.font = titleFont(fontPx);
-    return ctx.measureText(s).width;
-  };
-  const hasTitle = fitBoardTitle({
-    text: title ?? '',
-    maxWidth: width,
-    maxFontPx: BOARD_TITLE_MAX_FONT_PX,
-    minFontPx: BOARD_TITLE_MIN_FONT_PX,
-    measureAtFont,
-  });
-
   const layout = computeBoardLayout({
     width,
     height,
@@ -678,12 +331,17 @@ async function renderBoardToCanvas(
   const { cardWidth, cardHeight, cardSpacing, offsetX, offsetY, titleBand } = layout;
 
   if (titleBand) {
+    const titleFont = (fontPx: number) =>
+      `normal ${fontPx}px 'Jost', Arial, Helvetica, sans-serif`;
     const fit = fitBoardTitle({
       text: title ?? '',
       maxWidth: layout.gridWidth,
       maxFontPx: BOARD_TITLE_MAX_FONT_PX,
       minFontPx: BOARD_TITLE_MIN_FONT_PX,
-      measureAtFont,
+      measureAtFont: (fontPx, s) => {
+        ctx.font = titleFont(fontPx);
+        return ctx.measureText(s).width;
+      },
     });
     if (fit) {
       // Matches the card labels: Jost, uppercase, label colour.
@@ -694,32 +352,15 @@ async function renderBoardToCanvas(
       ctx.fillText(fit.text, width / 2, titleBand.top + titleBand.height / 2);
     }
   }
-
-  const cardImages = await Promise.all(board.map((card) => loadImage(card.illustration)));
-
-  const rows = 4;
-  const cols = 4;
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const cardIndex = row * cols + col;
-      const card = board[cardIndex];
-      const img = cardImages[cardIndex];
-
-      // A partial board (fewer than 16 cards) leaves trailing grid cells empty.
-      if (!card || !img) continue;
-
-      const x = offsetX + col * (cardWidth + cardSpacing);
-      const y = offsetY + row * (cardHeight + cardSpacing);
-
-      drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor }, false, 88);
-    }
-  }
-
-  return canvas;
-}
 ```
 
-- [ ] **Step 3: Add the option to `generateLoteriaSetPdf`** — add the interface above the function and thread it through:
+3. Keep the image loading and the card-drawing loop unchanged, declaring `const rows = 4; const cols = 4;` just above the loop.
+
+Update the doc comment to add: "A non-blank title is drawn in a band above the grid; the cards shrink to make room so the page margins are unchanged."
+
+- [ ] **Step 3: Add the option to `generateLoteriaSetPdf`**
+
+Above the function:
 
 ```ts
 export interface LoteriaSetPdfOptions {
@@ -728,32 +369,19 @@ export interface LoteriaSetPdfOptions {
 }
 ```
 
-Signature becomes:
+Add a trailing param `options: LoteriaSetPdfOptions = {}` after `boardCount`, and change the board-loop render call to:
 
 ```ts
-export async function generateLoteriaSetPdf(
-  cards: LotteriaCard[],
-  styleOptions: BoardStyleOptions = {},
-  onProgress?: (message: string) => void,
-  callerSheetLabels: CallerSheetLabels = { title: 'Caller Sheet' },
-  boardCount: number = DEFAULT_EXPORT_BOARD_COUNT,
-  options: LoteriaSetPdfOptions = {}
-): Promise<Blob> {
-```
-
-and the board loop call becomes:
-
-```ts
-const canvas = await renderBoardToCanvas(boards[i], styleOptions, options.boardTitle);
+    const canvas = await renderBoardToCanvas(boards[i], styleOptions, options.boardTitle);
 ```
 
 Leave `renderDeckPageToCanvas` and `generatePreviewBoardsPdf` untouched.
 
 - [ ] **Step 4: Verify**
 
-Run: `pnpm tsc --noEmit -p . 2>&1 | grep -v '^\.claude/' | head` — expected: no errors in `lib/`.
+Run: `pnpm tsc --noEmit -p . 2>&1 | grep -v '\.claude/' | head` — expected: no errors.
 Run: `pnpm vitest run __tests__/lib/generate-boards.test.ts __tests__/lib/board-layout.test.ts` — expected: PASS.
-Run: `pnpm eslint lib/generate-boards.ts lib/board-layout.ts` — expected: no errors.
+Run: `pnpm eslint lib/generate-boards.ts lib/board-layout.ts` — expected: clean.
 
 - [ ] **Step 5: Commit**
 
