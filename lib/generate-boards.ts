@@ -12,6 +12,13 @@ import {
   MAX_EXPORT_BOARD_COUNT,
   PRINT_SAFE_MARGIN_PX,
 } from '@/lib/constants';
+import {
+  computeBoardLayout,
+  fitBoardTitle,
+  BOARD_TITLE_BAND_PX,
+  BOARD_TITLE_MAX_FONT_PX,
+  BOARD_TITLE_MIN_FONT_PX,
+} from './board-layout';
 
 /**
  * JPEG quality (0–1) used when encoding each rendered page into the PDF.
@@ -387,11 +394,14 @@ function drawCard(
 
 /**
  * Renders a single board onto a canvas.
- * Board dimensions: 8.5" × 11" (US Letter) at 300 DPI = 2550 × 3300 pixels
+ * Board dimensions: 8.5" × 11" (US Letter) at 300 DPI = 2550 × 3300 pixels.
+ * A non-blank title is drawn in a band above the grid; the cards shrink to
+ * make room so the page margins are unchanged.
  */
 async function renderBoardToCanvas(
   board: LotteriaCard[],
-  styleOptions: BoardStyleOptions = {}
+  styleOptions: BoardStyleOptions = {},
+  title?: string
 ): Promise<HTMLCanvasElement> {
   const {
     backgroundColor = '#ffffff',
@@ -413,35 +423,7 @@ async function renderBoardToCanvas(
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
 
-  const rows = 4;
-  const cols = 4;
-  // The 4×4 grid is height-constrained, so this padding is the printed top and
-  // bottom margin verbatim — 0.2" before the print-safe margin was added.
-  const padding = 60 + PRINT_SAFE_MARGIN_PX;
-  const cardSpacing = 20;
-
-  const availableWidth = width - padding * 2 - cardSpacing * (cols - 1);
-  const availableHeight = height - padding * 2 - cardSpacing * (rows - 1);
-
-  const cardAspectRatio = 2 / 3;
-  const maxCardWidth = availableWidth / cols;
-  const maxCardHeight = availableHeight / rows;
-
-  let cardWidth: number;
-  let cardHeight: number;
-  if (maxCardWidth / maxCardHeight < cardAspectRatio) {
-    cardWidth = maxCardWidth;
-    cardHeight = cardWidth / cardAspectRatio;
-  } else {
-    cardHeight = maxCardHeight;
-    cardWidth = cardHeight * cardAspectRatio;
-  }
-
-  const gridWidth = cardWidth * cols + cardSpacing * (cols - 1);
-  const gridHeight = cardHeight * rows + cardSpacing * (rows - 1);
-  const offsetX = (width - gridWidth) / 2;
-  const offsetY = (height - gridHeight) / 2;
-
+  // Loaded before any text is measured so the title fits against real Jost metrics.
   await loadGoogleFont(
     'Caveat',
     'https://fonts.gstatic.com/s/caveat/v18/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9eIWpYQ.woff2'
@@ -451,8 +433,40 @@ async function renderBoardToCanvas(
     'https://fonts.gstatic.com/s/jost/v20/92zPtBhPNqw79Ij1E865zBUv7myjJTVBNIgun_HKOEo.woff2'
   );
 
+  const hasTitle = (title ?? '').trim() !== '';
+  const layout = computeBoardLayout({
+    width,
+    height,
+    titleBandHeight: hasTitle ? BOARD_TITLE_BAND_PX : 0,
+  });
+  const { cardWidth, cardHeight, cardSpacing, offsetX, offsetY, titleBand } = layout;
+
+  if (titleBand) {
+    const titleFont = (fontPx: number) => `normal ${fontPx}px 'Jost', Arial, Helvetica, sans-serif`;
+    const fit = fitBoardTitle({
+      text: title ?? '',
+      maxWidth: layout.gridWidth,
+      maxFontPx: BOARD_TITLE_MAX_FONT_PX,
+      minFontPx: BOARD_TITLE_MIN_FONT_PX,
+      measureAtFont: (fontPx, s) => {
+        ctx.font = titleFont(fontPx);
+        return ctx.measureText(s).width;
+      },
+    });
+    if (fit) {
+      // Matches the card labels: Jost, uppercase, label colour.
+      ctx.fillStyle = labelColor;
+      ctx.font = titleFont(fit.fontPx);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(fit.text, width / 2, titleBand.top + titleBand.height / 2);
+    }
+  }
+
   const cardImages = await Promise.all(board.map((card) => loadImage(card.illustration)));
 
+  const rows = 4;
+  const cols = 4;
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const cardIndex = row * cols + col;
@@ -581,6 +595,11 @@ async function renderDeckPageToCanvas(
   return canvas;
 }
 
+export interface LoteriaSetPdfOptions {
+  /** Printed at the top of every player board page when non-blank. */
+  boardTitle?: string;
+}
+
 /**
  * Generates a complete Loteria set (the requested number of boards + deck pages)
  * as a single multi-page PDF
@@ -590,7 +609,8 @@ export async function generateLoteriaSetPdf(
   styleOptions: BoardStyleOptions = {},
   onProgress?: (message: string) => void,
   callerSheetLabels: CallerSheetLabels = { title: 'Caller Sheet' },
-  boardCount: number = DEFAULT_EXPORT_BOARD_COUNT
+  boardCount: number = DEFAULT_EXPORT_BOARD_COUNT,
+  options: LoteriaSetPdfOptions = {}
 ): Promise<Blob> {
   const boards = generateBoards(cards, clampBoardCount(boardCount));
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'in', format: 'letter' });
@@ -599,7 +619,7 @@ export async function generateLoteriaSetPdf(
   for (let i = 0; i < boards.length; i++) {
     onProgress?.(`Generating board ${i + 1} of ${boards.length}…`);
     if (i > 0) pdf.addPage('letter', 'portrait');
-    const canvas = await renderBoardToCanvas(boards[i], styleOptions);
+    const canvas = await renderBoardToCanvas(boards[i], styleOptions, options.boardTitle);
     const imgData = canvas.toDataURL('image/jpeg', PDF_PAGE_JPEG_QUALITY);
     pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
   }
