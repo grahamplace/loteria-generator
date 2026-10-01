@@ -52,6 +52,8 @@ export function AdminBoardCardsGrid({
                 ...c,
                 status,
                 illustrationUrl: illustrationUrl ?? c.illustrationUrl,
+                // Changes the versioned image src so the new image is fetched.
+                updatedAt: new Date(),
                 errorMessage: errorMessage === undefined ? c.errorMessage : errorMessage,
               }
             : c

@@ -7,11 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import { cardImageProps, CARD_DETAIL_THUMB_WIDTH } from '@/lib/card-image';
+import { adminCardProxySrc } from '@/lib/admin-card-image';
 import Link from 'next/link';
 import { Grid2X2 } from 'lucide-react';
 import { RegenerateButton } from '../../components/regenerate-button';
 import { RecropButton } from '../../components/recrop-button';
 import { ReplaceIllustrationButton } from '../../components/replace-illustration-button';
+import { UseOriginalButton } from '../../components/use-original-button';
 
 async function getCardWithContext(cardId: string) {
   const result = await db
@@ -73,7 +75,11 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
                 </Link>
               </Button>
               {card.originalImageUrl && (
-                <RegenerateButton cardId={card.id} initialOverlay={card.promptOverlay} />
+                <RegenerateButton
+                  cardId={card.id}
+                  boardId={card.boardId}
+                  initialOverlay={card.promptOverlay}
+                />
               )}
               {card.preserveOriginal && card.originalImageUrl && (
                 <RecropButton
@@ -81,6 +87,9 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
                   boardId={card.boardId}
                   initialCrop={card.cropData ?? null}
                 />
+              )}
+              {!card.isDefault && card.originalImageUrl && !card.preserveOriginal && (
+                <UseOriginalButton cardId={card.id} />
               )}
               {!card.isDefault && <ReplaceIllustrationButton cardId={card.id} />}
               <StatusBadge status={card.status} />
@@ -130,7 +139,7 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
                 <div className="relative aspect-[2/3] overflow-hidden rounded border border-border bg-muted">
                   <Image
                     {...cardImageProps(
-                      `/api/admin/images/${card.id}/original`,
+                      adminCardProxySrc(card.id, 'original', card.updatedAt),
                       CARD_DETAIL_THUMB_WIDTH
                     )}
                     alt="Original upload"
@@ -164,7 +173,7 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
                     {...cardImageProps(
                       card.isDefault
                         ? card.illustrationUrl
-                        : `/api/admin/images/${card.id}/illustration`,
+                        : adminCardProxySrc(card.id, 'illustration', card.updatedAt),
                       CARD_DETAIL_THUMB_WIDTH
                     )}
                     alt="AI illustration"

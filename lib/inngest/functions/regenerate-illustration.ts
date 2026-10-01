@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db, cards } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
 import { normalizeImageForOpenAI } from '@/lib/image-normalize';
+import { extractCrop } from '@/lib/crop-region';
 import { inngest } from '../client';
 import { illustrationRegenerateRequested } from '../events';
 import { cardChannel, boardChannel } from '../channels';
@@ -57,6 +58,13 @@ export const regenerateIllustration = inngest.createFunction(
       status: 'processing',
     });
 
+    // Read from the row rather than the event so every sender (admin
+    // regenerate, retry-failed) gets the same crop.
+    const cropData = await step.run('load-crop', async () => {
+      const card = await db.query.cards.findFirst({ where: eq(cards.id, cardId) });
+      return card?.cropData ?? null;
+    });
+
     const illustrationUrl = await step.run('generate-and-upload-illustration', async () => {
       const { buffer, contentType } = await fetchBlob(originalImageUrl);
       if (!OPENAI_IMAGE_MIME_TO_EXT[contentType]) {
@@ -64,7 +72,10 @@ export const regenerateIllustration = inngest.createFunction(
           `Unsupported image format "${contentType}". Please upload PNG, JPEG, WebP, or GIF.`
         );
       }
-      const normalized = await normalizeImageForOpenAI(buffer);
+      // Crop before AI, as generate-card-artwork does. The AI drawing is then
+      // served as-is, so it must not stay marked preserveOriginal (below).
+      const sourceBuffer = cropData ? await extractCrop(buffer, cropData) : buffer;
+      const normalized = await normalizeImageForOpenAI(sourceBuffer);
       const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
       const illustrationModel =
         process.env.NODE_ENV === 'production' ? 'gpt-image-2' : 'gpt-image-1-mini';
@@ -92,6 +103,8 @@ export const regenerateIllustration = inngest.createFunction(
           illustrationUrl,
           status: 'completed',
           errorMessage: null,
+          // cropData is kept so "Use original photo" can restore the same crop.
+          preserveOriginal: false,
           updatedAt: new Date(),
         })
         .where(eq(cards.id, cardId));

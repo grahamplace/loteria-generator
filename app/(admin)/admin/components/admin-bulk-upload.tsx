@@ -18,6 +18,8 @@ interface FileItem {
   status: FileStatus;
   error?: string;
   crop?: PixelRect;
+  // Use the photo as-is instead of turning it into an AI drawing.
+  keepPhoto: boolean;
   previewUrl: string;
 }
 
@@ -54,11 +56,24 @@ export function AdminBulkUpload() {
           file,
           label: filenameToLabel(file.name),
           status: 'pending' as const,
+          keepPhoto: !reIllustrate,
           previewUrl: URL.createObjectURL(file),
         }));
     });
     setError(null);
     setResult(null);
+  }
+
+  // The batch checkbox sets every image; per-image toggles override it after.
+  function setReIllustrateAll(checked: boolean) {
+    setReIllustrate(checked);
+    setItems((prev) => prev.map((it) => ({ ...it, keepPhoto: !checked })));
+  }
+
+  function toggleKeepPhoto(index: number) {
+    setItems((prev) =>
+      prev.map((it, idx) => (idx === index ? { ...it, keepPhoto: !it.keepPhoto } : it))
+    );
   }
 
   function saveCrop(rect: PixelRect) {
@@ -86,7 +101,6 @@ export function AdminBulkUpload() {
       return;
     }
 
-    const skipIllustration = !reIllustrate;
     let succeeded = 0;
     for (let i = 0; i < items.length; i++) {
       setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, status: 'uploading' } : it)));
@@ -101,7 +115,7 @@ export function AdminBulkUpload() {
           originalImageBase64: dataUrl,
           label,
           skipLabeling,
-          skipIllustration,
+          skipIllustration: item.keepPhoto,
           cropData,
         });
         // Vercel answers an oversized body with a bare 413 before our handler
@@ -141,6 +155,7 @@ export function AdminBulkUpload() {
   }
 
   const failed = items.filter((it) => it.status === 'error');
+  const photoCount = items.filter((it) => it.keepPhoto).length;
 
   return (
     <section className="mb-8 rounded-lg border border-foreground/10 bg-background p-4 shadow-sm">
@@ -160,14 +175,21 @@ export function AdminBulkUpload() {
         />
       </div>
 
-      <label className="mb-2 flex items-center gap-2 text-sm text-foreground">
-        <input
-          type="checkbox"
-          checked={reIllustrate}
-          onChange={(e) => setReIllustrate(e.target.checked)}
-        />
-        Re-illustrate with AI
-      </label>
+      <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <label className="flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={reIllustrate}
+            onChange={(e) => setReIllustrateAll(e.target.checked)}
+          />
+          Re-illustrate with AI
+        </label>
+        {items.length > 0 && (
+          <span className="text-xs text-foreground/60 [font-variant-numeric:tabular-nums]">
+            {items.length - photoCount} AI · {photoCount} photo
+          </span>
+        )}
+      </div>
 
       <label className="mb-3 flex items-center gap-2 text-sm text-foreground">
         <input
@@ -191,34 +213,58 @@ export function AdminBulkUpload() {
       {items.length > 0 && (
         <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
           {items.map((it, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => setCropIndex(idx)}
-              className="group relative overflow-hidden rounded-md border border-foreground/10 focus-visible:outline-2 focus-visible:outline-primary"
-              style={{ touchAction: 'manipulation' }}
-              title={it.error ? `${it.file.name} — ${it.error}` : `${it.file.name} — click to crop`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={it.previewUrl}
-                alt={it.file.name}
-                className="aspect-[2/3] w-full object-cover"
-              />
-              {it.crop && (
-                <span className="absolute left-1 top-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                  cropped
+            <div key={idx} className="flex min-w-0 flex-col gap-1">
+              <button
+                type="button"
+                onClick={() => setCropIndex(idx)}
+                className="group relative overflow-hidden rounded-md border border-foreground/10 focus-visible:outline-2 focus-visible:outline-primary"
+                style={{ touchAction: 'manipulation' }}
+                title={
+                  it.error ? `${it.file.name} — ${it.error}` : `${it.file.name} — click to crop`
+                }
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={it.previewUrl}
+                  alt={it.file.name}
+                  className="aspect-[2/3] w-full object-cover"
+                />
+                {it.crop && (
+                  <span className="absolute left-1 top-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                    cropped
+                  </span>
+                )}
+                {it.status === 'error' ? (
+                  <span className="absolute right-1 top-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                    failed
+                  </span>
+                ) : (
+                  it.keepPhoto && (
+                    <span className="absolute right-1 top-1 rounded bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                      photo
+                    </span>
+                  )
+                )}
+                <span className="absolute inset-x-0 bottom-0 truncate bg-black/50 px-1 py-0.5 text-[10px] text-white">
+                  {useFilenameLabels ? it.label || '(AI label)' : '(AI label)'} · {it.status}
                 </span>
-              )}
-              {it.status === 'error' && (
-                <span className="absolute right-1 top-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                  failed
-                </span>
-              )}
-              <span className="absolute inset-x-0 bottom-0 truncate bg-black/50 px-1 py-0.5 text-[10px] text-white">
-                {useFilenameLabels ? it.label || '(AI label)' : '(AI label)'} · {it.status}
-              </span>
-            </button>
+              </button>
+              <button
+                type="button"
+                aria-pressed={it.keepPhoto}
+                aria-label={`Keep as photo: ${it.file.name}`}
+                onClick={() => toggleKeepPhoto(idx)}
+                disabled={submitting}
+                className={`min-h-6 rounded-md border px-2 py-1 text-xs font-medium focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50 ${
+                  it.keepPhoto
+                    ? 'border-accent bg-accent/10 text-accent'
+                    : 'border-foreground/20 text-foreground/70 hover:bg-foreground/5'
+                }`}
+                style={{ touchAction: 'manipulation' }}
+              >
+                {it.keepPhoto ? 'Photo' : 'AI drawing'}
+              </button>
+            </div>
           ))}
         </div>
       )}
