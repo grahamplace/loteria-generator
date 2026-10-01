@@ -126,6 +126,50 @@ describe('AdminBulkUpload', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  describe('per-image illustration choice', () => {
+    function sentSkipIllustration(fetchMock: ReturnType<typeof vi.fn>) {
+      // Call 0 creates the board; each later call is one card.
+      return fetchMock.mock.calls
+        .slice(1)
+        .map((call) => JSON.parse((call[1] as RequestInit).body as string).skipIllustration);
+    }
+
+    it('starts every image on the batch default (photo when re-illustrate is off)', () => {
+      render(<AdminBulkUpload />);
+      selectFiles('a.jpg', 'b.jpg');
+      const toggles = screen.getAllByRole('button', { name: /keep as photo/i });
+      expect(toggles).toHaveLength(2);
+      toggles.forEach((t) => expect(t).toHaveAttribute('aria-pressed', 'true'));
+    });
+
+    it('sends skipIllustration per image when one is switched to a photo', async () => {
+      const fetchMock = mockFetch([
+        { status: 201, json: { card: {} } },
+        { status: 201, json: { card: {} } },
+        { status: 201, json: { card: {} } },
+      ]);
+      render(<AdminBulkUpload />);
+      fireEvent.click(screen.getByRole('checkbox', { name: /re-illustrate with ai/i }));
+      selectFiles('a.jpg', 'b.jpg', 'c.jpg');
+      fireEvent.click(screen.getAllByRole('button', { name: /keep as photo/i })[1]);
+      clickCreate();
+
+      await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/boards/b1'));
+      expect(sentSkipIllustration(fetchMock)).toEqual([false, true, false]);
+    });
+
+    it('resets every image when the batch checkbox changes', () => {
+      render(<AdminBulkUpload />);
+      selectFiles('a.jpg', 'b.jpg');
+      fireEvent.click(screen.getAllByRole('button', { name: /keep as photo/i })[0]);
+      fireEvent.click(screen.getByRole('checkbox', { name: /re-illustrate with ai/i }));
+      screen
+        .getAllByRole('button', { name: /keep as photo/i })
+        .forEach((t) => expect(t).toHaveAttribute('aria-pressed', 'false'));
+      expect(screen.getByText('2 AI · 0 photo')).toBeInTheDocument();
+    });
+  });
+
   it('shows the API validation message for a rejected image', async () => {
     mockFetch([
       {
