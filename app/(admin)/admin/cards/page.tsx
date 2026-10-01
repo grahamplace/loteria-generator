@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AdminBreadcrumb } from '../components/admin-breadcrumb';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
+import { adminCardProxySrc } from '@/lib/admin-card-image';
 
 const PAGE_SIZE = 20;
 
@@ -24,6 +25,7 @@ async function getCardsPage(page: number) {
         label: cards.label,
         status: cards.status,
         createdAt: cards.createdAt,
+        updatedAt: cards.updatedAt,
         boardId: boards.id,
         boardName: boards.name,
         ownerEmail: user.email,
@@ -94,7 +96,7 @@ export default async function AdminCardsPage({
                       <div className="relative aspect-[2/3] overflow-hidden rounded border border-border bg-muted">
                         <Image
                           {...cardImageProps(
-                            `/api/admin/images/${card.id}/original`,
+                            adminCardProxySrc(card.id, 'original', card.updatedAt),
                             CARD_GRID_THUMB_WIDTH
                           )}
                           alt={`Original upload for card #${card.number}`}
@@ -111,7 +113,7 @@ export default async function AdminCardsPage({
                       <div className="relative aspect-[2/3] overflow-hidden rounded border border-border bg-muted">
                         <Image
                           {...cardImageProps(
-                            `/api/admin/images/${card.id}/illustration`,
+                            adminCardProxySrc(card.id, 'illustration', card.updatedAt),
                             CARD_GRID_THUMB_WIDTH
                           )}
                           alt={`AI illustration for card #${card.number}`}
