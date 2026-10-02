@@ -14,6 +14,16 @@ vi.mock('@/app/(admin)/admin/components/image-crop-modal', () => ({
 // jsdom has no createImageBitmap/canvas, so stub the resize step.
 vi.mock('@/lib/downscale-image', () => ({ downscaleToDataUrl: vi.fn() }));
 
+// Keep the real retry logic but skip its waits so tests stay fast.
+vi.mock('@/lib/fetch-with-retry', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/fetch-with-retry')>();
+  return {
+    ...actual,
+    fetchWithRetry: (input: RequestInfo | URL, init?: RequestInit) =>
+      actual.fetchWithRetry(input, init, { delaysMs: [0, 0] }),
+  };
+});
+
 const SMALL_DATA_URL = 'data:image/jpeg;base64,AAAA';
 
 beforeEach(() => {
@@ -168,6 +178,33 @@ describe('AdminBulkUpload', () => {
         .forEach((t) => expect(t).toHaveAttribute('aria-pressed', 'false'));
       expect(screen.getByText('2 AI · 0 photo')).toBeInTheDocument();
     });
+  });
+
+  it('retries a card whose connection dropped and still redirects', async () => {
+    const fetchMock = mockFetch([]);
+    fetchMock
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ card: {} }) });
+    render(<AdminBulkUpload />);
+    selectFiles('The Groom.jpg');
+    clickCreate();
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/boards/b1'));
+    // Board, then the dropped card attempt, then its retry.
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('reports the file once every retry of a dropped connection fails', async () => {
+    const fetchMock = mockFetch([]);
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+    render(<AdminBulkUpload />);
+    selectFiles('The Groom.jpg');
+    clickCreate();
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('The Groom.jpg: Failed to fetch');
+    // Board, then the first card attempt plus two retries.
+    expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
   it('shows the API validation message for a rejected image', async () => {

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { filenameToLabel } from '@/lib/filename-label';
 import { type PixelRect } from '@/lib/crop-image';
 import { downscaleToDataUrl } from '@/lib/downscale-image';
+import { fetchWithRetry } from '@/lib/fetch-with-retry';
 import { scaleRect } from '@/lib/crop-math';
 import { describeUploadFailure, requestBodyLimitError } from '@/lib/upload-limits';
 import { ImageCropModal } from './image-crop-modal';
@@ -122,7 +123,9 @@ export function AdminBulkUpload() {
         // runs. Check first so the failure names the size instead.
         const sizeError = requestBodyLimitError(new Blob([body]).size);
         if (sizeError) throw new Error(sizeError);
-        const res = await fetch(`/api/boards/${boardId}/cards`, {
+        // A long batch is likely to hit a Wi-Fi blip somewhere; retry dropped
+        // connections so one blip doesn't lose the card.
+        const res = await fetchWithRetry(`/api/boards/${boardId}/cards`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body,
