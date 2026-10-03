@@ -1,5 +1,6 @@
 import { requireAdmin } from '@/lib/admin';
 import { fontVariables } from '@/lib/fonts';
+import { Toaster } from '@/components/ui/sonner';
 import { AdminSidebar } from './admin/components/admin-sidebar';
 
 export const metadata = {
@@ -16,6 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <AdminSidebar email={session.user.email} />
           <main className="min-h-screen p-4 md:ml-56 md:p-6">{children}</main>
         </div>
+        <Toaster />
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { Card, CardStatus } from '@/db/schema';
@@ -509,18 +509,45 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
     [boardId, fetchCards]
   );
 
-  const reorderCards = useCallback((startIndex: number, endIndex: number) => {
-    setCards((prev) => {
-      const result = Array.from(prev);
-      const [removed] = result.splice(startIndex, 1);
-      result.splice(endIndex, 0, removed);
+  // Reorder saves run one at a time so a quick second drag can't land on the
+  // server before the first and leave the older order persisted.
+  const reorderQueue = useRef<Promise<void>>(Promise.resolve());
 
-      return result.map((card, index) => ({
-        ...card,
-        number: index + 1,
-      }));
-    });
-  }, []);
+  const reorderCards = useCallback(
+    (startIndex: number, endIndex: number) => {
+      const moveCard = (list: BoardCard[]) => {
+        const result = Array.from(list);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+        return result.map((card, index) => ({ ...card, number: index + 1 }));
+      };
+
+      setCards(moveCard);
+
+      // Temp cards aren't on the server yet; the server keeps any card the
+      // request omits, so leaving them out is safe.
+      const cardIds = moveCard(cards)
+        .map((c) => c.id)
+        .filter((id) => !id.startsWith('temp-'));
+
+      reorderQueue.current = reorderQueue.current.then(async () => {
+        try {
+          const response = await fetch(`/api/boards/${boardId}/cards/order`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cardIds }),
+          });
+          if (!response.ok) {
+            throw new Error('Failed to save card order');
+          }
+        } catch {
+          toast.error('Failed to save card order');
+          await fetchCards();
+        }
+      });
+    },
+    [boardId, cards, fetchCards]
+  );
 
   const applyStreamCompletion = useCallback(
     async (cardId: string, data: { label: string; illustrationUrl: string }) => {
