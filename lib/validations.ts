@@ -74,3 +74,8 @@ export const addDefaultCardsSchema = z.object({
 export const reorderCardsSchema = z.object({
   cardIds: z.array(z.string().uuid()).max(200),
 });
+
+// PUT /api/admin/cards/[cardId]/label
+export const adminCardLabelSchema = z.object({
+  label: z.string().trim().min(1, 'Label is required').max(200),
+});

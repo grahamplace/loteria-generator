@@ -14,6 +14,7 @@ import { RegenerateButton } from '../../components/regenerate-button';
 import { RecropButton } from '../../components/recrop-button';
 import { ReplaceIllustrationButton } from '../../components/replace-illustration-button';
 import { UseOriginalButton } from '../../components/use-original-button';
+import { EditLabelButton } from '../../components/edit-label-button';
 
 async function getCardWithContext(cardId: string) {
   const result = await db
@@ -74,6 +75,7 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
                   View Board
                 </Link>
               </Button>
+              <EditLabelButton cardId={card.id} cardNumber={card.number} label={card.label} />
               {card.originalImageUrl && (
                 <RegenerateButton
                   cardId={card.id}
