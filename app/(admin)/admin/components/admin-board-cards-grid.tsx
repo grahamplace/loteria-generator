@@ -30,6 +30,7 @@ import { getAdminBoardRealtimeToken } from '@/app/actions/admin-board-realtime';
 import { adminCardImageSrc } from '@/lib/admin-card-image';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import type { Card } from '@/db/schema';
+import { EditLabelButton } from './edit-label-button';
 
 export function AdminBoardCardsGrid({
   boardId,
@@ -150,7 +151,13 @@ export function AdminBoardCardsGrid({
           <SortableContext items={cards.map((c) => c.id)} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8">
               {cards.map((card) => (
-                <SortableAdminCard key={card.id} card={card} />
+                <SortableAdminCard
+                  key={card.id}
+                  card={card}
+                  onLabelSaved={(label) =>
+                    setCards((prev) => prev.map((c) => (c.id === card.id ? { ...c, label } : c)))
+                  }
+                />
               ))}
             </div>
           </SortableContext>
@@ -160,7 +167,13 @@ export function AdminBoardCardsGrid({
   );
 }
 
-function SortableAdminCard({ card }: { card: Card }) {
+function SortableAdminCard({
+  card,
+  onLabelSaved,
+}: {
+  card: Card;
+  onLabelSaved: (label: string) => void;
+}) {
   const {
     attributes,
     listeners,
@@ -227,6 +240,14 @@ function SortableAdminCard({ card }: { card: Card }) {
       >
         <GripVertical className="size-4" aria-hidden="true" />
       </button>
+      <EditLabelButton
+        cardId={card.id}
+        cardNumber={card.number}
+        label={card.label}
+        variant="icon"
+        className="absolute right-3 top-3"
+        onSaved={onLabelSaved}
+      />
     </div>
   );
 }
