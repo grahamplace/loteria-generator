@@ -32,7 +32,8 @@ Photos are sourced from Unsplash ([Unsplash License](https://unsplash.com/licens
 These feed `scripts/example-images/generate-default-cards.ts` to produce the
 classic Lotería webps in `public/default-cards/`. Sources are user-supplied
 scans of traditional Lotería card art (with the exception of `la-rosa.jpg`,
-the original seed photo). The script pipes each through `gpt-image-1.5` with
+the original seed photo). The script pipes each through `ILLUSTRATION_MODEL`
+(currently `gpt-image-2`; the committed webps were made with `gpt-image-1.5`) with
 the production `ILLUSTRATION_PROMPT`, which restyles them into the app's
 illustrated look while preserving subject and composition.
 

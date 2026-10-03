@@ -8,7 +8,7 @@ import { inngest } from '../client';
 import { illustrationRegenerateRequested } from '../events';
 import { cardChannel, boardChannel } from '../channels';
 import { OPENAI_IMAGE_MIME_TO_EXT } from './generate-card-artwork';
-import { buildIllustrationPrompt } from '@/lib/illustration-prompt';
+import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
 
@@ -77,8 +77,7 @@ export const regenerateIllustration = inngest.createFunction(
       const sourceBuffer = cropData ? await extractCrop(buffer, cropData) : buffer;
       const normalized = await normalizeImageForOpenAI(sourceBuffer);
       const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
-      const illustrationModel =
-        process.env.NODE_ENV === 'production' ? 'gpt-image-2' : 'gpt-image-1-mini';
+      const illustrationModel = ILLUSTRATION_MODEL;
       const result = await withAITrace(
         'regenerate-illustration',
         { userId, boardId, cardId, model: illustrationModel },
