@@ -69,3 +69,8 @@ export const replaceIllustrationSchema = z.object({
 export const addDefaultCardsSchema = z.object({
   defaultCardIds: z.array(z.string().min(1)).min(1).max(54),
 });
+
+// PUT /api/boards/[boardId]/cards/order
+export const reorderCardsSchema = z.object({
+  cardIds: z.array(z.string().uuid()).max(200),
+});
