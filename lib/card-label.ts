@@ -1,5 +1,24 @@
 import { z } from 'zod';
-import type { ResponseFormatJSONSchema } from 'openai/resources/shared';
+import type { ReasoningEffort, ResponseFormatJSONSchema } from 'openai/resources/shared';
+
+// gpt-6-luna made zero article/gender errors across the 52 classic cards
+// ("El Arpa", "El Corazón"); gpt-5-nano got ~4 wrong ("La Arpa"). It rejects
+// reasoning_effort 'minimal', so use 'none'.
+export const LABEL_MODEL = 'gpt-6-luna';
+export const LABEL_REASONING_EFFORT: ReasoningEffort = 'none';
+
+export const LABEL_SYSTEM_PROMPT =
+  'You are an expert in Mexican culture and Loteria cards. Generate authentic Loteria-style labels in Spanish.';
+
+export const LABEL_USER_PROMPT = `Based on this image, generate a short Spanish word or phrase that would be perfect as a label for a Mexican Loteria card.
+
+The label should be:
+- 1-3 words maximum
+- A noun or simple phrase
+- Appropriate for a traditional Loteria card game
+- In Spanish
+
+Respond with JSON containing only the label, e.g. {"label": "La Luna"}. Example labels: "El Diablo", "La Luna", "El Corazón"`;
 
 // Classic Lotería names top out around 12 characters and 2 words ("La
 // Escalera"); these limits leave headroom while rejecting the model's

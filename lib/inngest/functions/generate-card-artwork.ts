@@ -18,24 +18,18 @@ import { cardGenerateRequested } from '../events';
 import { cardChannel, boardChannel } from '../channels';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
-import { LABEL_RESPONSE_FORMAT, parseLabelResponse } from '@/lib/card-label';
+import {
+  LABEL_MODEL,
+  LABEL_REASONING_EFFORT,
+  LABEL_RESPONSE_FORMAT,
+  LABEL_SYSTEM_PROMPT,
+  LABEL_USER_PROMPT,
+  parseLabelResponse,
+} from '@/lib/card-label';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const LABEL_SYSTEM_PROMPT =
-  'You are an expert in Mexican culture and Loteria cards. Generate authentic Loteria-style labels in Spanish.';
-
-const LABEL_USER_PROMPT = `Based on this image, generate a short Spanish word or phrase that would be perfect as a label for a Mexican Loteria card.
-
-The label should be:
-- 1-3 words maximum
-- A noun or simple phrase
-- Appropriate for a traditional Loteria card game
-- In Spanish
-
-Respond with JSON containing only the label, e.g. {"label": "La Luna"}. Example labels: "El Diablo", "La Luna", "El Corazón"`;
 
 const LABEL_MAX_ATTEMPTS = 3;
 
@@ -92,7 +86,7 @@ export const generateCardArtwork = inngest.createFunction(
         const { buffer, contentType } = await fetchBlob(originalImageUrl);
         const mime = OPENAI_IMAGE_MIME_TO_EXT[contentType] ? contentType : 'image/png';
         const base64 = buffer.toString('base64');
-        const labelModel = 'gpt-5-nano-2025-08-07';
+        const labelModel = LABEL_MODEL;
         const rejected: (string | null)[] = [];
 
         for (let attempt = 1; attempt <= LABEL_MAX_ATTEMPTS; attempt++) {
@@ -117,7 +111,7 @@ export const generateCardArtwork = inngest.createFunction(
                 ],
                 response_format: LABEL_RESPONSE_FORMAT,
                 max_completion_tokens: 500,
-                reasoning_effort: 'minimal',
+                reasoning_effort: LABEL_REASONING_EFFORT,
               })
           );
           const choice = result.choices[0];
