@@ -2,7 +2,7 @@ import OpenAI, { toFile } from 'openai';
 import { eq, sql } from 'drizzle-orm';
 import { db, boards, cards } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
-import { buildIllustrationPrompt } from '@/lib/illustration-prompt';
+import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
 import { normalizeImageForOpenAI } from '@/lib/image-normalize';
 import { extractCrop } from '@/lib/crop-region';
 
@@ -150,8 +150,7 @@ export const generateCardArtwork = inngest.createFunction(
         const sourceBuffer = cropData ? await extractCrop(buffer, cropData) : buffer;
         const normalized = await normalizeImageForOpenAI(sourceBuffer);
         const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
-        const illustrationModel =
-          process.env.NODE_ENV === 'production' ? 'gpt-image-2' : 'gpt-image-1-mini';
+        const illustrationModel = ILLUSTRATION_MODEL;
         const result = await withAITrace(
           'generate-illustration',
           { userId, boardId, cardId, model: illustrationModel },

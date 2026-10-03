@@ -1,6 +1,6 @@
 // Generates the default ("classic") Lotería card illustrations from
 // scripts/example-images/source-photos/<stem>.jpg using the production
-// gpt-image-1.5 pipeline. Outputs to scripts/example-images/illustrations/
+// image pipeline (ILLUSTRATION_MODEL). Outputs to scripts/example-images/illustrations/
 // <stem>.png. Idempotent — skips stems whose output already exists.
 //
 // After running this, convert each PNG → webp at 600x900 and place at
@@ -11,7 +11,7 @@ import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import OpenAI, { toFile } from 'openai';
-import { ILLUSTRATION_PROMPT } from '../../lib/illustration-prompt';
+import { ILLUSTRATION_MODEL, ILLUSTRATION_PROMPT } from '../../lib/illustration-prompt';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE_DIR = join(__dirname, 'source-photos');
@@ -102,7 +102,7 @@ async function processOne(stem: string) {
   const file = await toFile(buffer, `${stem}.jpg`, { type: 'image/jpeg' });
   const start = Date.now();
   const result = await openai.images.edit({
-    model: 'gpt-image-1.5',
+    model: ILLUSTRATION_MODEL,
     image: file,
     prompt: ILLUSTRATION_PROMPT,
     size: '1024x1536',

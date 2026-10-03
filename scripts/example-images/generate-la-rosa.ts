@@ -5,7 +5,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import OpenAI, { toFile } from 'openai';
-import { ILLUSTRATION_PROMPT } from '../../lib/illustration-prompt';
+import { ILLUSTRATION_MODEL, ILLUSTRATION_PROMPT } from '../../lib/illustration-prompt';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE = join(__dirname, 'source-photos/la-rosa.jpg');
@@ -26,7 +26,7 @@ async function main() {
   console.log('Generating la-rosa illustration…');
   const start = Date.now();
   const result = await openai.images.edit({
-    model: 'gpt-image-1.5',
+    model: ILLUSTRATION_MODEL,
     image: file,
     prompt: ILLUSTRATION_PROMPT,
     size: '1024x1536',

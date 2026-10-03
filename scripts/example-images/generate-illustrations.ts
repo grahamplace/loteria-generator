@@ -23,7 +23,15 @@ import { join, dirname, basename, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import OpenAI, { toFile } from 'openai';
-import { ILLUSTRATION_PROMPT } from '../../lib/illustration-prompt';
+import { ILLUSTRATION_MODEL, ILLUSTRATION_PROMPT } from '../../lib/illustration-prompt';
+import {
+  LABEL_MODEL,
+  LABEL_REASONING_EFFORT,
+  LABEL_RESPONSE_FORMAT,
+  LABEL_SYSTEM_PROMPT,
+  LABEL_USER_PROMPT,
+  parseLabelResponse,
+} from '../../lib/card-label';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE_DIR = join(__dirname, 'source-photos');
@@ -45,19 +53,6 @@ const MIME_BY_EXT: Record<string, string> = {
   '.png': 'image/png',
   '.webp': 'image/webp',
 };
-
-const LABEL_SYSTEM_PROMPT =
-  'You are an expert in Mexican culture and Loteria cards. Generate authentic Loteria-style labels in Spanish.';
-
-const LABEL_USER_PROMPT = `Based on this image, generate a short Spanish word or phrase that would be perfect as a label for a Mexican Loteria card.
-
-The label should be:
-- 1-3 words maximum
-- A noun or simple phrase
-- Appropriate for a traditional Loteria card game
-- In Spanish
-
-Return ONLY the Spanish label, nothing else. Example labels: "El Diablo", "La Luna", "El Corazón"`;
 
 type ManifestEntry = {
   source: string;
@@ -88,28 +83,37 @@ async function saveManifest(entries: Record<string, ManifestEntry>): Promise<voi
 
 async function generateLabel(buffer: Buffer, mime: string): Promise<string> {
   const base64 = buffer.toString('base64');
-  const result = await openai.chat.completions.create({
-    model: 'gpt-5-nano-2025-08-07',
-    messages: [
-      { role: 'system', content: LABEL_SYSTEM_PROMPT },
-      {
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: `data:${mime};base64,${base64}` } },
-          { type: 'text', text: LABEL_USER_PROMPT },
-        ],
-      },
-    ],
-    max_completion_tokens: 500,
-    reasoning_effort: 'minimal',
-  });
-  return result.choices[0]?.message?.content?.trim() ?? '';
+  // Same model, prompt and validation as the production label job.
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const result = await openai.chat.completions.create({
+      model: LABEL_MODEL,
+      messages: [
+        { role: 'system', content: LABEL_SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:${mime};base64,${base64}` } },
+            { type: 'text', text: LABEL_USER_PROMPT },
+          ],
+        },
+      ],
+      response_format: LABEL_RESPONSE_FORMAT,
+      max_completion_tokens: 500,
+      reasoning_effort: LABEL_REASONING_EFFORT,
+    });
+    const choice = result.choices[0];
+    const label =
+      choice?.finish_reason === 'length' ? null : parseLabelResponse(choice?.message.content);
+    if (label) return label;
+    console.warn(`  invalid label (attempt ${attempt}): ${choice?.message.content}`);
+  }
+  throw new Error('No valid label after 3 attempts');
 }
 
 async function generateIllustration(buffer: Buffer, mime: string, ext: string): Promise<Buffer> {
   const imageFile = await toFile(buffer, `image${ext}`, { type: mime });
   const result = await openai.images.edit({
-    model: 'gpt-image-1.5',
+    model: ILLUSTRATION_MODEL,
     image: imageFile,
     prompt: ILLUSTRATION_PROMPT,
     size: '1024x1536',

@@ -1,3 +1,6 @@
+/** Image model for every card illustration: app jobs and example-image scripts. */
+export const ILLUSTRATION_MODEL = 'gpt-image-2';
+
 export type BackgroundColor = {
   /** Human-readable name rendered into the prompt instruction. */
   name: string;
