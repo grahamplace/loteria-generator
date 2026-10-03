@@ -111,7 +111,7 @@ describe('generate-card-artwork skipLabeling', () => {
   });
 
   it('runs AI labeling and persists the AI label when skipLabeling is falsy', async () => {
-    chatCreate.mockResolvedValue({ choices: [{ message: { content: 'La Luna' } }] });
+    chatCreate.mockResolvedValue({ choices: [{ message: { content: '{"label":"La Luna"}' } }] });
     const { runNames, step } = makeStep();
 
     await captured.handler!({
@@ -135,7 +135,7 @@ describe('generate-card-artwork skipLabeling', () => {
 
 describe('generate-card-artwork skipIllustration', () => {
   it('preserves the original image as the card face and skips AI illustration + counter', async () => {
-    chatCreate.mockResolvedValue({ choices: [{ message: { content: 'La Luna' } }] });
+    chatCreate.mockResolvedValue({ choices: [{ message: { content: '{"label":"La Luna"}' } }] });
     const { runNames, step } = makeStep();
 
     await captured.handler!({
@@ -164,7 +164,7 @@ describe('generate-card-artwork skipIllustration', () => {
 
 describe('generate-card-artwork cropData (AI branch)', () => {
   it('crops the source before AI when cropData is present', async () => {
-    chatCreate.mockResolvedValue({ choices: [{ message: { content: 'La Luna' } }] });
+    chatCreate.mockResolvedValue({ choices: [{ message: { content: '{"label":"La Luna"}' } }] });
     const { step } = makeStep();
     await captured.handler!({
       event: {
@@ -183,7 +183,7 @@ describe('generate-card-artwork cropData (AI branch)', () => {
   });
 
   it('does not crop when cropData is absent', async () => {
-    chatCreate.mockResolvedValue({ choices: [{ message: { content: 'La Luna' } }] });
+    chatCreate.mockResolvedValue({ choices: [{ message: { content: '{"label":"La Luna"}' } }] });
     const { step } = makeStep();
     await captured.handler!({
       event: {
@@ -197,5 +197,51 @@ describe('generate-card-artwork cropData (AI branch)', () => {
       step,
     });
     expect(extractCrop).not.toHaveBeenCalled();
+  });
+});
+
+describe('generate-card-artwork label validation', () => {
+  const event = {
+    data: { cardId: CARD, boardId: BOARD, userId: 'u1', originalImageUrl: 'https://blob/o.png' },
+  };
+  const reply = (content: string | null, finish_reason = 'stop') => ({
+    choices: [{ message: { content }, finish_reason }],
+  });
+
+  it('requests JSON-schema structured output', async () => {
+    chatCreate.mockResolvedValue(reply('{"label":"La Luna"}'));
+    const { step } = makeStep();
+    await captured.handler!({ event, step });
+    const body = chatCreate.mock.calls[0][0] as { response_format?: { type: string } };
+    expect(body.response_format?.type).toBe('json_schema');
+  });
+
+  it('retries when the model returns rambling text, and keeps the first valid label', async () => {
+    chatCreate
+      .mockResolvedValueOnce(
+        reply('{"label":"el.. wait, no I need a label in spanish. Maybe I should"}')
+      )
+      .mockResolvedValueOnce(reply('{"label":"El Corazón"}'));
+    const { step } = makeStep();
+    await captured.handler!({ event, step });
+    expect(chatCreate).toHaveBeenCalledTimes(2);
+    expect(persistCall()!.label).toBe('El Corazón');
+  });
+
+  it('falls back to an empty label after repeated invalid output instead of saving junk', async () => {
+    chatCreate.mockResolvedValue(reply('not json at all'));
+    const { step } = makeStep();
+    await captured.handler!({ event, step });
+    expect(chatCreate).toHaveBeenCalledTimes(3);
+    expect(persistCall()!.label).toBe('');
+  });
+
+  it('treats a truncated response as invalid', async () => {
+    chatCreate
+      .mockResolvedValueOnce(reply('{"label":"La', 'length'))
+      .mockResolvedValueOnce(reply('{"label":"La Luna"}'));
+    const { step } = makeStep();
+    await captured.handler!({ event, step });
+    expect(persistCall()!.label).toBe('La Luna');
   });
 });

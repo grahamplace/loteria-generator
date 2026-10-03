@@ -18,6 +18,7 @@ import { cardGenerateRequested } from '../events';
 import { cardChannel, boardChannel } from '../channels';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
+import { LABEL_RESPONSE_FORMAT, parseLabelResponse } from '@/lib/card-label';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -34,7 +35,9 @@ The label should be:
 - Appropriate for a traditional Loteria card game
 - In Spanish
 
-Return ONLY the Spanish label, nothing else. Example labels: "El Diablo", "La Luna", "El Corazón"`;
+Respond with JSON containing only the label, e.g. {"label": "La Luna"}. Example labels: "El Diablo", "La Luna", "El Corazón"`;
+
+const LABEL_MAX_ATTEMPTS = 3;
 
 export const generateCardArtwork = inngest.createFunction(
   {
@@ -90,30 +93,45 @@ export const generateCardArtwork = inngest.createFunction(
         const mime = OPENAI_IMAGE_MIME_TO_EXT[contentType] ? contentType : 'image/png';
         const base64 = buffer.toString('base64');
         const labelModel = 'gpt-5-nano-2025-08-07';
-        const result = await withAITrace(
-          'generate-label',
-          { userId, boardId, cardId, model: labelModel },
-          () =>
-            openai.chat.completions.create({
-              model: labelModel,
-              messages: [
-                { role: 'system', content: LABEL_SYSTEM_PROMPT },
-                {
-                  role: 'user',
-                  content: [
-                    {
-                      type: 'image_url',
-                      image_url: { url: `data:${mime};base64,${base64}` },
-                    },
-                    { type: 'text', text: LABEL_USER_PROMPT },
-                  ],
-                },
-              ],
-              max_completion_tokens: 500,
-              reasoning_effort: 'minimal',
-            })
-        );
-        return result.choices[0].message.content?.trim() || '';
+        const rejected: (string | null)[] = [];
+
+        for (let attempt = 1; attempt <= LABEL_MAX_ATTEMPTS; attempt++) {
+          const result = await withAITrace(
+            'generate-label',
+            { userId, boardId, cardId, model: labelModel },
+            () =>
+              openai.chat.completions.create({
+                model: labelModel,
+                messages: [
+                  { role: 'system', content: LABEL_SYSTEM_PROMPT },
+                  {
+                    role: 'user',
+                    content: [
+                      {
+                        type: 'image_url',
+                        image_url: { url: `data:${mime};base64,${base64}` },
+                      },
+                      { type: 'text', text: LABEL_USER_PROMPT },
+                    ],
+                  },
+                ],
+                response_format: LABEL_RESPONSE_FORMAT,
+                max_completion_tokens: 500,
+                reasoning_effort: 'minimal',
+              })
+          );
+          const choice = result.choices[0];
+          const content = choice?.message.content ?? null;
+          // A truncated response can still parse if it happens to cut at a
+          // valid boundary, so never trust one.
+          const label = choice?.finish_reason === 'length' ? null : parseLabelResponse(content);
+          if (label) return label;
+          rejected.push(content);
+        }
+
+        // A blank label is editable by the user; a garbage one looks broken.
+        console.warn('generate-label: no valid label after retries', { cardId, rejected });
+        return '';
       });
       await step.realtime.publish('publish-label', ch.label, { label });
       return label;
