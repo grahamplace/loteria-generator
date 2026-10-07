@@ -54,9 +54,7 @@ export function EditRiddleForm({
       if (!res.ok) throw new Error('Failed to save riddle');
       setSaved(trimmed);
       setValue(trimmed);
-      toast.success(
-        trimmed ? `Card #${cardNumber} riddle saved` : `Card #${cardNumber} riddle cleared`
-      );
+      toast.success(trimmed ? `#${cardNumber} riddle saved` : `#${cardNumber} riddle cleared`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save riddle');
@@ -117,7 +115,7 @@ export function EditRiddleForm({
         size="sm"
         variant="outline"
         disabled={saving || !dirty}
-        className="self-start"
+        className="w-full"
       >
         {saving && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
         Save riddle

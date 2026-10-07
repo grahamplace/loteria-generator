@@ -31,13 +31,16 @@ import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import type { Card } from '@/db/schema';
 import { EditLabelButton } from './edit-label-button';
 import { AdminCardModal } from './admin-card-modal';
+import type { CardOwner } from './admin-card-detail';
 
 export function AdminBoardCardsGrid({
   boardId,
   initialCards,
+  owner,
 }: {
   boardId: string;
   initialCards: Card[];
+  owner: CardOwner;
 }) {
   const router = useRouter();
   const [cards, setCards] = useState<Card[]>(initialCards);
@@ -217,6 +220,7 @@ export function AdminBoardCardsGrid({
       <AdminCardModal
         cards={cards}
         cardId={openCardId}
+        owner={owner}
         onSelect={pageToCard}
         onClose={closeCard}
         onLabelSaved={handleLabelSaved}

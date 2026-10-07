@@ -12,7 +12,7 @@ beforeEach(() => {
 });
 
 function selectFile() {
-  const input = screen.getByLabelText(/replace illustration/i);
+  const input = screen.getByLabelText(/override illustration/i);
   const file = new File(['x'], 'photo.png', { type: 'image/png' });
   fireEvent.change(input, { target: { files: [file] } });
 }
@@ -20,14 +20,14 @@ function selectFile() {
 describe('ReplaceIllustrationButton', () => {
   it('renders the replace control', () => {
     render(<ReplaceIllustrationButton cardId="c1" />);
-    expect(screen.getByText(/replace illustration/i)).toBeInTheDocument();
+    expect(screen.getByText(/override illustration/i)).toBeInTheDocument();
   });
 
   it('opens a confirm modal with a preview when a file is selected', () => {
     render(<ReplaceIllustrationButton cardId="c1" />);
     selectFile();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^replace$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^override$/i })).toBeInTheDocument();
   });
 
   it('PUTs the base64 payload and refreshes on confirm', async () => {
@@ -35,7 +35,7 @@ describe('ReplaceIllustrationButton', () => {
     vi.stubGlobal('fetch', fetchMock);
     render(<ReplaceIllustrationButton cardId="c1" />);
     selectFile();
-    fireEvent.click(screen.getByRole('button', { name: /^replace$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^override$/i }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/admin/cards/c1/illustration',
@@ -60,7 +60,7 @@ describe('ReplaceIllustrationButton', () => {
     render(<ReplaceIllustrationButton cardId="c1" />);
     const big = new File(['x'], 'big.png', { type: 'image/png' });
     Object.defineProperty(big, 'size', { value: 11 * 1024 * 1024 });
-    fireEvent.change(screen.getByLabelText(/replace illustration/i), { target: { files: [big] } });
+    fireEvent.change(screen.getByLabelText(/override illustration/i), { target: { files: [big] } });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent(/exceeds maximum size/i);
   });

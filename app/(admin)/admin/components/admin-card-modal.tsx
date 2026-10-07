@@ -9,7 +9,7 @@ import { Kbd } from '@/components/ui/kbd';
 import { adminCardImageSrc, adminCardProxySrc } from '@/lib/admin-card-image';
 import { cardImageProps, CARD_DETAIL_THUMB_WIDTH } from '@/lib/card-image';
 import type { Card } from '@/db/schema';
-import { AdminCardDetail } from './admin-card-detail';
+import { AdminCardDetail, type CardOwner } from './admin-card-detail';
 
 function isTypingTarget(el: Element) {
   return (
@@ -40,12 +40,14 @@ function preloadCard(card: Card) {
 export function AdminCardModal({
   cards,
   cardId,
+  owner,
   onSelect,
   onClose,
   onLabelSaved,
 }: {
   cards: Card[];
   cardId: string | null;
+  owner: CardOwner;
   onSelect: (cardId: string) => void;
   onClose: () => void;
   onLabelSaved: (cardId: string, label: string) => void;
@@ -105,9 +107,20 @@ export function AdminCardModal({
             e.preventDefault();
             contentRef.current?.focus();
           }}
-          // The card view hosts its own inline modals; let them take Escape first.
           onEscapeKeyDown={(e) => {
-            if (contentRef.current?.querySelector('[role="dialog"]')) e.preventDefault();
+            // The card view hosts its own inline modals; let them take Escape first.
+            if (contentRef.current?.querySelector('[role="dialog"]')) {
+              e.preventDefault();
+              return;
+            }
+            // In a text field, Escape leaves the field rather than closing the
+            // modal and dropping what was typed. Fields marked
+            // data-escape-handled (inline label edit) do their own thing.
+            const active = document.activeElement;
+            if (active && isTypingTarget(active)) {
+              e.preventDefault();
+              if (!active.hasAttribute('data-escape-handled')) (active as HTMLElement).blur();
+            }
           }}
           className="fixed inset-2 z-50 flex flex-col overflow-hidden rounded-xl border border-foreground/10 bg-background shadow-[0_1px_3px_rgb(0_0_0/0.12),0_24px_64px_-12px_rgb(0_0_0/0.45)] focus:outline-none sm:inset-6 lg:inset-10 motion-safe:data-[state=open]:animate-in motion-safe:data-[state=open]:fade-in-0 motion-safe:data-[state=open]:zoom-in-95 motion-safe:data-[state=closed]:animate-out motion-safe:data-[state=closed]:fade-out-0 motion-safe:data-[state=closed]:zoom-out-95"
           style={{ overscrollBehavior: 'contain' }}
@@ -167,6 +180,7 @@ export function AdminCardModal({
                 <AdminCardDetail
                   key={card.id}
                   card={card}
+                  owner={owner}
                   onLabelSaved={(label) => onLabelSaved(card.id, label)}
                 />
               </div>

@@ -14,6 +14,7 @@ async function getCardWithContext(cardId: string) {
       boardName: boards.name,
       boardId: boards.id,
       ownerEmail: user.email,
+      ownerName: user.name,
       ownerId: user.id,
     })
     .from(cards)
@@ -33,7 +34,7 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
     notFound();
   }
 
-  const { card, boardName, boardId, ownerEmail, ownerId } = data;
+  const { card, boardName, boardId, ownerEmail, ownerName, ownerId } = data;
 
   return (
     <div className="space-y-6">
@@ -51,6 +52,7 @@ export default async function AdminCardDebugPage({ params }: { params: Promise<{
         <AdminCardDetail
           card={card}
           board={{ id: boardId, name: boardName }}
+          owner={{ id: ownerId, name: ownerName, email: ownerEmail }}
           headerExtra={
             <Button asChild variant="outline" size="sm">
               {/* Opens this card in the board's modal, so arrow keys page from here. */}
