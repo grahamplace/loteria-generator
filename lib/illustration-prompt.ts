@@ -14,10 +14,10 @@ export type BackgroundColor = {
  * boards get the varied yellow / blue / pink mix of classic Lotería boards
  * instead of the model defaulting to blue every time.
  *
- * The solid color is one of two backgrounds the model chooses between when the
- * photo's own setting is incidental: a flat field of this color for objects
- * (like El Barril or La Bota), or the fixed {@link SKY_GRADIENT} for people and
- * scenes. Settings that carry the story (a wave, a mountain range) are kept and
+ * The solid color is one of two backgrounds used when the photo's own setting
+ * is incidental: a flat field of this color when there are no people or
+ * animals (objects, food, products — like El Barril or La Bota), or the fixed
+ * {@link SKY_GRADIENT} when there are. Settings that carry the story (a wave, a mountain range) are kept and
  * restyled instead. See the background rules in {@link renderIllustrationPrompt}.
  */
 export const BACKGROUND_COLORS: readonly BackgroundColor[] = [
@@ -48,6 +48,11 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
   return `
     ## Instructions
     - Restyle the provided image into the **classic Mexican Lotería card illustration style**.
+    - **Text-only images are the one exception to illustrating.** If the image is mostly or entirely text — a quote graphic, a text meme, a screenshot of a message or a poem — **the text itself is the subject**:
+      - Render the main text, word for word and spelled exactly as written, as bold hand-lettered type in the same vintage Lotería print style (ink outlines, slightly irregular letterforms, aged-paper texture), centered and filling the card.
+      - **Do not illustrate what the text says.** Add no people, objects, scenes, or symbols that aren't in the image. A quote about being sleepy stays words, not a drawing of a sleepy person.
+      - Drop everything around the main text: usernames and handles, watermarks, logos, small footer or header text, app UI, and the original's background.
+      - Place the lettering over a flat solid color field (see the background rules below). This rule overrides the "no typography" items in the negative prompt.
     - Keep the original subject, pose, and overall silhouette clearly recognizable, but **redraw everything as a vintage hand-painted print**.
     - Use **bold black ink outlines (no outline at the card edges, only around the main subject)** (slightly irregular, hand-drawn), simplified shapes, and **soft airbrush/watercolor gradients** for shading.
     - Reduce tiny details; prioritize clean, iconic readability from a distance — **except on faces, which are the one place detail must be preserved (see the likeness rule below)**.
@@ -63,10 +68,10 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
       - **Background IS meaningful** — e.g. the wave and spray behind a wakeboarder, the mountains behind a hiking couple, the snow under a kid on a snowboard, the ocean behind a child on the beach. **Keep it and restyle it in the same Lotería style as the subject**: same bold ink outlines, same flat saturated color blocking, same limited tonal steps. Simplify it into a few iconic shapes — a stylized wave, a ridgeline of peaks, a band of surf — rather than reproducing every photographic detail. It is scenery reduced to an emblem, not a painted landscape.
       - **Background is NOT meaningful** — e.g. a kitchen behind a hug, a couch behind a toddler, a studio backdrop, a parked car, a blank wall. **Drop it entirely** and place the subject over one of the two classic Lotería backgrounds below.
       - When in doubt, drop it. A clean iconic card beats a cluttered one.
-    - **When the background is dropped, choose ONE of these two classic Lotería backgrounds:**
-      - **Solid color — for objects.** A single flat field of ${background.name} (${background.hex}) filling the whole card, no gradient, no horizon, no scenery. Use it when the subject is a thing rather than a scene: a trumpet, a bowl of ramen, a pair of sneakers, a single held item — the way El Barril (the barrel) or La Bota (the boot) sit over a solid color on traditional cards.
-      - **Sky — for people and scenes.** The classic Lotería sky: ${SKY_GRADIENT.top.name} (${SKY_GRADIENT.top.hex}) at the top, fading smoothly to ${SKY_GRADIENT.horizon.name} (${SKY_GRADIENT.horizon.hex}) toward the horizon, with at most a simple ground line or a band of flat ground under the subject's feet. Use it for people, couples, groups, and moments that don't need a specific setting.
-      - Pick the one that fits the subject. Never mix them, and never use the sky's blue-to-pink gradient behind an object or the solid color behind a scene.
+    - **When the background is dropped, who is on the card decides which of the two classic Lotería backgrounds to use:**
+      - **No people or animals → solid color.** A single flat field of ${background.name} (${background.hex}) filling the whole card: no gradient, no horizon, no scenery. This covers food and dishes, products, tools, clothing, and collections of objects, **even when they were photographed on a table, counter, or floor — drop that surface too**. Think of how El Barril (the barrel) or La Bota (the boot) sit over a solid color on traditional cards.
+      - **People or animals → sky.** The classic Lotería sky: ${SKY_GRADIENT.top.name} (${SKY_GRADIENT.top.hex}) at the top, fading smoothly to ${SKY_GRADIENT.horizon.name} (${SKY_GRADIENT.horizon.hex}) toward the horizon, with at most a simple ground line or a band of flat ground under the subject's feet.
+      - Never put the sky behind an object card, and never put a solid color behind people or animals.
     - For a kept, meaningful background, restyle it in its natural colors (sky stays blue, water blue/green, fields green, snow white). ${background.name} (${background.hex}) may appear as an accent but must not recolor the scenery.
     - Color treatment should match classic Lotería: **high contrast, saturated primaries**, minimal neutral tones, and a slightly warm vintage print cast.
     - Lighting should feel illustrative (not photographic): soft highlights, gentle shadows, and limited tonal steps.
@@ -78,8 +83,8 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
 
     ## Colors
     **Main colors / palette guidance (use these as dominant colors):**
-    - Solid background option (objects): ${background.name} (${background.hex})
-    - Sky gradient (people / scenes): ${SKY_GRADIENT.top.hex} → ${SKY_GRADIENT.horizon.hex}
+    - Solid background (no people or animals): ${background.name} (${background.hex})
+    - Sky gradient (people or animals): ${SKY_GRADIENT.top.hex} → ${SKY_GRADIENT.horizon.hex}
     - Off-white / paper: #F3F2F2
     - Near-black ink (outlines): #1E1F25
     - Brick red / vintage crimson (accents): #962C2D and/or #5C282C
@@ -87,7 +92,7 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
     - Deep green (foliage accents): #284D38
       - If browns/tans are needed (wood, leather), keep them warm and slightly muted (burnt umber / tan), not photorealistic. **Skin follows the likeness rule above** — match the person's actual tone, warmed slightly toward this palette, never lightened or darkened to fit it.
 
-    ## Negative prompt (do not include these in the image):
+    ## Negative prompt (do not include these in the image; for a text-only image, the main text is required and is not "typography" here):
     photorealistic, 3D render, CGI, ultra-detailed texture, modern flat vector, crisp geometric logo style, anime, manga, glossy highlights, cinematic lighting, depth of field blur, HDR, heavy noise, neon palette, generic face, idealized or beautified face, symmetrical doll-like features, wrong person, altered facial features, changed skin tone, changed apparent age, blended or interchangeable faces, messy background, cluttered incidental background detail, photographic scenery pasted behind the subject, readable watermark, typography, captions, numbers, border, frame
     `;
 }
