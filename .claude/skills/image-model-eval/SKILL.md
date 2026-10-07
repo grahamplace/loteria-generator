@@ -9,6 +9,9 @@ Runs real photos through the production illustration pipeline on several image m
 
 - Script: `scripts/image-eval/run.ts` (sheet builder: `scripts/image-eval/compose.ts`)
 - Test photos: `scripts/image-eval/photos/` (credits + what each one stresses: `photos/SOURCES.md`)
+- Extra photo sets, local only (gitignored), picked with `--set`:
+  - `tricky` → `photos-tricky/`: every prod card where an admin had to add a prompt override. Built by `pnpm eval:pull-tricky` (needs `PROD_DATABASE_URL` from `.env.personal`; read-only). These are **customer photos: never commit them**. The sheet adds the corrected prod card and the override text to each row.
+  - `objects` → `photos-objects/`: objects that should land on a solid color (boots, ramen) next to scenes that shouldn't (Golden Gate). Licenses unknown, so not committed.
 - Output (gitignored): `scripts/image-eval/runs/<UTC timestamp>/`
 
 ## Prerequisites
@@ -27,7 +30,16 @@ pnpm eval:images                                   # default models
 pnpm eval:images --models gpt-image-2,gpt-image-2.5-flare
 pnpm eval:images --photos dog,hockey               # substring match on filenames
 pnpm eval:images --compose scripts/image-eval/runs/<run>   # rebuild sheet only, no API calls
+
+# Prompt change on the hard cases: old vs new prompt, prod model only
+PROD_DATABASE_URL=$(grep '^DATABASE_URL' .env.personal | cut -d= -f2-) pnpm eval:pull-tricky
+pnpm eval:images --set tricky --models gpt-image-2 \
+  --prompt-refs old=main,new=<prompt-branch> --concurrency 4
 ```
+
+`--prompt-refs` takes `label=ref` pairs and loads `lib/illustration-prompt.ts` from each git ref, so you can compare a prompt branch against `main` without checking it out. Columns are model × prompt.
+
+`--concurrency n` runs n photos at once. A 54-photo tricky run at 4 takes ~20 min; one photo at a time would take over an hour.
 
 Default models live in `DEFAULT_MODELS` in `run.ts`. A full default run (5 photos × 3 models) takes ~1–2 min.
 

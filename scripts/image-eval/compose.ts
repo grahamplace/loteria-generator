@@ -1,7 +1,8 @@
 /**
  * Builds the comparison sheet for an image-eval run from its results.json:
- * a speed summary followed by one row per photo (original + each model's
- * output, captioned with call time). Writes comparison.jpg (everything in one
+ * a speed summary followed by one row per photo (original + each column's
+ * output, captioned with call time). For the tricky set, each row also shows
+ * the corrected production card and the admin's override text. Writes comparison.jpg (everything in one
  * tall image) and comparison.pdf (one page per section).
  */
 
@@ -24,9 +25,21 @@ export interface CallResult {
 export interface EvalResults {
   startedAt: string;
   finishedAt?: string;
+  /** Column ids: a model name, or `model · prompt label` with --prompt-refs. */
   models: string[];
   size: string;
-  photos: { stem: string; file: string; background: string }[];
+  /** Folder under scripts/image-eval/ the photos came from. Default: photos. */
+  photosDir?: string;
+  promptRefs?: string | null;
+  photos: {
+    stem: string;
+    file: string;
+    background: string;
+    /** Tricky set: the admin's extra instructions for this card. */
+    overlay?: string;
+    /** Tricky set: the corrected production illustration, in photosDir. */
+    reference?: string | null;
+  }[];
   calls: CallResult[];
 }
 
@@ -41,7 +54,9 @@ const BG = '#f5f0e1';
 const INK = '#2b1d14';
 const MUTED = '#7a6a5a';
 
-const PHOTOS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'photos');
+const EVAL_DIR = dirname(fileURLToPath(import.meta.url));
+const OVERLAY_LINE_H = 26;
+const OVERLAY_MAX_LINES = 3;
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -61,13 +76,36 @@ function svg(width: number, height: number, body: string): Buffer {
   );
 }
 
-function sheetWidth(models: string[]): number {
-  const cols = models.length + 1;
+function hasReference(results: EvalResults): boolean {
+  return results.photos.some((p) => p.reference);
+}
+
+function wrap(text: string, maxChars: number, maxLines: number): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (const w of text.split(/\s+/)) {
+    if (line && (line + ' ' + w).length > maxChars) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = line ? `${line} ${w}` : w;
+    }
+  }
+  if (line) lines.push(line);
+  if (lines.length > maxLines) {
+    lines.length = maxLines;
+    lines[maxLines - 1] = `${lines[maxLines - 1].slice(0, maxChars - 1)}…`;
+  }
+  return lines;
+}
+
+function sheetWidth(results: EvalResults): number {
+  const cols = results.models.length + 1 + (hasReference(results) ? 1 : 0);
   return PAD * 2 + cols * CELL_W + (cols - 1) * GAP;
 }
 
 async function renderSummary(results: EvalResults): Promise<Buffer> {
-  const width = sheetWidth(results.models);
+  const width = sheetWidth(results);
   const lineH = 40;
   const colW = (width - PAD * 2) / 6;
   const lines: string[] = [];
@@ -79,12 +117,12 @@ async function renderSummary(results: EvalResults): Promise<Buffer> {
   y += 36;
   lines.push(
     `<text x="${PAD}" y="${y}" font-family="${FONT}" font-size="20" fill="${MUTED}">${esc(
-      `${results.startedAt.slice(0, 16).replace('T', ' ')} UTC · ${results.photos.length} photos · 1 generation per model per photo · ${results.size} · production prompt`
+      `${results.startedAt.slice(0, 16).replace('T', ' ')} UTC · ${results.photos.length} photos${results.photosDir && results.photosDir !== 'photos' ? ` (${results.photosDir})` : ''} · 1 generation per column per photo · ${results.size} · ${results.promptRefs ? `prompts: ${results.promptRefs}` : 'working-tree prompt'}`
     )}</text>`
   );
   y += 56;
 
-  const header = ['Model', 'Photos', 'Errors', 'Average', 'Fastest', 'Slowest'];
+  const header = ['Column', 'Photos', 'Errors', 'Average', 'Fastest', 'Slowest'];
   header.forEach((h, i) => {
     lines.push(
       `<text x="${PAD + i * colW + (i === 0 ? 0 : colW * 0.4)}" y="${y}" font-family="${FONT}" font-size="22" font-weight="700" fill="${INK}">${h}</text>`
@@ -118,7 +156,7 @@ async function renderSummary(results: EvalResults): Promise<Buffer> {
 
   y += 24;
   lines.push(
-    `<text x="${PAD}" y="${y}" font-family="${FONT}" font-size="18" fill="${MUTED}">Times are wall-clock seconds for one images.edit call per photo. Models ran concurrently on each photo.</text>`
+    `<text x="${PAD}" y="${y}" font-family="${FONT}" font-size="18" fill="${MUTED}">Times are wall-clock seconds for one images.edit call per photo. Columns ran concurrently on each photo.</text>`
   );
   y += PAD;
 
@@ -164,18 +202,37 @@ async function renderRow(
   runDir: string,
   photo: EvalResults['photos'][number]
 ): Promise<Buffer> {
-  const width = sheetWidth(results.models);
-  const height = PAD + ROW_TITLE_H + CAPTION_H + CELL_H + PAD;
+  const width = sheetWidth(results);
+  const photosDir = join(EVAL_DIR, results.photosDir ?? 'photos');
+  // ~11px per character at 20px Helvetica.
+  const overlayLines = photo.overlay
+    ? wrap(`Override: ${photo.overlay}`, Math.floor((width - PAD * 2) / 11), OVERLAY_MAX_LINES)
+    : [];
+  const overlayH = overlayLines.length ? overlayLines.length * OVERLAY_LINE_H + 12 : 0;
+  const top = PAD + ROW_TITLE_H + overlayH + CAPTION_H;
+  const height = top + CELL_H + PAD;
   const composites: sharp.OverlayOptions[] = [];
   const text: string[] = [
     `<text x="${PAD}" y="${PAD + 36}" font-family="${FONT}" font-size="30" font-weight="700" fill="${INK}">${esc(photo.stem)}</text>`,
     `<text x="${width - PAD}" y="${PAD + 36}" text-anchor="end" font-family="${FONT}" font-size="20" fill="${MUTED}">${esc(`background: ${photo.background}`)}</text>`,
+    ...overlayLines.map(
+      (l, i) =>
+        `<text x="${PAD}" y="${PAD + ROW_TITLE_H + 8 + i * OVERLAY_LINE_H}" font-family="${FONT}" font-size="20" fill="#9b2c1f">${esc(l)}</text>`
+    ),
   ];
 
-  const top = PAD + ROW_TITLE_H + CAPTION_H;
   const columns: { title: string; detail: string; cell: Promise<Buffer> }[] = [
-    { title: 'Original photo', detail: '', cell: fitCell(join(PHOTOS_DIR, photo.file)) },
+    { title: 'Original photo', detail: '', cell: fitCell(join(photosDir, photo.file)) },
   ];
+  if (hasReference(results)) {
+    columns.push({
+      title: 'Prod (with override)',
+      detail: 'reference',
+      cell: photo.reference
+        ? fitCell(join(photosDir, photo.reference))
+        : Promise.resolve(placeholderCell('No prod illustration')),
+    });
+  }
 
   for (const model of results.models) {
     const call = results.calls.find((c) => c.photo === photo.stem && c.model === model);
