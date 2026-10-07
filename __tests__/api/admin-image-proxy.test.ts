@@ -9,10 +9,6 @@ vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }));
 
-vi.mock('@/lib/admin', () => ({
-  isAdminEmail: vi.fn(() => true),
-}));
-
 vi.mock('@/db', () => ({
   db: { query: { cards: { findFirst: vi.fn() } } },
   cards: { id: 'id' },
@@ -64,7 +60,7 @@ const params = Promise.resolve({ cardId: 'card-1', type: 'illustration' });
 describe('GET /api/admin/images/[cardId]/[type]', () => {
   beforeEach(async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue({
-      user: { id: 'u1', email: 'admin@example.com' },
+      user: { id: 'u1', email: 'graham@stonecutterlabs.com' },
     } as any);
     vi.mocked(db.query.cards.findFirst).mockResolvedValue({
       id: 'card-1',
@@ -143,8 +139,9 @@ describe('GET /api/admin/images/[cardId]/[type]', () => {
   });
 
   it('refuses non-admin callers', async () => {
-    const { isAdminEmail } = await import('@/lib/admin');
-    vi.mocked(isAdminEmail).mockReturnValueOnce(false);
+    vi.mocked(auth.api.getSession).mockResolvedValueOnce({
+      user: { id: 'u2', email: 'someone@example.com' },
+    } as any);
     const res = await GET(makeReq('http://localhost/api/admin/images/card-1/illustration?w=400'), {
       params,
     });

@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { eq } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
-import { isAdminEmail } from '@/lib/admin';
+import { getAdminSession } from '@/lib/admin';
 import { db, boards } from '@/db';
 import { reorderCardsSchema } from '@/lib/validations';
 import { reorderBoardCards } from '@/lib/card-order';
@@ -13,8 +11,7 @@ import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
  * Body: { cardIds: string[] } in the desired display order
  */
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user || !isAdminEmail(session.user.email)) {
+  if (!(await getAdminSession())) {
     return new NextResponse('Not found', { status: 404 });
   }
 
