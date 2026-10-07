@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useRealtime } from 'inngest/react';
 import { GripVertical } from 'lucide-react';
 import {
@@ -31,6 +30,7 @@ import { adminCardImageSrc } from '@/lib/admin-card-image';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import type { Card } from '@/db/schema';
 import { EditLabelButton } from './edit-label-button';
+import { AdminCardModal } from './admin-card-modal';
 
 export function AdminBoardCardsGrid({
   boardId,
@@ -42,6 +42,52 @@ export function AdminBoardCardsGrid({
   const router = useRouter();
   const [cards, setCards] = useState<Card[]>(initialCards);
   const [reorderError, setReorderError] = useState(false);
+
+  // The open card lives in `?card=<id>` so the modal deep-links and survives
+  // a refresh. history.* calls sync with useSearchParams without a navigation.
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const openCardId = searchParams.get('card');
+  // True when this page pushed the open-card entry, so closing can pop it and
+  // Back doesn't reopen the card.
+  const pushedCardEntry = useRef(false);
+
+  const cardUrl = useCallback(
+    (cardId: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (cardId) params.set('card', cardId);
+      else params.delete('card');
+      const qs = params.toString();
+      return qs ? `${pathname}?${qs}` : pathname;
+    },
+    [pathname, searchParams]
+  );
+
+  const openCard = useCallback(
+    (cardId: string) => {
+      window.history.pushState(null, '', cardUrl(cardId));
+      pushedCardEntry.current = true;
+    },
+    [cardUrl]
+  );
+
+  const pageToCard = useCallback(
+    (cardId: string) => window.history.replaceState(null, '', cardUrl(cardId)),
+    [cardUrl]
+  );
+
+  const closeCard = useCallback(() => {
+    if (pushedCardEntry.current) {
+      pushedCardEntry.current = false;
+      window.history.back();
+    } else {
+      window.history.replaceState(null, '', cardUrl(null));
+    }
+  }, [cardUrl]);
+
+  const handleLabelSaved = useCallback((cardId: string, label: string) => {
+    setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, label } : c)));
+  }, []);
 
   // Re-seed local state when the server hands us a new initialCards array
   // (e.g. after router.refresh() following the bulk retry POST).
@@ -147,31 +193,45 @@ export function AdminBoardCardsGrid({
       {cards.length === 0 ? (
         <p className="text-sm text-muted-foreground">No cards</p>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext
+          // Stable id so the server and client render the same aria-describedby.
+          id={`admin-board-cards-${boardId}`}
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
           <SortableContext items={cards.map((c) => c.id)} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8">
               {cards.map((card) => (
                 <SortableAdminCard
                   key={card.id}
                   card={card}
-                  onLabelSaved={(label) =>
-                    setCards((prev) => prev.map((c) => (c.id === card.id ? { ...c, label } : c)))
-                  }
+                  onOpen={() => openCard(card.id)}
+                  onLabelSaved={(label) => handleLabelSaved(card.id, label)}
                 />
               ))}
             </div>
           </SortableContext>
         </DndContext>
       )}
+      <AdminCardModal
+        cards={cards}
+        cardId={openCardId}
+        onSelect={pageToCard}
+        onClose={closeCard}
+        onLabelSaved={handleLabelSaved}
+      />
     </div>
   );
 }
 
 function SortableAdminCard({
   card,
+  onOpen,
   onLabelSaved,
 }: {
   card: Card;
+  onOpen: () => void;
   onLabelSaved: (label: string) => void;
 }) {
   const {
@@ -191,11 +251,13 @@ function SortableAdminCard({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={`relative ${isDragging ? 'z-10 opacity-80 shadow-lg' : ''}`}
     >
-      <Link
-        href={`/admin/cards/${card.id}`}
-        className="group block rounded-lg border border-border p-2 transition-colors hover:border-primary"
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-haspopup="dialog"
+        className="group block w-full rounded-lg border border-border p-2 text-left transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
-        <div className="relative mb-2 aspect-[2/3] overflow-hidden rounded bg-muted">
+        <span className="relative mb-2 block aspect-[2/3] overflow-hidden rounded bg-muted">
           {imageSrc ? (
             <Image
               {...cardImageProps(imageSrc, CARD_GRID_THUMB_WIDTH)}
@@ -205,31 +267,33 @@ function SortableAdminCard({
               className="object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+            <span className="flex h-full items-center justify-center text-xs text-muted-foreground">
               No image
-            </div>
+            </span>
           )}
           {card.status === 'error' && (
-            <div className="absolute inset-0 flex items-center justify-center bg-destructive/20">
+            <span className="absolute inset-0 flex items-center justify-center bg-destructive/20">
               <Badge variant="destructive" className="text-[10px]">
                 Error
               </Badge>
-            </div>
+            </span>
           )}
           {card.status === 'processing' && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background/40">
+            <span className="absolute inset-0 flex items-center justify-center bg-background/40">
               <Badge variant="secondary" className="text-[10px]">
                 Processing…
               </Badge>
-            </div>
+            </span>
           )}
-        </div>
-        <div className="text-center">
-          <p className="text-xs font-medium">#{card.number}</p>
-          <p className="truncate text-[10px] text-muted-foreground">{card.label || 'Unlabeled'}</p>
-        </div>
-      </Link>
-      {/* Sibling of the Link, not a child: a button can't nest inside <a>. */}
+        </span>
+        <span className="block text-center">
+          <span className="block text-xs font-medium">#{card.number}</span>
+          <span className="block truncate text-[10px] text-muted-foreground">
+            {card.label || 'Unlabeled'}
+          </span>
+        </span>
+      </button>
+      {/* Sibling of the card button, not a child: buttons can't nest. */}
       <button
         type="button"
         ref={setActivatorNodeRef}

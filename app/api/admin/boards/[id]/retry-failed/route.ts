@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { and, eq, inArray, isNotNull, lt, or } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
-import { isAdminEmail, STUCK_PROCESSING_THRESHOLD_MS } from '@/lib/admin';
+import { getAdminSession, STUCK_PROCESSING_THRESHOLD_MS } from '@/lib/admin';
 import { db, cards } from '@/db';
 import { inngest } from '@/lib/inngest/client';
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user || !isAdminEmail(session.user.email)) {
+  if (!(await getAdminSession())) {
     return new NextResponse('Not found', { status: 404 });
   }
 

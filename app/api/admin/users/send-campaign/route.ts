@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth';
-import { isAdminEmail } from '@/lib/admin';
+import { getAdminSession } from '@/lib/admin';
 import { inngest } from '@/lib/inngest/client';
 import { getCampaignTemplate } from '@/lib/email/campaigns/registry';
 
 export async function POST(req: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user || !isAdminEmail(session.user.email)) {
+  if (!(await getAdminSession())) {
     return new NextResponse('Not found', { status: 404 });
   }
 

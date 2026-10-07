@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
-import { isAdminEmail } from '@/lib/admin';
+import { getAdminSession } from '@/lib/admin';
 import { db, cards, boards } from '@/db';
 import { eq } from 'drizzle-orm';
 import { inngest } from '@/lib/inngest/client';
@@ -10,11 +8,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ cardId: string }> }
 ) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user || !isAdminEmail(session.user.email)) {
+  if (!(await getAdminSession())) {
     return new NextResponse('Not found', { status: 404 });
   }
 

@@ -4,10 +4,6 @@ vi.mock('@/lib/auth', () => ({
   auth: { api: { getSession: vi.fn() } },
 }));
 
-vi.mock('@/lib/admin', () => ({
-  isAdminEmail: vi.fn(),
-}));
-
 vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }));
@@ -25,7 +21,6 @@ vi.mock('@/lib/email/campaigns/registry', () => ({
 }));
 
 import { auth } from '@/lib/auth';
-import { isAdminEmail } from '@/lib/admin';
 import { POST } from '@/app/api/admin/users/send-campaign/route';
 
 const ADMIN_SESSION = { user: { email: 'graham@stonecutterlabs.com', id: 'admin-1' } };
@@ -43,7 +38,6 @@ describe('POST /api/admin/users/send-campaign', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN_SESSION as any);
-    vi.mocked(isAdminEmail).mockImplementation((email) => email === 'graham@stonecutterlabs.com');
     sendMock.mockResolvedValue(undefined);
   });
 
@@ -56,7 +50,6 @@ describe('POST /api/admin/users/send-campaign', () => {
 
   it('returns 404 when caller is not admin', async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(NON_ADMIN_SESSION as any);
-    vi.mocked(isAdminEmail).mockReturnValue(false);
     const res = await POST(makeReq({ templateKey: 'reengagement', userIds: ['u1'] }));
     expect(res.status).toBe(404);
     expect(sendMock).not.toHaveBeenCalled();

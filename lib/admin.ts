@@ -29,17 +29,45 @@ export function isAdminEmail(email: string | null | undefined): boolean {
 }
 
 /**
- * Server-side admin gate. Call at the top of admin layouts/pages.
- * Returns the session if admin, calls notFound() otherwise.
+ * Local-only escape hatch: with ADMIN_AUTH_BYPASS=1 under `next dev`, every
+ * admin check passes without signing in. Both conditions are required, and
+ * NODE_ENV is 'production' in every deployed build, so the flag does nothing
+ * on Vercel even if it were set there.
  */
-export async function requireAdmin() {
+function adminAuthBypassed(): boolean {
+  return process.env.NODE_ENV === 'development' && process.env.ADMIN_AUTH_BYPASS === '1';
+}
+
+type AdminSession = { user: { email: string } };
+
+/**
+ * The current session if it belongs to the admin, otherwise null. For API
+ * routes, which answer 404 themselves; pages and actions use requireAdmin().
+ */
+export async function getAdminSession(): Promise<AdminSession | null> {
+  if (adminAuthBypassed()) {
+    return { user: { email: ADMIN_EMAIL } };
+  }
+
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (!session?.user || !isAdminEmail(session.user.email)) {
-    notFound();
+    return null;
   }
 
+  return session;
+}
+
+/**
+ * Server-side admin gate. Call at the top of admin layouts/pages.
+ * Returns the session if admin, calls notFound() otherwise.
+ */
+export async function requireAdmin(): Promise<AdminSession> {
+  const session = await getAdminSession();
+  if (!session) {
+    notFound();
+  }
   return session;
 }

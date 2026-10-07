@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/admin';
 import { db, cards } from '@/db';
 import { eq } from 'drizzle-orm';
-import { adminCardLabelSchema } from '@/lib/validations';
-import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
+import { adminCardRiddleSchema } from '@/lib/validations';
 
 /**
- * PUT /api/admin/cards/[cardId]/label
+ * PUT /api/admin/cards/[cardId]/riddle
  *
- * Admin-only: rename any user's card. Body: { label }. The label is printed on
- * the card face, so the owner's cached board preview is invalidated.
+ * Admin-only: set any user's card riddle. Body: { riddle }; an empty string
+ * clears it. Riddles print on the caller sheet, not the card face, so the
+ * board preview is left alone.
  */
 export async function PUT(
   request: NextRequest,
@@ -20,36 +20,33 @@ export async function PUT(
       return new NextResponse('Not found', { status: 404 });
     }
 
-    const parsed = adminCardLabelSchema.safeParse(await request.json());
+    const parsed = adminCardRiddleSchema.safeParse(await request.json());
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Invalid request', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
-    const { label } = parsed.data;
+    const riddle = parsed.data.riddle || null;
 
     const { cardId } = await params;
     const card = await db.query.cards.findFirst({ where: eq(cards.id, cardId) });
     if (!card) {
       return new NextResponse('Not found', { status: 404 });
     }
-    if (card.label === label) {
+    if (card.riddle === riddle) {
       return NextResponse.json({ card });
     }
 
     const [updatedCard] = await db
       .update(cards)
-      .set({ label, updatedAt: new Date() })
+      .set({ riddle, updatedAt: new Date() })
       .where(eq(cards.id, card.id))
       .returning();
 
-    // Preview blobs live under the owner's path, not the admin's.
-    await invalidateBoardPreview(card.boardId, card.userId);
-
     return NextResponse.json({ card: updatedCard });
   } catch (error) {
-    console.error('Error updating card label (admin):', error);
-    return NextResponse.json({ error: 'Failed to update label' }, { status: 500 });
+    console.error('Error updating card riddle (admin):', error);
+    return NextResponse.json({ error: 'Failed to update riddle' }, { status: 500 });
   }
 }

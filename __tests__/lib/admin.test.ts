@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock server-only dependencies that are imported by lib/admin
 vi.mock('@/lib/auth', () => ({ auth: { api: { getSession: vi.fn() } } }));
@@ -9,6 +9,7 @@ import {
   isAdminEmail,
   ADMIN_EMAIL,
   requireAdmin,
+  getAdminSession,
   isRetriableCard,
   STUCK_PROCESSING_THRESHOLD_MS,
 } from '@/lib/admin';
@@ -116,5 +117,35 @@ describe('isRetriableCard', () => {
         now
       )
     ).toBe(false);
+  });
+});
+
+describe('getAdminSession dev bypass', () => {
+  beforeEach(() => {
+    vi.mocked(auth.api.getSession).mockReset();
+    vi.mocked(auth.api.getSession).mockResolvedValue(null);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('returns an admin session without a login under next dev with ADMIN_AUTH_BYPASS=1', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('ADMIN_AUTH_BYPASS', '1');
+    await expect(getAdminSession()).resolves.toEqual({ user: { email: ADMIN_EMAIL } });
+    expect(auth.api.getSession).not.toHaveBeenCalled();
+  });
+
+  it('ignores ADMIN_AUTH_BYPASS in a production build', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('ADMIN_AUTH_BYPASS', '1');
+    await expect(getAdminSession()).resolves.toBeNull();
+  });
+
+  it('requires a login in development when the flag is unset', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('ADMIN_AUTH_BYPASS', '');
+    await expect(getAdminSession()).resolves.toBeNull();
   });
 });
