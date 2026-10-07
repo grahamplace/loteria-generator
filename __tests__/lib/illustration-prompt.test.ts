@@ -21,7 +21,6 @@ describe('renderIllustrationPrompt', () => {
     const prompt = renderIllustrationPrompt(YELLOW);
     expect(prompt).toContain(YELLOW.name);
     expect(prompt).toContain(YELLOW.hex);
-    expect(prompt).toContain('do not default to blue');
   });
 
   it('tells the model to keep and restyle backgrounds that carry meaning', () => {

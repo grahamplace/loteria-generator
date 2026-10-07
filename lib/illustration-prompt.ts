@@ -24,7 +24,6 @@ export const BACKGROUND_COLORS: readonly BackgroundColor[] = [
   { name: 'pale lemon yellow', hex: '#F5EDA0' },
   { name: 'sky blue', hex: '#5F94D6' },
   { name: 'dusty rose / mauve pink', hex: '#DAB5C9' },
-  { name: 'dusty pale orange', hex: '#F7B17E' },
 ];
 
 /** Background used for the static {@link ILLUSTRATION_PROMPT} export (dev scripts). */
@@ -55,10 +54,10 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
       - **Background IS meaningful** — e.g. the wave and spray behind a wakeboarder, the mountains behind a hiking couple, the snow under a kid on a snowboard, the ocean behind a child on the beach. **Keep it and restyle it in the same Lotería style as the subject**: same bold ink outlines, same flat saturated color blocking, same limited tonal steps. Simplify it into a few iconic shapes — a stylized wave, a ridgeline of peaks, a band of surf — rather than reproducing every photographic detail. It is scenery reduced to an emblem, not a painted landscape.
       - **Background is NOT meaningful** — e.g. a kitchen behind a hug, a couch behind a toddler, a studio backdrop, a parked car, a blank wall. **Drop it entirely** and place the subject over an abstract color field, exactly like a classic Lotería card.
       - When in doubt, drop it. A clean iconic card beats a cluttered one.
-    - **This card's selected background color is ${background.name} (${background.hex}). Build the background around this color — do not default to blue.**
+    - **This card's potential background color is ${background.name} (${background.hex}). Build the background around this color**
       - For images featuring "plain objects" (e.g. a trumpet, or a bowl of ramen), use ${background.name} (${background.hex}) as a flat background color field.
       - For a person or scene with no meaningful setting, use a soft sky/ground gradient tinted toward ${background.name} (${background.hex}).
-      - For a kept, meaningful background, still tie it to ${background.name} (${background.hex}) — use it for the sky, water, or open field so the scenery reads as part of the same palette rather than a photograph pasted behind the subject.
+      - For a kept, meaningful background, you can use ${background.name} (${background.hex}) if needed — but things like sky, water, or open field should still be blue / green / etc
     - Color treatment should match classic Lotería: **high contrast, saturated primaries**, minimal neutral tones, and a slightly warm vintage print cast.
     - Lighting should feel illustrative (not photographic): soft highlights, gentle shadows, and limited tonal steps.
     - **Do not look like modern vector art**—it should feel like a mid-century printed card illustration.
