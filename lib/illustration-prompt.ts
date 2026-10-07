@@ -28,12 +28,12 @@ export const BACKGROUND_COLORS: readonly BackgroundColor[] = [
 
 /**
  * The classic Lotería "sky": blue at the top fading to dusty pink at the
- * horizon. Fixed rather than random.
+ * bottom of the card, with no floor or horizon. Fixed rather than random.
  */
 export const SKY_GRADIENT = {
   top: BACKGROUND_COLORS[1], // sky blue
-  horizon: { name: 'dusty pink', hex: '#DAB5C9' },
-} as const satisfies { top: BackgroundColor; horizon: BackgroundColor };
+  bottom: { name: 'dusty pink', hex: '#DAB5C9' },
+} as const satisfies { top: BackgroundColor; bottom: BackgroundColor };
 
 /** Background used for the static {@link ILLUSTRATION_PROMPT} export (dev scripts). */
 const DEFAULT_BACKGROUND = BACKGROUND_COLORS[1]; // sky blue — the historical default
@@ -70,7 +70,7 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
       - When in doubt, drop it. A clean iconic card beats a cluttered one.
     - **When the background is dropped, who is on the card decides which of the two classic Lotería backgrounds to use:**
       - **No people or animals → solid color.** A single flat field of ${background.name} (${background.hex}) filling the whole card: no gradient, no horizon, no scenery. This covers food and dishes, products, tools, clothing, and collections of objects, **even when they were photographed on a table, counter, or floor — drop that surface too**. Think of how El Barril (the barrel) or La Bota (the boot) sit over a solid color on traditional cards.
-      - **People or animals → sky.** The classic Lotería sky: ${SKY_GRADIENT.top.name} (${SKY_GRADIENT.top.hex}) at the top, fading smoothly to ${SKY_GRADIENT.horizon.name} (${SKY_GRADIENT.horizon.hex}) toward the horizon, with at most a simple ground line or a band of flat ground under the subject's feet.
+      - **People or animals → sky.** The classic Lotería sky: ${SKY_GRADIENT.top.name} (${SKY_GRADIENT.top.hex}) at the top, fading smoothly to ${SKY_GRADIENT.bottom.name} (${SKY_GRADIENT.bottom.hex}) at the bottom of the card. **No floor, ground, stage, rug, or horizon line**: the figures stand directly on the gradient, which runs uninterrupted behind and below them. At most a faint, soft shadow under the feet.
       - Never put the sky behind an object card, and never put a solid color behind people or animals.
     - For a kept, meaningful background, restyle it in its natural colors (sky stays blue, water blue/green, fields green, snow white). ${background.name} (${background.hex}) may appear as an accent but must not recolor the scenery.
     - Color treatment should match classic Lotería: **high contrast, saturated primaries**, minimal neutral tones, and a slightly warm vintage print cast.
@@ -84,16 +84,16 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
     ## Colors
     **Main colors / palette guidance (use these as dominant colors):**
     - Solid background (no people or animals): ${background.name} (${background.hex})
-    - Sky gradient (people or animals): ${SKY_GRADIENT.top.hex} → ${SKY_GRADIENT.horizon.hex}
+    - Sky gradient (people or animals): ${SKY_GRADIENT.top.hex} → ${SKY_GRADIENT.bottom.hex}
     - Off-white / paper: #F3F2F2
     - Near-black ink (outlines): #1E1F25
     - Brick red / vintage crimson (accents): #962C2D and/or #5C282C
-    - Dusty pink / mauve gradient (atmosphere/ground accents): #DAB5C9 / #CAA2AE
+    - Dusty pink / mauve gradient (atmosphere, and the bottom of the sky gradient): #DAB5C9 / #CAA2AE
     - Deep green (foliage accents): #284D38
       - If browns/tans are needed (wood, leather), keep them warm and slightly muted (burnt umber / tan), not photorealistic. **Skin follows the likeness rule above** — match the person's actual tone, warmed slightly toward this palette, never lightened or darkened to fit it.
 
     ## Negative prompt (do not include these in the image; for a text-only image, the main text is required and is not "typography" here):
-    photorealistic, 3D render, CGI, ultra-detailed texture, modern flat vector, crisp geometric logo style, anime, manga, glossy highlights, cinematic lighting, depth of field blur, HDR, heavy noise, neon palette, generic face, idealized or beautified face, symmetrical doll-like features, wrong person, altered facial features, changed skin tone, changed apparent age, blended or interchangeable faces, messy background, cluttered incidental background detail, photographic scenery pasted behind the subject, readable watermark, typography, captions, numbers, border, frame
+    photorealistic, 3D render, CGI, ultra-detailed texture, modern flat vector, crisp geometric logo style, anime, manga, glossy highlights, cinematic lighting, depth of field blur, HDR, heavy noise, neon palette, generic face, idealized or beautified face, symmetrical doll-like features, wrong person, altered facial features, changed skin tone, changed apparent age, blended or interchangeable faces, messy background, cluttered incidental background detail, photographic scenery pasted behind the subject, fake floor or ground band under people on a sky background, readable watermark, typography, captions, numbers, border, frame
     `;
 }
 

@@ -70,7 +70,15 @@ describe('renderIllustrationPrompt', () => {
     const prompt = renderIllustrationPrompt(YELLOW);
     expect(prompt).toContain('**People or animals → sky.**');
     expect(prompt).toContain(SKY_GRADIENT.top.hex);
-    expect(prompt).toContain(SKY_GRADIENT.horizon.hex);
+    expect(prompt).toContain(SKY_GRADIENT.bottom.hex);
+  });
+
+  it('puts people directly on the sky gradient, with no fake floor', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('**No floor, ground, stage, rug, or horizon line**');
+    expect(prompt).not.toContain('band of flat ground');
+    expect(prompt).not.toContain('ground accents');
+    expect(prompt).toContain('fake floor or ground band under people');
   });
 
   it('uses the sky blue from the color pool for the sky gradient', () => {
