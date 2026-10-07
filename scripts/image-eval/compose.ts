@@ -6,7 +6,7 @@
  * tall image) and comparison.pdf (one page per section).
  */
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, readdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -265,6 +265,10 @@ async function renderRow(
 
 export async function compose(runDir: string): Promise<{ sheet: string; pdf: string }> {
   const results = JSON.parse(await readFile(join(runDir, 'results.json'), 'utf8')) as EvalResults;
+  // Photos deleted from the set after the run (an audit) drop out of the sheet.
+  const photosDir = join(EVAL_DIR, results.photosDir ?? 'photos');
+  const present = new Set(await readdir(photosDir));
+  results.photos = results.photos.filter((p) => present.has(p.file));
 
   const sections = [
     await renderSummary(results),

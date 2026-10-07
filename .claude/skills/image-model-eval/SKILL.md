@@ -45,6 +45,24 @@ Default models live in `DEFAULT_MODELS` in `run.ts`. A full default run (5 photo
 
 Do a one-photo run (`--photos dog`) first when trying a model for the first time: unsupported parameters show up in seconds instead of after the whole batch.
 
+## LLM judge (`--judge`)
+
+Adds a Claude Opus 5.5 judge on top of a two-column run (baseline vs candidate, e.g. `--prompt-refs old=main,new=<branch>`) and writes `report.pdf`: a summary page, then one page per case, regressions first.
+
+```bash
+pnpm eval:images --set tricky --models gpt-image-2 --prompt-refs old=main,new=<branch> --concurrency 4 --judge
+pnpm eval:images --judge-only scripts/image-eval/runs/<run>   # re-judge, no image calls
+pnpm eval:images --report scripts/image-eval/runs/<run>       # rebuild report.pdf, no API calls
+```
+
+- Needs `ANTHROPIC_API_KEY` in `.env.local` (`pnpm secrets:pull`).
+- **Case notes**: `<set folder>/cases.json` maps each photo's stem to `{ "why": "…" }`, which says what that photo tests. The judge grades a pass/partial/fail "case check" against it. The tricky set's notes are seeded from the admin overrides; edit them freely (re-pulls keep them).
+- **Rubric** (1–5 each): likeness (null without faces), subject fidelity, Lotería style, background rules, clean (no leaked text or frames), plus overall 1–10 and matched/missed detail notes.
+- **Bias controls**: each case is judged twice with A/B swapped and the judge never learns which is baseline. A win needs both passes to agree; a split counts as a tie.
+- `--baseline` / `--candidate` pick columns; defaults are the first and second.
+- Cost: about $0.08 per case (two passes), ~15s per case, 4 at a time.
+- The judge is weakest on face likeness. Spot-check its verdicts against your own eye before trusting totals.
+
 ## What it does (so results are comparable)
 
 - Same pipeline as production: `normalizeImageForOpenAI` → `images.edit` at `1024x1536` with `renderIllustrationPrompt`.
