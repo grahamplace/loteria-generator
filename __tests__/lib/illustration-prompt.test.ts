@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   BACKGROUND_COLORS,
+  SKY_GRADIENT,
   buildIllustrationPrompt,
   pickBackgroundColor,
   renderIllustrationPrompt,
@@ -29,10 +30,29 @@ describe('renderIllustrationPrompt', () => {
     expect(prompt).toContain('Keep it and restyle it in the same Lotería style');
   });
 
-  it('tells the model to drop incidental backgrounds for a flat color field', () => {
+  it('tells the model to drop incidental backgrounds', () => {
     const prompt = renderIllustrationPrompt(YELLOW);
     expect(prompt).toContain('Background is NOT meaningful');
     expect(prompt).toContain('Drop it entirely');
+  });
+
+  it('offers a solid field of the picked color for objects', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('**Solid color — for objects.**');
+    expect(prompt).toContain(`A single flat field of ${YELLOW.name} (${YELLOW.hex})`);
+    expect(prompt).toContain('El Barril');
+    expect(prompt).toContain('La Bota');
+  });
+
+  it('offers the classic blue-to-pink sky for people and scenes', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('**Sky — for people and scenes.**');
+    expect(prompt).toContain(SKY_GRADIENT.top.hex);
+    expect(prompt).toContain(SKY_GRADIENT.horizon.hex);
+  });
+
+  it('uses the sky blue from the color pool for the sky gradient', () => {
+    expect(SKY_GRADIENT.top.hex).toBe('#5F94D6');
   });
 
   it('makes accurate facial likeness the top priority', () => {

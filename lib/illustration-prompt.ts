@@ -9,22 +9,31 @@ export type BackgroundColor = {
 };
 
 /**
- * Background color options for card illustrations. We pick one at random per
- * card (see {@link pickBackgroundColor}) and render an explicit instruction into
- * the prompt, so boards get the varied yellow / blue / white / pink mix of
- * classic Lotería boards instead of the model defaulting to blue every time.
+ * Solid background color options for card illustrations. We pick one at random
+ * per card (see {@link pickBackgroundColor}) and render it into the prompt, so
+ * boards get the varied yellow / blue / pink mix of classic Lotería boards
+ * instead of the model defaulting to blue every time.
  *
- * The color always applies, but how much of the card it covers depends on the
- * photo: cards whose setting carries the story (a wave, a mountain range) keep
- * that scenery restyled on top of this color, while cards with incidental
- * settings (a kitchen, a couch) drop it for a flat field. See the background
- * rules in {@link renderIllustrationPrompt}.
+ * The solid color is one of two backgrounds the model chooses between when the
+ * photo's own setting is incidental: a flat field of this color for objects
+ * (like El Barril or La Bota), or the fixed {@link SKY_GRADIENT} for people and
+ * scenes. Settings that carry the story (a wave, a mountain range) are kept and
+ * restyled instead. See the background rules in {@link renderIllustrationPrompt}.
  */
 export const BACKGROUND_COLORS: readonly BackgroundColor[] = [
   { name: 'pale lemon yellow', hex: '#F5EDA0' },
   { name: 'sky blue', hex: '#5F94D6' },
   { name: 'dusty rose / mauve pink', hex: '#DAB5C9' },
 ];
+
+/**
+ * The classic Lotería "sky": blue at the top fading to dusty pink at the
+ * horizon. Fixed rather than random.
+ */
+export const SKY_GRADIENT = {
+  top: BACKGROUND_COLORS[1], // sky blue
+  horizon: { name: 'dusty pink', hex: '#DAB5C9' },
+} as const satisfies { top: BackgroundColor; horizon: BackgroundColor };
 
 /** Background used for the static {@link ILLUSTRATION_PROMPT} export (dev scripts). */
 const DEFAULT_BACKGROUND = BACKGROUND_COLORS[1]; // sky blue — the historical default
@@ -34,7 +43,7 @@ export function pickBackgroundColor(): BackgroundColor {
   return BACKGROUND_COLORS[Math.floor(Math.random() * BACKGROUND_COLORS.length)];
 }
 
-/** Render the full illustration prompt for a specific background color. */
+/** Render the full illustration prompt with a specific solid background option. */
 export function renderIllustrationPrompt(background: BackgroundColor): string {
   return `
     ## Instructions
@@ -52,12 +61,13 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
     - Add a subtle **aged paper texture** and light **ink grain/halftone speckling**, with a touch of **ink bleed** at edges.
     - **First decide whether the background carries meaning.** Ask: does the setting tell you what is happening in this photo? If the subject were lifted onto a blank field, would the story be lost?
       - **Background IS meaningful** — e.g. the wave and spray behind a wakeboarder, the mountains behind a hiking couple, the snow under a kid on a snowboard, the ocean behind a child on the beach. **Keep it and restyle it in the same Lotería style as the subject**: same bold ink outlines, same flat saturated color blocking, same limited tonal steps. Simplify it into a few iconic shapes — a stylized wave, a ridgeline of peaks, a band of surf — rather than reproducing every photographic detail. It is scenery reduced to an emblem, not a painted landscape.
-      - **Background is NOT meaningful** — e.g. a kitchen behind a hug, a couch behind a toddler, a studio backdrop, a parked car, a blank wall. **Drop it entirely** and place the subject over an abstract color field, exactly like a classic Lotería card.
+      - **Background is NOT meaningful** — e.g. a kitchen behind a hug, a couch behind a toddler, a studio backdrop, a parked car, a blank wall. **Drop it entirely** and place the subject over one of the two classic Lotería backgrounds below.
       - When in doubt, drop it. A clean iconic card beats a cluttered one.
-    - **This card's potential background color is ${background.name} (${background.hex}). Build the background around this color**
-      - For images featuring "plain objects" (e.g. a trumpet, or a bowl of ramen), use ${background.name} (${background.hex}) as a flat background color field.
-      - For a person or scene with no meaningful setting, use a soft sky/ground gradient tinted toward ${background.name} (${background.hex}).
-      - For a kept, meaningful background, you can use ${background.name} (${background.hex}) if needed — but things like sky, water, or open field should still be blue / green / etc
+    - **When the background is dropped, choose ONE of these two classic Lotería backgrounds:**
+      - **Solid color — for objects.** A single flat field of ${background.name} (${background.hex}) filling the whole card, no gradient, no horizon, no scenery. Use it when the subject is a thing rather than a scene: a trumpet, a bowl of ramen, a pair of sneakers, a single held item — the way El Barril (the barrel) or La Bota (the boot) sit over a solid color on traditional cards.
+      - **Sky — for people and scenes.** The classic Lotería sky: ${SKY_GRADIENT.top.name} (${SKY_GRADIENT.top.hex}) at the top, fading smoothly to ${SKY_GRADIENT.horizon.name} (${SKY_GRADIENT.horizon.hex}) toward the horizon, with at most a simple ground line or a band of flat ground under the subject's feet. Use it for people, couples, groups, and moments that don't need a specific setting.
+      - Pick the one that fits the subject. Never mix them, and never use the sky's blue-to-pink gradient behind an object or the solid color behind a scene.
+    - For a kept, meaningful background, restyle it in its natural colors (sky stays blue, water blue/green, fields green, snow white). ${background.name} (${background.hex}) may appear as an accent but must not recolor the scenery.
     - Color treatment should match classic Lotería: **high contrast, saturated primaries**, minimal neutral tones, and a slightly warm vintage print cast.
     - Lighting should feel illustrative (not photographic): soft highlights, gentle shadows, and limited tonal steps.
     - **Do not look like modern vector art**—it should feel like a mid-century printed card illustration.
@@ -68,7 +78,8 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
 
     ## Colors
     **Main colors / palette guidance (use these as dominant colors):**
-    - Selected background color: ${background.name} (${background.hex})
+    - Solid background option (objects): ${background.name} (${background.hex})
+    - Sky gradient (people / scenes): ${SKY_GRADIENT.top.hex} → ${SKY_GRADIENT.horizon.hex}
     - Off-white / paper: #F3F2F2
     - Near-black ink (outlines): #1E1F25
     - Brick red / vintage crimson (accents): #962C2D and/or #5C282C
