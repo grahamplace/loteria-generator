@@ -6,6 +6,12 @@ import { useRouter } from 'next/navigation';
 import { filenameToLabel } from '@/lib/filename-label';
 import { type PixelRect } from '@/lib/crop-image';
 import { downscaleToDataUrl } from '@/lib/downscale-image';
+import {
+  CONVERTIBLE_IMAGE_ACCEPT,
+  convertForUpload,
+  convertibleKind,
+  isUploadCandidate,
+} from '@/lib/convert-upload-image';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
 import { scaleRect } from '@/lib/crop-math';
 import { describeUploadFailure, requestBodyLimitError } from '@/lib/upload-limits';
@@ -47,21 +53,32 @@ export function AdminBulkUpload() {
   itemsRef.current = items;
   useEffect(() => () => itemsRef.current.forEach((it) => URL.revokeObjectURL(it.previewUrl)), []);
 
-  function onFilesSelected(fileList: FileList | null) {
+  async function onFilesSelected(fileList: FileList | null) {
     if (!fileList) return;
+    const selected = Array.from(fileList).filter(isUploadCandidate);
+    let files = selected;
+    let unreadable: File[] = [];
+    // Await only when converting, so ordinary files update state synchronously.
+    if (selected.some((f) => convertibleKind(f))) {
+      const results = await Promise.allSettled(selected.map(convertForUpload));
+      files = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
+      unreadable = selected.filter((_, i) => results[i].status === 'rejected');
+    }
     setItems((prev) => {
       prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
-      return Array.from(fileList)
-        .filter((f) => f.type.startsWith('image/'))
-        .map((file) => ({
-          file,
-          label: filenameToLabel(file.name),
-          status: 'pending' as const,
-          keepPhoto: !reIllustrate,
-          previewUrl: URL.createObjectURL(file),
-        }));
+      return files.map((file) => ({
+        file,
+        label: filenameToLabel(file.name),
+        status: 'pending' as const,
+        keepPhoto: !reIllustrate,
+        previewUrl: URL.createObjectURL(file),
+      }));
     });
-    setError(null);
+    setError(
+      unreadable.length > 0
+        ? `Couldn’t read ${unreadable.map((f) => f.name).join(', ')}. Save as JPG and retry.`
+        : null
+    );
     setResult(null);
   }
 
@@ -207,7 +224,7 @@ export function AdminBulkUpload() {
         <input
           type="file"
           multiple
-          accept="image/*"
+          accept={`image/*,${CONVERTIBLE_IMAGE_ACCEPT}`}
           onChange={(e) => onFilesSelected(e.target.files)}
           className="block w-full text-sm text-foreground/70 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-primary/90 file:[touch-action:manipulation]"
         />

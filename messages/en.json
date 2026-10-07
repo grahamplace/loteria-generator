@@ -351,7 +351,7 @@
       "dropPhotos": "Drop photos to add cards",
       "ready": "ready",
       "processing": "processing",
-      "acceptedFormats": "PNG · JPG · WebP up to {maxSize}",
+      "acceptedFormats": "PNG · JPG · HEIC · WebP · AVIF · TIFF up to {maxSize}",
       "choosePhotos": "Choose photos",
       "uploadPhotos": "Upload photos",
       "exportTitle": "Export Loteria set",
@@ -382,6 +382,9 @@
         "exportFailedTitle": "Failed to export Loteria set",
         "exportFailedDesc": "Please try again.",
         "startingExport": "Starting export…",
+        "convertingPhotos": "{count, plural, =1 {Converting # photo…} other {Converting # photos…}}",
+        "convertFailedTitle": "Couldn’t read photo",
+        "convertFailedDesc": "{count, plural, =1 {# photo couldn’t be opened. Try saving it as a JPG first.} other {# photos couldn’t be opened. Try saving them as JPGs first.}}",
         "tooLargeTitle": "Image too large",
         "tooLargeDesc": "{count, plural, =1 {# photo is over the {maxSize} limit. Resize it or pick a smaller file.} other {# photos are over the {maxSize} limit. Resize them or pick smaller files.}}"
       }

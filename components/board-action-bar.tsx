@@ -12,6 +12,13 @@ import {
   DEFAULT_EXPORT_BOARD_COUNT,
 } from '@/lib/constants';
 import { partitionBySize, MAX_UPLOAD_DISPLAY } from '@/lib/upload-limits';
+import { UPLOAD_IMAGE_ACCEPT } from '@/lib/image-formats';
+import {
+  CONVERTIBLE_IMAGE_ACCEPT,
+  convertForUpload,
+  convertibleKind,
+  isUploadCandidate,
+} from '@/lib/convert-upload-image';
 import { BoardCountStepper } from '@/components/board-count-stepper';
 
 interface DisplayCard {
@@ -89,8 +96,29 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
       }
     };
 
-    const acceptFiles = (files: File[], method: 'drop' | 'picker') => {
-      const imageFiles = files.filter((f) => f.type.startsWith('image/'));
+    const acceptFiles = async (files: File[], method: 'drop' | 'picker') => {
+      const candidates = files.filter(isUploadCandidate);
+      const toConvert = candidates.filter((f) => convertibleKind(f)).length;
+      const convertingToast =
+        toConvert > 0
+          ? toast.loading(t('toasts.convertingPhotos', { count: toConvert }))
+          : undefined;
+      const imageFiles: File[] = [];
+      let unreadable = 0;
+      for (const file of candidates) {
+        try {
+          imageFiles.push(await convertForUpload(file));
+        } catch (err) {
+          console.warn('Photo conversion failed', { name: file.name, type: file.type, err });
+          unreadable++;
+        }
+      }
+      if (convertingToast !== undefined) toast.dismiss(convertingToast);
+      if (unreadable > 0) {
+        toast.error(t('toasts.convertFailedTitle'), {
+          description: t('toasts.convertFailedDesc', { count: unreadable }),
+        });
+      }
       const { valid, oversized } = partitionBySize(imageFiles);
       if (oversized.length > 0) {
         toast.error(t('toasts.tooLargeTitle'), {
@@ -114,13 +142,13 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
       setDragActive(false);
       const files = e.dataTransfer.files;
       if (files && files.length > 0) {
-        acceptFiles(Array.from(files), 'drop');
+        void acceptFiles(Array.from(files), 'drop');
       }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-        acceptFiles(Array.from(e.target.files), 'picker');
+        void acceptFiles(Array.from(e.target.files), 'picker');
       }
       // Reset so re-selecting the same file triggers onChange again
       e.target.value = '';
@@ -217,7 +245,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
           ref={inputRef}
           type="file"
           multiple
-          accept="image/png,image/jpeg,image/webp,image/gif"
+          accept={`${UPLOAD_IMAGE_ACCEPT},${CONVERTIBLE_IMAGE_ACCEPT}`}
           onChange={handleChange}
           className="hidden"
           disabled={isMaxReached}

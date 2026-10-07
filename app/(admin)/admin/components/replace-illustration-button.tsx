@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  CONVERTIBLE_IMAGE_ACCEPT,
+  convertForUpload,
+  convertibleKind,
+} from '@/lib/convert-upload-image';
 
 // Match the server-side base64 cap (~10MB decoded).
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -17,10 +22,20 @@ export function ReplaceIllustrationButton({ cardId }: ReplaceIllustrationButtonP
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function onSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
+  async function onSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = e.target.files?.[0];
     e.target.value = ''; // allow re-selecting the same file later
-    if (!f) return;
+    if (!selected) return;
+    let f = selected;
+    // Await only when converting, so ordinary files update state synchronously.
+    if (convertibleKind(selected)) {
+      try {
+        f = await convertForUpload(selected);
+      } catch {
+        setError('Couldn’t read that image. Save it as a JPG or PNG and retry.');
+        return;
+      }
+    }
     if (f.size > MAX_BYTES) {
       setError('Image exceeds maximum size of 10MB');
       return;
@@ -72,7 +87,12 @@ export function ReplaceIllustrationButton({ cardId }: ReplaceIllustrationButtonP
         style={{ touchAction: 'manipulation' }}
       >
         Replace illustration…
-        <input type="file" accept="image/*" onChange={onSelect} className="sr-only" />
+        <input
+          type="file"
+          accept={`image/*,${CONVERTIBLE_IMAGE_ACCEPT}`}
+          onChange={onSelect}
+          className="sr-only"
+        />
       </label>
       {error && !file && (
         <span role="alert" className="ml-2 text-sm text-primary">

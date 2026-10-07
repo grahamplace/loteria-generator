@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import sharp from 'sharp';
-import { normalizeImageForOpenAI } from '@/lib/image-normalize';
+import { normalizeImageForOpenAI, convertForOpenAIVision } from '@/lib/image-normalize';
 
 async function makeRgbPng({ depth = 8 }: { depth?: 8 | 16 } = {}) {
   return sharp({
@@ -89,5 +89,29 @@ describe('normalizeImageForOpenAI', () => {
     expect(meta.format).toBe('png');
     expect(meta.depth).toBe('uchar');
     expect(meta.space).toBe('srgb');
+  });
+});
+
+async function makeAvif() {
+  return sharp({
+    create: { width: 32, height: 32, channels: 3, background: { r: 200, g: 100, b: 50 } },
+  })
+    .avif()
+    .toBuffer();
+}
+
+describe('AVIF uploads', () => {
+  it('normalizes AVIF to PNG for images.edit', async () => {
+    const output = await normalizeImageForOpenAI(await makeAvif());
+    const meta = await sharp(output).metadata();
+    expect(meta.format).toBe('png');
+    expect(meta.space).toBe('srgb');
+  });
+
+  it('converts AVIF to JPEG for vision input', async () => {
+    const output = await convertForOpenAIVision(await makeAvif());
+    const meta = await sharp(output).metadata();
+    expect(meta.format).toBe('jpeg');
+    expect(meta.width).toBe(32);
   });
 });

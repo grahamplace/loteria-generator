@@ -7,7 +7,7 @@ import { extractCrop } from '@/lib/crop-region';
 import { inngest } from '../client';
 import { illustrationRegenerateRequested } from '../events';
 import { cardChannel, boardChannel } from '../channels';
-import { OPENAI_IMAGE_MIME_TO_EXT } from './generate-card-artwork';
+import { isSupportedUploadMime } from '@/lib/image-formats';
 import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
@@ -67,9 +67,9 @@ export const regenerateIllustration = inngest.createFunction(
 
     const illustrationUrl = await step.run('generate-and-upload-illustration', async () => {
       const { buffer, contentType } = await fetchBlob(originalImageUrl);
-      if (!OPENAI_IMAGE_MIME_TO_EXT[contentType]) {
+      if (!isSupportedUploadMime(contentType)) {
         throw new Error(
-          `Unsupported image format "${contentType}". Please upload PNG, JPEG, WebP, or GIF.`
+          `Unsupported image format "${contentType}". Please upload PNG, JPEG, WebP, GIF, or AVIF.`
         );
       }
       // Crop before AI, as generate-card-artwork does. The AI drawing is then
