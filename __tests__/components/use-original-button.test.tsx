@@ -14,7 +14,7 @@ describe('UseOriginalButton', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     render(<UseOriginalButton cardId="c1" />);
-    fireEvent.click(screen.getByRole('button', { name: /use original photo/i }));
+    fireEvent.click(screen.getByRole('button', { name: /use photo/i }));
     expect(screen.getByText(/discard ai drawing\?/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^confirm$/i })).toHaveFocus();
     expect(fetchMock).not.toHaveBeenCalled();
@@ -24,9 +24,9 @@ describe('UseOriginalButton', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     render(<UseOriginalButton cardId="c1" />);
-    fireEvent.click(screen.getByRole('button', { name: /use original photo/i }));
+    fireEvent.click(screen.getByRole('button', { name: /use photo/i }));
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
-    expect(screen.getByRole('button', { name: /use original photo/i })).toHaveFocus();
+    expect(screen.getByRole('button', { name: /use photo/i })).toHaveFocus();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -34,7 +34,7 @@ describe('UseOriginalButton', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', fetchMock);
     render(<UseOriginalButton cardId="c1" />);
-    fireEvent.click(screen.getByRole('button', { name: /use original photo/i }));
+    fireEvent.click(screen.getByRole('button', { name: /use photo/i }));
     fireEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
     expect(fetchMock).toHaveBeenCalledWith('/api/admin/cards/c1/use-original', {
@@ -45,7 +45,7 @@ describe('UseOriginalButton', () => {
   it('shows an error and keeps the confirm step when the request fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
     render(<UseOriginalButton cardId="c1" />);
-    fireEvent.click(screen.getByRole('button', { name: /use original photo/i }));
+    fireEvent.click(screen.getByRole('button', { name: /use photo/i }));
     fireEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/failed to use original photo/i);
     expect(screen.getByRole('button', { name: /^confirm$/i })).toBeEnabled();

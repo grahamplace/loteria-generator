@@ -12,8 +12,10 @@ import { RegenerateButton } from './regenerate-button';
 import { RecropButton } from './recrop-button';
 import { ReplaceIllustrationButton } from './replace-illustration-button';
 import { UseOriginalButton } from './use-original-button';
-import { EditLabelButton } from './edit-label-button';
+import { InlineLabelEdit } from './inline-label-edit';
 import { EditRiddleForm } from './edit-riddle-form';
+
+export type CardOwner = { id: string; name: string | null; email: string };
 
 function StatusBadge({ status }: { status: string }) {
   const variant =
@@ -32,13 +34,16 @@ function StatusBadge({ status }: { status: string }) {
 export function AdminCardDetail({
   card,
   board,
+  owner,
   headerExtra,
   onLabelSaved,
 }: {
   card: Card;
+  /** The user who created the card (the board's owner). */
+  owner?: CardOwner;
   /** Shown as a metadata link when the board isn't already the context. */
   board?: { id: string; name: string };
-  /** Rendered first in the action list (e.g. a "View Board" link). */
+  /** Rendered under the heading (e.g. a "View Board" link). */
   headerExtra?: React.ReactNode;
   onLabelSaved?: (label: string) => void;
 }) {
@@ -99,32 +104,33 @@ export function AdminCardDetail({
         className="space-y-4 rounded-lg border border-border p-4 lg:min-h-0 lg:overflow-y-auto"
       >
         <div className="flex items-center justify-between gap-2">
-          <h2 className="min-w-0 truncate text-sm font-medium">
-            Card #{card.number} — {card.label || 'Unlabeled'}
-          </h2>
-          <StatusBadge status={card.status} />
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {headerExtra}
-          <EditLabelButton
+          <InlineLabelEdit
             cardId={card.id}
             cardNumber={card.number}
             label={card.label}
             onSaved={onLabelSaved}
           />
-          {card.preserveOriginal && card.originalImageUrl && (
-            <RecropButton
-              cardId={card.id}
-              boardId={card.boardId}
-              initialCrop={card.cropData ?? null}
-            />
-          )}
-          {!card.isDefault && card.originalImageUrl && !card.preserveOriginal && (
-            <UseOriginalButton cardId={card.id} />
-          )}
-          {!card.isDefault && <ReplaceIllustrationButton cardId={card.id} />}
+          <StatusBadge status={card.status} />
         </div>
+
+        {headerExtra}
+
+        {!card.isDefault && (
+          // Side by side, splitting the pane's width.
+          <div className="flex flex-wrap gap-2 [&>*]:flex-1">
+            {card.preserveOriginal && card.originalImageUrl && (
+              <RecropButton
+                cardId={card.id}
+                boardId={card.boardId}
+                initialCrop={card.cropData ?? null}
+              />
+            )}
+            {card.originalImageUrl && !card.preserveOriginal && (
+              <UseOriginalButton cardId={card.id} />
+            )}
+            <ReplaceIllustrationButton cardId={card.id} />
+          </div>
+        )}
 
         {card.status === 'error' && card.errorMessage && (
           <div className="rounded border border-destructive/30 bg-destructive/10 p-3">
@@ -150,6 +156,23 @@ export function AdminCardDetail({
               <dd>
                 <Link href={`/admin/boards/${board.id}`} className="block truncate hover:underline">
                   {board.name}
+                </Link>
+              </dd>
+            </div>
+          )}
+          {owner && (
+            <div className="col-span-2 min-w-0">
+              <dt className="text-xs text-muted-foreground">Created by</dt>
+              <dd>
+                <Link href={`/admin/users/${owner.id}`} className="group block min-w-0">
+                  {owner.name && (
+                    <span className="block truncate group-hover:underline">{owner.name}</span>
+                  )}
+                  <span
+                    className={`block truncate ${owner.name ? 'text-xs text-muted-foreground' : 'group-hover:underline'}`}
+                  >
+                    {owner.email}
+                  </span>
                 </Link>
               </dd>
             </div>

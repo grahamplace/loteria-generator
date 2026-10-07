@@ -2,15 +2,19 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Upload } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 // Match the server-side base64 cap (~10MB decoded).
 const MAX_BYTES = 10 * 1024 * 1024;
 
 interface ReplaceIllustrationButtonProps {
   cardId: string;
+  className?: string;
 }
 
-export function ReplaceIllustrationButton({ cardId }: ReplaceIllustrationButtonProps) {
+export function ReplaceIllustrationButton({ cardId, className }: ReplaceIllustrationButtonProps) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -55,11 +59,11 @@ export function ReplaceIllustrationButton({ cardId }: ReplaceIllustrationButtonP
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ illustrationBase64: dataUrl }),
       });
-      if (!res.ok) throw new Error('Failed to replace illustration');
+      if (!res.ok) throw new Error('Failed to override illustration');
       close();
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to replace illustration');
+      setError(e instanceof Error ? e.message : 'Failed to override illustration');
     } finally {
       setSaving(false);
     }
@@ -68,14 +72,19 @@ export function ReplaceIllustrationButton({ cardId }: ReplaceIllustrationButtonP
   return (
     <>
       <label
-        className="inline-flex cursor-pointer items-center rounded-md border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5 focus-within:outline-2 focus-within:outline-primary"
+        className={cn(
+          buttonVariants({ variant: 'outline', size: 'sm' }),
+          'cursor-pointer focus-within:ring-2 focus-within:ring-primary',
+          className
+        )}
         style={{ touchAction: 'manipulation' }}
       >
-        Replace illustration…
+        <Upload aria-hidden="true" />
+        Override illustration
         <input type="file" accept="image/*" onChange={onSelect} className="sr-only" />
       </label>
       {error && !file && (
-        <span role="alert" className="ml-2 text-sm text-primary">
+        <span role="alert" className="w-full text-sm text-primary">
           {error}
         </span>
       )}
@@ -160,11 +169,11 @@ function ConfirmModal({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Replace illustration"
+        aria-label="Override illustration"
         className="w-full max-w-sm rounded-lg border border-foreground/10 bg-background p-4 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-sm font-semibold text-foreground">Replace illustration?</h2>
+        <h2 className="text-sm font-semibold text-foreground">Override illustration?</h2>
         <p className="mt-1 text-xs text-muted-foreground">
           This overwrites the current illustration with the uploaded image, used as-is. No AI is
           run.
@@ -196,7 +205,7 @@ function ConfirmModal({
             className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"
             style={{ touchAction: 'manipulation' }}
           >
-            {saving ? 'Replacing…' : 'Replace'}
+            {saving ? 'Overriding…' : 'Override'}
           </button>
         </div>
       </div>
