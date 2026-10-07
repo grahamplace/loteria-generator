@@ -79,3 +79,8 @@ export const reorderCardsSchema = z.object({
 export const adminCardLabelSchema = z.object({
   label: z.string().trim().min(1, 'Label is required').max(200),
 });
+
+// PUT /api/admin/cards/[cardId]/riddle — an empty riddle clears it.
+export const adminCardRiddleSchema = z.object({
+  riddle: z.string().trim().max(500, 'Riddle must be 500 characters or fewer'),
+});
