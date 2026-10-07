@@ -14,7 +14,8 @@
  *   PROD_DATABASE_URL         production Neon URL (in .env.personal); read-only queries
  *   PRIVATE_READ_WRITE_TOKEN  blob token (from .env.local; prod and dev share the store)
  *
- * Re-running replaces the folder's contents with the current set.
+ * Re-running replaces the folder's contents with the current set, which undoes
+ * any manual audit (photos deleted from the folder to drop them from the set).
  */
 
 import { mkdir, rm, writeFile } from 'node:fs/promises';

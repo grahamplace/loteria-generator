@@ -149,7 +149,9 @@ async function main() {
         process.exit(1);
       })
     ) as TrickyPhoto[];
-    for (const p of manifest) tricky.set(p.file, p);
+    // Auditing the set means deleting photos from the folder; skip those.
+    const present = new Set(await readdir(photosDir));
+    for (const p of manifest) if (present.has(p.file)) tricky.set(p.file, p);
   }
 
   const photoFiles = (set === 'tricky' ? [...tricky.keys()] : await readdir(photosDir))
