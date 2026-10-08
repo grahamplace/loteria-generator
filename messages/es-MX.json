@@ -588,7 +588,17 @@
         "sport": "Fútbol",
         "waves": "Olas",
         "papel": "Papel picado"
-      }
+      },
+      "expand": "Ampliar",
+      "expandPreview": "Ampliar vista previa de la tabla",
+      "expandedPreview": "Vista previa ampliada",
+      "closeExpandedPreview": "Cerrar vista previa ampliada",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "fitPreview": "Ajustar",
+      "fitPreviewLabel": "Ajustar tabla a la pantalla",
+      "previewZoom": "Nivel de zoom",
+      "panPreview": "Detalle de la tabla. Desplázate para explorar al acercar."
     },
     "Page": {
       "eyebrow": "Tu gente. Tus recuerdos. Tu lotería.",

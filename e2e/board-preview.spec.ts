@@ -545,3 +545,173 @@ for (const width of [1440, 390]) {
     await expect(background).toHaveValue('#abcdef');
   });
 }
+
+for (const width of [1024, 1440, 2560]) {
+  test(`expanded preview shows sharp detail, zooms, and returns focus at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await openEditor(page, { count: 54 });
+    const panel = page.getByRole('complementary', { name: 'Live preview' });
+    const expand = panel.getByRole('button', { name: 'Expand board preview' });
+    await expect(expand).toBeVisible();
+    const smallWidth = (await panel.getByRole('img').boundingBox())!.width;
+    await expand.focus();
+    await expand.press('Enter');
+    const viewer = page.getByRole('dialog', { name: 'Board preview', exact: true });
+    const image = viewer.getByRole('img');
+    const region = viewer.getByRole('region');
+    await expect(viewer).toBeVisible();
+    await expect(region).toHaveAttribute('aria-busy', 'false');
+    await expect
+      .poll(() => image.evaluate((el) => (el as HTMLImageElement).naturalWidth))
+      .toBe(2550);
+    const fitWidth = (await image.boundingBox())!.width;
+    expect(fitWidth).toBeGreaterThan(smallWidth);
+    expect((await viewer.boundingBox())!.width).toBe(width);
+    expect((await viewer.boundingBox())!.height).toBe(900);
+    await expect(viewer.getByRole('button', { name: 'Zoom out' })).toBeDisabled();
+    await page.keyboard.press('Tab');
+    expect(await viewer.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+    const source = await image.getAttribute('src');
+    for (const zoom of [150, 200, 300, 400]) {
+      await viewer.getByRole('button', { name: 'Zoom in' }).click();
+      await expect(viewer.getByText(`${zoom}%`, { exact: true })).toBeVisible();
+    }
+    await expect(viewer.getByRole('button', { name: 'Zoom in' })).toBeDisabled();
+    expect((await image.boundingBox())!.width).toBeCloseTo(fitWidth * 4, 0);
+    await expect(image).toHaveAttribute('src', source!);
+    const overflow = await region.evaluate((el) => ({
+      x: el.scrollWidth > el.clientWidth,
+      y: el.scrollHeight > el.clientHeight,
+    }));
+    expect(overflow).toEqual({ x: fitWidth * 4 + 32 > width, y: true });
+    await region.evaluate((el) => {
+      el.scrollLeft = 0;
+      el.scrollTop = 0;
+    });
+    await page.screenshot({
+      animations: 'disabled',
+      path: `.scratch/theme-work/preview-zoom-${width}.png`,
+    });
+    await viewer.getByRole('button', { name: 'Fit board to screen' }).click();
+    await expect(viewer.getByText('100%', { exact: true })).toBeVisible();
+    await viewer.getByRole('button', { name: 'Next preview page' }).click();
+    await expect(viewer.getByText('Cards 17–32', { exact: true })).toBeVisible();
+    await expect.poll(() => image.getAttribute('src')).not.toBe(source);
+    await expect(region).toHaveAttribute('aria-busy', 'false');
+    await page.keyboard.press('Escape');
+    await expect(viewer).toHaveCount(0);
+    await expect(expand).toBeFocused();
+    await expect(panel.getByText('Page 2 of 4', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true
+    );
+  });
+}
+
+test('Spanish mobile expanded preview layers over the sheet and survives refresh and Back', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await openEditor(page, { count: 20, locale: 'es' });
+  const open = page.getByRole('button', { name: 'Ver y descargar', exact: true });
+  await open.click();
+  const sheet = page.getByRole('dialog', { name: 'Vista previa en vivo', exact: true });
+  const expand = sheet.getByRole('button', { name: 'Ampliar vista previa de la tabla' });
+  await expand.click();
+  const viewer = page.getByRole('dialog', { name: 'Vista previa ampliada', exact: true });
+  await expect(viewer).toBeVisible();
+  const region = viewer.getByRole('region');
+  await expect(region).toHaveAttribute('aria-busy', 'false');
+  for (const name of [
+    'Acercar',
+    'Alejar',
+    'Ajustar tabla a la pantalla',
+    'Cerrar vista previa ampliada',
+  ]) {
+    await expect(viewer.getByRole('button', { name, exact: true })).toBeInViewport({ ratio: 1 });
+  }
+  await viewer.getByRole('button', { name: 'Acercar', exact: true }).click();
+  await viewer.getByRole('button', { name: 'Acercar', exact: true }).click();
+  expect((await viewer.getByRole('img').boundingBox())!.width).toBeGreaterThan(320);
+  await region.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(() => region.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+  await expect(viewer.getByRole('navigation')).toBeInViewport({ ratio: 1 });
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/preview-zoom-mobile-es.png',
+  });
+  await page.keyboard.press('Escape');
+  await expect(viewer).toHaveCount(0);
+  await expect(sheet).toBeVisible();
+  await expect(expand).toBeFocused();
+  await expand.click();
+  await page.goBack();
+  await expect(viewer).toHaveCount(0);
+  await page.goForward();
+  await expect(viewer).toBeVisible();
+  await viewer.getByRole('button', { name: 'Acercar', exact: true }).click();
+  await page.reload();
+  await expect(viewer).toBeVisible();
+  await expect(viewer.getByText('150%', { exact: true })).toBeVisible();
+  await viewer.getByRole('button', { name: 'Cerrar vista previa ampliada', exact: true }).click();
+  await expect(open).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('expanded preview stays usable on a slower device and connection', async ({
+  page,
+  context,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openEditor(page, { count: 16 });
+  await page.getByRole('button', { name: 'Preview & download', exact: true }).click();
+  const expand = page
+    .getByRole('dialog', { name: 'Live preview', exact: true })
+    .getByRole('button', { name: 'Expand board preview' });
+  await expect(expand).toBeVisible();
+  const session = await context.newCDPSession(page);
+  await session.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await session.send('Network.enable');
+  await session.send('Network.emulateNetworkConditions', {
+    offline: false,
+    latency: 150,
+    downloadThroughput: 200000,
+    uploadThroughput: 100000,
+  });
+  await page.evaluate(() => performance.mark('expand-start'));
+  await expand.click();
+  const viewer = page.getByRole('dialog', { name: 'Board preview', exact: true });
+  await expect(viewer).toBeVisible();
+  const openMs = await page.evaluate(
+    () => performance.now() - performance.getEntriesByName('expand-start')[0].startTime
+  );
+  await viewer.getByRole('button', { name: 'Zoom in' }).click();
+  await expect(viewer.getByText('150%', { exact: true })).toBeVisible();
+  await expect(viewer.getByRole('region')).toHaveAttribute('aria-busy', 'false', {
+    timeout: 30000,
+  });
+  await expect
+    .poll(() => viewer.getByRole('img').evaluate((el) => (el as HTMLImageElement).naturalWidth))
+    .toBe(2550);
+  const readyMs = await page.evaluate(
+    () => performance.now() - performance.getEntriesByName('expand-start')[0].startTime
+  );
+  await test.info().attach('expanded-preview-profile', {
+    body: JSON.stringify({
+      expandedPreviewProfile: {
+        cpuSlowdown: 4,
+        latencyMs: 150,
+        downloadBytesPerSecond: 200000,
+        openMs: Math.round(openMs),
+        readyMs: Math.round(readyMs),
+      },
+    }),
+    contentType: 'application/json',
+  });
+  await viewer.getByRole('button', { name: 'Close expanded preview' }).click();
+  await expect(expand).toBeFocused();
+  await session.detach();
+});

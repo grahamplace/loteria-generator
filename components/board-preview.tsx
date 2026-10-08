@@ -4,13 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { getImageProps } from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Maximize2 } from 'lucide-react';
 import { renderBoardToCanvas, type LotteriaCard } from '@/lib/generate-boards';
 import { MIN_EXPORT_CARD_COUNT } from '@/lib/constants';
 import type { BoardStyleOptions } from '@/lib/themes/presets';
-import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
+import { cardImageProps, CARD_GRID_THUMB_WIDTH, CARD_DETAIL_THUMB_WIDTH } from '@/lib/card-image';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { BoardPreviewZoom } from '@/components/board-preview-zoom';
 
 export interface BoardPreviewProps {
   styles?: BoardStyleOptions | null;
@@ -26,29 +27,49 @@ function setPreviewPage(page: number, replace = false) {
   else window.history.pushState(null, '', url);
 }
 
+export const previewZoomLevels = [100, 150, 200, 300, 400] as const;
+
+function setPreviewZoom(zoom: number | null, replace = false) {
+  const url = new URL(window.location.href);
+  if (zoom === null) url.searchParams.delete('previewZoom');
+  else url.searchParams.set('previewZoom', String(zoom));
+  if (replace) window.history.replaceState(null, '', url);
+  else window.history.pushState(null, '', url);
+}
+
 export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps) {
   const t = useTranslations('Themes.Builder');
   const locale = useLocale() === 'es-MX' ? 'es-MX' : 'en';
   const searchParams = useSearchParams();
   const pageParam = Number(searchParams.get('previewPage'));
+  const expanded = searchParams.get('previewZoom') != null;
+  const zoomParam = Number(searchParams.get('previewZoom'));
+  const zoom = previewZoomLevels.find((value) => value === zoomParam) ?? 100;
+  const expandTrigger = useRef<HTMLElement | null>(null);
+  const detailImages = useRef(new Map<string, Promise<HTMLImageElement>>());
+  const detailCache = useRef<{ signature: string; src: string } | null>(null);
+  const [detail, setDetail] = useState<{ signature: string; src: string } | null>(null);
+  const [detailRendering, setDetailRendering] = useState(false);
+  const [detailError, setDetailError] = useState('');
+  const [detailAttempt, setDetailAttempt] = useState(0);
   const requestedPage = Number.isInteger(pageParam) && pageParam > 0 ? pageParam - 1 : 0;
   const [preview, setPreview] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState('');
   const [rendering, setRendering] = useState(true);
   const [previewAttempt, setPreviewAttempt] = useState(0);
   const previewImages = useRef(new Map<string, Promise<HTMLImageElement>>());
-  const complete = cards
+  const readyCards = cards
     .filter((card) => !card.isProcessing && !card.error && card.illustration)
-    .sort((a, b) => a.number - b.number)
-    .map((card) => ({
-      ...card,
-      illustration: getImageProps({
-        ...cardImageProps(card.illustration, CARD_GRID_THUMB_WIDTH),
-        width: 160,
-        height: 240,
-        alt: '',
-      }).props.src,
-    }));
+    .sort((a, b) => a.number - b.number);
+  const complete = readyCards.map((card) => ({
+    ...card,
+    illustration: getImageProps({
+      ...cardImageProps(card.illustration, CARD_GRID_THUMB_WIDTH),
+      width: 160,
+      height: 240,
+      alt: '',
+    }).props.src,
+  }));
   const pageCount = Math.max(1, Math.ceil(complete.length / MIN_EXPORT_CARD_COUNT));
   const page = Math.min(requestedPage, pageCount - 1);
   const pageCards = complete.slice(
@@ -103,10 +124,96 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature, previewAttempt]);
 
+  useEffect(() => {
+    if (!expanded) {
+      detailImages.current.clear();
+      return;
+    }
+    setDetailError('');
+    if (detailCache.current?.signature === signature) {
+      setDetailRendering(false);
+      return;
+    }
+    let cancelled = false;
+    setDetailRendering(true);
+    // Only the current page is fetched at a larger size, and only on expansion.
+    const detailCards = readyCards
+      .slice(page * MIN_EXPORT_CARD_COUNT, (page + 1) * MIN_EXPORT_CARD_COUNT)
+      .map((card) => ({
+        ...card,
+        illustration: getImageProps({
+          ...cardImageProps(card.illustration, CARD_DETAIL_THUMB_WIDTH),
+          width: 400,
+          height: 600,
+          alt: '',
+        }).props.src,
+      }));
+    const activeImages = new Set(detailCards.map((card) => card.illustration));
+    for (const src of detailImages.current.keys()) {
+      if (!activeImages.has(src)) detailImages.current.delete(src);
+    }
+    renderBoardToCanvas(
+      detailCards,
+      styles ?? {},
+      isSample
+        ? [locale === 'es-MX' ? 'Muestra' : 'Sample', styles?.showTitle ? boardName : undefined]
+            .filter(Boolean)
+            .join(' · ')
+        : styles?.showTitle
+          ? boardName
+          : undefined,
+      { scale: 1, imageCache: detailImages.current }
+    )
+      .then((canvas) => {
+        if (!cancelled) {
+          const rendered = { signature, src: canvas.toDataURL('image/png') };
+          detailCache.current = rendered;
+          setDetail(rendered);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setDetailError(t('previewError'));
+      })
+      .finally(() => {
+        if (!cancelled) setDetailRendering(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Zoom uses the same full-resolution render; only print inputs trigger new work.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded, signature, detailAttempt]);
+
   return {
     preview,
     previewError,
     rendering,
+    expanded,
+    zoom,
+    zoomLevels: previewZoomLevels,
+    detailPreview: detail?.signature === signature ? detail.src : null,
+    detailRendering,
+    detailError,
+    retryDetail: () => setDetailAttempt((n) => n + 1),
+    setZoom: (value: number) => setPreviewZoom(value, true),
+    expand: () => {
+      expandTrigger.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      setPreviewZoom(100);
+    },
+    closeExpanded: () => setPreviewZoom(null, true),
+    restoreExpandFocus: () => {
+      const previous = expandTrigger.current;
+      const target =
+        previous?.isConnected && previous.getClientRects().length
+          ? previous
+          : Array.from(
+              document.querySelectorAll<HTMLElement>(
+                '[data-board-preview-expand], [data-board-preview-open]'
+              )
+            ).find((element) => element.getClientRects().length);
+      target?.focus({ preventScroll: true });
+    },
     retry: () => setPreviewAttempt((n) => n + 1),
     count: complete.length,
     page,
@@ -193,9 +300,23 @@ export function BoardPreviewImage({
             />
           </>
         )}
+        {preview && !previewError && (
+          <button
+            type="button"
+            onClick={state.expand}
+            data-board-preview-expand
+            aria-label={t('expandPreview')}
+            className="absolute inset-0 z-10 cursor-zoom-in touch-manipulation rounded-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+          >
+            <span className="absolute right-2 top-2 inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border bg-background/95 px-3 text-sm font-medium text-foreground shadow-sm hover:bg-background">
+              <Maximize2 className="size-4" aria-hidden="true" />
+              {t('expand')}
+            </span>
+          </button>
+        )}
         {rendering && (
           <div
-            className={`absolute inset-x-3 flex justify-center ${preview ? 'bottom-3' : 'inset-y-0 items-center'}`}
+            className={`pointer-events-none absolute inset-x-3 z-20 flex justify-center ${preview ? 'bottom-3' : 'inset-y-0 items-center'}`}
           >
             <span
               role="status"
@@ -242,12 +363,15 @@ export function BoardPreview(props: BoardPreviewProps) {
   const t = useTranslations('Themes.Builder');
   const state = useBoardPreview(props);
   return (
-    <aside
-      aria-label={t('livePreview')}
-      className="w-full min-w-0 max-w-sm justify-self-center rounded-xl border border-border bg-muted/30 p-3 lg:sticky lg:top-24"
-    >
-      <h3 className="mb-3 text-sm font-medium">{t('livePreview')}</h3>
-      <BoardPreviewImage state={state} />
-    </aside>
+    <>
+      <aside
+        aria-label={t('livePreview')}
+        className="w-full min-w-0 max-w-sm justify-self-center rounded-xl border border-border bg-muted/30 p-3 lg:sticky lg:top-24"
+      >
+        <h3 className="mb-3 text-sm font-medium">{t('livePreview')}</h3>
+        <BoardPreviewImage state={state} />
+      </aside>
+      <BoardPreviewZoom state={state} pagination={<BoardPreviewPagination state={state} />} />
+    </>
   );
 }

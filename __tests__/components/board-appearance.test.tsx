@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSyncExternalStore, type ComponentProps } from 'react';
@@ -62,6 +62,59 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('automatic board preview', () => {
+  it('renders a detailed page only on expansion and reuses it while zooming', async () => {
+    render(
+      view({
+        cards: [{ id: '1', number: 1, label: 'La Flor', illustration: '/api/images/flower' }],
+        styles: { presetId: 'wedding', showTitle: true },
+      })
+    );
+    await screen.findByRole('img', { name: previewName });
+    expect(renderBoard).toHaveBeenCalledTimes(1);
+    renderBoard.mockResolvedValueOnce(canvas('detailed'));
+    fireEvent.click(screen.getByRole('button', { name: 'Expand board preview' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
+    await waitFor(() =>
+      expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('detailed').toDataURL())
+    );
+    expect(renderBoard).toHaveBeenLastCalledWith(
+      [expect.objectContaining({ illustration: '/api/images/flower?w=800' })],
+      { presetId: 'wedding', showTitle: true },
+      'Sample · Our party',
+      expect.objectContaining({ scale: 1 })
+    );
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Zoom in' }));
+    expect(within(dialog).getByText('150%')).toBeVisible();
+    expect(window.location.search).toBe('?previewZoom=150');
+    expect(renderBoard).toHaveBeenCalledTimes(2);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close expanded preview' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Expand board preview' }));
+    await screen.findByRole('dialog', { name: 'Board preview' });
+    expect(renderBoard).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the thumbnail available when a detailed render fails and supports retry', async () => {
+    render(view());
+    await screen.findByRole('img', { name: previewName });
+    renderBoard.mockRejectedValueOnce(new Error('Detailed image failed'));
+    fireEvent.click(screen.getByRole('button', { name: 'Expand board preview' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      messages.Themes.Builder.previewError
+    );
+    expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('initial').toDataURL());
+    renderBoard.mockResolvedValueOnce(canvas('retry-detail'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Try again' }));
+    await waitFor(() =>
+      expect(within(dialog).getByRole('img')).toHaveAttribute(
+        'src',
+        canvas('retry-detail').toDataURL()
+      )
+    );
+    expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('protects an unfinished color edit and lets Escape restore the saved color', async () => {
     render(view({ styles: { presetId: 'halloween' } }));
     fireEvent.click(screen.getByRole('button', { name: 'Customize' }));

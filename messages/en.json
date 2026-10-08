@@ -582,7 +582,17 @@
         "sport": "Soccer",
         "waves": "Waves",
         "papel": "Papel picado"
-      }
+      },
+      "expand": "Expand",
+      "expandPreview": "Expand board preview",
+      "expandedPreview": "Board preview",
+      "closeExpandedPreview": "Close expanded preview",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fitPreview": "Fit",
+      "fitPreviewLabel": "Fit board to screen",
+      "previewZoom": "Zoom level",
+      "panPreview": "Board detail. Scroll to explore when zoomed in."
     },
     "Page": {
       "eyebrow": "Your people. Your memories. Your Lotería.",

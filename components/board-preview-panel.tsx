@@ -13,6 +13,7 @@ import {
   useBoardDownload,
   type BoardDownloadProps,
 } from '@/components/board-download-controls';
+import { BoardPreviewZoom } from '@/components/board-preview-zoom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
@@ -70,7 +71,10 @@ export function BoardPreviewPanel({
               {t('addPhotos')}
             </Button>
             <SheetTrigger asChild>
-              <Button className="min-h-11 min-w-0 flex-1 touch-manipulation whitespace-normal transition-colors">
+              <Button
+                data-board-preview-open
+                className="min-h-11 min-w-0 flex-1 touch-manipulation whitespace-normal transition-colors"
+              >
                 <Eye aria-hidden="true" />
                 {t('previewAndDownload')}
               </Button>
@@ -102,6 +106,7 @@ export function BoardPreviewPanel({
           </div>
         </SheetContent>
       </Sheet>
+      <BoardPreviewZoom state={preview} pagination={<BoardPreviewPagination state={preview} />} />
     </>
   );
 }
