@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getImageProps } from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { renderBoardToCanvas, type LotteriaCard } from '@/lib/generate-boards';
+import { MIN_EXPORT_CARD_COUNT } from '@/lib/constants';
 import type { BoardStyleOptions } from '@/lib/themes/presets';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import { Button } from '@/components/ui/button';
@@ -16,9 +18,20 @@ export interface BoardPreviewProps {
   cards: LotteriaCard[];
 }
 
+function setPreviewPage(page: number, replace = false) {
+  const url = new URL(window.location.href);
+  if (page === 0) url.searchParams.delete('previewPage');
+  else url.searchParams.set('previewPage', String(page + 1));
+  if (replace) window.history.replaceState(null, '', url);
+  else window.history.pushState(null, '', url);
+}
+
 export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps) {
   const t = useTranslations('Themes.Builder');
   const locale = useLocale() === 'es-MX' ? 'es-MX' : 'en';
+  const searchParams = useSearchParams();
+  const pageParam = Number(searchParams.get('previewPage'));
+  const requestedPage = Number.isInteger(pageParam) && pageParam > 0 ? pageParam - 1 : 0;
   const [preview, setPreview] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState('');
   const [rendering, setRendering] = useState(true);
@@ -26,7 +39,7 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
   const previewImages = useRef(new Map<string, Promise<HTMLImageElement>>());
   const complete = cards
     .filter((card) => !card.isProcessing && !card.error && card.illustration)
-    .slice(0, 16)
+    .sort((a, b) => a.number - b.number)
     .map((card) => ({
       ...card,
       illustration: getImageProps({
@@ -36,20 +49,36 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
         alt: '',
       }).props.src,
     }));
-  const signature = JSON.stringify([complete, styles, boardName, locale]);
+  const pageCount = Math.max(1, Math.ceil(complete.length / MIN_EXPORT_CARD_COUNT));
+  const page = Math.min(requestedPage, pageCount - 1);
+  const pageCards = complete.slice(
+    page * MIN_EXPORT_CARD_COUNT,
+    (page + 1) * MIN_EXPORT_CARD_COUNT
+  );
+  const isSample = complete.length < MIN_EXPORT_CARD_COUNT;
+  const signature = JSON.stringify([pageCards, styles, boardName, locale, isSample]);
+  const imageSources = JSON.stringify(complete.map((card) => card.illustration));
+
+  // Removing cards can remove the current page. Keep the URL on a valid page.
+  useEffect(() => {
+    if (requestedPage !== page) setPreviewPage(page, true);
+  }, [requestedPage, page]);
+
+  useEffect(() => {
+    const activeImages = new Set<string>(JSON.parse(imageSources));
+    for (const src of previewImages.current.keys()) {
+      if (!activeImages.has(src)) previewImages.current.delete(src);
+    }
+  }, [imageSources]);
 
   useEffect(() => {
     let cancelled = false;
     setRendering(true);
     setPreviewError('');
-    const activeImages = new Set(complete.map((card) => card.illustration));
-    for (const src of previewImages.current.keys()) {
-      if (!activeImages.has(src)) previewImages.current.delete(src);
-    }
     renderBoardToCanvas(
-      complete,
+      pageCards,
       styles ?? {},
-      complete.length < 16
+      isSample
         ? [locale === 'es-MX' ? 'Muestra' : 'Sample', styles?.showTitle ? boardName : undefined]
             .filter(Boolean)
             .join(' · ')
@@ -80,15 +109,62 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
     rendering,
     retry: () => setPreviewAttempt((n) => n + 1),
     count: complete.length,
+    page,
+    pageCount,
+    firstNumber: pageCards[0]?.number ?? 0,
+    lastNumber: pageCards.at(-1)?.number ?? 0,
+    goToPage: (index: number) => setPreviewPage(Math.max(0, Math.min(index, pageCount - 1))),
   };
+}
+
+export function BoardPreviewPagination({ state }: { state: ReturnType<typeof useBoardPreview> }) {
+  const t = useTranslations('Themes.Builder');
+  const { page, pageCount, firstNumber, lastNumber, goToPage } = state;
+  if (pageCount <= 1) return null;
+  return (
+    <nav aria-label={t('previewPages')} className="flex items-center gap-3">
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="size-11 touch-manipulation transition-colors"
+        aria-label={t('previousPreviewPage')}
+        disabled={page === 0}
+        onClick={() => goToPage(page - 1)}
+      >
+        <ChevronLeft aria-hidden="true" />
+      </Button>
+      <div role="status" className="min-w-0 flex-1 text-center tabular-nums">
+        <p className="text-sm font-medium">
+          {t('previewPage', { current: page + 1, total: pageCount })}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {t('previewCardRange', { first: firstNumber, last: lastNumber })}
+        </p>
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="size-11 touch-manipulation transition-colors"
+        aria-label={t('nextPreviewPage')}
+        disabled={page === pageCount - 1}
+        onClick={() => goToPage(page + 1)}
+      >
+        <ChevronRight aria-hidden="true" />
+      </Button>
+    </nav>
+  );
 }
 
 export function BoardPreviewImage({
   state,
   fitViewport = false,
+  showPagination = true,
 }: {
   state: ReturnType<typeof useBoardPreview>;
   fitViewport?: boolean;
+  showPagination?: boolean;
 }) {
   const t = useTranslations('Themes.Builder');
   const { preview, previewError, rendering, retry, count } = state;
@@ -97,7 +173,10 @@ export function BoardPreviewImage({
       <div
         className={cn(
           'relative mx-auto aspect-[17/22] w-full overflow-hidden rounded-sm bg-muted shadow-md',
-          fitViewport && 'max-w-[min(100%,max(8rem,calc((100dvh-24rem)*17/22)))]'
+          fitViewport &&
+            (state.pageCount > 1
+              ? 'max-w-[min(100%,max(8rem,calc((100dvh-28rem)*17/22)))]'
+              : 'max-w-[min(100%,max(8rem,calc((100dvh-24rem)*17/22)))]')
         )}
         aria-busy={rendering}
       >
@@ -141,8 +220,19 @@ export function BoardPreviewImage({
           </div>
         )}
       </div>
+      {showPagination && state.pageCount > 1 && (
+        <div className="mt-3">
+          <BoardPreviewPagination state={state} />
+        </div>
+      )}
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        {t(count === 0 ? 'emptyPreview' : count < 16 ? 'partialPreview' : 'fullPreview')}
+        {t(
+          count === 0
+            ? 'emptyPreview'
+            : count < MIN_EXPORT_CARD_COUNT
+              ? 'partialPreview'
+              : 'fullPreview'
+        )}
       </p>
     </>
   );

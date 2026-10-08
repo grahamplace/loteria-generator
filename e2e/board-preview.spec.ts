@@ -165,3 +165,78 @@ test('board count survives the mobile sheet and a switch back to desktop', async
   expect(file.suggestedFilename()).toBe('our-halloween-loteria-set.pdf');
   await file.saveAs('.scratch/theme-work/sidebar-full-set.pdf');
 });
+
+test('all preview pages survive refresh, Back, and switching between desktop and mobile', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openEditor(page, { count: 54 });
+  const panel = page.getByRole('complementary', { name: 'Live preview' });
+  await expect(panel.getByText('Page 1 of 4', { exact: true })).toBeVisible();
+  await expect(panel.getByRole('button', { name: 'Previous preview page' })).toBeDisabled();
+  for (let current = 2; current <= 4; current++) {
+    const previousImage = await panel.getByRole('img').getAttribute('src');
+    const next = panel.getByRole('button', { name: 'Next preview page' });
+    await next.focus();
+    await next.press('Enter');
+    await expect(panel.getByText(`Page ${current} of 4`, { exact: true })).toBeVisible();
+    await expect.poll(() => panel.getByRole('img').getAttribute('src')).not.toBe(previousImage);
+    await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+  }
+  await expect(panel.getByText('Cards 49–54', { exact: true })).toBeVisible();
+  await expect(panel.getByRole('button', { name: 'Next preview page' })).toBeDisabled();
+  await expect(
+    panel.getByText('Example board. Export to generate shuffled boards.', { exact: true })
+  ).toBeVisible();
+  await expect(panel.getByRole('button', { name: 'Download set' })).toBeVisible();
+  await panel.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/pagination-last-page.png',
+  });
+  await expect(page).toHaveURL(/previewPage=4$/);
+  await page.goBack();
+  await expect(panel.getByText('Cards 33–48', { exact: true })).toBeVisible();
+  await page.goForward();
+  await expect(panel.getByText('Cards 49–54', { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(panel.getByText('Page 4 of 4', { exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Preview & download', exact: true }).click();
+  const sheet = page.getByRole('dialog', { name: 'Live preview', exact: true });
+  await expect(sheet.getByRole('navigation', { name: 'Preview pages' })).toBeInViewport({
+    ratio: 1,
+  });
+  await sheet.getByRole('button', { name: 'Previous preview page' }).click();
+  await expect(sheet.getByText('Cards 33–48', { exact: true })).toBeVisible();
+  await expect(sheet.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/pagination-mobile.png',
+  });
+  await page.keyboard.press('Escape');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(panel.getByText('Page 3 of 4', { exact: true })).toBeVisible();
+});
+
+test('Spanish mobile pagination stays accessible and clamps an out-of-range link', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await openEditor(page, { count: 54, locale: 'es' });
+  await page.goto(`${page.url()}?previewPage=99&source=preview-check`);
+  await expect(page).toHaveURL(/previewPage=4&source=preview-check$/);
+  await page.getByRole('button', { name: 'Ver y descargar', exact: true }).click();
+  const sheet = page.getByRole('dialog');
+  await expect(sheet.getByText('Cartas 49–54', { exact: true })).toBeVisible();
+  const navigation = sheet.getByRole('navigation', { name: 'Páginas de la vista previa' });
+  await expect(navigation).toBeInViewport({ ratio: 1 });
+  await navigation.getByRole('button', { name: 'Página anterior de la vista previa' }).click();
+  await expect(sheet.getByText('Página 3 de 4', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/previewPage=3&source=preview-check$/);
+  await expect(sheet.getByRole('button', { name: 'Descargar juego' })).toBeInViewport({ ratio: 1 });
+  await expect(sheet.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/pagination-mobile-es.png',
+  });
+});

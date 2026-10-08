@@ -1,12 +1,24 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ComponentProps } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useSyncExternalStore, type ComponentProps } from 'react';
 import { BoardAppearance } from '@/components/board-appearance';
 import { renderBoardToCanvas } from '@/lib/generate-boards';
 import messages from '@/messages/en.json';
 
 vi.mock('@/lib/generate-boards', () => ({ renderBoardToCanvas: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => {
+    const search = useSyncExternalStore(
+      (notify) => {
+        window.addEventListener('popstate', notify);
+        return () => window.removeEventListener('popstate', notify);
+      },
+      () => window.location.search
+    );
+    return new URLSearchParams(search);
+  },
+}));
 const renderBoard = vi.mocked(renderBoardToCanvas);
 const previewName = 'Your board rendered with the selected theme';
 
@@ -30,9 +42,22 @@ function view(props: Partial<ComponentProps<typeof BoardAppearance>> = {}) {
 }
 
 beforeEach(() => {
+  window.history.replaceState(null, '', '/');
+  // Next synchronizes native history updates with useSearchParams. Simulate
+  // that subscription here; browser tests also exercise the real router.
+  for (const method of ['pushState', 'replaceState'] as const) {
+    const original = window.history[method].bind(window.history);
+    vi.spyOn(window.history, method).mockImplementation(
+      (data: unknown, unused: string, url?: string | URL | null) => {
+        original(data, unused, url);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
+    );
+  }
   renderBoard.mockReset();
   renderBoard.mockResolvedValue(canvas('initial'));
 });
+afterEach(() => vi.restoreAllMocks());
 
 describe('automatic board preview', () => {
   it('shows the selected design even before the first photo is ready', async () => {
@@ -109,5 +134,66 @@ describe('automatic board preview', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByRole('img', { name: previewName })).toBeVisible();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('previews all 54 cards in number order, leaving the last page partial', async () => {
+    const cards = Array.from({ length: 54 }, (_, i) => ({
+      id: String(i + 1),
+      number: i + 1,
+      label: `Card ${i + 1}`,
+      illustration: `/card-${i + 1}.webp`,
+    })).reverse();
+    render(view({ cards, styles: { presetId: 'birthday', showTitle: true } }));
+    await screen.findByRole('img', { name: previewName });
+    expect(cards[0].number).toBe(54);
+    expect(screen.getByRole('button', { name: 'Previous preview page' })).toBeDisabled();
+    for (let page = 0; page < 4; page++) {
+      const first = page * 16 + 1;
+      const last = Math.min(first + 15, 54);
+      await waitFor(() =>
+        expect(renderBoard.mock.lastCall?.[0].map((card) => card.number)).toEqual(
+          Array.from({ length: last - first + 1 }, (_, i) => first + i)
+        )
+      );
+      expect(screen.getByText(`Page ${page + 1} of 4`)).toBeVisible();
+      expect(screen.getByText(`Cards ${first}–${last}`)).toBeVisible();
+      expect(renderBoard.mock.lastCall?.[2]).toBe('Our party');
+      expect(screen.getByText(messages.Themes.Builder.fullPreview)).toBeVisible();
+      if (page < 3) fireEvent.click(screen.getByRole('button', { name: 'Next preview page' }));
+    }
+    expect(screen.getByRole('button', { name: 'Next preview page' })).toBeDisabled();
+    expect(window.location.search).toBe('?previewPage=4');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Previous preview page' }));
+    });
+    expect(screen.getByText('Cards 33–48')).toBeVisible();
+  });
+
+  it('excludes unfinished cards and moves to a valid page when cards are removed', async () => {
+    const ready = Array.from({ length: 17 }, (_, i) => ({
+      id: String(i + 1),
+      number: i + 1,
+      label: `Card ${i + 1}`,
+      illustration: `/card-${i + 1}.webp`,
+    }));
+    const { rerender } = render(
+      view({
+        cards: [
+          ...ready,
+          { ...ready[0], id: 'processing', number: 18, isProcessing: true },
+          { ...ready[0], id: 'failed', number: 19, error: 'Failed' },
+        ],
+      })
+    );
+    await screen.findByRole('img', { name: previewName });
+    fireEvent.click(screen.getByRole('button', { name: 'Next preview page' }));
+    await waitFor(() =>
+      expect(renderBoard.mock.lastCall?.[0].map((card) => card.number)).toEqual([17])
+    );
+    rerender(view({ cards: ready.slice(0, 4) }));
+    await waitFor(() => expect(window.location.search).toBe(''));
+    expect(screen.queryByRole('navigation', { name: 'Preview pages' })).not.toBeInTheDocument();
+    expect(renderBoard.mock.lastCall?.[2]).toBe('Sample');
+    expect(renderBoard.mock.lastCall?.[0].map((card) => card.number)).toEqual([1, 2, 3, 4]);
   });
 });

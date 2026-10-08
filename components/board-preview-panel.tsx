@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react';
 import { Eye, Upload } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { BoardPreviewImage, useBoardPreview } from '@/components/board-preview';
+import {
+  BoardPreviewImage,
+  BoardPreviewPagination,
+  useBoardPreview,
+} from '@/components/board-preview';
 import {
   BoardDownloadControls,
   useBoardDownload,
@@ -91,11 +95,12 @@ export function BoardPreviewPanel({
           </SheetHeader>
           <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-4">
             <div className="mx-auto max-w-sm">
-              <BoardPreviewImage state={preview} />
+              <BoardPreviewImage state={preview} showPagination={false} />
             </div>
           </div>
           <div className="shrink-0 bg-background px-4 pb-4">
-            <div className="mx-auto max-w-sm">
+            <div className="mx-auto max-w-sm space-y-3">
+              <BoardPreviewPagination state={preview} />
               <BoardDownloadControls
                 state={download}
                 onUnlock={props.isUnlocked ? undefined : onUnlock}
