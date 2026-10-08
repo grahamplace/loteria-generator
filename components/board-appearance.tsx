@@ -1,13 +1,9 @@
 'use client';
 
-import { useEffect, useId, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useState } from 'react';
+import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
-import {
-  themePresets,
-  themeVariables,
-  type BoardStyleOptions,
-  type PhotoMode,
-} from '@/lib/themes/presets';
+import { themePresets, type BoardStyleOptions, type PhotoMode } from '@/lib/themes/presets';
 import { renderBoardToCanvas, type LotteriaCard } from '@/lib/generate-boards';
 import { Button } from '@/components/ui/button';
 import { Loader2, Check } from 'lucide-react';
@@ -97,13 +93,12 @@ export function BoardAppearance({
           <div
             role="radiogroup"
             aria-label={t('chooseTheme')}
-            className="grid max-h-80 grid-cols-2 gap-2 overflow-y-auto p-1 sm:grid-cols-3 lg:grid-cols-6"
+            className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6"
           >
             {themePresets.map((preset) => (
               <label
                 key={preset.id}
-                style={themeVariables(preset.id) as CSSProperties}
-                className={`theme-surface relative cursor-pointer rounded-md border-2 p-3 min-h-20 ${selected === preset.id ? 'border-primary ring-2 ring-primary/25' : 'border-border'}`}
+                className={`relative flex min-h-14 min-w-0 cursor-pointer items-center gap-2 rounded-lg border px-2 py-1.5 transition-colors has-[:disabled]:cursor-wait has-[:disabled]:opacity-60 sm:gap-3 ${selected === preset.id ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-background/60 hover:border-primary/50 hover:bg-background'}`}
               >
                 <input
                   type="radio"
@@ -121,11 +116,28 @@ export function BoardAppearance({
                   }
                   className="peer sr-only"
                 />
-                <span className="absolute inset-0 rounded-md peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary" />
-                <span className="theme-heading text-lg">{preset.name[locale]}</span>
-                {selected === preset.id && (
-                  <Check className="absolute bottom-2 right-2 h-4 w-4" aria-hidden="true" />
-                )}
+                <span className="pointer-events-none absolute inset-0 rounded-lg peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary" />
+                <span className="relative w-6 shrink-0 sm:w-8">
+                  <Image
+                    src={`/themes/picker/${preset.id}.webp`}
+                    width={32}
+                    height={42}
+                    alt=""
+                    unoptimized
+                    className="h-auto w-full rounded-sm border border-foreground/10 shadow-sm"
+                  />
+                  {selected === preset.id && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-background"
+                    >
+                      <Check className="h-3 w-3" strokeWidth={3} />
+                    </span>
+                  )}
+                </span>
+                <span className="min-w-0 flex-1 break-words text-[0.8125rem] font-medium leading-tight text-foreground sm:text-sm">
+                  {preset.name[locale]}
+                </span>
               </label>
             ))}
           </div>
