@@ -186,7 +186,7 @@ test('all preview pages survive refresh, Back, and switching between desktop and
   await expect(panel.getByText('Cards 49–54', { exact: true })).toBeVisible();
   await expect(panel.getByRole('button', { name: 'Next preview page' })).toBeDisabled();
   await expect(
-    panel.getByText('Example board. Export to generate shuffled boards.', { exact: true })
+    panel.getByText('Example. Export to generate shuffled boards.', { exact: true })
   ).toBeVisible();
   await expect(panel.getByRole('button', { name: 'Download set' })).toBeVisible();
   await panel.screenshot({
