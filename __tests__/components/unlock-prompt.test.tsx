@@ -16,7 +16,7 @@ vi.mock('next-intl', () => ({
         dialogTitleSrOnly: 'Unlock "{name}"',
         dialogDescSrOnly: 'Unlock this board for full access to all features.',
         freeLimitReached: "You've reached the free limit",
-        keepBuildingPrefix: 'Keep building —',
+        keepBuildingPrefix: 'Finish your Lotería set —',
         keepBuildingSuffix: 'await',
         moreCards: '{count} more cards',
         featureCards: 'Up to 54 cards',

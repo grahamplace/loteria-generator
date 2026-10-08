@@ -13,13 +13,13 @@ vi.mock('next-intl', () => ({
         noImage: 'No image',
         noLabel: 'No label',
         freeLimitReached: "You've reached the free limit",
-        keepBuildingPrefix: 'Keep building —',
+        keepBuildingPrefix: 'Finish your Lotería set —',
         keepBuildingSuffix: 'await',
         moreCards: '{count} more cards',
         featureCards: 'Up to 54 cards',
         featureExports: 'Unlimited exports',
         featureWatermarks: 'No watermarks',
-        unlockButton: 'Unlock',
+        unlockButton: 'Unlock · {price}',
         addMore: 'Add more',
         addClassicTile: 'Add classic',
         deleteDialogTitle: 'Delete this card?',
@@ -213,5 +213,23 @@ describe('BoardCardGrid', () => {
     // Custom card (isDefault: false) → red/primary badge
     expect(badges[1].classList.contains('bg-primary')).toBe(true);
     expect(badges[1].classList.contains('bg-accent')).toBe(false);
+  });
+
+  it('counts the cards an unlock adds toward 54, not toward the free limit', () => {
+    const fourCards = Array.from({ length: 4 }, (_, i) => ({
+      ...mockCards[0],
+      id: `card-${i}`,
+      number: i + 1,
+    }));
+    render(
+      <BoardCardGrid
+        {...defaultProps}
+        cards={fourCards}
+        isLocked
+        atCardLimit
+        onUnlockRequired={vi.fn()}
+      />
+    );
+    expect(screen.getByText('50 more cards')).toBeInTheDocument();
   });
 });
