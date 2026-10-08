@@ -14,14 +14,7 @@ import {
   type BoardDownloadProps,
 } from '@/components/board-download-controls';
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export function BoardPreviewPanel({
   onAddPhotos,
@@ -86,12 +79,12 @@ export function BoardPreviewPanel({
         </div>
         <SheetContent
           side="bottom"
+          aria-describedby={undefined}
           closeLabel={t('closePreview')}
           className="max-h-[92dvh] gap-0 rounded-t-2xl pb-[env(safe-area-inset-bottom)] motion-reduce:animate-none"
         >
           <SheetHeader className="shrink-0 pr-16">
             <SheetTitle>{t('livePreview')}</SheetTitle>
-            <SheetDescription>{t('previewDescription')}</SheetDescription>
           </SheetHeader>
           <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-4">
             <div className="mx-auto max-w-sm">
