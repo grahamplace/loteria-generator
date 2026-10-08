@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   BACKGROUND_COLORS,
+  SKY_GRADIENT,
   buildIllustrationPrompt,
   pickBackgroundColor,
   renderIllustrationPrompt,
@@ -29,10 +30,59 @@ describe('renderIllustrationPrompt', () => {
     expect(prompt).toContain('Keep it and restyle it in the same Lotería style');
   });
 
-  it('tells the model to drop incidental backgrounds for a flat color field', () => {
+  it('tells the model to drop incidental backgrounds', () => {
     const prompt = renderIllustrationPrompt(YELLOW);
     expect(prompt).toContain('Background is NOT meaningful');
     expect(prompt).toContain('Drop it entirely');
+  });
+
+  it('uses a solid field of the picked color when there are no people or animals', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('**No people or animals → solid color.**');
+    expect(prompt).toContain(`A single flat field of ${YELLOW.name} (${YELLOW.hex})`);
+    expect(prompt).toContain('El Barril');
+    expect(prompt).toContain('La Bota');
+  });
+
+  it('renders text-only images as lettering instead of illustrating what they say', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('**the text itself is the subject**');
+    expect(prompt).toContain('word for word and spelled exactly as written');
+    expect(prompt).toContain('**Do not illustrate what the text says.**');
+    expect(prompt).toContain('usernames and handles, watermarks');
+  });
+
+  it("exempts a text-only image's main text from the no-typography negative prompt", () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain(
+      'This rule overrides the "no typography" items in the negative prompt'
+    );
+    expect(prompt).toMatch(/## Negative prompt[^\n]*the main text is required/);
+  });
+
+  it('drops the table or floor under food and objects too', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('food and dishes, products');
+    expect(prompt).toContain('even when they were photographed on a table, counter, or floor');
+  });
+
+  it('uses the classic blue-to-pink sky when there are people or animals', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('**People or animals → sky.**');
+    expect(prompt).toContain(SKY_GRADIENT.top.hex);
+    expect(prompt).toContain(SKY_GRADIENT.bottom.hex);
+  });
+
+  it('puts people directly on the sky gradient, with no fake floor', () => {
+    const prompt = renderIllustrationPrompt(YELLOW);
+    expect(prompt).toContain('**No floor, ground, stage, rug, or horizon line**');
+    expect(prompt).not.toContain('band of flat ground');
+    expect(prompt).not.toContain('ground accents');
+    expect(prompt).toContain('fake floor or ground band under people');
+  });
+
+  it('uses the sky blue from the color pool for the sky gradient', () => {
+    expect(SKY_GRADIENT.top.hex).toBe('#5F94D6');
   });
 
   it('makes accurate facial likeness the top priority', () => {
