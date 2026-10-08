@@ -107,7 +107,7 @@ export function BoardDownloadControls({
   const { exportPdf, isExporting, progress, boardCount, setBoardCount, isSample, canExport } =
     state;
   return (
-    <div className="space-y-3 border-t border-border pt-3">
+    <div className="flex flex-col gap-3 border-t border-border pt-3">
       {!isSample && (
         <div className="flex flex-wrap items-center justify-between gap-2 max-lg:[&_button]:min-h-11 max-lg:[&_button]:min-w-11 max-lg:[&_input]:min-h-11 max-lg:[&_input]:text-base">
           <span className="text-sm font-medium">{t('boardCountLabel')}</span>
@@ -144,7 +144,7 @@ export function BoardDownloadControls({
           {unlock('unlockButton')}
         </Button>
       )}
-      <p className="text-center text-xs leading-relaxed text-muted-foreground">
+      <p className="hidden text-center text-xs leading-relaxed text-muted-foreground lg:block">
         {themes(isSample ? 'sampleDownloadIncludes' : 'fullExport')}
       </p>
       {isExporting && (
