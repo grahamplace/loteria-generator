@@ -7,7 +7,7 @@ import { themePresets, type BoardStyleOptions, type PhotoMode } from '@/lib/them
 import type { LotteriaCard } from '@/lib/generate-boards';
 import { BoardPreview } from '@/components/board-preview';
 import { cn } from '@/lib/utils';
-import { Loader2, Check } from 'lucide-react';
+import { Loader2, Check, ChevronDown } from 'lucide-react';
 
 export function BoardAppearance({
   styles,
@@ -118,15 +118,22 @@ export function BoardAppearance({
               <label htmlFor="photo-mode" className="block font-medium mb-2">
                 {t('photoMode')}
               </label>
-              <select
-                id="photo-mode"
-                value={photoMode}
-                onChange={(event) => void save({ photoMode: event.target.value as PhotoMode })}
-                className="min-h-11 rounded-md border border-input bg-background text-foreground px-3 text-base focus-visible:outline-2 focus-visible:outline-primary"
-              >
-                <option value="illustrated">{t('illustrated')}</option>
-                <option value="original">{t('original')}</option>
-              </select>
+              <div className="relative w-fit max-w-full">
+                <select
+                  id="photo-mode"
+                  name="photoMode"
+                  value={photoMode}
+                  onChange={(event) => void save({ photoMode: event.target.value as PhotoMode })}
+                  className="min-h-11 max-w-full appearance-none touch-manipulation rounded-md border border-input bg-background pl-3 pr-10 text-base text-foreground transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"
+                >
+                  <option value="illustrated">{t('illustrated')}</option>
+                  <option value="original">{t('original')}</option>
+                </select>
+                <ChevronDown
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                />
+              </div>
               <p className="mt-2 text-sm text-muted-foreground">{t('futureUploads')}</p>
             </div>
           </fieldset>
