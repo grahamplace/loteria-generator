@@ -598,7 +598,10 @@
       "fitPreview": "Ajustar",
       "fitPreviewLabel": "Ajustar tabla a la pantalla",
       "previewZoom": "Nivel de zoom",
-      "panPreview": "Detalle de la tabla. Desplázate para explorar al acercar."
+      "panPreview": "Detalle de la tabla. Desplázate para explorar al acercar.",
+      "fontSampleTitle": "Mi Lotería",
+      "fontLoading": "Cargando vista previa…",
+      "fontPreviewError": "No se pudo cargar la tipografía."
     },
     "Page": {
       "eyebrow": "Tu gente. Tus recuerdos. Tu lotería.",

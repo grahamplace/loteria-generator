@@ -4,7 +4,9 @@ import {
   type BoardDesignValues,
   type ThemeId,
   type FrameStyle,
+  type PrintFont,
 } from './presets';
+import { loadPrintFont } from './fonts';
 
 export function printColor(token: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
@@ -62,31 +64,8 @@ export function editableBoardStyle(options: BoardStyleOptions = {}): BoardDesign
 }
 export type ResolvedBoardStyle = ReturnType<typeof resolveBoardStyle>;
 
-const loadedFonts = new Map<string, Promise<void>>();
-export async function loadPrintFonts(displayFont = 'Jost') {
-  const paths: Record<string, string> = {
-    Caveat: '/fonts/themes/Caveat.woff2',
-    Jost: '/fonts/themes/Jost.woff2',
-    Creepster: '/fonts/themes/Creepster-Regular.ttf',
-    'Bebas Neue': '/fonts/themes/BebasNeue-Regular.ttf',
-  };
-  await Promise.all(
-    [...new Set(['Caveat', 'Jost', displayFont])].map((family) => {
-      if (!loadedFonts.has(family)) {
-        const promise = new FontFace(family, `url(${paths[family]})`)
-          .load()
-          .then((font) => {
-            document.fonts.add(font);
-          })
-          .catch((error) => {
-            loadedFonts.delete(family);
-            throw error;
-          });
-        loadedFonts.set(family, promise);
-      }
-      return loadedFonts.get(family);
-    })
-  );
+export async function loadPrintFonts(displayFont: PrintFont = 'Jost') {
+  await Promise.all([...new Set<PrintFont>(['Caveat', 'Jost', displayFont])].map(loadPrintFont));
 }
 
 /** Decorations stay inside the printable edge and outside the card grid. */

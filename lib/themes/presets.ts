@@ -1,6 +1,15 @@
 /** Lightweight render definitions. Color values live in app/globals.css. */
 export type PhotoMode = 'illustrated' | 'original';
-export const printFonts = ['Jost', 'Caveat', 'Creepster', 'Bebas Neue'] as const;
+export const printFonts = [
+  'Jost',
+  'Caveat',
+  'Creepster',
+  'Bebas Neue',
+  'Montserrat',
+  'Playfair Display',
+  'Fredoka',
+  'Roboto Slab',
+] as const;
 export type PrintFont = (typeof printFonts)[number];
 export const borderStyles = [
   'hand-drawn',

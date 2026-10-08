@@ -101,6 +101,8 @@ export function BoardAppearance({
             />
             <BoardDesignControls
               styles={styles}
+              boardName={boardName}
+              disabled={saving}
               onChange={(patch) =>
                 void save({
                   styleOptions: {

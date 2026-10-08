@@ -7,6 +7,8 @@ import { renderBoardToCanvas } from '@/lib/generate-boards';
 import messages from '@/messages/en.json';
 import { installPrintPalettes } from '../helpers/print-palettes';
 
+vi.mock('@/hooks/use-mobile', () => ({ useIsMobile: () => false }));
+vi.mock('@/lib/themes/fonts', () => ({ loadPrintFont: async () => {} }));
 vi.mock('@/lib/generate-boards', () => ({ renderBoardToCanvas: vi.fn() }));
 vi.mock('next/navigation', () => ({
   useSearchParams: () => {

@@ -4,14 +4,10 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
-import {
-  borderStyles,
-  printFonts,
-  type BoardDesignValues,
-  type BoardStyleOptions,
-} from '@/lib/themes/presets';
+import { borderStyles, type BoardDesignValues, type BoardStyleOptions } from '@/lib/themes/presets';
 import { editableBoardStyle } from '@/lib/themes/render-style';
 import { cn } from '@/lib/utils';
+import { BoardFontPicker } from '@/components/board-font-picker';
 
 export function openDesignControls() {
   const url = new URL(window.location.href);
@@ -140,9 +136,13 @@ function ColorControl({
 
 export function BoardDesignControls({
   styles,
+  boardName,
+  disabled,
   onChange,
 }: {
   styles?: BoardStyleOptions | null;
+  boardName: string;
+  disabled: boolean;
   onChange: (patch: Partial<BoardDesignValues>) => void;
 }) {
   const t = useTranslations('Themes.Builder');
@@ -199,29 +199,13 @@ export function BoardDesignControls({
               ))}
             </div>
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="min-w-0 text-sm font-medium">
-                <span className="mb-1.5 block">{t('font')}</span>
-                <span className="relative block">
-                  <select
-                    name="printFont"
-                    value={values.font}
-                    onChange={(event) =>
-                      onChange({ font: event.target.value as BoardDesignValues['font'] })
-                    }
-                    className={selectClassName}
-                  >
-                    {printFonts.map((font) => (
-                      <option key={font} value={font}>
-                        {font}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    aria-hidden="true"
-                    className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  />
-                </span>
-              </label>
+              <BoardFontPicker
+                value={values.font}
+                boardName={boardName}
+                active={open}
+                disabled={disabled}
+                onChange={(font) => onChange({ font })}
+              />
               <label className="min-w-0 text-sm font-medium">
                 <span className="mb-1.5 block">{t('borderStyle')}</span>
                 <span className="relative block">

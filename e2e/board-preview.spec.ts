@@ -5,12 +5,12 @@ import { mergeBoardStyles, type BoardStyleOptions } from '../lib/themes/presets'
 
 // Exercise the real editor and renderer with browser-local fixtures. No API
 // request in this suite can read or mutate a user's board.
-async function openEditor(page: Page, { count = 24, locale = 'en' } = {}) {
+async function openEditor(page: Page, { count = 24, locale = 'en', name = 'Our Halloween' } = {}) {
   const boardId = 'preview-layout-fixture';
   const initialStyles: BoardStyleOptions = { presetId: 'halloween', showTitle: true };
   let board = {
     id: boardId,
-    name: 'Our Halloween',
+    name,
     isUnlocked: true,
     photoMode: 'original',
     styleOptions: initialStyles,
@@ -380,7 +380,10 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await page.getByRole('button', { name: 'Customize', exact: true }).click();
   const background = page.getByRole('textbox', { name: 'Background', exact: true });
   await expect(background).toHaveValue('#21152e');
-  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveValue('Creepster');
+  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
+    'data-value',
+    'Creepster'
+  );
   await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
     'web'
   );
@@ -407,7 +410,8 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toBeEnabled();
   await page.getByRole('textbox', { name: 'Number text', exact: true }).fill('#ffffaa');
   await page.getByRole('textbox', { name: 'Number text', exact: true }).press('Enter');
-  await page.getByRole('combobox', { name: 'Font', exact: true }).selectOption('Bebas Neue');
+  await page.getByRole('combobox', { name: 'Font', exact: true }).click();
+  await page.getByRole('option', { name: 'Bebas Neue', exact: true }).click();
   await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('double');
   await page.getByRole('textbox', { name: 'Border color', exact: true }).fill('#c0ffee');
   await page.getByRole('textbox', { name: 'Border color', exact: true }).press('Enter');
@@ -424,7 +428,10 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await expect(page.getByRole('textbox', { name: 'Border color', exact: true })).toHaveValue(
     '#c0ffee'
   );
-  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveValue('Bebas Neue');
+  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
+    'data-value',
+    'Bebas Neue'
+  );
   await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
     'double'
   );
@@ -442,7 +449,10 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toHaveValue(
     '#7b946c'
   );
-  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveValue('Jost');
+  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
+    'data-value',
+    'Jost'
+  );
   await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
     'floral'
   );
@@ -499,7 +509,8 @@ for (const width of [1440, 390]) {
     const background = page.getByRole('textbox', { name: 'Background', exact: true });
     await background.fill('#345678');
     await background.press('Enter');
-    await page.getByRole('combobox', { name: 'Font', exact: true }).selectOption('Caveat');
+    await page.getByRole('combobox', { name: 'Font', exact: true }).click();
+    await page.getByRole('option', { name: 'Caveat', exact: true }).click();
     await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('dashed');
     await expect(background).toBeEnabled();
     async function choose(name: string) {
@@ -526,7 +537,10 @@ for (const width of [1440, 390]) {
     await page.reload();
     await choose('Custom');
     await expect(background).toHaveValue('#345678');
-    await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveValue('Caveat');
+    await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
+      'data-value',
+      'Caveat'
+    );
     await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
       'dashed'
     );
@@ -537,7 +551,10 @@ for (const width of [1440, 390]) {
     await page.reload();
     await choose('Custom');
     await expect(background).toHaveValue('#abcdef');
-    await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveValue('Caveat');
+    await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
+      'data-value',
+      'Caveat'
+    );
     await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
       'dashed'
     );
@@ -714,4 +731,118 @@ test('expanded preview stays usable on a slower device and connection', async ({
   await viewer.getByRole('button', { name: 'Close expanded preview' }).click();
   await expect(expand).toBeFocused();
   await session.detach();
+});
+
+test('font picker previews the actual title, loads on demand, and exports every new face', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const fonts = ['Montserrat', 'Playfair Display', 'Fredoka', 'Roboto Slab'];
+  const requestedFonts: string[] = [];
+  page.on('request', (request) => {
+    if (fonts.some((font) => request.url().includes(font.replaceAll(' ', '') + '-Regular')))
+      requestedFonts.push(request.url());
+  });
+  await openEditor(page, { count: 4, name: 'Lucía y José · 50 años' });
+  const panel = page.getByRole('complementary', { name: 'Live preview' });
+  await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+  await page.getByRole('button', { name: 'Customize', exact: true }).click();
+  const trigger = page.getByRole('combobox', { name: 'Font', exact: true });
+  await expect(trigger).toContainText('LUCÍA Y JOSÉ · 50 AÑOS');
+  expect(requestedFonts).toEqual([]);
+  await trigger.focus();
+  await trigger.press('Enter');
+  await expect(page.getByRole('listbox')).toBeVisible();
+  for (const font of fonts) {
+    const option = page.getByRole('option', { name: font, exact: true });
+    await expect(option).toBeEnabled();
+    await expect(option).toContainText('LUCÍA Y JOSÉ · 50 AÑOS');
+    await expect(option.locator('[title]')).toHaveCSS(
+      'font-family',
+      `"${font}", sans-serif`.replace(/^"([A-Za-z]+)"/, '$1')
+    );
+  }
+  expect(requestedFonts).toHaveLength(4);
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/font-picker-desktop.png',
+  });
+  await page.keyboard.press('m');
+  await expect(page.getByRole('option', { name: 'Montserrat', exact: true })).toBeFocused();
+  // Browsing options does not save until Enter commits the choice.
+  await expect(page.locator('[role=combobox][data-value]')).toHaveAttribute(
+    'data-value',
+    'Creepster'
+  );
+  await page.keyboard.press('Enter');
+  await expect(trigger).toBeFocused();
+  const rendered = new Set<string | null>();
+  for (const font of fonts) {
+    if (font !== fonts[0]) {
+      await trigger.click();
+      await page.getByRole('option', { name: font, exact: true }).click();
+    }
+    await expect(trigger).toHaveAttribute('data-value', font);
+    await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+    rendered.add(await panel.getByRole('img').getAttribute('src'));
+    const download = page.waitForEvent('download');
+    await panel.getByRole('button', { name: 'Download preview' }).click();
+    await (await download).saveAs(`.scratch/theme-work/font-${font.replaceAll(' ', '-')}.pdf`);
+  }
+  expect(rendered.size).toBe(4);
+  await expect(page.getByRole('radio', { name: 'Custom', exact: true })).toBeChecked();
+  await page.reload();
+  await expect(trigger).toHaveAttribute('data-value', 'Roboto Slab');
+  await expect(trigger).toContainText('LUCÍA Y JOSÉ · 50 AÑOS');
+});
+
+test('font picker fits a narrow Spanish screen and keeps long titles contained', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await openEditor(page, {
+    locale: 'es',
+    name: 'La fiesta de cumpleaños de Lucía, José y toda nuestra familia',
+  });
+  await page.getByRole('button', { name: 'Personalizar', exact: true }).click();
+  const trigger = page.getByRole('combobox', { name: 'Tipografía', exact: true });
+  await trigger.click();
+  const menu = page.getByRole('listbox');
+  await expect(page.getByRole('option', { name: 'Fredoka', exact: true })).toBeEnabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const bounds = (await menu.boundingBox())!;
+  expect(bounds.x).toBeGreaterThanOrEqual(0);
+  expect(bounds.x + bounds.width).toBeLessThanOrEqual(320);
+  expect(bounds.height).toBeLessThanOrEqual(568);
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/font-picker-mobile-es.png',
+  });
+  await page.keyboard.press('f');
+  await expect(page.getByRole('option', { name: 'Fredoka', exact: true })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(trigger).toHaveAttribute('data-value', 'Fredoka');
+  await trigger.click();
+  await page.keyboard.press('Escape');
+  await expect(trigger).toBeFocused();
+  await expect(trigger).toHaveAttribute('data-value', 'Fredoka');
+});
+
+test('font loading failures can retry without saving a broken font', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.route('**/fonts/themes/Fredoka-Regular.woff2', (route) => route.abort(), { times: 1 });
+  await openEditor(page);
+  await page.getByRole('button', { name: 'Customize', exact: true }).click();
+  const trigger = page.getByRole('combobox', { name: 'Font', exact: true });
+  await trigger.click();
+  const option = page.getByRole('option', { name: 'Fredoka', exact: true });
+  await expect(option).toContainText('Couldn’t load font preview.');
+  await expect(option).toBeDisabled();
+  await page.keyboard.press('Escape');
+  await expect(trigger).toHaveAttribute('data-value', 'Creepster');
+  await page.getByRole('button', { name: 'Try again', exact: true }).click();
+  await expect(option).toBeEnabled();
+  await option.click();
+  await expect(trigger).toHaveAttribute('data-value', 'Fredoka');
+  await expect(page.getByText('Couldn’t load font preview.')).toHaveCount(0);
 });

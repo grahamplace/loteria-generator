@@ -592,7 +592,10 @@
       "fitPreview": "Fit",
       "fitPreviewLabel": "Fit board to screen",
       "previewZoom": "Zoom level",
-      "panPreview": "Board detail. Scroll to explore when zoomed in."
+      "panPreview": "Board detail. Scroll to explore when zoomed in.",
+      "fontSampleTitle": "My Lotería",
+      "fontLoading": "Loading preview…",
+      "fontPreviewError": "Couldn’t load font preview."
     },
     "Page": {
       "eyebrow": "Your people. Your memories. Your Lotería.",
