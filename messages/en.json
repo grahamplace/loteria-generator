@@ -540,7 +540,6 @@
       "sample": "Sample",
       "sampleExport": "Export your sample",
       "sampleExplanation": "Download your cards and a partial 4×4 board. Complete game boards need 16 cards.",
-      "fullExport": "Unique boards and printable calling cards in one PDF. Export as often as you like.",
       "downloadSample": "Download sample PDF",
       "uploadExport": "Add photos and export",
       "processing": "{count} cards processing…",
@@ -551,7 +550,6 @@
       "cutInstruction": "Cut along lines to make individual cards",
       "downloadPreview": "Download preview",
       "downloadSet": "Download set",
-      "sampleDownloadIncludes": "PDF with a sample board and printable calling cards.",
       "addPhotos": "Add photos",
       "previewAndDownload": "Preview & download",
       "closePreview": "Close preview"

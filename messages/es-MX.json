@@ -546,7 +546,6 @@
       "sample": "Muestra",
       "sampleExport": "Exporta tu muestra",
       "sampleExplanation": "Descarga tus cartas y una tabla parcial de 4×4. Un juego completo necesita 16 cartas.",
-      "fullExport": "Tablas diferentes y cartas para cantar en un PDF. Exporta las veces que quieras.",
       "downloadSample": "Descargar PDF de muestra",
       "uploadExport": "Agregar fotos y exportar",
       "processing": "Procesando {count} cartas…",
@@ -557,7 +556,6 @@
       "cutInstruction": "Recorta por las líneas para separar las cartas",
       "downloadPreview": "Descargar muestra",
       "downloadSet": "Descargar juego",
-      "sampleDownloadIncludes": "PDF con una tabla de muestra y cartas para cantar.",
       "addPhotos": "Subir fotos",
       "previewAndDownload": "Ver y descargar",
       "closePreview": "Cerrar vista previa"

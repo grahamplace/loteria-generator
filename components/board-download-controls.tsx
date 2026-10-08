@@ -144,9 +144,6 @@ export function BoardDownloadControls({
           {unlock('unlockButton')}
         </Button>
       )}
-      <p className="hidden text-center text-xs leading-relaxed text-muted-foreground lg:block">
-        {themes(isSample ? 'sampleDownloadIncludes' : 'fullExport')}
-      </p>
       {isExporting && (
         <p role="status" className="text-sm">
           {progress}
