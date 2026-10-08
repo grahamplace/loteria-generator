@@ -1,17 +1,19 @@
 import { test, expect, type Page } from '@playwright/test';
 import samples from '../scripts/themes/samples/birthday.json';
 import { updateBoardSchema } from '../lib/validations';
+import { mergeBoardStyles, type BoardStyleOptions } from '../lib/themes/presets';
 
 // Exercise the real editor and renderer with browser-local fixtures. No API
 // request in this suite can read or mutate a user's board.
 async function openEditor(page: Page, { count = 24, locale = 'en' } = {}) {
   const boardId = 'preview-layout-fixture';
+  const initialStyles: BoardStyleOptions = { presetId: 'halloween', showTitle: true };
   let board = {
     id: boardId,
     name: 'Our Halloween',
     isUnlocked: true,
     photoMode: 'original',
-    styleOptions: { presetId: 'halloween', showTitle: true },
+    styleOptions: initialStyles,
   };
   let cards = Array.from({ length: count }, (_, index) => {
     const card = samples.cards[index % samples.cards.length];
@@ -42,7 +44,13 @@ async function openEditor(page: Page, { count = 24, locale = 'en' } = {}) {
       if (route.request().method() === 'PATCH') {
         if (!updateBoardSchema.safeParse(data).success)
           return route.fulfill({ status: 400, json: { error: 'Invalid settings' } });
-        board = { ...board, ...data };
+        board = {
+          ...board,
+          ...data,
+          styleOptions: data.styleOptions
+            ? mergeBoardStyles(board.styleOptions, data.styleOptions)
+            : board.styleOptions,
+        };
       }
       return route.fulfill({ json: { board } });
     }
@@ -482,3 +490,58 @@ test('mobile custom controls are compact, validate colors, and preserve the save
   await page.goBack();
   await expect(background).toBeVisible();
 });
+
+for (const width of [1440, 390]) {
+  test(`last custom design survives preset changes and refresh at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await openEditor(page, { count: 4 });
+    await page.getByRole('button', { name: 'Customize', exact: true }).click();
+    const background = page.getByRole('textbox', { name: 'Background', exact: true });
+    await background.fill('#345678');
+    await background.press('Enter');
+    await page.getByRole('combobox', { name: 'Font', exact: true }).selectOption('Caveat');
+    await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('dashed');
+    await expect(background).toBeEnabled();
+    async function choose(name: string) {
+      if (width >= 1024) {
+        const choice = page.getByRole('radio', { name, exact: true });
+        await expect(choice).toBeEnabled();
+        await choice.focus();
+        await choice.press('Space');
+        await expect(choice).toBeChecked();
+      } else {
+        await page.getByRole('button', { name: /^Change theme, currently / }).click();
+        const sheet = page.getByRole('dialog', { name: 'Choose a theme' });
+        await sheet.getByRole('button', { name, exact: true }).click();
+        await expect(sheet).toHaveCount(0);
+        await expect(
+          page.getByRole('button', { name: `Change theme, currently ${name}` })
+        ).toBeVisible();
+      }
+    }
+    await choose('Wedding');
+    await expect(background).toHaveValue('#f5efdf');
+    await choose('Christmas');
+    await expect(background).toHaveValue('#103b30');
+    await page.reload();
+    await choose('Custom');
+    await expect(background).toHaveValue('#345678');
+    await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveValue('Caveat');
+    await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
+      'dashed'
+    );
+    await background.fill('#abcdef');
+    await background.press('Enter');
+    await expect(background).toBeEnabled();
+    await choose('Classic');
+    await page.reload();
+    await choose('Custom');
+    await expect(background).toHaveValue('#abcdef');
+    await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveValue('Caveat');
+    await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
+      'dashed'
+    );
+    await page.reload();
+    await expect(background).toHaveValue('#abcdef');
+  });
+}

@@ -67,11 +67,71 @@ describe('editable print designs', () => {
     expect(mergeBoardStyles(custom, { presetId: 'classic' })).toEqual({
       presetId: 'classic',
       showTitle: true,
+      customDesign: presetBoardStyle('halloween'),
     });
-    expect(mergeBoardStyles(custom, { showTitle: false })).toEqual({ ...custom, showTitle: false });
+    expect(mergeBoardStyles(custom, { showTitle: false })).toEqual({
+      ...custom,
+      showTitle: false,
+      customDesign: presetBoardStyle('halloween'),
+    });
     expect(
       mergeBoardStyles(custom, { ...presetBoardStyle('wedding'), presetId: 'wedding' })
-    ).toEqual({ ...presetBoardStyle('wedding'), presetId: 'wedding', showTitle: true });
+    ).toEqual({
+      ...presetBoardStyle('wedding'),
+      presetId: 'wedding',
+      showTitle: true,
+      customDesign: presetBoardStyle('halloween'),
+    });
+  });
+  it('restores the latest custom design after multiple presets and a JSON round trip', () => {
+    const design = { ...presetBoardStyle('halloween'), backgroundColor: '#123456' };
+    const custom = mergeBoardStyles(null, { ...design, presetId: 'custom', showTitle: false });
+    const wedding = mergeBoardStyles(custom, {
+      ...presetBoardStyle('wedding'),
+      presetId: 'wedding',
+    });
+    const christmas = mergeBoardStyles(wedding, {
+      ...presetBoardStyle('christmas'),
+      presetId: 'christmas',
+    });
+    const restored = mergeBoardStyles(JSON.parse(JSON.stringify(christmas)), {
+      presetId: 'custom',
+    });
+    expect(editableBoardStyle(restored)).toEqual(design);
+    expect(restored.showTitle).toBe(false);
+    const edited = mergeBoardStyles(restored, { numberColor: '#abcdef' });
+    const classic = mergeBoardStyles(edited, {
+      ...presetBoardStyle('classic'),
+      presetId: 'classic',
+    });
+    expect(mergeBoardStyles(classic, { presetId: 'custom' }).customDesign).toEqual({
+      ...design,
+      numberColor: '#abcdef',
+    });
+  });
+  it('preserves legacy custom colors without copying metadata into the saved design', () => {
+    const preset = mergeBoardStyles(
+      { backgroundColor: '#123456', showTitle: true },
+      { presetId: 'wedding' }
+    );
+    expect(preset.customDesign).toEqual({ backgroundColor: '#123456' });
+    expect(mergeBoardStyles(preset, { presetId: 'custom' })).toEqual({
+      presetId: 'custom',
+      backgroundColor: '#123456',
+      showTitle: true,
+      customDesign: { backgroundColor: '#123456' },
+    });
+    expect(selectedBoardTheme({ customDesign: preset.customDesign })).toBe('classic');
+  });
+  it('keeps custom settings board-specific and ignores stale history sent by a client', () => {
+    const first = mergeBoardStyles(null, { ...presetBoardStyle('halloween'), presetId: 'custom' });
+    const second = mergeBoardStyles(null, { ...presetBoardStyle('wedding'), presetId: 'wedding' });
+    expect(second.customDesign).toBeUndefined();
+    const switched = mergeBoardStyles(first, {
+      presetId: 'classic',
+      customDesign: presetBoardStyle('wedding'),
+    });
+    expect(switched.customDesign).toEqual(presetBoardStyle('halloween'));
   });
   it.each([
     { backgroundColor: 'url(https://example.com)' },

@@ -87,7 +87,9 @@ export function BoardAppearance({
                 const saved = await save({
                   styleOptions: {
                     ...(presetId === 'custom'
-                      ? editableBoardStyle(styles ?? {})
+                      ? styles?.customDesign
+                        ? {}
+                        : editableBoardStyle(styles ?? {})
                       : presetBoardStyle(presetId)),
                     presetId,
                     showTitle: styles?.showTitle ?? presetId !== 'classic',

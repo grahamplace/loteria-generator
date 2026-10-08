@@ -35,6 +35,33 @@ beforeEach(() => {
   });
 });
 describe('admin board settings', () => {
+  it('stores and restores the board custom design through preset changes', async () => {
+    mocks.find.mockResolvedValue({
+      id: 'board',
+      userId: 'owner',
+      styleOptions: {
+        presetId: 'custom',
+        backgroundColor: '#123456',
+        font: 'Caveat',
+        borderStyle: 'dashed',
+      },
+    });
+    const switched = await PATCH(request({ styleOptions: { presetId: 'wedding' } }), { params });
+    const saved = (await switched.json()).board;
+    expect(saved.styleOptions.customDesign).toEqual({
+      backgroundColor: '#123456',
+      font: 'Caveat',
+      borderStyle: 'dashed',
+    });
+    mocks.find.mockResolvedValue({ ...saved, userId: 'owner' });
+    const restored = await PATCH(request({ styleOptions: { presetId: 'custom' } }), { params });
+    expect((await restored.json()).board.styleOptions).toMatchObject({
+      presetId: 'custom',
+      backgroundColor: '#123456',
+      font: 'Caveat',
+      borderStyle: 'dashed',
+    });
+  });
   it('saves custom colors, typography and borders through the admin endpoint', async () => {
     const styleOptions = {
       presetId: 'custom',
@@ -47,7 +74,20 @@ describe('admin board settings', () => {
     const response = await PATCH(request({ styleOptions }), { params });
     expect(response.status).toBe(200);
     expect(mocks.set).toHaveBeenCalledWith(
-      expect.objectContaining({ styleOptions: { labelColor: '#123456', ...styleOptions } })
+      expect.objectContaining({
+        styleOptions: {
+          labelColor: '#123456',
+          ...styleOptions,
+          customDesign: {
+            labelColor: '#123456',
+            backgroundColor: '#123456',
+            numberColor: '#abcdef',
+            font: 'Caveat',
+            borderStyle: 'double',
+            borderColor: '#fedcba',
+          },
+        },
+      })
     );
   });
   it('conceals settings from non-admins', async () => {
@@ -63,14 +103,24 @@ describe('admin board settings', () => {
   });
   it('persists the shared preset, title and photo mode without stale colors', async () => {
     const response = await PATCH(
-      request({ styleOptions: { presetId: 'halloween', showTitle: true }, photoMode: 'original' }),
+      request({
+        styleOptions: {
+          presetId: 'halloween',
+          showTitle: true,
+        },
+        photoMode: 'original',
+      }),
       { params }
     );
     expect(response.status).toBe(200);
     expect(mocks.set).toHaveBeenCalledWith(
       expect.objectContaining({
         photoMode: 'original',
-        styleOptions: { presetId: 'halloween', showTitle: true },
+        styleOptions: {
+          presetId: 'halloween',
+          showTitle: true,
+          customDesign: { labelColor: '#123456' },
+        },
       })
     );
     expect(mocks.invalidate).toHaveBeenCalledWith('board', 'owner');

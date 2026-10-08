@@ -32,22 +32,58 @@ export interface BoardDesignValues {
 export interface BoardStyleOptions extends Partial<BoardDesignValues> {
   presetId?: BoardThemeId;
   showTitle?: boolean;
+  /** Last custom design for this board, maintained by the settings API. */
+  customDesign?: Partial<BoardDesignValues>;
+}
+
+const designKeys = [
+  'backgroundColor',
+  'badgeColor',
+  'numberColor',
+  'labelColor',
+  'borderColor',
+  'font',
+  'borderStyle',
+] as const satisfies readonly (keyof BoardDesignValues)[];
+
+function designValues(options: BoardStyleOptions): Partial<BoardDesignValues> {
+  const design: Partial<BoardDesignValues> = {};
+  for (const key of designKeys) {
+    if (options[key] !== undefined) Object.assign(design, { [key]: options[key] });
+  }
+  return design;
 }
 
 export function selectedBoardTheme(options?: BoardStyleOptions | null): BoardThemeId {
   if (options?.presetId) return options.presetId;
-  return options && Object.keys(options).some((key) => key !== 'showTitle') ? 'custom' : 'classic';
+  return options && designKeys.some((key) => options[key] !== undefined) ? 'custom' : 'classic';
 }
 
-/** A newly selected preset replaces previous design values; title-only patches retain them. */
+/** Preserve a board's last custom design independently of its active preset. */
 export function mergeBoardStyles(
   previous: BoardStyleOptions | null | undefined,
   patch: BoardStyleOptions
 ): BoardStyleOptions {
-  if (patch.presetId && patch.presetId !== 'custom' && patch.presetId !== previous?.presetId) {
-    return { showTitle: previous?.showTitle, ...patch };
-  }
-  return { ...previous, ...patch };
+  const update = { ...patch };
+  // History comes from the saved board, never a potentially stale client snapshot.
+  delete update.customDesign;
+  const customDesign =
+    previous && selectedBoardTheme(previous) === 'custom'
+      ? designValues(previous)
+      : previous?.customDesign;
+  const restoreCustom =
+    update.presetId === 'custom' && customDesign && Object.keys(designValues(update)).length === 0;
+  const replacePreset =
+    update.presetId && update.presetId !== 'custom' && update.presetId !== previous?.presetId;
+  const base = restoreCustom
+    ? { showTitle: previous?.showTitle, ...customDesign }
+    : replacePreset
+      ? { showTitle: previous?.showTitle }
+      : previous;
+  const next: BoardStyleOptions = { ...base, ...update };
+  const latestCustom = selectedBoardTheme(next) === 'custom' ? designValues(next) : customDesign;
+  if (latestCustom) next.customDesign = latestCustom;
+  return next;
 }
 export type FrameStyle =
   | 'none'
