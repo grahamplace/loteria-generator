@@ -5,6 +5,7 @@ import { Eye, Upload } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
   BoardPreviewImage,
+  BoardPreviewExpand,
   BoardPreviewPagination,
   useBoardPreview,
 } from '@/components/board-preview';
@@ -48,7 +49,10 @@ export function BoardPreviewPanel({
         aria-label={t('livePreview')}
         className="sticky top-20 hidden max-h-[calc(100dvh-6rem)] min-w-0 self-start overflow-y-auto overscroll-contain rounded-xl border border-border bg-card p-4 shadow-sm lg:block"
       >
-        <h2 className="mb-3 font-display text-lg font-semibold">{t('livePreview')}</h2>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="min-w-0 font-display text-lg font-semibold">{t('livePreview')}</h2>
+          <BoardPreviewExpand state={preview} />
+        </div>
         <BoardPreviewImage state={preview} fitViewport />
         <div className="mt-4">
           <BoardDownloadControls
@@ -87,8 +91,9 @@ export function BoardPreviewPanel({
           closeLabel={t('closePreview')}
           className="max-h-[92dvh] gap-0 rounded-t-2xl pb-[env(safe-area-inset-bottom)] motion-reduce:animate-none"
         >
-          <SheetHeader className="shrink-0 pr-16">
-            <SheetTitle>{t('livePreview')}</SheetTitle>
+          <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 pr-16">
+            <SheetTitle className="min-w-0">{t('livePreview')}</SheetTitle>
+            <BoardPreviewExpand state={preview} />
           </SheetHeader>
           <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-4">
             <div className="mx-auto max-w-sm">

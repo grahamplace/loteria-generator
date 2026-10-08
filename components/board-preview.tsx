@@ -264,6 +264,23 @@ export function BoardPreviewPagination({ state }: { state: ReturnType<typeof use
   );
 }
 
+export function BoardPreviewExpand({ state }: { state: ReturnType<typeof useBoardPreview> }) {
+  const t = useTranslations('Themes.Builder');
+  return (
+    <button
+      type="button"
+      onClick={state.expand}
+      disabled={!state.preview || !!state.previewError}
+      data-board-preview-expand
+      aria-label={t('expandPreview')}
+      className="inline-flex min-h-11 min-w-11 shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
+    >
+      <Maximize2 className="size-4" aria-hidden="true" />
+      <span className="hidden min-[380px]:inline">{t('expand')}</span>
+    </button>
+  );
+}
+
 export function BoardPreviewImage({
   state,
   fitViewport = false,
@@ -282,8 +299,8 @@ export function BoardPreviewImage({
           'relative mx-auto aspect-[17/22] w-full overflow-hidden rounded-sm bg-muted shadow-md',
           fitViewport &&
             (state.pageCount > 1
-              ? 'max-w-[min(100%,max(8rem,calc((100dvh-28rem)*17/22)))]'
-              : 'max-w-[min(100%,max(8rem,calc((100dvh-24rem)*17/22)))]')
+              ? 'max-w-[min(100%,max(8rem,calc((100dvh-29rem)*17/22)))]'
+              : 'max-w-[min(100%,max(8rem,calc((100dvh-25rem)*17/22)))]')
         )}
         aria-busy={rendering}
       >
@@ -299,20 +316,6 @@ export function BoardPreviewImage({
               className="absolute inset-0 h-full w-full object-contain"
             />
           </>
-        )}
-        {preview && !previewError && (
-          <button
-            type="button"
-            onClick={state.expand}
-            data-board-preview-expand
-            aria-label={t('expandPreview')}
-            className="absolute inset-0 z-10 cursor-zoom-in touch-manipulation rounded-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
-          >
-            <span className="absolute right-2 top-2 inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border bg-background/95 px-3 text-sm font-medium text-foreground shadow-sm hover:bg-background">
-              <Maximize2 className="size-4" aria-hidden="true" />
-              {t('expand')}
-            </span>
-          </button>
         )}
         {rendering && (
           <div
@@ -368,7 +371,10 @@ export function BoardPreview(props: BoardPreviewProps) {
         aria-label={t('livePreview')}
         className="w-full min-w-0 max-w-sm justify-self-center rounded-xl border border-border bg-muted/30 p-3 lg:sticky lg:top-24"
       >
-        <h3 className="mb-3 text-sm font-medium">{t('livePreview')}</h3>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h3 className="min-w-0 text-sm font-medium">{t('livePreview')}</h3>
+          <BoardPreviewExpand state={state} />
+        </div>
         <BoardPreviewImage state={state} />
       </aside>
       <BoardPreviewZoom state={state} pagination={<BoardPreviewPagination state={state} />} />
