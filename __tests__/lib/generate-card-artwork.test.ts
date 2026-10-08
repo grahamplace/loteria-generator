@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 const { captured, updateSetSpy, cardsFindFirst, chatCreate, imagesEdit } = vi.hoisted(() => ({
   captured: {} as { handler?: (arg: unknown) => Promise<unknown> },
@@ -48,6 +48,7 @@ vi.mock('@/lib/blob', () => ({
 }));
 vi.mock('@/lib/image-normalize', () => ({
   normalizeImageForOpenAI: vi.fn(async () => Buffer.from('normalized')),
+  convertForOpenAIVision: vi.fn(async () => Buffer.from('vision-jpeg')),
 }));
 vi.mock('@/lib/invalidate-board-preview', () => ({ invalidateBoardPreview: vi.fn() }));
 vi.mock('@/lib/ai-tracing', () => ({
@@ -55,6 +56,7 @@ vi.mock('@/lib/ai-tracing', () => ({
 }));
 
 import '@/lib/inngest/functions/generate-card-artwork';
+import { fetchBlob } from '@/lib/blob';
 
 const CARD = '00000000-0000-0000-0000-000000000001';
 const BOARD = '00000000-0000-0000-0000-000000000002';
@@ -243,5 +245,59 @@ describe('generate-card-artwork label validation', () => {
     const { step } = makeStep();
     await captured.handler!({ event, step });
     expect(persistCall()!.label).toBe('La Luna');
+  });
+});
+
+describe('generate-card-artwork AVIF uploads', () => {
+  const reply = (content: string) => ({
+    choices: [{ message: { content }, finish_reason: 'stop' }],
+  });
+  const asOriginal = (contentType: string) =>
+    vi.mocked(fetchBlob).mockResolvedValue({ buffer: Buffer.from('raw'), contentType });
+
+  afterEach(() => asOriginal('image/png'));
+
+  const event = {
+    data: { cardId: CARD, boardId: BOARD, userId: 'u1', originalImageUrl: 'https://blob/o.png' },
+  };
+
+  function imageUrlSent() {
+    const body = chatCreate.mock.calls[0][0] as {
+      messages: { content: string | { type: string; image_url?: { url: string } }[] }[];
+    };
+    const parts = body.messages[1].content as { type: string; image_url?: { url: string } }[];
+    return parts.find((p) => p.type === 'image_url')!.image_url!.url;
+  }
+
+  it('converts AVIF to JPEG for labeling, since OpenAI vision cannot read AVIF', async () => {
+    asOriginal('image/avif');
+    chatCreate.mockResolvedValue(reply('{"label":"La Luna"}'));
+    const { step } = makeStep();
+
+    await captured.handler!({ event, step });
+
+    expect(imageUrlSent()).toBe(
+      `data:image/jpeg;base64,${Buffer.from('vision-jpeg').toString('base64')}`
+    );
+  });
+
+  it('generates an illustration from an AVIF original', async () => {
+    asOriginal('image/avif');
+    chatCreate.mockResolvedValue(reply('{"label":"La Luna"}'));
+    const { step } = makeStep();
+
+    await captured.handler!({ event, step });
+
+    expect(imagesEdit).toHaveBeenCalledOnce();
+    expect(persistCall()!.illustrationUrl).toBe('https://blob/illustration.png');
+  });
+
+  it('still rejects formats sharp or browsers cannot handle', async () => {
+    asOriginal('image/heic');
+    const { step } = makeStep();
+
+    await expect(
+      captured.handler!({ event: { data: { ...event.data, skipLabeling: true } }, step })
+    ).rejects.toThrow('Unsupported image format "image/heic"');
   });
 });

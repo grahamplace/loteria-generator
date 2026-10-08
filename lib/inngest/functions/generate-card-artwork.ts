@@ -3,9 +3,11 @@ import { eq, sql } from 'drizzle-orm';
 import { db, boards, cards } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
 import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
-import { normalizeImageForOpenAI } from '@/lib/image-normalize';
+import { normalizeImageForOpenAI, convertForOpenAIVision } from '@/lib/image-normalize';
+import { isSupportedUploadMime } from '@/lib/image-formats';
 import { extractCrop } from '@/lib/crop-region';
 
+/** Formats OpenAI's vision input reads directly; others are converted first. */
 export const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
@@ -83,8 +85,10 @@ export const generateCardArtwork = inngest.createFunction(
       }
 
       const label = await step.run('generate-label', async () => {
-        const { buffer, contentType } = await fetchBlob(originalImageUrl);
-        const mime = OPENAI_IMAGE_MIME_TO_EXT[contentType] ? contentType : 'image/png';
+        const { buffer: original, contentType } = await fetchBlob(originalImageUrl);
+        const visionReadable = Boolean(OPENAI_IMAGE_MIME_TO_EXT[contentType]);
+        const buffer = visionReadable ? original : await convertForOpenAIVision(original);
+        const mime = visionReadable ? contentType : 'image/jpeg';
         const base64 = buffer.toString('base64');
         const labelModel = LABEL_MODEL;
         const rejected: (string | null)[] = [];
@@ -142,9 +146,9 @@ export const generateCardArtwork = inngest.createFunction(
 
       const illustrationUrl = await step.run('generate-and-upload-illustration', async () => {
         const { buffer, contentType } = await fetchBlob(originalImageUrl);
-        if (!OPENAI_IMAGE_MIME_TO_EXT[contentType]) {
+        if (!isSupportedUploadMime(contentType)) {
           throw new Error(
-            `Unsupported image format "${contentType}". Please upload PNG, JPEG, WebP, or GIF.`
+            `Unsupported image format "${contentType}". Please upload PNG, JPEG, WebP, GIF, or AVIF.`
           );
         }
         const sourceBuffer = cropData ? await extractCrop(buffer, cropData) : buffer;

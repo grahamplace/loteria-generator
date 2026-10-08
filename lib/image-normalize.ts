@@ -15,3 +15,11 @@ export async function normalizeImageForOpenAI(buffer: Buffer): Promise<Buffer> {
     .png({ palette: false, compressionLevel: 6 })
     .toBuffer();
 }
+
+/**
+ * Re-encode an image OpenAI's vision input can't read (e.g. AVIF) as JPEG.
+ * JPEG rather than PNG keeps a full-size photo's payload small.
+ */
+export async function convertForOpenAIVision(buffer: Buffer): Promise<Buffer> {
+  return sharp(buffer).rotate().toColorspace('srgb').jpeg({ quality: 90 }).toBuffer();
+}

@@ -351,7 +351,7 @@
       "dropPhotos": "Suelta fotos para agregar cartas",
       "ready": "listas",
       "processing": "procesando",
-      "acceptedFormats": "PNG · JPG · WebP hasta {maxSize}",
+      "acceptedFormats": "PNG · JPG · HEIC · WebP · AVIF · TIFF hasta {maxSize}",
       "choosePhotos": "Seleccionar fotos",
       "uploadPhotos": "Subir fotos",
       "exportTitle": "Exportar Lotería",
@@ -382,6 +382,9 @@
         "exportFailedTitle": "No se pudo exportar la Lotería",
         "exportFailedDesc": "Por favor, inténtalo de nuevo.",
         "startingExport": "Iniciando exportación…",
+        "convertingPhotos": "{count, plural, =1 {Convirtiendo # foto…} other {Convirtiendo # fotos…}}",
+        "convertFailedTitle": "No se pudo leer la foto",
+        "convertFailedDesc": "{count, plural, =1 {No se pudo abrir # foto. Intenta guardarla primero como JPG.} other {No se pudieron abrir # fotos. Intenta guardarlas primero como JPG.}}",
         "tooLargeTitle": "Imagen demasiado grande",
         "tooLargeDesc": "{count, plural, =1 {# foto supera el límite de {maxSize}. Redúcela o elige un archivo más pequeño.} other {# fotos superan el límite de {maxSize}. Redúcelas o elige archivos más pequeños.}}"
       }
