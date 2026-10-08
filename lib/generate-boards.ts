@@ -213,7 +213,16 @@ export function drawCard(
   }
   ctx.strokeStyle = styleOptions.borderColor ?? printColor('--loteria-classic-ink');
   ctx.lineWidth = 3;
-  drawHandDrawnRect(ctx, x, y, cardWidth, cardHeight, 1);
+  ctx.save();
+  if (styleOptions.borderStyle === 'dashed') ctx.setLineDash([14, 10]);
+  if (['solid', 'double', 'dashed'].includes(styleOptions.borderStyle ?? '')) {
+    ctx.strokeRect(x, y, cardWidth, cardHeight);
+    if (styleOptions.borderStyle === 'double')
+      ctx.strokeRect(x + 7, y + 7, cardWidth - 14, cardHeight - 14);
+  } else if (styleOptions.borderStyle !== 'none') {
+    drawHandDrawnRect(ctx, x, y, cardWidth, cardHeight, 1);
+  }
+  ctx.restore();
 
   // Draw card illustration (portrait orientation, centered with padding)
   const imagePadding = 5;
@@ -326,12 +335,13 @@ export function drawCard(
 
   ctx.fillStyle = styleOptions.numberColor ?? printColor('--loteria-number-ink');
   // Glyph fills ~60% of the circle; keep the ratio as the badge scales.
-  ctx.font = `bold ${Math.round(badgeSize * 0.6)}px Caveat, cursive`;
+  const numberFont = styleOptions.numberFont ?? 'Caveat';
+  ctx.font = `bold ${Math.round(badgeSize * 0.6)}px '${numberFont}', sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   // Nudge left: Caveat digits sit slightly right of the glyph box, so centering
   // on the circle's center looks off without this correction (scales with size).
-  const badgeNudge = (badgeSize * 3) / 70;
+  const badgeNudge = numberFont === 'Caveat' ? (badgeSize * 3) / 70 : 0;
   ctx.fillText(card.number.toString(), badgeX + badgeSize / 2 - badgeNudge, badgeY + badgeSize / 2);
 
   // Draw label text (bottom of card)
@@ -339,7 +349,8 @@ export function drawCard(
 
   const labelText = card.label.toUpperCase();
   const baseFontSize = 40;
-  ctx.font = `normal ${baseFontSize}px 'Jost', Arial, Helvetica, sans-serif`;
+  const labelFont = styleOptions.labelFont ?? 'Jost';
+  ctx.font = `normal ${baseFontSize}px '${labelFont}', Arial, Helvetica, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
 
@@ -351,7 +362,7 @@ export function drawCard(
 
   while (metrics.width > maxLabelWidth && fontSize > 22) {
     fontSize -= 1;
-    ctx.font = `normal ${fontSize}px 'Jost', Arial, Helvetica, sans-serif`;
+    ctx.font = `normal ${fontSize}px '${labelFont}', Arial, Helvetica, sans-serif`;
     metrics = ctx.measureText(labelText);
   }
 

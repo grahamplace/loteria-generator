@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { getTheme, type ThemeId, type PhotoMode } from '@/lib/themes/presets';
+import { presetBoardStyle } from '@/lib/themes/render-style';
 import { Button } from '@/components/ui/button';
 import posthog from 'posthog-js';
 
@@ -33,7 +34,7 @@ export function ThemeEntry({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...(id && id !== starterId ? {} : { name }),
-          styleOptions: { presetId: theme, showTitle: true },
+          styleOptions: { ...presetBoardStyle(theme), presetId: theme, showTitle: true },
           photoMode,
         }),
       });

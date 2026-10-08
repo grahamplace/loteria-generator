@@ -4,8 +4,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Check, ChevronRight, Loader2 } from 'lucide-react';
-import { themePresets, type ThemeId } from '@/lib/themes/presets';
+import { Check, ChevronRight, Loader2, SlidersHorizontal } from 'lucide-react';
+import { themePresets, type BoardThemeId } from '@/lib/themes/presets';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
@@ -20,17 +20,23 @@ function setPickerOpen(open: boolean) {
   }
 }
 
-function ThemeThumbnail({ id, selected = false }: { id: ThemeId; selected?: boolean }) {
+function ThemeThumbnail({ id, selected = false }: { id: BoardThemeId; selected?: boolean }) {
   return (
     <span className="relative w-8 shrink-0">
-      <Image
-        src={`/themes/picker/${id}.webp`}
-        width={32}
-        height={42}
-        alt=""
-        unoptimized
-        className="h-auto w-full rounded-sm border border-foreground/10 shadow-sm"
-      />
+      {id === 'custom' ? (
+        <span className="flex h-[42px] items-center justify-center rounded-sm border border-primary/20 bg-primary/5 text-primary">
+          <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+        </span>
+      ) : (
+        <Image
+          src={`/themes/picker/${id}.webp`}
+          width={32}
+          height={42}
+          alt=""
+          unoptimized
+          className="h-auto w-full rounded-sm border border-foreground/10 shadow-sm"
+        />
+      )}
       {selected && (
         <span
           aria-hidden="true"
@@ -52,10 +58,10 @@ export function BoardThemePicker({
   error,
   onSelect,
 }: {
-  selected: ThemeId;
+  selected: BoardThemeId;
   saving: boolean;
   error: string;
-  onSelect: (id: ThemeId) => Promise<boolean>;
+  onSelect: (id: BoardThemeId) => Promise<boolean>;
 }) {
   const t = useTranslations('Themes.Builder');
   const locale = useLocale() === 'es-MX' ? 'es-MX' : 'en';
@@ -63,8 +69,12 @@ export function BoardThemePicker({
   const searchParams = useSearchParams();
   const open = searchParams.get('themePicker') === '1';
   const selectedButton = useRef<HTMLButtonElement>(null);
-  const [pending, setPending] = useState<ThemeId | null>(null);
-  const current = themePresets.find((preset) => preset.id === selected) ?? themePresets[0];
+  const [pending, setPending] = useState<BoardThemeId | null>(null);
+  const choices = [
+    ...themePresets,
+    { id: 'custom' as const, name: { en: t('custom'), 'es-MX': t('custom') } },
+  ];
+  const current = choices.find((preset) => preset.id === selected) ?? choices[0];
 
   useEffect(() => {
     if (!open) return;
@@ -77,7 +87,7 @@ export function BoardThemePicker({
     return () => desktop.removeEventListener('change', closeOnDesktop);
   }, [open]);
 
-  async function selectMobile(id: ThemeId) {
+  async function selectMobile(id: BoardThemeId) {
     if (saving || pending) return;
     if (id === selected) {
       setPickerOpen(false);
@@ -127,7 +137,7 @@ export function BoardThemePicker({
             </SheetHeader>
             <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-4">
               <div className="mx-auto grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-3">
-                {themePresets.map((preset) => (
+                {choices.map((preset) => (
                   <button
                     key={preset.id}
                     ref={selected === preset.id ? selectedButton : undefined}
@@ -175,7 +185,7 @@ export function BoardThemePicker({
         aria-label={t('chooseTheme')}
         className="hidden gap-2 lg:grid lg:grid-cols-3 xl:grid-cols-4"
       >
-        {themePresets.map((preset) => (
+        {choices.map((preset) => (
           <label
             key={preset.id}
             className={cn(

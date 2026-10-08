@@ -1,10 +1,17 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { themePresets, type BoardStyleOptions, type PhotoMode } from '@/lib/themes/presets';
+import {
+  themePresets,
+  selectedBoardTheme,
+  type BoardStyleOptions,
+  type PhotoMode,
+} from '@/lib/themes/presets';
 import type { LotteriaCard } from '@/lib/generate-boards';
 import { BoardPreview } from '@/components/board-preview';
+import { editableBoardStyle, presetBoardStyle } from '@/lib/themes/render-style';
+import { BoardDesignControls, openDesignControls } from '@/components/board-design-controls';
 import { BoardThemePicker } from '@/components/board-theme-picker';
 import { cn } from '@/lib/utils';
 import { Loader2, ChevronDown } from 'lucide-react';
@@ -32,9 +39,12 @@ export function BoardAppearance({
   const titleHelpId = useId();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const selected = styles?.presetId ?? 'classic';
+  const savingRef = useRef(false);
+  const selected = selectedBoardTheme(styles);
 
   async function save(settings: { styleOptions?: BoardStyleOptions; photoMode?: PhotoMode }) {
+    if (savingRef.current) return false;
+    savingRef.current = true;
     setSaving(true);
     setError('');
     try {
@@ -45,6 +55,7 @@ export function BoardAppearance({
       setError(t('saveError'));
       return false;
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
@@ -54,7 +65,9 @@ export function BoardAppearance({
       <div className="mb-4 flex min-h-11 flex-wrap items-baseline gap-x-3 gap-y-1 py-2">
         <h2 className="font-display text-lg font-semibold">{t('title')}</h2>
         <span className="hidden text-sm text-muted-foreground lg:inline">
-          {themePresets.find((p) => p.id === selected)?.name[locale]}
+          {selected === 'custom'
+            ? t('custom')
+            : themePresets.find((p) => p.id === selected)?.name[locale]}
         </span>
       </div>
       <div
@@ -70,12 +83,29 @@ export function BoardAppearance({
               selected={selected}
               saving={saving}
               error={error}
-              onSelect={(presetId) =>
-                save({
+              onSelect={async (presetId) => {
+                const saved = await save({
                   styleOptions: {
-                    ...styles,
+                    ...(presetId === 'custom'
+                      ? editableBoardStyle(styles ?? {})
+                      : presetBoardStyle(presetId)),
                     presetId,
                     showTitle: styles?.showTitle ?? presetId !== 'classic',
+                  },
+                });
+                if (saved && presetId === 'custom') openDesignControls();
+                return saved;
+              }}
+            />
+            <BoardDesignControls
+              styles={styles}
+              onChange={(patch) =>
+                void save({
+                  styleOptions: {
+                    ...editableBoardStyle(styles ?? {}),
+                    ...patch,
+                    presetId: 'custom',
+                    showTitle: styles?.showTitle ?? false,
                   },
                 })
               }

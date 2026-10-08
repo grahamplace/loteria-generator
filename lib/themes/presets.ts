@@ -1,11 +1,53 @@
 /** Lightweight render definitions. Color values live in app/globals.css. */
 export type PhotoMode = 'illustrated' | 'original';
-export interface BoardStyleOptions {
-  backgroundColor?: string;
-  badgeColor?: string;
-  labelColor?: string;
-  presetId?: ThemeId;
+export const printFonts = ['Jost', 'Caveat', 'Creepster', 'Bebas Neue'] as const;
+export type PrintFont = (typeof printFonts)[number];
+export const borderStyles = [
+  'hand-drawn',
+  'none',
+  'solid',
+  'double',
+  'dashed',
+  'web',
+  'stars',
+  'confetti',
+  'leaves',
+  'floral',
+  'pencils',
+  'sport',
+  'waves',
+  'papel',
+] as const;
+export type BorderStyle = (typeof borderStyles)[number];
+export type BoardThemeId = ThemeId | 'custom';
+export interface BoardDesignValues {
+  backgroundColor: string;
+  badgeColor: string;
+  numberColor: string;
+  labelColor: string;
+  borderColor: string;
+  font: PrintFont;
+  borderStyle: BorderStyle;
+}
+export interface BoardStyleOptions extends Partial<BoardDesignValues> {
+  presetId?: BoardThemeId;
   showTitle?: boolean;
+}
+
+export function selectedBoardTheme(options?: BoardStyleOptions | null): BoardThemeId {
+  if (options?.presetId) return options.presetId;
+  return options && Object.keys(options).some((key) => key !== 'showTitle') ? 'custom' : 'classic';
+}
+
+/** A newly selected preset replaces previous design values; title-only patches retain them. */
+export function mergeBoardStyles(
+  previous: BoardStyleOptions | null | undefined,
+  patch: BoardStyleOptions
+): BoardStyleOptions {
+  if (patch.presetId && patch.presetId !== 'custom' && patch.presetId !== previous?.presetId) {
+    return { showTitle: previous?.showTitle, ...patch };
+  }
+  return { ...previous, ...patch };
 }
 export type FrameStyle =
   | 'none'

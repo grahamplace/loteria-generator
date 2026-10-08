@@ -1,3 +1,4 @@
+import { mergeBoardStyles } from '@/lib/themes/presets';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
@@ -91,7 +92,7 @@ export async function PATCH(
     }
 
     if (styleOptions !== undefined) {
-      updateData.styleOptions = { ...existingBoard.styleOptions, ...styleOptions };
+      updateData.styleOptions = mergeBoardStyles(existingBoard.styleOptions, styleOptions);
     }
 
     if (photoMode !== undefined) updateData.photoMode = photoMode;

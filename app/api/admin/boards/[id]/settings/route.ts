@@ -1,3 +1,4 @@
+import { mergeBoardStyles } from '@/lib/themes/presets';
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db, boards } from '@/db';
@@ -17,7 +18,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .set({
       ...parsed.data,
       styleOptions: parsed.data.styleOptions
-        ? { ...board.styleOptions, ...parsed.data.styleOptions }
+        ? mergeBoardStyles(board.styleOptions, parsed.data.styleOptions)
         : board.styleOptions,
       updatedAt: new Date(),
     })

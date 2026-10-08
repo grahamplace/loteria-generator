@@ -5,6 +5,7 @@ import { useSyncExternalStore, type ComponentProps } from 'react';
 import { BoardAppearance } from '@/components/board-appearance';
 import { renderBoardToCanvas } from '@/lib/generate-boards';
 import messages from '@/messages/en.json';
+import { installPrintPalettes } from '../helpers/print-palettes';
 
 vi.mock('@/lib/generate-boards', () => ({ renderBoardToCanvas: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -42,6 +43,7 @@ function view(props: Partial<ComponentProps<typeof BoardAppearance>> = {}) {
 }
 
 beforeEach(() => {
+  installPrintPalettes();
   window.history.replaceState(null, '', '/');
   // Next synchronizes native history updates with useSearchParams. Simulate
   // that subscription here; browser tests also exercise the real router.
@@ -60,6 +62,20 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('automatic board preview', () => {
+  it('protects an unfinished color edit and lets Escape restore the saved color', async () => {
+    render(view({ styles: { presetId: 'halloween' } }));
+    fireEvent.click(screen.getByRole('button', { name: 'Customize' }));
+    const field = await screen.findByRole('textbox', { name: 'Background' });
+    fireEvent.change(field, { target: { value: '#12' } });
+    const leaving = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(leaving);
+    expect(leaving.defaultPrevented).toBe(true);
+    fireEvent.keyDown(field, { key: 'Escape' });
+    expect(field).toHaveValue('#21152e');
+    const restored = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(restored);
+    expect(restored.defaultPrevented).toBe(false);
+  });
   it('shows the selected design even before the first photo is ready', async () => {
     render(view({ styles: { presetId: 'halloween', showTitle: true } }));
     expect(await screen.findByRole('img', { name: previewName })).toBeVisible();

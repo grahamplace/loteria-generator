@@ -35,6 +35,21 @@ beforeEach(() => {
   });
 });
 describe('admin board settings', () => {
+  it('saves custom colors, typography and borders through the admin endpoint', async () => {
+    const styleOptions = {
+      presetId: 'custom',
+      backgroundColor: '#123456',
+      numberColor: '#abcdef',
+      font: 'Caveat',
+      borderStyle: 'double',
+      borderColor: '#fedcba',
+    };
+    const response = await PATCH(request({ styleOptions }), { params });
+    expect(response.status).toBe(200);
+    expect(mocks.set).toHaveBeenCalledWith(
+      expect.objectContaining({ styleOptions: { labelColor: '#123456', ...styleOptions } })
+    );
+  });
   it('conceals settings from non-admins', async () => {
     mocks.session.mockResolvedValue(null);
     expect((await PATCH(request({ photoMode: 'original' }), { params })).status).toBe(404);
@@ -46,7 +61,7 @@ describe('admin board settings', () => {
     ).toBe(400);
     expect(mocks.set).not.toHaveBeenCalled();
   });
-  it('persists the shared preset, title and photo mode while retaining legacy fields', async () => {
+  it('persists the shared preset, title and photo mode without stale colors', async () => {
     const response = await PATCH(
       request({ styleOptions: { presetId: 'halloween', showTitle: true }, photoMode: 'original' }),
       { params }
@@ -55,7 +70,7 @@ describe('admin board settings', () => {
     expect(mocks.set).toHaveBeenCalledWith(
       expect.objectContaining({
         photoMode: 'original',
-        styleOptions: { labelColor: '#123456', presetId: 'halloween', showTitle: true },
+        styleOptions: { presetId: 'halloween', showTitle: true },
       })
     );
     expect(mocks.invalidate).toHaveBeenCalledWith('board', 'owner');

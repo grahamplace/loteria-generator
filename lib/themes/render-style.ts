@@ -1,25 +1,64 @@
-import { getTheme, type BoardStyleOptions } from './presets';
+import {
+  getTheme,
+  type BoardStyleOptions,
+  type BoardDesignValues,
+  type ThemeId,
+  type FrameStyle,
+} from './presets';
 
 export function printColor(token: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
   if (!value) throw new Error(`Missing print color: ${token}`);
-  return value;
+  // CSS optimization shortens hex values; native color inputs and persisted
+  // settings use six digits, so expand the browser's resolved token here.
+  return /^#[0-9a-f]{3}$/i.test(value)
+    ? `#${value
+        .slice(1)
+        .split('')
+        .map((digit) => digit + digit)
+        .join('')}`
+    : value;
+}
+
+/** Concrete values are saved when a preset is picked, so Custom never depends on a theme ID. */
+export function presetBoardStyle(id: ThemeId): BoardDesignValues {
+  const preset = getTheme(id);
+  const color = (key: string) => printColor(`--loteria-${id}-${key}`);
+  return {
+    backgroundColor: color('paper'),
+    badgeColor: color('badge'),
+    labelColor: color('ink'),
+    borderColor: color('accent'),
+    numberColor: id === 'classic' ? printColor('--loteria-number-ink') : color('number'),
+    font: preset.font,
+    borderStyle:
+      id === 'classic' ? 'hand-drawn' : preset.frame === 'none' ? 'double' : preset.frame,
+  };
 }
 
 export function resolveBoardStyle(options: BoardStyleOptions = {}) {
-  const preset = getTheme(options.presetId);
-  const color = (key: string) => printColor(`--loteria-${preset.id}-${key}`);
-  const legacy = !options.presetId;
+  const defaults = presetBoardStyle(getTheme(options.presetId).id);
+  const design: BoardDesignValues = { ...defaults };
+  for (const key of Object.keys(defaults) as (keyof BoardDesignValues)[]) {
+    // Assign only defined fields; legacy boards may contain partial color settings.
+    if (options[key] !== undefined) Object.assign(design, { [key]: options[key] });
+  }
   return {
-    backgroundColor: (legacy && options.backgroundColor) || color('paper'),
-    badgeColor: (legacy && options.badgeColor) || color('badge'),
-    labelColor: (legacy && options.labelColor) || color('ink'),
-    borderColor: color('accent'),
-    numberColor: preset.id === 'classic' ? printColor('--loteria-number-ink') : color('number'),
-    font: preset.font,
-    frame: preset.frame,
-    themed: preset.id !== 'classic',
+    ...design,
+    // Existing boards retain their typography until a design is explicitly saved.
+    labelFont: options.font ?? 'Jost',
+    numberFont: options.font ?? 'Caveat',
+    frame: (['hand-drawn', 'solid', 'double', 'dashed'].includes(design.borderStyle)
+      ? 'none'
+      : design.borderStyle) as FrameStyle,
+    themed: design.borderStyle !== 'hand-drawn' && design.borderStyle !== 'none',
   };
+}
+
+export function editableBoardStyle(options: BoardStyleOptions = {}): BoardDesignValues {
+  const { backgroundColor, badgeColor, labelColor, borderColor, numberColor, font, borderStyle } =
+    resolveBoardStyle(options);
+  return { backgroundColor, badgeColor, labelColor, borderColor, numberColor, font, borderStyle };
 }
 export type ResolvedBoardStyle = ReturnType<typeof resolveBoardStyle>;
 
@@ -63,9 +102,13 @@ export function drawThemeFrame(
   ctx.fillStyle = style.borderColor;
   ctx.lineWidth = 5;
   const margin = 80;
+  if (style.borderStyle === 'dashed') ctx.setLineDash([24, 18]);
   ctx.strokeRect(margin, margin, width - margin * 2, height - margin * 2);
-  ctx.lineWidth = 2;
-  ctx.strokeRect(margin + 15, margin + 15, width - (margin + 15) * 2, height - (margin + 15) * 2);
+  ctx.setLineDash([]);
+  if (style.borderStyle !== 'solid' && style.borderStyle !== 'dashed') {
+    ctx.lineWidth = 2;
+    ctx.strokeRect(margin + 15, margin + 15, width - (margin + 15) * 2, height - (margin + 15) * 2);
+  }
   for (const [cx, cy, angle] of [
     [120, 120, 0],
     [width - 120, 120, Math.PI / 2],

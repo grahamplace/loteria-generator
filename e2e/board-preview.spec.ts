@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import samples from '../scripts/themes/samples/birthday.json';
+import { updateBoardSchema } from '../lib/validations';
 
 // Exercise the real editor and renderer with browser-local fixtures. No API
 // request in this suite can read or mutate a user's board.
@@ -38,7 +39,11 @@ async function openEditor(page: Page, { count = 24, locale = 'en' } = {}) {
     const url = new URL(route.request().url());
     const data = route.request().postDataJSON();
     if (url.pathname === `/api/boards/${boardId}`) {
-      if (route.request().method() === 'PATCH') board = { ...board, ...data };
+      if (route.request().method() === 'PATCH') {
+        if (!updateBoardSchema.safeParse(data).success)
+          return route.fulfill({ status: 400, json: { error: 'Invalid settings' } });
+        board = { ...board, ...data };
+      }
       return route.fulfill({ json: { board } });
     }
     if (url.pathname === `/api/boards/${boardId}/cards`) {
@@ -271,7 +276,13 @@ test('mobile theme picker keeps the editor compact and saves a choice before clo
   const saved = page.waitForRequest((request) => request.method() === 'PATCH');
   await sheet.getByRole('button', { name: 'Wedding', exact: true }).click();
   expect((await saved).postDataJSON()).toEqual({
-    styleOptions: { presetId: 'wedding', showTitle: true },
+    styleOptions: expect.objectContaining({
+      presetId: 'wedding',
+      showTitle: true,
+      backgroundColor: '#f5efdf',
+      font: 'Jost',
+      borderStyle: 'floral',
+    }),
   });
   await expect(sheet).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeFocused();
@@ -349,4 +360,125 @@ test('Spanish theme picker fits a small phone and supports Back, refresh, and de
   await expect(sheet).toHaveCount(0);
   await expect(page.getByRole('radio', { name: 'Halloween', exact: true })).toBeChecked();
   await expect(page).toHaveURL(/previewPage=2&source=theme-check$/);
+});
+
+test('custom designs update the preview, persist, export, and reset to a preset', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openEditor(page, { count: 4 });
+  const panel = page.getByRole('complementary', { name: 'Live preview' });
+  await expect(panel.getByRole('img')).toBeVisible();
+  await page.getByRole('button', { name: 'Customize', exact: true }).click();
+  const background = page.getByRole('textbox', { name: 'Background', exact: true });
+  await expect(background).toHaveValue('#21152e');
+  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveValue('Creepster');
+  await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
+    'web'
+  );
+  const before = await panel.getByRole('img').getAttribute('src');
+  await background.fill('#123456');
+  const saved = page.waitForRequest((request) => request.method() === 'PATCH');
+  await background.press('Enter');
+  expect((await saved).postDataJSON()).toEqual({
+    styleOptions: {
+      presetId: 'custom',
+      showTitle: true,
+      backgroundColor: '#123456',
+      badgeColor: '#bc441f',
+      numberColor: '#ffffff',
+      labelColor: '#ffe8af',
+      borderColor: '#d9a952',
+      font: 'Creepster',
+      borderStyle: 'web',
+    },
+  });
+  await expect(page.getByRole('radio', { name: 'Custom', exact: true })).toBeChecked();
+  await expect.poll(() => panel.getByRole('img').getAttribute('src')).not.toBe(before);
+  await page.getByLabel('Choose Number background color', { exact: true }).fill('#554433');
+  await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toBeEnabled();
+  await page.getByRole('textbox', { name: 'Number text', exact: true }).fill('#ffffaa');
+  await page.getByRole('textbox', { name: 'Number text', exact: true }).press('Enter');
+  await page.getByRole('combobox', { name: 'Font', exact: true }).selectOption('Bebas Neue');
+  await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('double');
+  await page.getByRole('textbox', { name: 'Border color', exact: true }).fill('#c0ffee');
+  await page.getByRole('textbox', { name: 'Border color', exact: true }).press('Enter');
+  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toBeEnabled();
+  await page.reload();
+  await expect(page.getByRole('radio', { name: 'Custom', exact: true })).toBeChecked();
+  await expect(background).toHaveValue('#123456');
+  await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toHaveValue(
+    '#554433'
+  );
+  await expect(page.getByRole('textbox', { name: 'Number text', exact: true })).toHaveValue(
+    '#ffffaa'
+  );
+  await expect(page.getByRole('textbox', { name: 'Border color', exact: true })).toHaveValue(
+    '#c0ffee'
+  );
+  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveValue('Bebas Neue');
+  await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
+    'double'
+  );
+  await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/custom-design-desktop.png',
+  });
+  const downloaded = page.waitForEvent('download');
+  await panel.getByRole('button', { name: 'Download preview' }).click();
+  await (await downloaded).saveAs('.scratch/theme-work/custom-design.pdf');
+  await page.getByRole('radio', { name: 'Wedding', exact: true }).focus();
+  await page.getByRole('radio', { name: 'Wedding', exact: true }).press('Space');
+  await expect(background).toHaveValue('#f5efdf');
+  await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toHaveValue(
+    '#7b946c'
+  );
+  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveValue('Jost');
+  await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
+    'floral'
+  );
+  await expect(page.getByRole('checkbox', { name: 'Include board title' })).toBeChecked();
+});
+
+test('mobile custom controls are compact, validate colors, and preserve the saved design on failure', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await openEditor(page, { locale: 'es' });
+  const customize = page.getByRole('button', { name: 'Personalizar', exact: true });
+  await expect(customize).toHaveAttribute('aria-expanded', 'false');
+  await customize.click();
+  const background = page.getByRole('textbox', { name: 'Fondo', exact: true });
+  await background.fill('oops');
+  await background.press('Enter');
+  await expect(background).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.getByText('Ingresa un color hexadecimal de 6 dígitos.')).toBeVisible();
+  await page.route(
+    '**/api/boards/preview-layout-fixture',
+    (route) => route.fulfill({ status: 500, json: { error: 'failed' } }),
+    { times: 1 }
+  );
+  await background.fill('123456');
+  await background.press('Enter');
+  await expect(page.getByText('No se pudo guardar. Inténtalo de nuevo.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Cambiar tema, actual: Halloween' })).toBeVisible();
+  await background.press('Enter');
+  await expect(
+    page.getByRole('button', { name: 'Cambiar tema, actual: Personalizado' })
+  ).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(page.getByText('Failed to update board', { exact: true })).toBeHidden({
+    timeout: 10000,
+  });
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/custom-design-mobile-es.png',
+  });
+  await page.reload();
+  await expect(background).toHaveValue('#123456');
+  await customize.click();
+  await expect(background).toBeHidden();
+  await page.goBack();
+  await expect(background).toBeVisible();
 });

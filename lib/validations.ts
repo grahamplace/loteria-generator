@@ -1,11 +1,19 @@
 import { z } from 'zod';
-import { isThemeId } from '@/lib/themes/presets';
+import { isThemeId, printFonts, borderStyles, type BoardThemeId } from '@/lib/themes/presets';
+
+const printColorSchema = z.string().regex(/^#[0-9a-f]{6}$/i, 'Use a six-digit hex color');
 
 export const boardStyleSchema = z.object({
-  backgroundColor: z.string().max(50).optional(),
-  badgeColor: z.string().max(50).optional(),
-  labelColor: z.string().max(50).optional(),
-  presetId: z.custom<import('@/lib/themes/presets').ThemeId>(isThemeId, 'Unknown theme').optional(),
+  backgroundColor: printColorSchema.optional(),
+  badgeColor: printColorSchema.optional(),
+  labelColor: printColorSchema.optional(),
+  numberColor: printColorSchema.optional(),
+  borderColor: printColorSchema.optional(),
+  font: z.enum(printFonts).optional(),
+  borderStyle: z.enum(borderStyles).optional(),
+  presetId: z
+    .custom<BoardThemeId>((value) => value === 'custom' || isThemeId(value), 'Unknown theme')
+    .optional(),
   showTitle: z.boolean().optional(),
 });
 export const photoModeSchema = z.enum(['illustrated', 'original']);
