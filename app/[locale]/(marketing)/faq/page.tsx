@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { LandingFaq } from '@/components/landing-faq';
 import { FAQJsonLd, BreadcrumbJsonLd } from '@/components/json-ld';
-import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
+import { unlockPriceDisplay } from '@/lib/constants';
 import { SITE_URL, ogImages } from '@/lib/site-metadata';
 
 export async function generateMetadata({
@@ -61,7 +61,7 @@ export default async function FAQPage({ params }: { params: Promise<{ locale: st
   const tCta = await getTranslations('Marketing.FinalCta');
   const faqs = (tFaq.raw('items') as Array<{ question: string; answer: string }>).map((item) => ({
     question: item.question,
-    answer: item.answer.replaceAll('{price}', BOARD_UNLOCK_PRICE_DISPLAY),
+    answer: item.answer.replaceAll('{price}', unlockPriceDisplay(locale)),
   }));
 
   return (

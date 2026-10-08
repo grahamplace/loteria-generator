@@ -4,6 +4,7 @@ import { BoardCardGrid } from '@/components/board-card-grid';
 
 // Mock next-intl for BoardEditor.CardGrid and BoardEditor.CardEditModal namespaces
 vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
   useTranslations: (namespace: string) => {
     const messages: Record<string, Record<string, string>> = {
       'BoardEditor.CardGrid': {
