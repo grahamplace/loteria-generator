@@ -49,6 +49,27 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
 
 ---
 
+## Image eval (illustration prompt / model changes)
+
+- MUST: When the user asks to eval, compare, or test the illustration prompt or an image model, **run the eval yourself** and report the results. Do not hand back commands for the user to run.
+- Tooling: `scripts/image-eval/` (`pnpm eval:images`). Full reference: `.claude/skills/image-model-eval/SKILL.md`. Prompt lives in `lib/illustration-prompt.ts`; production model is `ILLUSTRATION_MODEL` there.
+- Keys come from `.env.local` (`OPENAI_API_KEY` for images, `ANTHROPIC_API_KEY` for the judge). If missing, run `pnpm secrets:pull`.
+- Compare a prompt branch against main without checking it out (columns are model × prompt):
+
+  ```bash
+  pnpm eval:images --set tricky --models gpt-image-2 \
+    --prompt-refs old=main,new=<prompt-branch> --concurrency 4 --judge
+  ```
+
+- Photo sets (`--set`): `default` (committed stock photos), `tricky` (prod cards the admin had to fix with a prompt override; customer photos, gitignored, **never commit**), `objects` (objects vs scenes, gitignored). `--photos a,b` narrows by filename substring.
+- `tricky` must exist locally first. If `scripts/image-eval/photos-tricky/` is missing, build it: `PROD_DATABASE_URL=$(grep '^DATABASE_URL' .env.personal | cut -d= -f2-) pnpm eval:pull-tricky` (read-only prod query). Re-pulling undoes the user's manual audit of that folder, so don't re-pull if it exists unless asked.
+- Judge: `--judge` (after generating) or `--judge-only scripts/image-eval/runs/<run>` (no image calls). `--report <run>` rebuilds `report.pdf` with no API calls. Case notes per photo: `<set folder>/cases.json`.
+- Cost and time: image calls are the expensive part, ~15–80s each; the judge is ~$0.08 per case. Run up to ~40 image calls without asking. Above that, or the full tricky set with `--judge`, state the call count and cost and ask first. If the user says not to judge, leave off `--judge`.
+- After a run, **look at the output yourself**: read `comparison.jpg` (downscale with `sips -Z 1600` first) or `report.pdf`, and report what changed per photo, not just the paths. Lead with the verdict counts when judged.
+- Outputs land in `scripts/image-eval/runs/<UTC timestamp>/` (gitignored).
+
+---
+
 ## Board Unlock Price
 
 - MUST: Change the unlock price by editing both constants in `lib/constants.ts`: `BOARD_UNLOCK_PRICE_CENTS` (integer cents, used by Stripe) and `BOARD_UNLOCK_PRICE_DISPLAY` (formatted string, e.g. `'$20'`, used in UI/FAQ copy). Keep the two values in sync.

@@ -20,6 +20,12 @@
  *                       Default: the working tree's prompt.
  *   --set objects       use photos-objects/ (local only): objects vs scenes, for
  *                       the solid-color vs sky background choice.
+ *   --judge             after generating, have Claude judge baseline vs
+ *                       candidate and write report.pdf (needs ANTHROPIC_API_KEY)
+ *   --judge-only <run>  judge an existing run, no image calls
+ *   --report <run>      rebuild report.pdf from saved judgments, no API calls
+ *   --baseline <col>    column to treat as baseline (default: the first)
+ *   --candidate <col>   column to treat as candidate (default: the second)
  *   --concurrency n     photos in flight at once (default 1). Above 1, timings
  *                       share the network with other photos' calls.
  *
@@ -43,6 +49,8 @@ import * as workingTreePrompt from '../../lib/illustration-prompt';
 import { normalizeImageForOpenAI } from '../../lib/image-normalize';
 import { compose, type EvalResults, type CallResult } from './compose';
 import type { TrickyPhoto } from './pull-tricky';
+import { judgeRun } from './judge';
+import { buildReport } from './report';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // objects: things that should land on a solid color (boots, ramen) plus
@@ -115,8 +123,35 @@ async function main() {
       set: { type: 'string' },
       'prompt-refs': { type: 'string' },
       concurrency: { type: 'string' },
+      judge: { type: 'boolean' },
+      'judge-only': { type: 'string' },
+      report: { type: 'string' },
+      baseline: { type: 'string' },
+      candidate: { type: 'string' },
     },
   });
+
+  const judge = async (runDir: string) => {
+    const judged = await judgeRun(runDir, {
+      baseline: values.baseline,
+      candidate: values.candidate,
+    });
+    const report = await buildReport(runDir);
+    const n = (v: string) => judged.cases.filter((c) => !c.error && c.verdict === v).length;
+    console.log(
+      `\nJudge: candidate better ${n('candidate')}, baseline better ${n('baseline')}, tie ${n('tie')} · $${judged.usage.costUsd.toFixed(2)}\nReport: ${report}`
+    );
+  };
+
+  if (values.report) {
+    console.log(`Report: ${await buildReport(resolve(values.report))}`);
+    return;
+  }
+
+  if (values['judge-only']) {
+    await judge(resolve(values['judge-only']));
+    return;
+  }
 
   if (values.compose) {
     const out = await compose(resolve(values.compose));
@@ -249,6 +284,7 @@ async function main() {
   await save();
   const out = await compose(runDir);
   console.log(`\nSheet: ${out.sheet}\nPDF:   ${out.pdf}`);
+  if (values.judge) await judge(runDir);
 }
 
 main().catch((err) => {

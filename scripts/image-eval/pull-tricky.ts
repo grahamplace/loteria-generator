@@ -18,11 +18,12 @@
  * any manual audit (photos deleted from the folder to drop them from the set).
  */
 
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { neon } from '@neondatabase/serverless';
 import { fetchBlob } from '../../lib/blob';
+import { noteFromOverlay } from './judge';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const TRICKY_DIR = join(__dirname, 'photos-tricky');
@@ -78,6 +79,8 @@ async function main() {
     { readOnly: true }
   );
 
+  // Hand-edited case notes survive a re-pull; everything else is rebuilt.
+  const savedNotes = await readFile(join(TRICKY_DIR, 'cases.json'), 'utf8').catch(() => null);
   await rm(TRICKY_DIR, { recursive: true, force: true });
   await mkdir(TRICKY_DIR, { recursive: true });
 
@@ -114,6 +117,14 @@ async function main() {
   }
 
   await writeFile(join(TRICKY_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  // Seed a case note per photo from its override, for the LLM judge. Edit the
+  // "why" text to say more precisely what each photo tests.
+  const notes: Record<string, { why: string }> = savedNotes ? JSON.parse(savedNotes) : {};
+  for (const p of manifest) {
+    const stem = p.file.replace(/\.[^.]+$/, '');
+    notes[stem] ??= { why: noteFromOverlay(p.overlay) };
+  }
+  await writeFile(join(TRICKY_DIR, 'cases.json'), JSON.stringify(notes, null, 2));
   console.log(`\n${manifest.length}/${rows.length} cards → ${TRICKY_DIR}`);
 }
 

@@ -1,0 +1,17 @@
+{
+  "01-portrait": {
+    "why": "Likeness of a single face in soft window light. The man must be instantly recognizable: face shape, eyes, nose, beard/hair, skin tone. A person or scene with no meaningful setting, so the background should be the blue-to-pink Lotería sky."
+  },
+  "02-family-gathering": {
+    "why": "Thirteen people with small faces. Everyone in the photo must still be there (count them), each with their own distinct face; no one added, merged, or dropped. The beach setting carries the moment, so it should be kept and restyled."
+  },
+  "03-dog-closeup": {
+    "why": "Tight crop of a dog's face cut off at the frame edge. The dog's markings and coloring must match, and the crop should still read as a deliberate card composition."
+  },
+  "04-hockey-action": {
+    "why": "Several players in motion with a crowd and advertising text on the boards. The ad text must not leak into the illustration as readable or garbled lettering; the players and action should stay clear."
+  },
+  "05-thanksgiving-table": {
+    "why": "A table of many small objects. The main dishes should stay recognizable without the image turning cluttered. An object scene: a flat solid color background fits better than the sky."
+  }
+}
