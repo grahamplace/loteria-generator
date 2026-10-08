@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 import samples from '../scripts/themes/samples/birthday.json';
 import { updateBoardSchema } from '../lib/validations';
 import { mergeBoardStyles, type BoardStyleOptions } from '../lib/themes/presets';
@@ -64,6 +64,14 @@ async function openEditor(page: Page, { count = 24, locale = 'en', name = 'Our H
     return route.fulfill({ status: 404, json: { error: 'Unexpected fixture request' } });
   });
   await page.goto(`${locale === 'es' ? '/es' : ''}/boards/${boardId}`);
+}
+
+// Direct hex entry is secondary: dismiss the focus-opened native chooser first.
+async function enterHex(page: Page, field: Locator, value: string) {
+  await field.focus();
+  await page.keyboard.press('Escape');
+  await field.fill(value);
+  await field.press('Enter');
 }
 
 for (const width of [1024, 1440, 2560]) {
@@ -388,9 +396,8 @@ test('custom designs update the preview, persist, export, and reset to a preset'
     'web'
   );
   const before = await panel.getByRole('img').getAttribute('src');
-  await background.fill('#123456');
   const saved = page.waitForRequest((request) => request.method() === 'PATCH');
-  await background.press('Enter');
+  await enterHex(page, background, '#123456');
   expect((await saved).postDataJSON()).toEqual({
     styleOptions: {
       presetId: 'custom',
@@ -408,13 +415,11 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await expect.poll(() => panel.getByRole('img').getAttribute('src')).not.toBe(before);
   await page.getByLabel('Choose Number background color', { exact: true }).fill('#554433');
   await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toBeEnabled();
-  await page.getByRole('textbox', { name: 'Number text', exact: true }).fill('#ffffaa');
-  await page.getByRole('textbox', { name: 'Number text', exact: true }).press('Enter');
+  await enterHex(page, page.getByRole('textbox', { name: 'Number text', exact: true }), '#ffffaa');
   await page.getByRole('combobox', { name: 'Font', exact: true }).click();
   await page.getByRole('option', { name: 'Bebas Neue', exact: true }).click();
   await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('double');
-  await page.getByRole('textbox', { name: 'Border color', exact: true }).fill('#c0ffee');
-  await page.getByRole('textbox', { name: 'Border color', exact: true }).press('Enter');
+  await enterHex(page, page.getByRole('textbox', { name: 'Border color', exact: true }), '#c0ffee');
   await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toBeEnabled();
   await page.reload();
   await expect(page.getByRole('radio', { name: 'Custom', exact: true })).toBeChecked();
@@ -468,8 +473,7 @@ test('mobile custom controls are compact, validate colors, and preserve the save
   await expect(customize).toHaveAttribute('aria-expanded', 'false');
   await customize.click();
   const background = page.getByRole('textbox', { name: 'Fondo', exact: true });
-  await background.fill('oops');
-  await background.press('Enter');
+  await enterHex(page, background, 'oops');
   await expect(background).toHaveAttribute('aria-invalid', 'true');
   await expect(page.getByText('Ingresa un color hexadecimal de 6 dígitos.')).toBeVisible();
   await page.route(
@@ -477,11 +481,10 @@ test('mobile custom controls are compact, validate colors, and preserve the save
     (route) => route.fulfill({ status: 500, json: { error: 'failed' } }),
     { times: 1 }
   );
-  await background.fill('123456');
-  await background.press('Enter');
+  await enterHex(page, background, '123456');
   await expect(page.getByText('No se pudo guardar. Inténtalo de nuevo.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Cambiar tema, actual: Halloween' })).toBeVisible();
-  await background.press('Enter');
+  await enterHex(page, background, '123456');
   await expect(
     page.getByRole('button', { name: 'Cambiar tema, actual: Personalizado' })
   ).toBeVisible();
@@ -507,8 +510,7 @@ for (const width of [1440, 390]) {
     await openEditor(page, { count: 4 });
     await page.getByRole('button', { name: 'Customize', exact: true }).click();
     const background = page.getByRole('textbox', { name: 'Background', exact: true });
-    await background.fill('#345678');
-    await background.press('Enter');
+    await enterHex(page, background, '#345678');
     await page.getByRole('combobox', { name: 'Font', exact: true }).click();
     await page.getByRole('option', { name: 'Caveat', exact: true }).click();
     await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('dashed');
@@ -544,8 +546,7 @@ for (const width of [1440, 390]) {
     await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
       'dashed'
     );
-    await background.fill('#abcdef');
-    await background.press('Enter');
+    await enterHex(page, background, '#abcdef');
     await expect(background).toBeEnabled();
     await choose('Classic');
     await page.reload();
@@ -846,3 +847,43 @@ test('font loading failures can retry without saving a broken font', async ({ pa
   await expect(trigger).toHaveAttribute('data-value', 'Fredoka');
   await expect(page.getByText('Couldn’t load font preview.')).toHaveCount(0);
 });
+
+for (const width of [1440, 390]) {
+  test(`color fields open the visual chooser on focus without a focus border at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.addInitScript(() => {
+      const showPicker = HTMLInputElement.prototype.showPicker;
+      HTMLInputElement.prototype.showPicker = function () {
+        showPicker.call(this);
+        this.dataset.opened = String(Number(this.dataset.opened ?? 0) + 1);
+      };
+    });
+    await openEditor(page);
+    await page.getByRole('button', { name: 'Customize', exact: true }).click();
+    const field = page.getByRole('textbox', { name: 'Number text', exact: true });
+    const swatch = page.getByLabel('Choose Number text color', { exact: true });
+    await field.click();
+    // Calls the real browser API, including its user-activation requirement.
+    await expect(swatch).toHaveAttribute('data-opened', '1');
+    await expect(field).toHaveCSS('outline-style', 'none');
+    await expect(field.locator('..')).toHaveCSS('box-shadow', 'none');
+    await page.keyboard.press('Escape');
+    await field.click();
+    await expect(swatch).toHaveAttribute('data-opened', '2');
+    await page.keyboard.press('Escape');
+    await swatch.click();
+    await expect(swatch).toHaveAttribute('data-opened', '3');
+    await page.keyboard.press('Escape');
+    await swatch.press('Tab');
+    await expect(field).toBeFocused();
+    await expect(swatch).toHaveAttribute('data-opened', '4');
+    await page.keyboard.press('Escape');
+    await expect(field).toHaveValue('#ffffff');
+    await page.screenshot({
+      animations: 'disabled',
+      path: `.scratch/theme-work/color-focus-${width}.png`,
+    });
+  });
+}

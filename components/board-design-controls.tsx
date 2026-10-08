@@ -39,6 +39,7 @@ function ColorControl({
   const [draft, setDraft] = useState(value);
   const [invalid, setInvalid] = useState(false);
   const picker = useRef<HTMLInputElement>(null);
+  const openingPicker = useRef(false);
   const commit = useRef(onChange);
   commit.current = onChange;
   useEffect(() => {
@@ -64,6 +65,23 @@ function ColorControl({
     window.addEventListener('beforeunload', warnBeforeLeaving);
     return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
   }, [draft, value]);
+  function openPicker() {
+    const input = picker.current;
+    if (!input || input.matches(':disabled') || openingPicker.current) return;
+    // A successful showPicker consumes activation. Don't reopen the chooser
+    // when the click follows the same focus event, or when focus is restored.
+    if (navigator.userActivation && !navigator.userActivation.isActive) return;
+    openingPicker.current = true;
+    try {
+      if (typeof input.showPicker === 'function') input.showPicker();
+      else input.click();
+    } catch {
+      // Browsers can refuse focus-triggered pickers; the native swatch remains
+      // clickable and direct hex entry still works.
+    } finally {
+      openingPicker.current = false;
+    }
+  }
   function commitText() {
     const trimmed = draft.trim();
     const normalized = `${trimmed.startsWith('#') ? '' : '#'}${trimmed}`;
@@ -76,13 +94,16 @@ function ColorControl({
     if (normalized.toLowerCase() !== value.toLowerCase()) onChange(normalized);
   }
   return (
-    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_8.5rem] items-center gap-x-2 min-[380px]:block">
-      <label htmlFor={id} className="mb-0 block text-sm font-medium min-[380px]:mb-1.5">
+    <div className="group/color grid min-w-0 grid-cols-[minmax(0,1fr)_8.5rem] items-center gap-x-2 min-[380px]:block">
+      <label
+        htmlFor={id}
+        className="mb-0 block text-sm font-medium decoration-primary underline-offset-4 group-has-[:focus-visible]/color:underline min-[380px]:mb-1.5"
+      >
         {label}
       </label>
       <div
         className={cn(
-          'flex min-h-11 items-center rounded-md border bg-background focus-within:ring-2 focus-within:ring-primary/40',
+          'flex min-h-11 items-center rounded-md border bg-background',
           invalid ? 'border-destructive' : 'border-input'
         )}
       >
@@ -91,12 +112,19 @@ function ColorControl({
           type="color"
           value={/^#[0-9a-f]{6}$/i.test(draft) ? draft : value}
           aria-label={t('pickColor', { name: label })}
+          onFocus={openPicker}
+          onClick={(event) => {
+            if (typeof event.currentTarget.showPicker === 'function') {
+              event.preventDefault();
+              openPicker();
+            }
+          }}
           onInput={(event) => {
             setDraft(event.currentTarget.value);
             setInvalid(false);
           }}
           onChange={() => {}}
-          className="h-11 w-11 shrink-0 cursor-pointer touch-manipulation rounded-l-md border-0 bg-transparent p-1.5 focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-wait"
+          className="h-11 w-11 shrink-0 cursor-pointer touch-manipulation rounded-l-md border-0 bg-transparent p-1.5 outline-none disabled:cursor-wait"
         />
         <input
           id={id}
@@ -107,6 +135,8 @@ function ColorControl({
           autoComplete="off"
           aria-invalid={invalid}
           aria-describedby={invalid ? `${id}-error` : undefined}
+          onFocus={openPicker}
+          onClick={openPicker}
           onChange={(event) => {
             setDraft(event.target.value);
             setInvalid(false);
@@ -122,7 +152,7 @@ function ColorControl({
               commitText();
             }
           }}
-          className="min-h-11 w-full min-w-0 rounded-r-md bg-transparent pr-2 text-base uppercase text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          className="min-h-11 w-full min-w-0 touch-manipulation rounded-r-md bg-transparent pr-2 text-base uppercase text-foreground outline-none"
         />
       </div>
       {invalid && (
