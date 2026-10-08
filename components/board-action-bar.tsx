@@ -12,6 +12,13 @@ import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
 import { MIN_EXPORT_CARD_COUNT, DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
 import { partitionBySize, MAX_UPLOAD_DISPLAY } from '@/lib/upload-limits';
+import { UPLOAD_IMAGE_ACCEPT } from '@/lib/image-formats';
+import {
+  CONVERTIBLE_IMAGE_ACCEPT,
+  convertForUpload,
+  convertibleKind,
+  isUploadCandidate,
+} from '@/lib/convert-upload-image';
 import { BoardCountStepper } from '@/components/board-count-stepper';
 import { Button } from '@/components/ui/button';
 import type { PhotoMode } from '@/lib/themes/presets';
@@ -76,10 +83,30 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
       },
     }));
 
-    function acceptFiles(files: File[], method: string) {
-      const { valid, oversized } = partitionBySize(
-        files.filter((file) => file.type.startsWith('image/'))
-      );
+    async function acceptFiles(files: File[], method: 'drop' | 'picker') {
+      const candidates = files.filter(isUploadCandidate);
+      const toConvert = candidates.filter((f) => convertibleKind(f)).length;
+      const convertingToast =
+        toConvert > 0
+          ? toast.loading(t('toasts.convertingPhotos', { count: toConvert }))
+          : undefined;
+      const imageFiles: File[] = [];
+      let unreadable = 0;
+      for (const file of candidates) {
+        try {
+          imageFiles.push(await convertForUpload(file));
+        } catch (err) {
+          console.warn('Photo conversion failed', { name: file.name, type: file.type, err });
+          unreadable++;
+        }
+      }
+      if (convertingToast !== undefined) toast.dismiss(convertingToast);
+      if (unreadable > 0) {
+        toast.error(t('toasts.convertFailedTitle'), {
+          description: t('toasts.convertFailedDesc', { count: unreadable }),
+        });
+      }
+      const { valid, oversized } = partitionBySize(imageFiles);
       if (oversized.length)
         toast.error(t('toasts.tooLargeTitle'), {
           description: t('toasts.tooLargeDesc', {
@@ -155,10 +182,10 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
           ref={inputRef}
           type="file"
           multiple
-          accept="image/png,image/jpeg,image/webp,image/gif"
+          accept={`${UPLOAD_IMAGE_ACCEPT},${CONVERTIBLE_IMAGE_ACCEPT}`}
           className="hidden"
           onChange={(event) => {
-            acceptFiles(Array.from(event.target.files ?? []), 'picker');
+            void acceptFiles(Array.from(event.target.files ?? []), 'picker');
             event.target.value = '';
           }}
         />
@@ -171,7 +198,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
           onDrop={(event) => {
             event.preventDefault();
             setDragActive(false);
-            acceptFiles(Array.from(event.dataTransfer.files), 'drop');
+            void acceptFiles(Array.from(event.dataTransfer.files), 'drop');
           }}
           className={`rounded-xl border-2 border-dashed p-4 ${dragActive ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
         >

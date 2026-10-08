@@ -54,10 +54,11 @@ After deployment, verify the live canonical/language pairs, sitemap, assets, aut
 
 ## Local verification (2026-10-07)
 
-- 717 unit/API/component tests passed; 19 existing tests skipped.
+- 749 unit/API/component tests passed after integration with the latest image-format upload support; 19 existing tests skipped.
 - The full 28-test browser suite passed. After expanding coverage, the focused theme suite passed all 7 tests, including mixed concurrent uploads, keyboard preset selection, crop persistence, repeated free exports, protected existing work and Spanish email signup. Each run used a disposable database branch, and all branches were deleted.
 - Google signup/sign-in callback tests cover theme, mode, locale and unsafe redirect rejection. An actual Google account login was not performed.
 - All 42 routes were checked against a production server for server-rendered content, self-canonicals, reciprocal language alternates and breadcrumbs. Unknown themes returned 404. Mobile (390px), desktop (1440px) and wide (2560px) layouts had no horizontal overflow; the keyboard skip link worked.
+- The final consumer title checks passed in English and Spanish, including visibility, persistence after refresh, and actual PDF downloads with titles enabled and disabled. The final focused browser run passed all 4 tests, including mixed concurrent uploads and original-photo preservation.
 - Actual canvas/PDF checks passed for 1, 4, 15 and 16 cards, legacy colors, preview output, accented titles and print margins. All 21 sample boards and comparison pairs were visually inspected. The Etsy helper rendered Halloween successfully through the shared module.
 - Changed-file lint has no errors. App type checking and production build pass with two pre-existing untracked experiments (`play-a-game.tmp.ts`, `scripts/pricing-experiment.ts`) excluded temporarily and restored unchanged. Normal repository-wide type checking still reports those experiments' existing errors. Local production checks supplied a process-only auth secret because `.env.local` does not define one.
 - Both skill packages pass the skill validator.

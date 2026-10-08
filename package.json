@@ -86,6 +86,7 @@
     "drizzle-orm": "^0.45.1",
     "embla-carousel-react": "8.5.1",
     "framer-motion": "^12.29.0",
+    "heic-to": "1.5.2",
     "inngest": "^4.2.4",
     "input-otp": "1.4.1",
     "jspdf": "^4.2.1",
@@ -111,6 +112,7 @@
     "stripe": "^20.2.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
+    "utif": "3.1.0",
     "vaul": "^1.1.2",
     "ws": "^8.19.0",
     "zod": "3.25.76"
@@ -130,6 +132,7 @@
     "@types/node": "^22.19.7",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/utif": "3.0.6",
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/coverage-v8": "^2.1.9",
     "concurrently": "^9.2.1",
