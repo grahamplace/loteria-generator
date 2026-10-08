@@ -103,7 +103,6 @@ export function useBoardCards(
     if (!boardId) return;
 
     try {
-      setIsLoading(true);
       setError(null);
 
       const response = await fetch(`/api/boards/${boardId}/cards`);
@@ -132,6 +131,9 @@ export function useBoardCards(
   }, [boardId, router]);
 
   useEffect(() => {
+    // Only the initial board load replaces the editor with a skeleton. Edits
+    // refresh cards in place so the live preview and download state stay mounted.
+    setIsLoading(true);
     fetchCards();
   }, [fetchCards]);
 

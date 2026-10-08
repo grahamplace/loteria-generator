@@ -1,25 +1,27 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
-import Image, { getImageProps } from 'next/image';
+import { useId, useState } from 'react';
+import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { themePresets, type BoardStyleOptions, type PhotoMode } from '@/lib/themes/presets';
-import { renderBoardToCanvas, type LotteriaCard } from '@/lib/generate-boards';
-import { Button } from '@/components/ui/button';
-import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
+import type { LotteriaCard } from '@/lib/generate-boards';
+import { BoardPreview } from '@/components/board-preview';
+import { cn } from '@/lib/utils';
 import { Loader2, Check } from 'lucide-react';
 
 export function BoardAppearance({
   styles,
   photoMode,
   boardName,
-  cards,
+  cards = [],
+  showPreview = true,
   onSave,
 }: {
   styles?: BoardStyleOptions | null;
   photoMode: PhotoMode;
   boardName: string;
-  cards: LotteriaCard[];
+  cards?: LotteriaCard[];
+  showPreview?: boolean;
   onSave: (settings: {
     styleOptions?: BoardStyleOptions;
     photoMode?: PhotoMode;
@@ -30,61 +32,7 @@ export function BoardAppearance({
   const titleHelpId = useId();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [preview, setPreview] = useState<string | null>(null);
-  const [previewError, setPreviewError] = useState('');
-  const [rendering, setRendering] = useState(true);
-  const [previewAttempt, setPreviewAttempt] = useState(0);
-  const previewImages = useRef(new Map<string, Promise<HTMLImageElement>>());
   const selected = styles?.presetId ?? 'classic';
-  const complete = cards
-    .filter((card) => !card.isProcessing && !card.error && card.illustration)
-    .slice(0, 16)
-    .map((card) => ({
-      ...card,
-      illustration: getImageProps({
-        ...cardImageProps(card.illustration, CARD_GRID_THUMB_WIDTH),
-        width: 160,
-        height: 240,
-        alt: '',
-      }).props.src,
-    }));
-  const signature = JSON.stringify([complete, styles, boardName, locale]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setRendering(true);
-    setPreviewError('');
-    const activeImages = new Set(complete.map((card) => card.illustration));
-    for (const src of previewImages.current.keys()) {
-      if (!activeImages.has(src)) previewImages.current.delete(src);
-    }
-    renderBoardToCanvas(
-      complete,
-      styles ?? {},
-      complete.length < 16
-        ? [locale === 'es-MX' ? 'Muestra' : 'Sample', styles?.showTitle ? boardName : undefined]
-            .filter(Boolean)
-            .join(' · ')
-        : styles?.showTitle
-          ? boardName
-          : undefined,
-      { scale: 0.25, imageCache: previewImages.current }
-    )
-      .then((canvas) => {
-        if (!cancelled) setPreview(canvas.toDataURL('image/jpeg', 0.7));
-      })
-      .catch(() => {
-        if (!cancelled) setPreviewError(t('previewError'));
-      })
-      .finally(() => {
-        if (!cancelled) setRendering(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-    // Render only when the serialized print inputs change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signature, previewAttempt]);
 
   async function save(settings: { styleOptions?: BoardStyleOptions; photoMode?: PhotoMode }) {
     setSaving(true);
@@ -106,7 +54,12 @@ export function BoardAppearance({
           {themePresets.find((p) => p.id === selected)?.name[locale]}
         </span>
       </div>
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
+      <div
+        className={cn(
+          'grid items-start gap-6',
+          showPreview && 'lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]'
+        )}
+      >
         <div className="min-w-0">
           <fieldset disabled={saving} className="space-y-5">
             <legend className="sr-only">{t('chooseTheme')}</legend>
@@ -212,69 +165,7 @@ export function BoardAppearance({
             )}
           </div>
         </div>
-        <aside
-          aria-label={t('livePreview')}
-          className="w-full min-w-0 max-w-sm justify-self-center rounded-xl border border-border bg-muted/30 p-3 lg:sticky lg:top-24"
-        >
-          <h3 className="mb-3 text-sm font-medium">{t('livePreview')}</h3>
-          <div
-            className="relative aspect-[17/22] overflow-hidden rounded-sm bg-muted shadow-md"
-            aria-busy={rendering}
-          >
-            {preview && (
-              <>
-                {/* The image is an in-memory canvas of the actual PDF renderer. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={preview}
-                  width={2550}
-                  height={3300}
-                  alt={t('previewAlt')}
-                  className="absolute inset-0 h-full w-full object-contain"
-                />
-              </>
-            )}
-            {rendering && (
-              <div
-                className={`absolute inset-x-3 flex justify-center ${preview ? 'bottom-3' : 'inset-y-0 items-center'}`}
-              >
-                <span
-                  role="status"
-                  className="inline-flex items-center gap-2 rounded-md border border-border bg-background/95 px-3 py-2 text-sm shadow-sm"
-                >
-                  <Loader2
-                    className="h-4 w-4 shrink-0 animate-spin motion-reduce:animate-none"
-                    aria-hidden="true"
-                  />
-                  {t('rendering')}
-                </span>
-              </div>
-            )}
-            {previewError && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/95 p-5 text-center">
-                <p role="alert" className="text-sm">
-                  {previewError}
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setPreviewAttempt((attempt) => attempt + 1)}
-                >
-                  {t('retryPreview')}
-                </Button>
-              </div>
-            )}
-          </div>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            {t(
-              complete.length === 0
-                ? 'emptyPreview'
-                : complete.length < 16
-                  ? 'partialPreview'
-                  : 'fullPreview'
-            )}
-          </p>
-        </aside>
+        {showPreview && <BoardPreview styles={styles} boardName={boardName} cards={cards} />}
       </div>
     </section>
   );

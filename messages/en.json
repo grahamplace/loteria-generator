@@ -542,7 +542,14 @@
       "cropHint": "Drag a crop or use the arrow keys on the selection. Your original photo is kept.",
       "resetCrop": "Use full photo",
       "saveCrop": "Save crop",
-      "cutInstruction": "Cut along lines to make individual cards"
+      "cutInstruction": "Cut along lines to make individual cards",
+      "downloadPreview": "Download preview",
+      "downloadSet": "Download set",
+      "sampleDownloadIncludes": "PDF with a sample board and printable calling cards.",
+      "addPhotos": "Add photos",
+      "previewAndDownload": "Preview & download",
+      "closePreview": "Close preview",
+      "previewDescription": "Your current design, ready to print."
     },
     "Page": {
       "eyebrow": "Your people. Your memories. Your Lotería.",

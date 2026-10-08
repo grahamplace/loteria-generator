@@ -176,7 +176,7 @@ test.describe('themed Lotería', () => {
         path: `.scratch/theme-work/consumer-title-${showTitle ? 'on' : 'off'}-preview.png`,
       });
       const download = page.waitForEvent('download');
-      await page.getByRole('button', { name: /download sample/i }).click();
+      await page.getByRole('button', { name: /download preview/i }).click();
       const pdf = await download;
       expect(pdf.suggestedFilename()).toMatch(/\.pdf$/);
       await pdf.saveAs(`.scratch/theme-work/consumer-title-${showTitle ? 'on' : 'off'}.pdf`);
