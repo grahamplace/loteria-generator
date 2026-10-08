@@ -472,29 +472,32 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                 <span className="truncate">{t('boardCountUnit')}</span>
               </div>
             )}
-            <span className="flex items-center gap-1 shrink-0">
-              {processingCount > 0 ? (
-                <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  {processingCount} {t('processing')}
-                </>
-              ) : (
-                <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  {t('mobileSaved')}
-                </>
-              )}
-            </span>
+            {processingCount > 0 && (
+              <span className="flex items-center gap-1 shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                {processingCount} {t('processing')}
+              </span>
+            )}
           </div>
           <div className="px-3 pb-[max(env(safe-area-inset-bottom,0px),12px)] flex gap-2">
-            <button
-              onClick={() => inputRef.current?.click()}
-              disabled={isMaxReached}
-              className="flex-1 h-12 rounded-xl bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              <Upload className="w-4 h-4" />
-              {t('choosePhotos')}
-            </button>
+            {isMaxReached && !isUnlocked ? (
+              <button
+                onClick={onUnlockRequired}
+                className="flex-1 h-12 rounded-xl bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <Unlock className="w-4 h-4" aria-hidden="true" />
+                {t('unlockMoreCards', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
+              </button>
+            ) : (
+              <button
+                onClick={() => inputRef.current?.click()}
+                disabled={isMaxReached}
+                className="flex-1 h-12 rounded-xl bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <Upload className="w-4 h-4" />
+                {t('choosePhotos')}
+              </button>
+            )}
             <button
               onClick={handleExport}
               disabled={(!canExport && !hasUsedFreeExport) || isExporting}

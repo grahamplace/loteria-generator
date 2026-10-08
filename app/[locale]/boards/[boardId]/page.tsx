@@ -287,7 +287,7 @@ export default function BoardEditorPage() {
 
           {/* Cards */}
           {cards.length > 0 ? (
-            <div className="flex-1 max-w-[1400px] w-full mx-auto px-3 md:px-6 pb-28 md:pb-6">
+            <div className="flex-1 max-w-[1400px] w-full mx-auto px-3 md:px-6 pb-[calc(9.5rem+env(safe-area-inset-bottom,0px))] md:pb-6">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                   {t('yourCards')}
@@ -305,7 +305,6 @@ export default function BoardEditorPage() {
                 onAddClassic={() => setDefaultsPickerOpen(true)}
                 isLocked={!board.isUnlocked}
                 atCardLimit={atCardLimit}
-                maxCards={cardLimit}
                 onUnlockRequired={handleCardLimitReached}
               />
             </div>
