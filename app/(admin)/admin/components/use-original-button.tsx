@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
  * confirm: the AI drawing is no longer referenced afterwards, and getting it
  * back means paying for a new generation.
  */
-export function UseOriginalButton({ cardId }: { cardId: string }) {
+export function UseOriginalButton({ cardId, className }: { cardId: string; className?: string }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -47,9 +47,15 @@ export function UseOriginalButton({ cardId }: { cardId: string }) {
 
   if (!confirming) {
     return (
-      <Button ref={triggerRef} size="sm" variant="outline" onClick={() => setConfirming(true)}>
-        <ImageIcon className="mr-1.5 h-3.5 w-3.5" />
-        Use original photo…
+      <Button
+        ref={triggerRef}
+        size="sm"
+        variant="outline"
+        onClick={() => setConfirming(true)}
+        className={className}
+      >
+        <ImageIcon aria-hidden="true" />
+        Use photo
       </Button>
     );
   }
@@ -57,8 +63,9 @@ export function UseOriginalButton({ cardId }: { cardId: string }) {
   return (
     <div
       role="group"
-      aria-label="Use original photo"
-      className="flex flex-wrap items-center gap-2 rounded-md border border-secondary/40 bg-secondary/10 px-2 py-1"
+      aria-label="Use photo"
+      // Full row: the confirm step needs more room than the trigger it replaces.
+      className="flex w-full flex-wrap items-center gap-2 rounded-md border border-secondary/40 bg-secondary/10 px-2 py-1"
     >
       <span className="text-sm text-foreground">Discard AI drawing?</span>
       <Button ref={confirmRef} size="sm" onClick={handleConfirm} disabled={saving}>

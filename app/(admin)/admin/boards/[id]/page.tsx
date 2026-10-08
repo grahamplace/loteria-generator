@@ -18,6 +18,7 @@ async function getBoardWithOwner(boardId: string) {
     .select({
       board: boards,
       ownerEmail: user.email,
+      ownerName: user.name,
       ownerId: user.id,
     })
     .from(boards)
@@ -44,7 +45,7 @@ export default async function AdminBoardDetailPage({
     notFound();
   }
 
-  const { board, ownerEmail, ownerId } = data;
+  const { board, ownerEmail, ownerName, ownerId } = data;
   const genLimit = board.isUnlocked ? IMAGE_GENERATION_LIMIT_PAID : IMAGE_GENERATION_LIMIT_FREE;
   const now = new Date();
   const errorCount = boardCards.filter((c) => isRetriableCard(c, now)).length;
@@ -131,7 +132,11 @@ export default async function AdminBoardDetailPage({
       </Card>
 
       {/* Cards grid (client component with realtime subscription) */}
-      <AdminBoardCardsGrid boardId={id} initialCards={boardCards} />
+      <AdminBoardCardsGrid
+        boardId={id}
+        initialCards={boardCards}
+        owner={{ id: ownerId, name: ownerName, email: ownerEmail }}
+      />
     </div>
   );
 }

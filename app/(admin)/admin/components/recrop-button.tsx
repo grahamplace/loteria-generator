@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Crop } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ImageCropModal } from './image-crop-modal';
 import type { PixelRect } from '@/lib/crop-image';
 
@@ -9,9 +11,10 @@ interface RecropButtonProps {
   cardId: string;
   boardId: string;
   initialCrop: PixelRect | null;
+  className?: string;
 }
 
-export function RecropButton({ cardId, boardId, initialCrop }: RecropButtonProps) {
+export function RecropButton({ cardId, boardId, initialCrop, className }: RecropButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -38,17 +41,18 @@ export function RecropButton({ cardId, boardId, initialCrop }: RecropButtonProps
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        size="sm"
+        variant="outline"
         onClick={() => setOpen(true)}
         disabled={saving}
-        className="rounded-md border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"
-        style={{ touchAction: 'manipulation' }}
+        className={className}
       >
+        <Crop aria-hidden="true" />
         {saving ? 'Saving…' : 'Re-crop'}
-      </button>
+      </Button>
       {error && (
-        <span role="alert" className="ml-2 text-sm text-primary">
+        <span role="alert" className="w-full text-sm text-primary">
           {error}
         </span>
       )}

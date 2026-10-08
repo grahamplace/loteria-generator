@@ -96,7 +96,7 @@ export function RegenerateButton({
         variant="outline"
         onClick={handleRegenerate}
         disabled={state === 'loading' || state === 'sent'}
-        className="self-start"
+        className="w-full"
       >
         <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${state === 'loading' ? 'animate-spin' : ''}`} />
         {state === 'idle' && 'Regenerate illustration'}

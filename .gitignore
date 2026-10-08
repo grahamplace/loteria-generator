@@ -50,6 +50,10 @@ local-data/
 
 # image model eval runs (`pnpm eval:images`): generated PNGs + comparison sheets
 /scripts/image-eval/runs/
+# Tricky eval set pulled from prod (`pnpm eval:pull-tricky`): customer photos, never commit
+/scripts/image-eval/photos-tricky/
+# Objects eval set: pasted photos with unknown licenses, keep local
+/scripts/image-eval/photos-objects/
 
 # Playwright / E2E
 e2e/setup/storage-state.json
