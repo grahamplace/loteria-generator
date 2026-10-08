@@ -64,6 +64,66 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('automatic board preview', () => {
+  it('keeps inline zoom while designs change and shares the detailed render with full screen', async () => {
+    const { rerender } = render(view({ styles: { font: 'Jost' } }));
+    await screen.findByRole('img', { name: previewName });
+    renderBoard.mockResolvedValueOnce(canvas('detail-jost'));
+    fireEvent.click(screen.getByRole('button', { name: 'Click to zoom in on the board' }));
+    await waitFor(() =>
+      expect(screen.getByRole('img')).toHaveAttribute('src', canvas('detail-jost').toDataURL())
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(window.location.search).toBe('?previewScale=200');
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(screen.getByText('300%')).toBeVisible();
+    expect(renderBoard).toHaveBeenCalledTimes(2);
+
+    renderBoard.mockImplementation(async (_cards, style, _title, options) =>
+      canvas(`${options?.scale === 1 ? 'detail' : 'thumbnail'}-${style?.font}`)
+    );
+    rerender(view({ styles: { font: 'Montserrat', borderStyle: 'double' } }));
+    await waitFor(() =>
+      expect(screen.getByRole('img')).toHaveAttribute(
+        'src',
+        canvas('detail-Montserrat').toDataURL()
+      )
+    );
+    expect(screen.getByText('300%')).toBeVisible();
+    expect(renderBoard).toHaveBeenCalledTimes(4);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand board preview' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
+    expect(within(dialog).getByRole('img')).toHaveAttribute(
+      'src',
+      canvas('detail-Montserrat').toDataURL()
+    );
+    expect(renderBoard).toHaveBeenCalledTimes(4);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close expanded preview' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByText('300%')).toBeVisible();
+  });
+
+  it('offers inline retry without losing the thumbnail or zoom when details fail', async () => {
+    render(view());
+    await screen.findByRole('img', { name: previewName });
+    renderBoard.mockRejectedValueOnce(new Error('Details unavailable'));
+    fireEvent.click(screen.getByRole('button', { name: 'Click to zoom in on the board' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      messages.Themes.Builder.previewError
+    );
+    expect(screen.getByRole('img')).toHaveAttribute('src', canvas('initial').toDataURL());
+    expect(screen.getByText('200%')).toBeVisible();
+    renderBoard.mockResolvedValueOnce(canvas('retried-detail'));
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await waitFor(() =>
+      expect(screen.getByRole('img')).toHaveAttribute('src', canvas('retried-detail').toDataURL())
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    const controls = screen.getByRole('group', { name: 'Zoom level' });
+    fireEvent.click(within(controls).getByRole('button', { name: 'Fit board in live preview' }));
+    expect(screen.queryByRole('group', { name: 'Zoom level' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Click to zoom in on the board' })).toHaveFocus();
+  });
+
   it('renders a detailed page only on expansion and reuses it while zooming', async () => {
     render(
       view({

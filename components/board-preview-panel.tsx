@@ -90,6 +90,15 @@ export function BoardPreviewPanel({
           aria-describedby={undefined}
           closeLabel={t('closePreview')}
           className="max-h-[92dvh] gap-0 rounded-t-2xl pb-[env(safe-area-inset-bottom)] motion-reduce:animate-none"
+          onEscapeKeyDown={(event) => {
+            // Let inline zoom handle Escape before dismissing its containing sheet.
+            if (
+              preview.inlineZoom > 100 &&
+              event.target instanceof Element &&
+              event.target.closest('[data-board-inline-zoom]')
+            )
+              event.preventDefault();
+          }}
         >
           <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 pr-16">
             <SheetTitle className="min-w-0">{t('livePreview')}</SheetTitle>

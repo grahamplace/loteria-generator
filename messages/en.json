@@ -595,7 +595,11 @@
       "panPreview": "Board detail. Scroll to explore when zoomed in.",
       "fontSampleTitle": "My Lotería",
       "fontLoading": "Loading preview…",
-      "fontPreviewError": "Couldn’t load font preview."
+      "fontPreviewError": "Couldn’t load font preview.",
+      "zoomInlinePreview": "Click to zoom in on the board",
+      "fitInlinePreview": "Fit board in live preview",
+      "inlinePanPreview": "Zoomable live board preview",
+      "inlinePanHint": "Drag or use arrow keys to move. Click to zoom out."
     },
     "Page": {
       "eyebrow": "Your people. Your memories. Your Lotería.",

@@ -12,6 +12,7 @@ import { cardImageProps, CARD_GRID_THUMB_WIDTH, CARD_DETAIL_THUMB_WIDTH } from '
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { BoardPreviewZoom } from '@/components/board-preview-zoom';
+import { BoardPreviewInlineZoom } from '@/components/board-preview-inline-zoom';
 
 export interface BoardPreviewProps {
   styles?: BoardStyleOptions | null;
@@ -45,6 +46,9 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
   const expanded = searchParams.get('previewZoom') != null;
   const zoomParam = Number(searchParams.get('previewZoom'));
   const zoom = previewZoomLevels.find((value) => value === zoomParam) ?? 100;
+  const inlineZoomParam = Number(searchParams.get('previewScale'));
+  const inlineZoom = previewZoomLevels.find((value) => value === inlineZoomParam) ?? 100;
+  const needsDetail = expanded || inlineZoom > 100;
   const expandTrigger = useRef<HTMLElement | null>(null);
   const detailImages = useRef(new Map<string, Promise<HTMLImageElement>>());
   const detailCache = useRef<{ signature: string; src: string } | null>(null);
@@ -125,7 +129,7 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
   }, [signature, previewAttempt]);
 
   useEffect(() => {
-    if (!expanded) {
+    if (!needsDetail) {
       detailImages.current.clear();
       return;
     }
@@ -136,7 +140,7 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
     }
     let cancelled = false;
     setDetailRendering(true);
-    // Only the current page is fetched at a larger size, and only on expansion.
+    // Both inline zoom and full-screen expansion share the current detailed page.
     const detailCards = readyCards
       .slice(page * MIN_EXPORT_CARD_COUNT, (page + 1) * MIN_EXPORT_CARD_COUNT)
       .map((card) => ({
@@ -182,7 +186,7 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
     };
     // Zoom uses the same full-resolution render; only print inputs trigger new work.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded, signature, detailAttempt]);
+  }, [needsDetail, signature, detailAttempt]);
 
   return {
     preview,
@@ -190,6 +194,14 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
     rendering,
     expanded,
     zoom,
+    inlineZoom,
+    setInlineZoom: (value: number) => {
+      const url = new URL(window.location.href);
+      if (value === 100) url.searchParams.delete('previewScale');
+      else url.searchParams.set('previewScale', String(value));
+      if (inlineZoom > 100 === value > 100) window.history.replaceState(null, '', url);
+      else window.history.pushState(null, '', url);
+    },
     zoomLevels: previewZoomLevels,
     detailPreview: detail?.signature === signature ? detail.src : null,
     detailRendering,
@@ -292,32 +304,24 @@ export function BoardPreviewImage({
 }) {
   const t = useTranslations('Themes.Builder');
   const { preview, previewError, rendering, retry, count } = state;
+  const inspecting = state.inlineZoom > 100;
+  const busy = rendering || (inspecting && state.detailRendering);
   return (
     <>
-      <div
-        className={cn(
-          'relative mx-auto aspect-[17/22] w-full overflow-hidden rounded-sm bg-muted shadow-md',
+      <BoardPreviewInlineZoom
+        state={state}
+        viewportClassName={cn(
           fitViewport &&
             (state.pageCount > 1
-              ? 'max-w-[min(100%,max(8rem,calc((100dvh-29rem)*17/22)))]'
-              : 'max-w-[min(100%,max(8rem,calc((100dvh-25rem)*17/22)))]')
+              ? inspecting
+                ? 'max-w-[min(100%,max(8rem,calc((100dvh-32.5rem)*17/22)))]'
+                : 'max-w-[min(100%,max(8rem,calc((100dvh-29rem)*17/22)))]'
+              : inspecting
+                ? 'max-w-[min(100%,max(8rem,calc((100dvh-28.5rem)*17/22)))]'
+                : 'max-w-[min(100%,max(8rem,calc((100dvh-25rem)*17/22)))]')
         )}
-        aria-busy={rendering}
       >
-        {preview && (
-          <>
-            {/* The image is an in-memory canvas of the actual PDF renderer. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={preview}
-              width={2550}
-              height={3300}
-              alt={t('previewAlt')}
-              className="absolute inset-0 h-full w-full object-contain"
-            />
-          </>
-        )}
-        {rendering && (
+        {busy && (
           <div
             className={`pointer-events-none absolute inset-x-3 z-20 flex justify-center ${preview ? 'bottom-3' : 'inset-y-0 items-center'}`}
           >
@@ -343,7 +347,7 @@ export function BoardPreviewImage({
             </Button>
           </div>
         )}
-      </div>
+      </BoardPreviewInlineZoom>
       {showPagination && state.pageCount > 1 && (
         <div className="mt-3">
           <BoardPreviewPagination state={state} />

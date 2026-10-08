@@ -601,7 +601,11 @@
       "panPreview": "Detalle de la tabla. Desplázate para explorar al acercar.",
       "fontSampleTitle": "Mi Lotería",
       "fontLoading": "Cargando vista previa…",
-      "fontPreviewError": "No se pudo cargar la tipografía."
+      "fontPreviewError": "No se pudo cargar la tipografía.",
+      "zoomInlinePreview": "Haz clic para acercar la tabla",
+      "fitInlinePreview": "Ajustar tabla en la vista previa",
+      "inlinePanPreview": "Vista previa de la tabla con zoom",
+      "inlinePanHint": "Arrastra o usa las flechas para moverte. Haz clic para alejar."
     },
     "Page": {
       "eyebrow": "Tu gente. Tus recuerdos. Tu lotería.",
