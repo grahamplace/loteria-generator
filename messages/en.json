@@ -25,10 +25,10 @@
       "subtitle": "Upload your favorite photos and we handle the rest.",
       "step1Title": "Upload your photos",
       "step1Desc": "Upload photos of family, friends, or pets. We can illustrate anything or anyone you want to feature on a card.",
-      "step2Title": "We illustrate each card",
-      "step2Desc": "We instantly draw each photo in classic Lotería style and add Spanish labels — El Abuelo, La Novia, El Niño.",
+      "step2Title": "Choose your photo style",
+      "step2Desc": "Keep your original photos or turn them into classic Lotería illustrations. Choose any theme and edit every card name.",
       "step3Title": "Print and play at home",
-      "step3Desc": "Download print-ready PDFs of every card and tabla. Print at home or at a local print shop. You're ready to play Lotería!",
+      "step3Desc": "Export a sample with your first 4 cards. With 16 or more cards, download complete randomized boards and calling cards. Print at actual size at home or at a print shop.",
       "ctaGetStarted": "Get started for free →",
       "step2GrandpaPhotoAlt": "Original photo of a grandfather"
     },
@@ -63,12 +63,12 @@
     "Pricing": {
       "tagline": "Pay once · No subscriptions",
       "headline": "Simple pricing.",
-      "subtitle": "Start free with a sample set. Unlock the full 54-card deck when you're ready.",
+      "subtitle": "Start with 4 cards in any theme. Unlock up to 54 cards when you are ready.",
       "free": {
         "name": "Free Preview",
         "price": "$0",
         "priceLabel": "/ forever",
-        "features": ["Up to 4 custom cards", "1 printable tabla", "Custom Lotería illustrations", "Spanish label generation"],
+        "features": ["Up to 4 cards", "Every theme included", "Illustrations or original photos", "Repeat sample PDF exports"],
         "cta": "Start free"
       },
       "unlocked": {
@@ -76,7 +76,7 @@
         "price": "{price}",
         "priceLabel": "one-time",
         "badge": "Most popular",
-        "features": ["Full 54-card custom deck", "Unlimited printable tablas", "High-resolution print PDFs", "No watermarks"],
+        "features": ["Up to 54 cards per set", "Build complete 4×4 games with 16+ cards", "Every theme and photo mode", "One-time payment for this set"],
         "cta": "Get unlocked set"
       }
     },
@@ -121,7 +121,7 @@
         },
         {
           "question": "How do I create a custom Lotería set with my own photos?",
-          "answer": "Upload your photos and we restyle each one into a traditional Lotería-style illustration with a Spanish label. You then arrange your cards, edit labels, and generate printable tablas (boards) so you have a complete Lotería set ready to play."
+          "answer": "Choose a theme, upload your photos, and either keep the originals or illustrate them. Edit the card names and preview the printed board. Start with a free four-card sample; add at least 16 different cards for a complete 4×4 game."
         },
         {
           "question": "Can I use this for my wedding or party?",
@@ -129,7 +129,7 @@
         },
         {
           "question": "How many cards can I create?",
-          "answer": "With the free preview, you can create up to 4 cards and generate one sample board. By unlocking your board for {price}, you get access to 54 cards (a full traditional Lotería deck) and unlimited board generations."
+          "answer": "Create up to 4 cards for free in any theme, with illustrations or original photos. Download sample PDFs as often as you like. A one-time {price} payment raises this set’s limit to 54 cards. Complete 4×4 boards need at least 16 different cards."
         },
         {
           "question": "What file formats can I export?",
@@ -137,7 +137,7 @@
         },
         {
           "question": "Is there a subscription or recurring fee?",
-          "answer": "No subscriptions! Our pricing is simple — try for free, and when you're ready, pay a one-time {price} fee to unlock your board. That purchase gives you permanent access to that project."
+          "answer": "No subscriptions. Every set includes themes, both photo modes, and repeated exports. Pay {price} once to raise one set’s card limit from 4 to 54; create additional free sets whenever you like."
         }
       ]
     },
@@ -160,16 +160,10 @@
       "siteDescription": "Create personalized Mexican Lotería cards from your photos. The easiest custom Lotería card maker for weddings, parties, and family events.",
       "softwareName": "Lotería Generator",
       "softwareFreeOfferName": "Free Preview",
-      "softwareFreeOfferDescription": "Create up to 4 cards and 1 board for free",
+      "softwareFreeOfferDescription": "Up to 4 cards, all themes, original-photo or illustrated mode, repeat sample PDF exports",
       "softwareUnlockedOfferName": "Unlocked Board",
-      "softwareUnlockedOfferDescription": "Full access with up to 54 cards and unlimited card generations",
-      "softwareFeatures": [
-        "Photo to Lotería card conversion",
-        "Traditional Mexican Lotería style illustrations",
-        "Automatic Spanish label generation",
-        "Printable board generation",
-        "Custom card editing"
-      ],
+      "softwareUnlockedOfferDescription": "Up to 54 cards per set; unlocking raises the card limit",
+      "softwareFeatures": ["All occasion themes included", "Illustrated or original photos", "Editable card names and original-photo crops", "Repeated printable PDF exports", "Additional free sets"],
       "howToName": "How to Create Custom Lotería Cards",
       "howToDescription": "Learn how to create personalized Mexican Lotería cards from your photos in just a few simple steps.",
       "howToSteps": [
@@ -183,8 +177,8 @@
           "text": "Upload your favorite photos — people, pets, objects, or anything meaningful to you."
         },
         {
-          "name": "Illustration",
-          "text": "Each photo is automatically transformed into a traditional Lotería-style illustration with a Spanish label."
+          "name": "Choose your photo style",
+          "text": "Keep your original photos or turn them into classic Lotería illustrations. Choose any theme and edit every card name."
         },
         {
           "name": "Customize Cards",
@@ -192,7 +186,7 @@
         },
         {
           "name": "Generate Boards",
-          "text": "Create randomized 4x4 bingo-style boards ready for printing and playing."
+          "text": "Export a sample with your first 4 cards. With 16 or more cards, download complete randomized boards and calling cards. Print at actual size at home or at a print shop."
         }
       ]
     }
@@ -357,19 +351,13 @@
       "exportTitle": "Export Loteria set",
       "exportSubtitleDefault": "each one unique · card deck · PDF",
       "exportSubtitleNeedsCards": "Needs {min} cards to generate boards — you have {have}.",
-      "exportSubtitleUsed": "Unlock to export again",
       "boardCountLabel": "Number of boards",
       "boardCountDecrease": "Fewer boards",
       "boardCountIncrease": "More boards",
       "boardCountUnit": "boards",
-      "freeExportUsed": "Free export used",
       "exportButton": "Export",
       "exportingButton": "Exporting…",
-      "unlockExport": "Unlock · {price}",
       "moreNeeded": "{count} more cards",
-      "bannerTitle": "Loved your first export?",
-      "bannerDesc": "Unlock for unlimited exports and the full 54-card deck.",
-      "bannerCta": "Unlock now →",
       "mobileCardsStatus": "{processed}/{max} cards",
       "mobileSaved": "Saved",
       "addClassic": "Add classic",
@@ -378,7 +366,7 @@
       "callerSheetTitle": "Caller Sheet",
       "toasts": {
         "exportSuccessTitle": "Loteria set exported!",
-        "exportSuccessDesc": "{count, plural, =1 {# unique board and card deck downloaded as a PDF.} other {# unique boards and card deck downloaded as a PDF.}}",
+        "exportSuccessDesc": "{count, plural, one {# board page and your cards downloaded as a PDF.} other {# boards and your cards downloaded as a PDF.}}",
         "exportFailedTitle": "Failed to export Loteria set",
         "exportFailedDesc": "Please try again.",
         "startingExport": "Starting export…",
@@ -397,8 +385,8 @@
       "keepBuildingSuffix": "await",
       "moreCards": "{count} more cards",
       "featureCards": "Up to 54 cards",
-      "featureExports": "Unlimited exports",
-      "featureWatermarks": "No watermarks",
+      "featureExports": "More people and memories in this set",
+      "featureWatermarks": "One-time payment · keep your set",
       "unlockButton": "Unlock",
       "addMore": "Add custom",
       "addClassicTile": "ADD CLASSIC",
@@ -450,8 +438,8 @@
       "keepBuildingSuffix": "await",
       "moreCards": "{count} more cards",
       "featureCards": "Up to 54 cards",
-      "featureExports": "Unlimited exports",
-      "featureWatermarks": "No watermarks",
+      "featureExports": "More people and memories in this set",
+      "featureWatermarks": "One-time payment · keep your set",
       "unlockButton": "Unlock",
       "redirectingButton": "Redirecting…",
       "maybeLater": "Maybe later",
@@ -510,7 +498,7 @@
     },
     "boardAddPhoto": {
       "title": "Add your first photo",
-      "content": "Upload a photo of someone you love and we'll turn it into a custom Lotería card — that's the fun part."
+      "content": "Choose any theme and upload your first photo. Keep the original or illustrate it — your first four cards are free."
     },
     "controls": {
       "skip": "Skip",
@@ -518,6 +506,84 @@
       "next": "Next",
       "done": "Got it",
       "progress": "{current} of {total}"
+    }
+  },
+  "Themes": {
+    "Builder": {
+      "title": "Design your set",
+      "chooseTheme": "Choose a theme",
+      "showTitle": "Include board title",
+      "printedTitle": "Print “{name}” at the top of each board.",
+      "photoMode": "New photo uploads",
+      "illustrated": "Illustrate my photos",
+      "original": "Use original photos",
+      "futureUploads": "This choice applies to new uploads. Cards already in your set stay as they are.",
+      "preview": "Preview printed board",
+      "hidePreview": "Hide preview",
+      "previewAlt": "Your board rendered with the selected theme",
+      "previewError": "The preview could not load. Close it and try again.",
+      "partialPreview": "This is a partial sample. A playable 4×4 board needs at least 16 cards.",
+      "saving": "Saving…",
+      "rendering": "Rendering your board…",
+      "saveError": "Could not save. Please try again.",
+      "sample": "Sample",
+      "sampleExport": "Export your sample",
+      "sampleExplanation": "Download your cards and a partial 4×4 board. Complete game boards need 16 cards.",
+      "fullExport": "Unique boards and printable calling cards in one PDF. Export as often as you like.",
+      "downloadSample": "Download sample PDF",
+      "uploadExport": "Add photos and export",
+      "processing": "{count} cards processing…",
+      "crop": "Crop photo",
+      "cropHint": "Drag a crop or use the arrow keys on the selection. Your original photo is kept.",
+      "resetCrop": "Use full photo",
+      "saveCrop": "Save crop",
+      "cutInstruction": "Cut along lines to make individual cards"
+    },
+    "Page": {
+      "eyebrow": "Your people. Your memories. Your Lotería.",
+      "custom": "Made from YOUR photos",
+      "create": "Create your {name} Lotería",
+      "freeNote": "All themes included · Start with {free} cards free",
+      "priceNote": "{price} unlocks up to {total} cards for this set.",
+      "photoHeading": "Your photo becomes part of the game",
+      "originalHeading": "Your photos, still your photos",
+      "photoBody": "Upload a photo, choose illustration or original-photo mode, and edit its card name. The people and memories are yours.",
+      "photoAlt": "Sample source photo",
+      "cardAlt": "Example Lotería card made from the source photo",
+      "ideasHeading": "What could go in your set?",
+      "playHeading": "Make it part of your celebration",
+      "stepsHeading": "From your photos to the table",
+      "steps": [
+        "Choose this theme and add your photos.",
+        "Keep the photos or turn them into illustrations. Edit the names and check the print preview.",
+        "Download your sample, or add at least 16 cards for a complete game. Print the PDF at actual size."
+      ],
+      "questions": "A few things to know",
+      "questionTheme": "Can I change the theme after uploading photos?",
+      "answerTheme": "Yes. Changing the frame, colors, and type does not change your photos or generate new illustrations. Preview the design before exporting.",
+      "questionFree": "What can I make for free?",
+      "answerFree": "Create up to {free} cards in any theme and export a sample PDF as often as you like. Unlock this set for {price} to add up to {total} cards.",
+      "questionPrint": "What do I need to print and play?",
+      "answerPrint": "The PDF uses US Letter pages. Print at actual size, cut out the calling cards, and use beans or other small markers. A complete 4×4 game needs at least 16 different cards.",
+      "related": "More reasons to play",
+      "browse": "Browse every theme",
+      "home": "Home",
+      "hubTitle": "A Lotería for every occasion",
+      "hubIntro": "Make a familiar game entirely your own. Choose a theme, bring your photos, and create a set starring the people and moments that matter to you.",
+      "hubTag": "THE OCCASION COLLECTION",
+      "before": "Your photo",
+      "after": "Your card",
+      "themeIncluded": "Themes, original photos, and repeat exports are included. Unlocking only raises your card limit."
+    },
+    "Entry": {
+      "title": "Start your {name} set",
+      "intro": "Create a new set or choose one to restyle. Existing cards will stay intact.",
+      "create": "Create a new set",
+      "apply": "Apply theme to this set",
+      "continue": "Continue to my set",
+      "working": "Preparing your set…",
+      "error": "Could not prepare the set. Please try again.",
+      "retry": "Try again"
     }
   }
 }

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { PhotoCropDialog } from '@/components/photo-crop-dialog';
+import type { PixelRect } from '@/lib/crop-image';
 import { X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotteriaCard } from '@/lib/generate-boards';
@@ -15,6 +17,8 @@ interface CardEditModalProps {
   onSave: (newLabel: string, newRiddle: string) => void;
   onDelete?: () => void;
   onClose: () => void;
+  cropData?: PixelRect | null;
+  onCrop?: (crop: PixelRect | null) => Promise<void>;
 }
 
 export function CardEditModal({
@@ -23,8 +27,12 @@ export function CardEditModal({
   onSave,
   onDelete,
   onClose,
+  cropData,
+  onCrop,
 }: CardEditModalProps) {
   const t = useTranslations('BoardEditor.CardEditModal');
+  const themeText = useTranslations('Themes.Builder');
+  const [cropping, setCropping] = useState(false);
   const [label, setLabel] = useState(card.label);
   const [riddle, setRiddle] = useState(card.riddle ?? '');
 
@@ -48,6 +56,16 @@ export function CardEditModal({
       onSave(label.trim(), riddle.trim());
     }
   };
+
+  if (cropping && originalImage && onCrop)
+    return (
+      <PhotoCropDialog
+        src={originalImage}
+        initialCrop={cropData}
+        onSave={onCrop}
+        onClose={() => setCropping(false)}
+      />
+    );
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -85,7 +103,7 @@ export function CardEditModal({
             <div className="space-y-1">
               {originalImage && (
                 <p className="text-xs text-muted-foreground text-center">
-                  {t('illustrationLabel')}
+                  {onCrop ? themeText('original') : t('illustrationLabel')}
                 </p>
               )}
               <div className="relative w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
@@ -102,6 +120,12 @@ export function CardEditModal({
               </div>
             </div>
           </div>
+
+          {onCrop && originalImage && (
+            <Button variant="outline" onClick={() => setCropping(true)}>
+              {themeText('crop')}
+            </Button>
+          )}
 
           {/* Label input */}
           <div>

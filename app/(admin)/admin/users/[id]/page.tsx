@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/table';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import Link from 'next/link';
-import { IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db/schema';
 
 async function getUser(id: string) {
   const result = await db.query.user.findFirst({
@@ -137,9 +136,6 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
               </TableHeader>
               <TableBody>
                 {userBoards.map((board) => {
-                  const genLimit = board.isUnlocked
-                    ? IMAGE_GENERATION_LIMIT_PAID
-                    : IMAGE_GENERATION_LIMIT_FREE;
                   return (
                     <TableRow key={board.id}>
                       <TableCell className="whitespace-nowrap">
@@ -152,7 +148,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                       </TableCell>
                       <TableCell className="text-sm tabular-nums">{board.cardCount}</TableCell>
                       <TableCell className="whitespace-nowrap text-sm tabular-nums">
-                        {board.imageGenerationsUsed}/{genLimit}
+                        {board.imageGenerationsUsed}
                       </TableCell>
                       <TableCell>
                         {board.isUnlocked ? (

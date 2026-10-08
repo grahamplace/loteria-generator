@@ -16,16 +16,8 @@ interface BoardSummary {
   previewCards: Array<{ id: string; number: number }>;
 }
 
-interface BoardLimits {
-  current: number;
-  max: number;
-  unlockedCount: number;
-  canCreateBoard: boolean;
-}
-
 interface UseBoardsReturn {
   boards: BoardSummary[];
-  limits: BoardLimits | null;
   isLoading: boolean;
   error: string | null;
   createBoard: (name?: string) => Promise<Board | null>;
@@ -38,7 +30,6 @@ interface UseBoardsReturn {
  */
 export function useBoards(): UseBoardsReturn {
   const [boards, setBoards] = useState<BoardSummary[]>([]);
-  const [limits, setLimits] = useState<BoardLimits | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -60,7 +51,6 @@ export function useBoards(): UseBoardsReturn {
 
       const data = await response.json();
       setBoards(data.boards || []);
-      setLimits(data.limits || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch boards');
     } finally {
@@ -83,13 +73,6 @@ export function useBoards(): UseBoardsReturn {
 
         if (!response.ok) {
           const data = await response.json();
-
-          if (data.code === 'BOARD_LIMIT_REACHED') {
-            toast.error('Board limit reached', {
-              description: data.message,
-            });
-            return null;
-          }
 
           throw new Error(data.error || 'Failed to create board');
         }
@@ -130,7 +113,6 @@ export function useBoards(): UseBoardsReturn {
 
   return {
     boards,
-    limits,
     isLoading,
     error,
     createBoard,
@@ -155,7 +137,11 @@ interface UseBoardReturn {
   board: BoardWithCards | null;
   isLoading: boolean;
   error: string | null;
-  updateBoard: (updates: { name?: string; styleOptions?: BoardStyleOptions }) => Promise<boolean>;
+  updateBoard: (updates: {
+    name?: string;
+    styleOptions?: BoardStyleOptions;
+    photoMode?: import('@/lib/themes/presets').PhotoMode;
+  }) => Promise<boolean>;
   refreshBoard: () => Promise<void>;
 }
 
@@ -203,7 +189,11 @@ export function useBoard(boardId: string): UseBoardReturn {
   }, [fetchBoard]);
 
   const updateBoard = useCallback(
-    async (updates: { name?: string; styleOptions?: BoardStyleOptions }): Promise<boolean> => {
+    async (updates: {
+      name?: string;
+      styleOptions?: BoardStyleOptions;
+      photoMode?: import('@/lib/themes/presets').PhotoMode;
+    }): Promise<boolean> => {
       try {
         const response = await fetch(`/api/boards/${boardId}`, {
           method: 'PATCH',

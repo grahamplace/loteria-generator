@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db/schema';
 
 interface BoardRow {
   id: string;
@@ -58,9 +57,6 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
             </TableHeader>
             <TableBody>
               {filtered.map((board) => {
-                const genLimit = board.isUnlocked
-                  ? IMAGE_GENERATION_LIMIT_PAID
-                  : IMAGE_GENERATION_LIMIT_FREE;
                 return (
                   <TableRow key={board.id}>
                     <TableCell className="whitespace-nowrap">
@@ -78,7 +74,7 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
                     </TableCell>
                     <TableCell className="text-sm tabular-nums">{board.cardCount}</TableCell>
                     <TableCell className="whitespace-nowrap text-sm tabular-nums">
-                      {board.imageGenerationsUsed}/{genLimit}
+                      {board.imageGenerationsUsed}
                     </TableCell>
                     <TableCell>
                       {board.isUnlocked ? (

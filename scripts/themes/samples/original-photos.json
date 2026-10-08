@@ -1,0 +1,124 @@
+{
+  "title": "Original Photo Lotería",
+  "styles": {
+    "presetId": "original-photos",
+    "showTitle": true
+  },
+  "cards": [
+    {
+      "id": "anniversary-couple",
+      "label": "Nuestro Amor",
+      "number": 1,
+      "illustration": "public/themes/cards/55f3c564e340ca7e00.webp",
+      "source": "output/imagegen/etsy-variants-2/photos/anniversary-couple.png"
+    },
+    {
+      "id": "07-family-portrait",
+      "label": "La Familia",
+      "number": 2,
+      "illustration": "public/themes/cards/83c6138b2569cec436.webp",
+      "source": "scripts/example-images/source-photos/07-family-portrait.jpg"
+    },
+    {
+      "id": "11-dog",
+      "label": "El Perro",
+      "number": 3,
+      "illustration": "public/themes/cards/763cfb8052cf73cfa9.webp",
+      "source": "scripts/example-images/source-photos/11-dog.jpg"
+    },
+    {
+      "id": "student-maya",
+      "label": "Maya",
+      "number": 4,
+      "illustration": "public/themes/cards/74ccf5a483c8743f92.webp",
+      "source": "output/imagegen/etsy-variants-2/photos/student-maya.png"
+    },
+    {
+      "id": "destination-beach-couple",
+      "label": "La Boda en la Playa",
+      "number": 5,
+      "illustration": "public/themes/cards/4b045ac14d026db602.webp",
+      "source": "output/imagegen/etsy-variants-2/photos/destination-beach-couple.png"
+    },
+    {
+      "id": "graduation-portrait",
+      "label": "La Graduada",
+      "number": 6,
+      "illustration": "public/themes/cards/96f0c0dab8f300cb39.webp",
+      "source": "output/imagegen/etsy-variants-2/photos/graduation-portrait.png"
+    },
+    {
+      "id": "milestone-woman",
+      "label": "Los 50",
+      "number": 7,
+      "illustration": "public/themes/cards/55b1b54afae1f4b93a.webp",
+      "source": "output/imagegen/etsy-variants-2/photos/milestone-woman.png"
+    },
+    {
+      "id": "hanukkah-family",
+      "label": "Nuestra Familia",
+      "number": 8,
+      "illustration": "public/themes/cards/44efb565f9ff92eba2.webp",
+      "source": "output/imagegen/etsy-variants-2/photos/hanukkah-family.png"
+    },
+    {
+      "id": "easter-family",
+      "label": "La Pascua",
+      "number": 9,
+      "illustration": "public/themes/cards/3e43c5bb57640da284.webp",
+      "source": "output/imagegen/etsy-variants-2/photos/easter-family.png"
+    },
+    {
+      "id": "soccer-team",
+      "label": "Nuestro Equipo",
+      "number": 10,
+      "illustration": "public/themes/cards/5682d78a77de2eed96.webp",
+      "source": "output/imagegen/etsy-variants-2/photos/soccer-team.png"
+    },
+    {
+      "id": "18-tacos",
+      "label": "Los Tacos",
+      "number": 11,
+      "illustration": "public/themes/cards/61891e839547d36733.webp",
+      "source": "scripts/example-images/source-photos/18-tacos.jpg"
+    },
+    {
+      "id": "12-cat",
+      "label": "El Gato",
+      "number": 12,
+      "illustration": "public/themes/cards/991b20a6c26dda2428.webp",
+      "source": "scripts/example-images/source-photos/12-cat.jpg"
+    },
+    {
+      "id": "08-baby",
+      "label": "El Bebé",
+      "number": 13,
+      "illustration": "public/themes/cards/70e11f19787d0678a3.webp",
+      "source": "scripts/example-images/source-photos/08-baby.jpg"
+    },
+    {
+      "id": "09-grandpa",
+      "label": "El Abuelo",
+      "number": 14,
+      "illustration": "public/themes/cards/40e71d638a1e5eb3c4.webp",
+      "source": "scripts/example-images/source-photos/09-grandpa.jpg"
+    },
+    {
+      "id": "10-grandma",
+      "label": "La Abuela",
+      "number": 15,
+      "illustration": "public/themes/cards/d96272f4a1b81a79a1.webp",
+      "source": "scripts/example-images/source-photos/10-grandma.jpg"
+    },
+    {
+      "id": "13-house",
+      "label": "La Casa",
+      "number": 16,
+      "illustration": "public/themes/cards/7cb185f3e54d4f97cd.webp",
+      "source": "scripts/example-images/source-photos/13-house.jpg"
+    }
+  ],
+  "compareId": "anniversary-couple",
+  "sourcePackage": "output/etsy/variants-2-2026/18-photo-only",
+  "etsyListingId": "4590891086"
+}

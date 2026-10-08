@@ -56,11 +56,14 @@ interface DisplayCard {
   isProcessing?: boolean;
   error?: string;
   isDefault?: boolean;
+  preserveOriginal?: boolean;
+  cropData?: import('@/lib/crop-image').PixelRect | null;
 }
 
 interface BoardCardGridProps {
   cards: DisplayCard[];
   onDeleteCard: (id: string) => void;
+  onCropCard?: (id: string, crop: import('@/lib/crop-image').PixelRect | null) => Promise<void>;
   onUpdateLabel: (id: string, label: string, riddle: string) => void;
   onReorderCards: (startIndex: number, endIndex: number) => void;
   onAddMore?: () => void;
@@ -202,6 +205,7 @@ function DragOverlayCard({ card }: { card: DisplayCard }) {
 export function BoardCardGrid({
   cards,
   onDeleteCard,
+  onCropCard,
   onUpdateLabel,
   onReorderCards,
   onAddMore,
@@ -457,6 +461,12 @@ export function BoardCardGrid({
             riddle: editingCard.riddle,
           }}
           originalImage={editingCard.originalImage}
+          cropData={editingCard.cropData}
+          onCrop={
+            editingCard.preserveOriginal && onCropCard
+              ? (crop) => onCropCard(editingCard.id, crop)
+              : undefined
+          }
           onSave={(newLabel, newRiddle) => {
             onUpdateLabel(editingCard.id, newLabel, newRiddle);
             setEditingCard(null);

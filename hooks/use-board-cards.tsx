@@ -1,4 +1,6 @@
 'use client';
+import { filenameToLabel } from '@/lib/filename-label';
+import type { PhotoMode } from '@/lib/themes/presets';
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -52,6 +54,9 @@ export interface BoardCard {
   errorMessage: string | null;
   isDefault: boolean;
   defaultCardId: string | null;
+  preserveOriginal?: boolean;
+  cropData?: Card['cropData'];
+  imageVersion?: number;
   // Local state for optimistic UI
   localOriginalImage?: string; // base64 for immediate display
   localIllustration?: string; // base64 for immediate display
@@ -82,7 +87,11 @@ interface UseBoardCardsReturn {
  * Hook for managing cards for a specific board
  * Combines local state for instant UX with API persistence
  */
-export function useBoardCards(boardId: string, isUnlocked: boolean = false): UseBoardCardsReturn {
+export function useBoardCards(
+  boardId: string,
+  isUnlocked: boolean = false,
+  photoMode: PhotoMode = 'illustrated'
+): UseBoardCardsReturn {
   const [cards, setCards] = useState<BoardCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -195,6 +204,9 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
               ...c,
               id: serverCard.id,
               number: serverCard.number,
+              preserveOriginal: serverCard.preserveOriginal,
+              cropData: serverCard.cropData,
+              ...(serverCard.status === 'completed' ? { localOriginalImage: undefined } : {}),
               originalImageUrl: serverCard.originalImageUrl,
               illustrationUrl: serverCard.illustrationUrl,
               label: serverCard.label || c.label,
@@ -238,19 +250,17 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
         const createResponse = await fetch(`/api/boards/${boardId}/cards`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ originalImageBase64: base64Image, label: '' }),
+          body: JSON.stringify({
+            originalImageBase64: base64Image,
+            label: photoMode === 'original' ? filenameToLabel(file.name).slice(0, 200) : '',
+          }),
         });
 
         if (!createResponse.ok) {
           const data = await createResponse.json();
-          if (data.code === 'CARD_LIMIT_REACHED' || data.code === 'GENERATION_LIMIT_REACHED') {
+          if (data.code === 'CARD_LIMIT_REACHED') {
             setCards((prev) => prev.filter((c) => c.id !== tempId));
-            toast.error(
-              data.code === 'CARD_LIMIT_REACHED'
-                ? 'Card limit reached'
-                : 'Generation limit reached',
-              { description: data.message }
-            );
+            toast.error('Card limit reached', { description: data.message });
             return;
           }
           throw new Error('Failed to create card');
@@ -275,7 +285,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
         toast.error('Failed to create card');
       }
     },
-    [boardId, mergeServerCard]
+    [boardId, mergeServerCard, photoMode]
   );
 
   const addCards = useCallback(
@@ -284,6 +294,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
         files.map(async (file) => ({
           base64: await readFileAsDataURL(file),
           tempId: createTempId(),
+          label: photoMode === 'original' ? filenameToLabel(file.name).slice(0, 200) : '',
         }))
       );
 
@@ -314,12 +325,12 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
           const res = await fetch(`/api/boards/${boardId}/cards`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ originalImageBase64: fd.base64, label: '' }),
+            body: JSON.stringify({ originalImageBase64: fd.base64, label: fd.label }),
           });
 
           if (!res.ok) {
             const data = await res.json();
-            if (data.code === 'CARD_LIMIT_REACHED' || data.code === 'GENERATION_LIMIT_REACHED') {
+            if (data.code === 'CARD_LIMIT_REACHED') {
               setCards((prev) => prev.filter((c) => c.id !== fd.tempId));
               toast.error(
                 data.code === 'CARD_LIMIT_REACHED'
@@ -352,7 +363,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
         }
       }
     },
-    [boardId, mergeServerCard]
+    [boardId, mergeServerCard, photoMode]
   );
 
   const addDefaultCards = useCallback(

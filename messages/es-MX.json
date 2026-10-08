@@ -25,10 +25,10 @@
       "subtitle": "Sube tus fotos favoritas y nosotros nos encargamos de lo demás.",
       "step1Title": "Sube tus fotos",
       "step1Desc": "Sube fotos de tu familia, amigos o mascotas. Podemos ilustrar a cualquier persona o cosa que quieras incluir en una carta.",
-      "step2Title": "Ilustramos cada carta",
-      "step2Desc": "Al instante dibujamos cada foto al estilo clásico de la Lotería y agregamos los nombres en español — El Abuelo, La Novia, El Niño.",
+      "step2Title": "Elige el estilo de tus fotos",
+      "step2Desc": "Conserva tus fotos originales o conviértelas en ilustraciones de Lotería. Elige cualquier tema y edita el nombre de cada carta.",
       "step3Title": "Imprime y juega en casa",
-      "step3Desc": "Descarga PDFs listos para imprimir de cada carta y tabla. Imprime en casa o en una imprenta local. ¡Listo para jugar Lotería!",
+      "step3Desc": "Exporta una muestra con tus primeras 4 cartas. Con 16 cartas o más, descarga tablas completas al azar y cartas para cantar. Imprime a tamaño real en casa o en una imprenta.",
       "ctaGetStarted": "Empieza gratis →",
       "step2GrandpaPhotoAlt": "Foto original de un abuelo"
     },
@@ -63,12 +63,12 @@
     "Pricing": {
       "tagline": "Pago único · Sin suscripciones",
       "headline": "Precios sencillos.",
-      "subtitle": "Empieza gratis con una Lotería de muestra. Desbloquea las 54 cartas completas cuando estés listo.",
+      "subtitle": "Empieza con 4 cartas y cualquier tema. Desbloquea hasta 54 cartas cuando quieras.",
       "free": {
         "name": "Vista previa gratis",
         "price": "$0",
         "priceLabel": "/ para siempre",
-        "features": ["Hasta 4 cartas personalizadas", "1 tabla imprimible", "Ilustraciones de Lotería personalizadas", "Generación de nombres en español"],
+        "features": ["Hasta 4 cartas", "Todos los temas incluidos", "Ilustraciones o fotos originales", "PDF de muestra sin límite de exportaciones"],
         "cta": "Empieza gratis"
       },
       "unlocked": {
@@ -76,7 +76,7 @@
         "price": "{price}",
         "priceLabel": "pago único",
         "badge": "La más popular",
-        "features": ["Lotería personalizada de 54 cartas", "Tablas imprimibles ilimitadas", "PDFs de alta resolución para imprimir", "Sin marcas de agua"],
+        "features": ["Hasta 54 cartas por juego", "Tablas completas de 4×4 con 16 cartas o más", "Todos los temas y modos de foto", "Un solo pago para este juego"],
         "cta": "Desbloquea la Lotería completa"
       }
     },
@@ -121,7 +121,7 @@
         },
         {
           "question": "¿Cómo creo una Lotería personalizada con mis propias fotos?",
-          "answer": "Sube tus fotos y nosotros transformamos cada una en una ilustración al estilo tradicional de la Lotería con su nombre en español. Después acomodas tus cartas, editas los nombres y generas tablas imprimibles para que tengas una Lotería completa lista para jugar."
+          "answer": "Elige un tema, sube tus fotos y decide si quieres conservarlas o ilustrarlas. Edita los nombres de las cartas y revisa la tabla antes de imprimir. Empieza con una muestra gratis de cuatro cartas; agrega al menos 16 cartas diferentes para un juego completo de 4×4."
         },
         {
           "question": "¿Puedo usar esto para mi boda o fiesta?",
@@ -129,7 +129,7 @@
         },
         {
           "question": "¿Cuántas cartas puedo crear?",
-          "answer": "Con la vista previa gratis puedes crear hasta 4 cartas y generar una tabla de muestra. Al desbloquear tu tabla por {price}, obtienes acceso a 54 cartas (una Lotería tradicional completa) y generación ilimitada de tablas."
+          "answer": "Crea hasta 4 cartas gratis con cualquier tema, como ilustraciones o fotos originales. Descarga muestras PDF las veces que quieras. Un pago de {price} aumenta el límite de este juego a 54 cartas. Las tablas completas de 4×4 necesitan al menos 16 cartas diferentes."
         },
         {
           "question": "¿En qué formatos puedo exportar?",
@@ -137,7 +137,7 @@
         },
         {
           "question": "¿Hay alguna suscripción o cobro recurrente?",
-          "answer": "¡Sin suscripciones! Nuestros precios son sencillos — pruébalo gratis y, cuando estés listo, paga una sola vez {price} para desbloquear tu tabla. Esa compra te da acceso permanente a ese proyecto."
+          "answer": "Sin suscripciones. Cada juego incluye temas, ambos modos de foto y exportaciones repetidas. Paga {price} una sola vez para aumentar el límite de un juego de 4 a 54 cartas; puedes crear más juegos gratis cuando quieras."
         }
       ]
     },
@@ -160,15 +160,15 @@
       "siteDescription": "Crea cartas de Lotería mexicana personalizadas con tus fotos. El generador de Lotería personalizada más sencillo para bodas, fiestas y reuniones familiares.",
       "softwareName": "Lotería Generator",
       "softwareFreeOfferName": "Vista previa gratis",
-      "softwareFreeOfferDescription": "Crea hasta 4 cartas y 1 tabla gratis",
+      "softwareFreeOfferDescription": "Hasta 4 cartas, todos los temas, fotos originales o ilustraciones y exportaciones repetidas de muestras PDF",
       "softwareUnlockedOfferName": "Lotería completa desbloqueada",
-      "softwareUnlockedOfferDescription": "Acceso completo con hasta 54 cartas y generación ilimitada de tablas",
+      "softwareUnlockedOfferDescription": "Hasta 54 cartas por juego; desbloquear aumenta el límite de cartas",
       "softwareFeatures": [
-        "Conversión de fotos a cartas de Lotería",
-        "Ilustraciones al estilo tradicional de la Lotería mexicana",
-        "Generación automática de nombres en español",
-        "Generación de tablas imprimibles",
-        "Edición personalizada de cartas"
+        "Todos los temas incluidos",
+        "Ilustraciones o fotos originales",
+        "Nombres editables y recorte de fotos originales",
+        "Exportaciones repetidas de PDF imprimibles",
+        "Juegos adicionales gratis"
       ],
       "howToName": "Cómo crear cartas de Lotería personalizadas",
       "howToDescription": "Aprende a crear cartas de Lotería mexicana personalizadas con tus fotos en unos pocos pasos sencillos.",
@@ -183,8 +183,8 @@
           "text": "Sube tus fotos favoritas — personas, mascotas, objetos o lo que más te importe."
         },
         {
-          "name": "Ilustración",
-          "text": "Cada foto se transforma automáticamente en una ilustración al estilo tradicional de la Lotería con su nombre en español."
+          "name": "Elige el estilo de tus fotos",
+          "text": "Conserva tus fotos originales o conviértelas en ilustraciones de Lotería. Elige cualquier tema y edita el nombre de cada carta."
         },
         {
           "name": "Personaliza las cartas",
@@ -192,7 +192,7 @@
         },
         {
           "name": "Genera las tablas",
-          "text": "Crea tablas al azar con cuadrícula de 4x4 listas para imprimir y jugar."
+          "text": "Exporta una muestra con tus primeras 4 cartas. Con 16 cartas o más, descarga tablas completas al azar y cartas para cantar. Imprime a tamaño real en casa o en una imprenta."
         }
       ]
     }
@@ -357,19 +357,13 @@
       "exportTitle": "Exportar Lotería",
       "exportSubtitleDefault": "todas diferentes · mazo de cartas · PDF",
       "exportSubtitleNeedsCards": "Necesita {min} cartas para generar tableros — tienes {have}.",
-      "exportSubtitleUsed": "Desbloquea para exportar de nuevo",
       "boardCountLabel": "Número de tablas",
       "boardCountDecrease": "Menos tablas",
       "boardCountIncrease": "Más tablas",
       "boardCountUnit": "tablas",
-      "freeExportUsed": "Exportación gratis usada",
       "exportButton": "Exportar",
       "exportingButton": "Exportando…",
-      "unlockExport": "Desbloquear · {price}",
       "moreNeeded": "{count} cartas más",
-      "bannerTitle": "¿Te encantó tu primera exportación?",
-      "bannerDesc": "Desbloquea para tener exportaciones ilimitadas y las 54 cartas completas.",
-      "bannerCta": "Desbloquear ahora →",
       "mobileCardsStatus": "{processed}/{max} cartas",
       "mobileSaved": "Guardado",
       "addClassic": "Agregar clásica",
@@ -378,7 +372,7 @@
       "callerSheetTitle": "Hoja del cantor",
       "toasts": {
         "exportSuccessTitle": "¡Lotería exportada!",
-        "exportSuccessDesc": "{count, plural, =1 {# tabla y el mazo de cartas se descargaron como PDF.} other {# tablas únicas y el mazo de cartas se descargaron como PDF.}}",
+        "exportSuccessDesc": "{count, plural, one {# tabla y tus cartas descargadas en PDF.} other {# tablas y tus cartas descargadas en PDF.}}",
         "exportFailedTitle": "No se pudo exportar la Lotería",
         "exportFailedDesc": "Por favor, inténtalo de nuevo.",
         "startingExport": "Iniciando exportación…",
@@ -397,8 +391,8 @@
       "keepBuildingSuffix": "te esperan",
       "moreCards": "{count} cartas más",
       "featureCards": "Hasta 54 cartas",
-      "featureExports": "Exportaciones ilimitadas",
-      "featureWatermarks": "Sin marcas de agua",
+      "featureExports": "Más personas y recuerdos en este juego",
+      "featureWatermarks": "Un solo pago · conserva tu juego",
       "unlockButton": "Desbloquear",
       "addMore": "Agregar personalizada",
       "addClassicTile": "AGREGAR CLÁSICA",
@@ -450,8 +444,8 @@
       "keepBuildingSuffix": "te esperan",
       "moreCards": "{count} cartas más",
       "featureCards": "Hasta 54 cartas",
-      "featureExports": "Exportaciones ilimitadas",
-      "featureWatermarks": "Sin marcas de agua",
+      "featureExports": "Más personas y recuerdos en este juego",
+      "featureWatermarks": "Un solo pago · conserva tu juego",
       "unlockButton": "Desbloquear",
       "redirectingButton": "Redirigiendo…",
       "maybeLater": "Tal vez después",
@@ -510,7 +504,7 @@
     },
     "boardAddPhoto": {
       "title": "Agrega tu primera foto",
-      "content": "Sube la foto de alguien que quieras y la convertimos en una carta de Lotería personalizada — esa es la parte divertida."
+      "content": "Elige cualquier tema y sube tu primera foto. Consérvala o ilústrala: tus primeras cuatro cartas son gratis."
     },
     "controls": {
       "skip": "Omitir",
@@ -518,6 +512,84 @@
       "next": "Siguiente",
       "done": "Entendido",
       "progress": "{current} de {total}"
+    }
+  },
+  "Themes": {
+    "Builder": {
+      "title": "Diseña tu juego",
+      "chooseTheme": "Elige un tema",
+      "showTitle": "Incluir título en las tablas",
+      "printedTitle": "Imprime “{name}” en la parte superior de cada tabla.",
+      "photoMode": "Nuevas fotos",
+      "illustrated": "Ilustrar mis fotos",
+      "original": "Usar fotos originales",
+      "futureUploads": "Esta opción se aplica a las próximas fotos. Las cartas que ya tienes no cambian.",
+      "preview": "Ver tabla para imprimir",
+      "hidePreview": "Ocultar vista previa",
+      "previewAlt": "Tu tabla con el tema seleccionado",
+      "previewError": "No se pudo cargar la vista previa. Ciérrala e inténtalo de nuevo.",
+      "partialPreview": "Esta es una muestra parcial. Una tabla de 4×4 necesita al menos 16 cartas.",
+      "saving": "Guardando…",
+      "rendering": "Preparando tu tabla…",
+      "saveError": "No se pudo guardar. Inténtalo de nuevo.",
+      "sample": "Muestra",
+      "sampleExport": "Exporta tu muestra",
+      "sampleExplanation": "Descarga tus cartas y una tabla parcial de 4×4. Un juego completo necesita 16 cartas.",
+      "fullExport": "Tablas diferentes y cartas para cantar en un PDF. Exporta las veces que quieras.",
+      "downloadSample": "Descargar PDF de muestra",
+      "uploadExport": "Agregar fotos y exportar",
+      "processing": "Procesando {count} cartas…",
+      "crop": "Recortar foto",
+      "cropHint": "Arrastra el recorte o usa las flechas del teclado en la selección. Se conserva tu foto original.",
+      "resetCrop": "Usar foto completa",
+      "saveCrop": "Guardar recorte",
+      "cutInstruction": "Recorta por las líneas para separar las cartas"
+    },
+    "Page": {
+      "eyebrow": "Tu gente. Tus recuerdos. Tu lotería.",
+      "custom": "Hecha con TUS fotos",
+      "create": "Crear mi lotería · {name}",
+      "freeNote": "Todos los temas incluidos · Empieza con {free} cartas gratis",
+      "priceNote": "{price} desbloquea hasta {total} cartas para este juego.",
+      "photoHeading": "Tu foto se convierte en parte del juego",
+      "originalHeading": "Tus fotos siguen siendo tus fotos",
+      "photoBody": "Sube una foto, elige ilustración o foto original y edita el nombre de la carta. Las personas y los recuerdos son tuyos.",
+      "photoAlt": "Foto de ejemplo original",
+      "cardAlt": "Carta de lotería creada con la foto de ejemplo",
+      "ideasHeading": "¿Qué puedes incluir en tu juego?",
+      "playHeading": "Hazlo parte de tu celebración",
+      "stepsHeading": "De tus fotos a la mesa",
+      "steps": [
+        "Elige este tema y agrega tus fotos.",
+        "Conserva las fotos o conviértelas en ilustraciones. Edita los nombres y revisa la vista previa.",
+        "Descarga tu muestra o agrega al menos 16 cartas para un juego completo. Imprime el PDF a tamaño real."
+      ],
+      "questions": "Antes de empezar",
+      "questionTheme": "¿Puedo cambiar el tema después de subir fotos?",
+      "answerTheme": "Sí. Cambiar el marco, los colores y la tipografía no modifica tus fotos ni genera nuevas ilustraciones. Revisa el diseño antes de exportarlo.",
+      "questionFree": "¿Qué puedo hacer gratis?",
+      "answerFree": "Crea hasta {free} cartas con cualquier tema y exporta tu PDF de muestra las veces que quieras. Desbloquea este juego por {price} para agregar hasta {total} cartas.",
+      "questionPrint": "¿Qué necesito para imprimir y jugar?",
+      "answerPrint": "El PDF usa páginas tamaño carta. Imprime a tamaño real, recorta las cartas para cantar y usa frijoles u otros objetos pequeños como marcadores. Una tabla completa de 4×4 necesita al menos 16 cartas diferentes.",
+      "related": "Más motivos para jugar",
+      "browse": "Ver todos los temas",
+      "home": "Inicio",
+      "hubTitle": "Una lotería para cada ocasión",
+      "hubIntro": "Haz tuyo un juego conocido. Elige un tema, trae tus fotos y crea una lotería protagonizada por las personas y los momentos que más te importan.",
+      "hubTag": "LA COLECCIÓN DE OCASIONES",
+      "before": "Tu foto",
+      "after": "Tu carta",
+      "themeIncluded": "Los temas, las fotos originales y las exportaciones repetidas están incluidos. Desbloquear solo aumenta el límite de cartas."
+    },
+    "Entry": {
+      "title": "Empieza tu juego · {name}",
+      "intro": "Crea un juego o elige uno para cambiar su diseño. Las cartas existentes se conservan.",
+      "create": "Crear un juego nuevo",
+      "apply": "Aplicar tema a este juego",
+      "continue": "Continuar a mi juego",
+      "working": "Preparando tu juego…",
+      "error": "No se pudo preparar el juego. Inténtalo de nuevo.",
+      "retry": "Intentar de nuevo"
     }
   }
 }

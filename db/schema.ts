@@ -79,12 +79,8 @@ export const userProfiles = pgTable('user_profiles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Board style options type
-export interface BoardStyleOptions {
-  backgroundColor?: string;
-  badgeColor?: string;
-  labelColor?: string;
-}
+import type { BoardStyleOptions, PhotoMode } from '@/lib/themes/presets';
+export type { BoardStyleOptions } from '@/lib/themes/presets';
 
 // Crop rectangle in pixels of the stored (downscaled) original image.
 export interface CropData {
@@ -93,10 +89,6 @@ export interface CropData {
   width: number;
   height: number;
 }
-
-// Generation limits
-export const IMAGE_GENERATION_LIMIT_FREE = 4;
-export const IMAGE_GENERATION_LIMIT_PAID = 100;
 
 // Boards table
 export const boards = pgTable('boards', {
@@ -111,6 +103,7 @@ export const boards = pgTable('boards', {
   imageGenerationsUsed: integer('image_generations_used').notNull().default(0),
   previewUrl: text('preview_url'),
   styleOptions: json('style_options').$type<BoardStyleOptions>(),
+  photoMode: text('photo_mode').$type<PhotoMode>().notNull().default('illustrated'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

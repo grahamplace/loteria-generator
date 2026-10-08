@@ -1,0 +1,124 @@
+{
+  "title": "Classroom Lotería",
+  "styles": {
+    "presetId": "classroom",
+    "showTitle": true
+  },
+  "cards": [
+    {
+      "id": "teacher",
+      "label": "Ms. Rivera",
+      "number": 1,
+      "illustration": "public/themes/cards/c793e6f5290a8e3ffe.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/teacher.png"
+    },
+    {
+      "id": "student-maya",
+      "label": "Maya",
+      "number": 2,
+      "illustration": "public/themes/cards/344c20994cc584aa54.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/student-maya.png"
+    },
+    {
+      "id": "student-lucas",
+      "label": "Lucas",
+      "number": 3,
+      "illustration": "public/themes/cards/a561366eb0290438c3.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/student-lucas.png"
+    },
+    {
+      "id": "principal",
+      "label": "Mr. Chen",
+      "number": 4,
+      "illustration": "public/themes/cards/98e7818d33c469e42a.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/principal.png"
+    },
+    {
+      "id": "student-ava",
+      "label": "Ava",
+      "number": 5,
+      "illustration": "public/themes/cards/9a128cb90fbb0f0b57.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/student-ava.png"
+    },
+    {
+      "id": "student-noah",
+      "label": "Noah",
+      "number": 6,
+      "illustration": "public/themes/cards/0aabe82e6c112767c8.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/student-noah.png"
+    },
+    {
+      "id": "soccer-girl",
+      "label": "Sofia",
+      "number": 7,
+      "illustration": "public/themes/cards/0082432c76ce370f94.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/soccer-girl.png"
+    },
+    {
+      "id": "soccer-boy",
+      "label": "Mateo",
+      "number": 8,
+      "illustration": "public/themes/cards/ef48d414ca11687278.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/soccer-boy.png"
+    },
+    {
+      "id": "soccer-coach",
+      "label": "Coach Alex",
+      "number": 9,
+      "illustration": "public/themes/cards/ecfc9faa70f80b8002.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/soccer-coach.png"
+    },
+    {
+      "id": "school-books",
+      "label": "Los Libros",
+      "number": 10,
+      "illustration": "public/themes/cards/39457cf9eae0118c7b.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/school-books.png"
+    },
+    {
+      "id": "soccer-kit",
+      "label": "El Equipo",
+      "number": 11,
+      "illustration": "public/themes/cards/da71b658397413d963.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/soccer-kit.png"
+    },
+    {
+      "id": "11-dog",
+      "label": "El Perro",
+      "number": 12,
+      "illustration": "public/themes/cards/472f18df46a9ef5438.webp",
+      "source": "lib/hero-cards-illustrations/11-dog.webp"
+    },
+    {
+      "id": "15-guitar",
+      "label": "La Guitarra",
+      "number": 13,
+      "illustration": "public/themes/cards/1e0cc63e18eae5f2d4.webp",
+      "source": "lib/hero-cards-illustrations/15-guitar.webp"
+    },
+    {
+      "id": "17-camera",
+      "label": "La Cámara",
+      "number": 14,
+      "illustration": "public/themes/cards/a05ce3691a0cf677c5.webp",
+      "source": "lib/hero-cards-illustrations/17-camera.webp"
+    },
+    {
+      "id": "12-cat",
+      "label": "El Gato",
+      "number": 15,
+      "illustration": "public/themes/cards/64a4e345ed306e1147.webp",
+      "source": "lib/hero-cards-illustrations/12-cat.webp"
+    },
+    {
+      "id": "18-tacos",
+      "label": "Los Tacos",
+      "number": 16,
+      "illustration": "public/themes/cards/630519f82f345adb4e.webp",
+      "source": "lib/hero-cards-illustrations/18-tacos.webp"
+    }
+  ],
+  "compareId": "teacher",
+  "sourcePackage": "output/etsy/variants-2-2026/11-classroom",
+  "etsyListingId": "4590870501"
+}

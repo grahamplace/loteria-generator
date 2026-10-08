@@ -25,13 +25,12 @@ import { BOARD_UNLOCK_PRICE_DISPLAY, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@
 interface UnlockPromptProps {
   boardId: string;
   boardName: string;
-  trigger: 'card_limit' | 'board_limit' | 'export';
+  trigger: 'card_limit';
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 function UnlockContent({
-  boardName,
   isLoading,
   onUnlock,
   onDismiss,

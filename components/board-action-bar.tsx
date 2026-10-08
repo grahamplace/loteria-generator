@@ -1,18 +1,20 @@
 'use client';
 
 import { useRef, useState, useImperativeHandle, forwardRef } from 'react';
-import { Upload, Package, Plus, Unlock, Sparkles } from 'lucide-react';
-import { generateLoteriaSetPdf, clampBoardCount, BoardStyleOptions } from '@/lib/generate-boards';
+import { Upload, Package, Plus, Loader2 } from 'lucide-react';
+import {
+  generateLoteriaSetPdf,
+  clampBoardCount,
+  type BoardStyleOptions,
+} from '@/lib/generate-boards';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
-import {
-  MIN_EXPORT_CARD_COUNT,
-  BOARD_UNLOCK_PRICE_DISPLAY,
-  DEFAULT_EXPORT_BOARD_COUNT,
-} from '@/lib/constants';
+import { MIN_EXPORT_CARD_COUNT, DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
 import { partitionBySize, MAX_UPLOAD_DISPLAY } from '@/lib/upload-limits';
 import { BoardCountStepper } from '@/components/board-count-stepper';
+import { Button } from '@/components/ui/button';
+import type { PhotoMode } from '@/lib/themes/presets';
 
 interface DisplayCard {
   id: string;
@@ -23,7 +25,6 @@ interface DisplayCard {
   isProcessing?: boolean;
   error?: string;
 }
-
 interface BoardActionBarProps {
   onFilesSelected: (files: File[]) => void;
   cardCount: number;
@@ -35,8 +36,9 @@ interface BoardActionBarProps {
   boardName: string;
   onUnlockRequired: () => void;
   onOpenDefaults: () => void;
+  styleOptions?: BoardStyleOptions | null;
+  photoMode?: PhotoMode;
 }
-
 export interface BoardActionBarRef {
   triggerFileSelect: () => void;
 }
@@ -54,437 +56,187 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
       boardName,
       onUnlockRequired,
       onOpenDefaults,
+      styleOptions,
+      photoMode = 'illustrated',
     },
     ref
   ) {
     const t = useTranslations('BoardEditor.ActionBar');
+    const themes = useTranslations('Themes.Builder');
     const inputRef = useRef<HTMLInputElement>(null);
-    const [dragActive, setDragActive] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
-    const [exportProgress, setExportProgress] = useState<string | null>(null);
-    const [generatedCount, setGeneratedCount] = useState(0);
+    const [progress, setProgress] = useState('');
     const [boardCount, setBoardCount] = useState(DEFAULT_EXPORT_BOARD_COUNT);
-
-    const isMaxReached = cardCount >= maxCards;
-    const canExport = processedCount >= MIN_EXPORT_CARD_COUNT;
-    const hasUsedFreeExport = !isUnlocked && generatedCount >= 1;
-    // Nothing to export yet and no paid path open — the whole panel is inert.
-    const exportLocked = !canExport && !hasUsedFreeExport;
-
+    const [dragActive, setDragActive] = useState(false);
+    const isSample = processedCount < MIN_EXPORT_CARD_COUNT;
     useImperativeHandle(ref, () => ({
-      triggerFileSelect: () => {
-        if (!isMaxReached) {
-          inputRef.current?.click();
-        }
+      triggerFileSelect() {
+        if (cardCount < maxCards) inputRef.current?.click();
+        else if (!isUnlocked) onUnlockRequired();
       },
     }));
 
-    const handleDrag = (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.type === 'dragenter' || e.type === 'dragover') {
-        setDragActive(true);
-      } else if (e.type === 'dragleave') {
-        setDragActive(false);
-      }
-    };
-
-    const acceptFiles = (files: File[], method: 'drop' | 'picker') => {
-      const imageFiles = files.filter((f) => f.type.startsWith('image/'));
-      const { valid, oversized } = partitionBySize(imageFiles);
-      if (oversized.length > 0) {
+    function acceptFiles(files: File[], method: string) {
+      const { valid, oversized } = partitionBySize(
+        files.filter((file) => file.type.startsWith('image/'))
+      );
+      if (oversized.length)
         toast.error(t('toasts.tooLargeTitle'), {
           description: t('toasts.tooLargeDesc', {
             count: oversized.length,
             maxSize: MAX_UPLOAD_DISPLAY,
           }),
         });
+      if (valid.length > maxCards - cardCount && !isUnlocked) onUnlockRequired();
+      const accepted = valid.slice(0, Math.max(0, maxCards - cardCount));
+      if (accepted.length) {
+        posthog.capture('photos_uploaded', {
+          count: accepted.length,
+          method,
+          theme: styleOptions?.presetId ?? 'classic',
+          photo_mode: photoMode,
+        });
+        onFilesSelected(accepted);
       }
-      const remaining = maxCards - cardCount;
-      const validFiles = valid.slice(0, remaining);
-      if (validFiles.length > 0) {
-        posthog.capture('photos_uploaded', { count: validFiles.length, method });
-        onFilesSelected(validFiles);
-      }
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setDragActive(false);
-      const files = e.dataTransfer.files;
-      if (files && files.length > 0) {
-        acceptFiles(Array.from(files), 'drop');
-      }
-    };
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files) {
-        acceptFiles(Array.from(e.target.files), 'picker');
-      }
-      // Reset so re-selecting the same file triggers onChange again
-      e.target.value = '';
-    };
-
-    const boardStyleOptions: BoardStyleOptions = {
-      backgroundColor: '#f5f0e1',
-      badgeColor: '#eb865a',
-      labelColor: '#000000',
-    };
-
-    const handleExport = async () => {
-      if (hasUsedFreeExport) {
-        onUnlockRequired();
-        return;
-      }
-      if (!canExport) return;
-
+    }
+    async function exportPdf() {
+      if (processedCount < 1 || isExporting) return;
       setIsExporting(true);
-      setExportProgress(t('toasts.startingExport'));
-
+      setProgress(t('toasts.startingExport'));
       try {
-        const exportCards = cards
-          .filter((c) => !c.isProcessing && !c.error)
-          .map((c) => ({
-            id: c.id,
-            number: c.number,
-            label: c.label,
-            illustration: c.illustration,
-            riddle: c.riddle,
-          }));
-
-        // The stepper propagates raw numeric input before its blur/Enter commit,
-        // so `boardCount` can briefly sit outside the supported range. Resolve it
-        // once here so the PDF, the analytics event, and the toast all report the
-        // same number the export actually contains.
-        const exportedBoardCount = clampBoardCount(boardCount);
-
-        const pdfBlob = await generateLoteriaSetPdf(
-          exportCards,
-          boardStyleOptions,
-          setExportProgress,
+        const completed = cards.filter((card) => !card.isProcessing && !card.error);
+        const count = isSample ? 1 : clampBoardCount(boardCount);
+        const blob = await generateLoteriaSetPdf(
+          completed,
+          styleOptions ?? {},
+          setProgress,
           { title: t('callerSheetTitle') },
-          exportedBoardCount
+          count,
+          {
+            boardTitle: styleOptions?.showTitle ? boardName : undefined,
+            sampleLabel: themes('sample'),
+            cutInstruction: themes('cutInstruction'),
+          }
         );
-
-        const url = URL.createObjectURL(pdfBlob);
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const slug = boardName
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)/g, '');
-        a.download = `${slug}-loteria-set.pdf`;
+        a.download = `${
+          boardName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '') || 'loteria'
+        }-${isSample ? 'sample' : 'loteria-set'}.pdf`;
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        a.remove();
         URL.revokeObjectURL(url);
-
-        setGeneratedCount((prev) => prev + 1);
         posthog.capture('board_exported', {
-          card_count: exportCards.length,
-          board_name: boardName,
+          card_count: completed.length,
+          board_count: count,
           is_unlocked: isUnlocked,
-          board_count: exportedBoardCount,
+          theme: styleOptions?.presetId ?? 'classic',
+          photo_mode: photoMode,
+          sample: isSample,
         });
         toast.success(t('toasts.exportSuccessTitle'), {
-          description: t('toasts.exportSuccessDesc', { count: exportedBoardCount }),
+          description: t('toasts.exportSuccessDesc', { count }),
         });
       } catch (error) {
-        console.error('Error exporting Loteria set:', error);
         posthog.captureException(error);
-        toast.error(t('toasts.exportFailedTitle'), {
-          description: t('toasts.exportFailedDesc'),
-        });
+        toast.error(t('toasts.exportFailedTitle'));
       } finally {
         setIsExporting(false);
-        setExportProgress(null);
       }
-    };
-
-    const mobileExportLabel = isExporting
-      ? exportProgress || t('exportingButton')
-      : hasUsedFreeExport
-        ? t('unlockExport', { price: BOARD_UNLOCK_PRICE_DISPLAY })
-        : canExport
-          ? t('exportButton')
-          : t('moreNeeded', { count: MIN_EXPORT_CARD_COUNT - processedCount });
-
+    }
     return (
-      <>
-        {/* Shared hidden file input */}
+      <section className="grid gap-3 md:grid-cols-2" aria-label={themes('uploadExport')}>
         <input
           ref={inputRef}
           type="file"
           multiple
           accept="image/png,image/jpeg,image/webp,image/gif"
-          onChange={handleChange}
           className="hidden"
-          disabled={isMaxReached}
+          onChange={(event) => {
+            acceptFiles(Array.from(event.target.files ?? []), 'picker');
+            event.target.value = '';
+          }}
         />
-
-        {/* ── Desktop layout ── */}
-        <div className="hidden md:block space-y-3">
-          <div className="grid grid-cols-12 gap-3">
-            {/* Upload section */}
-            <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              className={`col-span-7 rounded-lg p-4 flex items-center gap-4 transition-colors border border-dashed ${
-                dragActive ? 'border-primary bg-primary/5' : 'border-foreground/20 bg-muted/30'
-              } ${isMaxReached ? 'opacity-50' : ''}`}
-            >
-              <div className="w-12 h-12 rounded-lg bg-white border border-border text-foreground/70 flex items-center justify-center shadow-sm shrink-0">
-                <Upload className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline justify-between">
-                  <span className="font-semibold text-[15px]">{t('dropPhotos')}</span>
-                  <span className="text-[11px] font-mono text-muted-foreground tabular-nums">
-                    {cardCount}/{maxCards}
-                  </span>
-                </div>
-                <div className="h-1 bg-border rounded-full overflow-hidden mt-2">
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{
-                      width: `${(cardCount / maxCards) * 100}%`,
-                      background: 'linear-gradient(90deg, oklch(0.55 0.22 25), oklch(0.65 0.2 40))',
-                    }}
-                  />
-                </div>
-                <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
-                  <span>
-                    <b className="text-foreground">{processedCount}</b> {t('ready')}
-                  </span>
-                  {processingCount > 0 && (
-                    <span className="flex items-center gap-1 text-primary">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                      {processingCount} {t('processing')}
-                    </span>
-                  )}
-                  <span className="ml-auto">
-                    {t('acceptedFormats', { maxSize: MAX_UPLOAD_DISPLAY })}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => inputRef.current?.click()}
-                  disabled={isMaxReached}
-                  className="px-3 py-2 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-1.5 shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="lg:hidden">{t('choosePhotos')}</span>
-                  <span className="hidden lg:inline">{t('uploadPhotos')}</span>
-                </button>
-                <button
-                  onClick={onOpenDefaults}
-                  disabled={isMaxReached}
-                  aria-label={t('addClassicAriaLabel')}
-                  title={isMaxReached ? t('addClassicDisabledTitle') : undefined}
-                  className="px-3 py-2 rounded-lg bg-secondary/15 border border-secondary/40 text-foreground text-sm font-semibold flex items-center gap-1.5 hover:bg-secondary/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                >
-                  <Sparkles className="w-4 h-4" aria-hidden="true" />
-                  {t('addClassic')}
-                </button>
-              </div>
-            </div>
-
-            {/* Export section */}
-            <div
-              className={`col-span-5 rounded-lg p-4 flex items-center gap-4 border relative ${
-                hasUsedFreeExport
-                  ? 'border-primary border-2 shadow-sm'
-                  : exportLocked
-                    ? 'border-border border-dashed bg-muted/40'
-                    : 'border-primary/20 shadow-sm'
-              }`}
-              style={
-                exportLocked
-                  ? undefined
-                  : { background: 'linear-gradient(135deg, #faf5e6 0%, #f2e6c8 100%)' }
-              }
-            >
-              {hasUsedFreeExport && (
-                <div
-                  className="absolute -top-2.5 right-4 border-2 border-primary rounded-md px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest text-primary bg-background"
-                  style={{ transform: 'rotate(-4deg)' }}
-                >
-                  {t('freeExportUsed')}
-                </div>
-              )}
-              <div
-                className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${
-                  exportLocked
-                    ? 'bg-muted text-muted-foreground/70 border border-border'
-                    : 'bg-primary text-white shadow-sm'
-                }`}
-              >
-                <Package className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <span
-                  className={`font-semibold text-[15px] block ${
-                    exportLocked ? 'text-muted-foreground' : ''
-                  }`}
-                >
-                  {t('exportTitle')}
-                </span>
-                {hasUsedFreeExport ? (
-                  <span className="text-[11px] text-muted-foreground mt-0.5 block">
-                    {t('exportSubtitleUsed')}
-                  </span>
-                ) : (
-                  // The stepper takes its own line so the subtitle keeps the full
-                  // text-block width. Sharing one line leaves the subtitle ~148px
-                  // against a ~162px natural width, which wraps and orphans "PDF".
-                  <div className="mt-1 space-y-1">
-                    {/* The unit noun sits against the stepper so the number is
-                        never orphaned from what it counts. */}
-                    {/* flex-wrap: "boards" is unbreakable, so at narrow widths it
-                        must drop under the stepper rather than overflow into the
-                        export button. */}
-                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                      <BoardCountStepper
-                        value={boardCount}
-                        onChange={setBoardCount}
-                        disabled={isExporting || exportLocked}
-                        label={t('boardCountLabel')}
-                        decreaseLabel={t('boardCountDecrease')}
-                        increaseLabel={t('boardCountIncrease')}
-                        size="sm"
-                      />
-                      <span className="text-xs font-medium text-foreground">
-                        {t('boardCountUnit')}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-muted-foreground block text-balance">
-                      {exportLocked
-                        ? t('exportSubtitleNeedsCards', {
-                            min: MIN_EXPORT_CARD_COUNT,
-                            have: processedCount,
-                          })
-                        : t('exportSubtitleDefault')}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={handleExport}
-                disabled={(!canExport && !hasUsedFreeExport) || isExporting}
-                className={`min-w-[120px] justify-center px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                  isExporting
-                    ? 'bg-primary/80 text-white cursor-wait'
-                    : hasUsedFreeExport
-                      ? 'bg-primary text-white hover:bg-primary/90 shadow-sm'
-                      : canExport
-                        ? 'bg-primary text-white hover:bg-primary/90 shadow-sm'
-                        : 'bg-background/50 text-muted-foreground border border-border border-dashed cursor-not-allowed'
-                }`}
-              >
-                {isExporting ? (
-                  <span className="text-xs" aria-live="polite">
-                    {exportProgress || t('exportingButton')}
-                  </span>
-                ) : hasUsedFreeExport ? (
-                  <>
-                    <Unlock className="w-3.5 h-3.5" />
-                    {t('unlockExport', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
-                  </>
-                ) : canExport ? (
-                  <>
-                    <Package className="w-4 h-4" />
-                    {t('exportButton')}
-                  </>
-                ) : (
-                  t('moreNeeded', { count: MIN_EXPORT_CARD_COUNT - processedCount })
-                )}
-              </button>
-            </div>
+        <div
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDragActive(true);
+          }}
+          onDragLeave={() => setDragActive(false)}
+          onDrop={(event) => {
+            event.preventDefault();
+            setDragActive(false);
+            acceptFiles(Array.from(event.dataTransfer.files), 'drop');
+          }}
+          className={`rounded-xl border-2 border-dashed p-4 ${dragActive ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-semibold">{t('dropPhotos')}</h2>
+            <span className="text-sm tabular-nums">
+              {cardCount}/{maxCards}
+            </span>
           </div>
-
-          {/* Inline banner after free export is used */}
-          {hasUsedFreeExport && (
-            <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-primary shrink-0" />
-              <div className="text-xs flex-1">
-                <b>{t('bannerTitle')}</b>{' '}
-                <span className="text-muted-foreground">{t('bannerDesc')}</span>
-              </div>
-              <button
-                onClick={onUnlockRequired}
-                className="text-[11px] font-semibold text-primary hover:underline whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
-              >
-                {t('bannerCta')}
-              </button>
-            </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {processingCount > 0
+              ? themes('processing', { count: processingCount })
+              : themes(photoMode === 'original' ? 'original' : 'illustrated')}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              onClick={() =>
+                cardCount >= maxCards && !isUnlocked
+                  ? onUnlockRequired()
+                  : inputRef.current?.click()
+              }
+              disabled={cardCount >= maxCards && isUnlocked}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              {t('choosePhotos')}
+            </Button>
+            <Button variant="outline" onClick={onOpenDefaults}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('addClassic')}
+            </Button>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h2 className="font-semibold">{isSample ? themes('sampleExport') : t('exportButton')}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isSample ? themes('sampleExplanation') : themes('fullExport')}
+          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            {!isSample && (
+              <BoardCountStepper
+                value={boardCount}
+                onChange={setBoardCount}
+                disabled={isExporting}
+                label={t('boardCountLabel')}
+                decreaseLabel={t('boardCountDecrease')}
+                increaseLabel={t('boardCountIncrease')}
+                size="sm"
+              />
+            )}
+            <Button onClick={() => void exportPdf()} disabled={processedCount < 1 || isExporting}>
+              {isExporting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Package className="mr-2 h-4 w-4" />
+              )}
+              {isSample ? themes('downloadSample') : t('exportButton')}
+            </Button>
+          </div>
+          {isExporting && (
+            <p role="status" className="mt-2 text-sm">
+              {progress}
+            </p>
           )}
         </div>
-
-        {/* ── Mobile bottom bar ── */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-background/95 backdrop-blur border-t border-border">
-          <div className="px-3 pt-3 pb-2 flex items-center justify-between gap-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            <span className="tabular-nums">
-              {t('mobileCardsStatus', { processed: processedCount, max: maxCards })}
-            </span>
-            {!hasUsedFreeExport && (
-              <div className="flex items-center gap-1.5 min-w-0">
-                <BoardCountStepper
-                  value={boardCount}
-                  onChange={setBoardCount}
-                  disabled={isExporting}
-                  label={t('boardCountLabel')}
-                  decreaseLabel={t('boardCountDecrease')}
-                  increaseLabel={t('boardCountIncrease')}
-                  size="sm"
-                />
-                <span className="truncate">{t('boardCountUnit')}</span>
-              </div>
-            )}
-            <span className="flex items-center gap-1 shrink-0">
-              {processingCount > 0 ? (
-                <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  {processingCount} {t('processing')}
-                </>
-              ) : (
-                <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  {t('mobileSaved')}
-                </>
-              )}
-            </span>
-          </div>
-          <div className="px-3 pb-[max(env(safe-area-inset-bottom,0px),12px)] flex gap-2">
-            <button
-              onClick={() => inputRef.current?.click()}
-              disabled={isMaxReached}
-              className="flex-1 h-12 rounded-xl bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              <Upload className="w-4 h-4" />
-              {t('choosePhotos')}
-            </button>
-            <button
-              onClick={handleExport}
-              disabled={(!canExport && !hasUsedFreeExport) || isExporting}
-              className={`flex-[1.3] h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                isExporting
-                  ? 'bg-foreground/80 text-background cursor-wait'
-                  : canExport || hasUsedFreeExport
-                    ? 'bg-foreground text-background'
-                    : 'bg-black/10 text-muted-foreground cursor-not-allowed'
-              }`}
-            >
-              {hasUsedFreeExport && !isExporting && <Unlock className="w-3.5 h-3.5" />}
-              {!hasUsedFreeExport && (canExport || isExporting) && <Package className="w-4 h-4" />}
-              {mobileExportLabel}
-            </button>
-          </div>
-        </div>
-      </>
+      </section>
     );
   }
 );

@@ -2,7 +2,11 @@ import createNextIntlMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { routing } from '@/i18n/routing';
-import { SIGN_IN_LOOP_BREAKER_PARAM, SIGN_IN_LOOP_BREAKER_VALUE } from '@/lib/safe-redirect';
+import {
+  SIGN_IN_LOOP_BREAKER_PARAM,
+  SIGN_IN_LOOP_BREAKER_VALUE,
+  safeRedirectPath,
+} from '@/lib/safe-redirect';
 
 const intlMiddleware = createNextIntlMiddleware(routing);
 
@@ -104,7 +108,10 @@ export async function proxy(request: NextRequest) {
 
   if (isProtectedRoute && !isAuthenticated) {
     const signInUrl = new URL(withLocale('/sign-in', locale), request.url);
-    signInUrl.searchParams.set('callbackUrl', withLocale(canonicalPath, locale));
+    signInUrl.searchParams.set(
+      'callbackUrl',
+      withLocale(canonicalPath, locale) + request.nextUrl.search
+    );
     return NextResponse.redirect(signInUrl);
   }
 
@@ -118,7 +125,15 @@ export async function proxy(request: NextRequest) {
   if (isAuthRoute && isAuthenticated && !isReturningFromDeadSession) {
     // '/start' rather than '/dashboard': it is idempotent (ensures the user has
     // a board) and drops a single-board user straight into their board.
-    return NextResponse.redirect(new URL(withLocale('/start', locale), request.url));
+    return NextResponse.redirect(
+      new URL(
+        safeRedirectPath(
+          request.nextUrl.searchParams.get('callbackUrl'),
+          withLocale('/start', locale)
+        ),
+        request.url
+      )
+    );
   }
 
   // --- next-intl locale routing ---

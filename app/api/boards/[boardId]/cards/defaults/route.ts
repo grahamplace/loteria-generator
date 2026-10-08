@@ -1,3 +1,5 @@
+import { insertCardsWithinLimit } from '@/lib/boards/add-cards';
+import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { and, eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
@@ -8,8 +10,8 @@ import { DEFAULT_CARDS_BY_ID } from '@/lib/default-cards';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { getPostHogClient } from '@/lib/posthog-server';
 
-const MAX_CARDS_FREE = 4;
-const MAX_CARDS_UNLOCKED = 54;
+const MAX_CARDS_FREE = FREE_CARD_LIMIT;
+const MAX_CARDS_UNLOCKED = TOTAL_CARD_COUNT;
 
 export async function POST(
   request: NextRequest,
@@ -96,26 +98,25 @@ export async function POST(
       );
     }
 
-    // Compute starting number.
-    const maxNumber = existingCards.reduce((m, c) => (c.number > m ? c.number : m), 0);
-
-    // Build insert rows.
-    const rows = defaultCardIds.map((id, i) => {
-      const def = DEFAULT_CARDS_BY_ID[id]!;
-      return {
-        boardId,
-        userId: session.user.id,
-        number: maxNumber + i + 1,
-        label: def.label,
-        originalImageUrl: null,
-        illustrationUrl: def.src,
-        status: 'completed' as const,
-        isDefault: true,
-        defaultCardId: id,
-      };
-    });
-
-    const inserted = await db.insert(cards).values(rows).returning();
+    const inserted = await insertCardsWithinLimit(
+      boardId,
+      session.user.id,
+      defaultCardIds.map((id) => {
+        const def = DEFAULT_CARDS_BY_ID[id]!;
+        return {
+          label: def.label,
+          illustrationUrl: def.src,
+          status: 'completed' as const,
+          isDefault: true,
+          defaultCardId: id,
+        };
+      })
+    );
+    if (inserted.length !== defaultCardIds.length)
+      return NextResponse.json(
+        { error: 'Card limit reached or classic already added', code: 'CARD_LIMIT_REACHED' },
+        { status: 403 }
+      );
 
     await invalidateBoardPreview(boardId, session.user.id);
 

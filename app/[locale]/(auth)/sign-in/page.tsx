@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import posthog from 'posthog-js';
 import { useLocale, useTranslations } from 'next-intl';
 import { signIn } from '@/lib/auth-client';
@@ -31,7 +31,10 @@ export default function SignInPage() {
   // The value is attacker-controlled — sanitize before redirecting to it.
   // The <Suspense> boundary this hook requires lives in ./layout.tsx.
   const searchParams = useSearchParams();
-  const safeTarget = safeRedirectPath(searchParams.get('callbackUrl'), '/start');
+  const safeTarget = safeRedirectPath(
+    searchParams.get('callbackUrl'),
+    locale === 'es-MX' ? '/es/start' : '/start'
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -191,7 +194,10 @@ export default function SignInPage() {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             {t('noAccountPrompt')}{' '}
-            <Link href="/sign-up" className="text-primary hover:underline font-medium">
+            <Link
+              href={`/sign-up?callbackUrl=${encodeURIComponent(safeTarget)}`}
+              className="text-primary hover:underline font-medium"
+            >
               {t('noAccountCta')}
             </Link>
           </p>

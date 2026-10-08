@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams, useParams } from 'next/navigation';
-import Link from 'next/link';
+import { useSearchParams, useParams } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { ArrowLeft, Lock, Sparkles, Unlock, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBoard } from '@/hooks/use-boards';
 import { useBoardCards } from '@/hooks/use-board-cards';
+import { BoardAppearance } from '@/components/board-appearance';
 import { BoardActionBar, BoardActionBarRef } from '@/components/board-action-bar';
 import { BoardCardGrid } from '@/components/board-card-grid';
 import { UnlockPrompt } from '@/components/unlock-prompt';
@@ -16,7 +17,7 @@ import { DefaultCardsPicker } from '@/components/default-cards-picker';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { BOARD_UNLOCK_PRICE_DISPLAY, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 import {
   OnboardingTrigger,
@@ -27,6 +28,7 @@ import { firePurchaseConversion, consumePendingSignupConversion } from '@/lib/go
 
 export default function BoardEditorPage() {
   const t = useTranslations('BoardEditor.Page');
+  const locale = useLocale();
   const params = useParams();
   const boardId = params.boardId as string;
   const router = useRouter();
@@ -40,19 +42,19 @@ export default function BoardEditorPage() {
     addCards,
     addDefaultCards,
     updateCardLabel,
+    refreshCards,
     deleteCard,
     reorderCards,
     cardLimit,
     CardStreamSubscriptions,
-  } = useBoardCards(boardId, board?.isUnlocked);
+  } = useBoardCards(boardId, board?.isUnlocked, board?.photoMode);
 
+  const [imageVersion, setImageVersion] = useState(0);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [unlockPromptOpen, setUnlockPromptOpen] = useState(false);
   const [defaultsPickerOpen, setDefaultsPickerOpen] = useState(false);
-  const [unlockTrigger, setUnlockTrigger] = useState<'card_limit' | 'board_limit' | 'export'>(
-    'card_limit'
-  );
+  const [unlockTrigger, setUnlockTrigger] = useState<'card_limit'>('card_limit');
 
   // Completes the Google-OAuth signup conversion started on the sign-up page:
   // new users land here via /start, so the dashboard never sees them.
@@ -90,10 +92,15 @@ export default function BoardEditorPage() {
     setIsEditingName(false);
   }
 
-  function openUnlockPrompt(trigger: 'card_limit' | 'board_limit' | 'export') {
+  function openUnlockPrompt(trigger: 'card_limit') {
     setUnlockTrigger(trigger);
     setUnlockPromptOpen(true);
-    posthog.capture('unlock_prompt_shown', { trigger, board_id: boardId });
+    posthog.capture('unlock_prompt_shown', {
+      trigger,
+      board_id: boardId,
+      theme: board?.styleOptions?.presetId ?? 'classic',
+      locale,
+    });
   }
 
   function handleFilesSelected(files: File[]) {
@@ -110,7 +117,7 @@ export default function BoardEditorPage() {
   }
 
   function handleExportLimitReached() {
-    openUnlockPrompt('export');
+    openUnlockPrompt('card_limit');
   }
 
   function handleCardLimitReached() {
@@ -129,13 +136,16 @@ export default function BoardEditorPage() {
     number: card.number,
     label: card.label,
     riddle: card.riddle,
+    preserveOriginal: card.preserveOriginal,
+    cropData: card.cropData,
+    imageVersion: card.imageVersion,
     illustration:
       card.localIllustration ||
       card.localOriginalImage ||
       (card.isDefault && card.illustrationUrl
         ? card.illustrationUrl
         : card.illustrationUrl
-          ? `/api/images/${boardId}/${card.id}/illustration`
+          ? `/api/images/${boardId}/${card.id}/illustration?v=${imageVersion}`
           : card.originalImageUrl
             ? `/api/images/${boardId}/${card.id}/original`
             : ''),
@@ -250,7 +260,7 @@ export default function BoardEditorPage() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <LanguageSwitch />
-            {!board.isUnlocked && (
+            {!board.isUnlocked && atCardLimit && (
               <button
                 onClick={() => openUnlockPrompt('card_limit')}
                 className="px-3 h-8 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary/90 flex items-center gap-1 md:gap-1.5 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
@@ -270,6 +280,13 @@ export default function BoardEditorPage() {
         <>
           {/* Action bar — desktop: top of content; mobile: fixed bottom bar */}
           <div className="max-w-[1400px] mx-auto w-full px-3 md:px-6 pt-3 md:pt-5 pb-3 md:pb-4">
+            <BoardAppearance
+              styles={board.styleOptions}
+              photoMode={board.photoMode}
+              boardName={board.name}
+              cards={displayCards}
+              onSave={updateBoard}
+            />
             <BoardActionBar
               ref={actionBarRef}
               onFilesSelected={handleFilesSelected}
@@ -277,6 +294,8 @@ export default function BoardEditorPage() {
               maxCards={cardLimit}
               processedCount={processedCards.length}
               processingCount={processingCards.length}
+              styleOptions={board.styleOptions}
+              photoMode={board.photoMode}
               isUnlocked={board.isUnlocked}
               cards={displayCards}
               boardName={board.name}
@@ -298,6 +317,16 @@ export default function BoardEditorPage() {
               </div>
               <BoardCardGrid
                 cards={displayCards}
+                onCropCard={async (cardId, cropData) => {
+                  const response = await fetch(`/api/boards/${boardId}/cards`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cardId, cropData }),
+                  });
+                  if (!response.ok) throw new Error('Crop failed');
+                  setImageVersion((v) => v + 1);
+                  await refreshCards();
+                }}
                 onDeleteCard={deleteCard}
                 onUpdateLabel={updateCardLabel}
                 onReorderCards={reorderCards}

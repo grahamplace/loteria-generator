@@ -42,11 +42,9 @@ export default function DashboardPage() {
   const t = useTranslations('Dashboard');
   const router = useRouter();
   const { user, isLoading: sessionLoading } = useSession();
-  const { boards, limits, isLoading: boardsLoading, createBoard, deleteBoard } = useBoards();
+  const { boards, isLoading: boardsLoading, createBoard, deleteBoard } = useBoards();
   const [deletingBoardId, setDeletingBoardId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-
-  const canCreateBoard = limits?.canCreateBoard ?? true;
 
   // Completes the Google-OAuth signup conversion started on the sign-up page.
   useEffect(() => {
@@ -155,11 +153,10 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">{t('subtitle')}</p>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <Button onClick={handleCreateBoard} disabled={isCreating || !canCreateBoard}>
+            <Button onClick={handleCreateBoard} disabled={isCreating}>
               <Plus className="h-4 w-4 mr-2" />
               {isCreating ? t('newBoardButtonLoading') : t('newBoardButton')}
             </Button>
-            {!canCreateBoard && <p className="text-xs text-muted-foreground">{t('lockedHint')}</p>}
           </div>
         </div>
 
@@ -185,11 +182,7 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">{t('emptyState.title')}</h3>
               <p className="text-muted-foreground mb-4">{t('emptyState.description')}</p>
-              <Button
-                id={ANCHOR_CREATE_BOARD}
-                onClick={handleCreateBoard}
-                disabled={isCreating || !canCreateBoard}
-              >
+              <Button id={ANCHOR_CREATE_BOARD} onClick={handleCreateBoard} disabled={isCreating}>
                 <Plus className="h-4 w-4 mr-2" />
                 {t('emptyState.cta')}
               </Button>

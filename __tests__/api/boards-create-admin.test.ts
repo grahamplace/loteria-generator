@@ -62,12 +62,12 @@ describe('POST /api/boards admin behavior', () => {
     });
   });
 
-  it('non-admin still hits the board limit', async () => {
+  it('non-admin can create another set without unlocking', async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(USER as never);
     boardsFindMany.mockResolvedValue([{ isUnlocked: false }]);
 
     const res = await POST(makeReq({ name: 'Mine' }));
-    expect(res.status).toBe(403);
-    expect(insertValuesSpy).not.toHaveBeenCalled();
+    expect(res.status).toBe(201);
+    expect(insertValuesSpy).toHaveBeenCalledWith(expect.objectContaining({ isUnlocked: false }));
   });
 });
