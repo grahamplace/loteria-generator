@@ -163,13 +163,23 @@ function drawHandDrawnRect(
   ctx.stroke();
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
+function loadImage(
+  src: string,
+  cache?: Map<string, Promise<HTMLImageElement>>
+): Promise<HTMLImageElement> {
+  const cached = cache?.get(src);
+  if (cached) return cached;
+  const loading = new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;
   });
+  cache?.set(src, loading);
+  void loading.catch(() => {
+    if (cache?.get(src) === loading) cache.delete(src);
+  });
+  return loading;
 }
 
 /**
@@ -231,11 +241,15 @@ export function drawCard(
 
   // Draw image with feathered edges using an offscreen canvas + alpha mask
   const feather = 35;
+  // Match temporary bitmaps to the target resolution for live previews.
+  // Print rendering keeps its original full-resolution path.
+  const rasterScale = Math.min(1, Math.abs(ctx.getTransform().a));
 
   const maskCanvas = document.createElement('canvas');
-  maskCanvas.width = imageWidth;
-  maskCanvas.height = imageHeight;
+  maskCanvas.width = imageWidth * rasterScale;
+  maskCanvas.height = imageHeight * rasterScale;
   const maskCtx = maskCanvas.getContext('2d')!;
+  if (rasterScale !== 1) maskCtx.scale(rasterScale, rasterScale);
 
   maskCtx.fillStyle = '#fff';
   maskCtx.fillRect(0, 0, imageWidth, imageHeight);
@@ -267,9 +281,10 @@ export function drawCard(
   maskCtx.fillRect(0, imageHeight - feather, imageWidth, feather);
 
   const offscreen = document.createElement('canvas');
-  offscreen.width = imageWidth;
-  offscreen.height = imageHeight;
+  offscreen.width = imageWidth * rasterScale;
+  offscreen.height = imageHeight * rasterScale;
   const offCtx = offscreen.getContext('2d')!;
+  if (rasterScale !== 1) offCtx.scale(rasterScale, rasterScale);
 
   // Draw image with "object-fit: cover" behavior — crop to fill, centered
   const targetAspect = imageWidth / imageHeight;
@@ -291,9 +306,13 @@ export function drawCard(
   offCtx.drawImage(img, sx, sy, sw, sh, 0, 0, imageWidth, imageHeight);
 
   offCtx.globalCompositeOperation = 'destination-in';
-  offCtx.drawImage(maskCanvas, 0, 0);
-
-  ctx.drawImage(offscreen, imageX, imageY);
+  if (rasterScale === 1) {
+    offCtx.drawImage(maskCanvas, 0, 0);
+    ctx.drawImage(offscreen, imageX, imageY);
+  } else {
+    offCtx.drawImage(maskCanvas, 0, 0, imageWidth, imageHeight);
+    ctx.drawImage(offscreen, imageX, imageY, imageWidth, imageHeight);
+  }
 
   // Draw number badge (top-left corner). badgeSize is caller-controlled so
   // boards and the larger deck cards can use proportionally bigger numbers.
@@ -392,25 +411,32 @@ export function drawCard(
  * Board dimensions: 8.5" × 11" (US Letter) at 300 DPI = 2550 × 3300 pixels.
  * A non-blank title is drawn in a band above the grid; the cards shrink to
  * make room so the page margins are unchanged.
+ * Optional scale reduces bitmap resolution for previews without changing layout.
  */
 export async function renderBoardToCanvas(
   board: LotteriaCard[],
   styleOptions: BoardStyleOptions = {},
-  title?: string
+  title?: string,
+  options: { scale?: number; imageCache?: Map<string, Promise<HTMLImageElement>> } = {}
 ): Promise<HTMLCanvasElement> {
+  const scale = options.scale ?? 1;
+  if (!Number.isFinite(scale) || scale <= 0 || scale > 1) {
+    throw new Error('Board render scale must be greater than 0 and at most 1');
+  }
   const resolved = resolveBoardStyle(styleOptions);
   const { backgroundColor, labelColor } = resolved;
 
   const width = 2550;
   const height = 3300;
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(height * scale);
   const ctx = canvas.getContext('2d');
 
   if (!ctx) {
     throw new Error('Could not get canvas context');
   }
+  if (scale !== 1) ctx.scale(scale, scale);
 
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
@@ -449,7 +475,9 @@ export async function renderBoardToCanvas(
     }
   }
 
-  const cardImages = await Promise.all(board.map((card) => loadImage(card.illustration)));
+  const cardImages = await Promise.all(
+    board.map((card) => loadImage(card.illustration, options.imageCache))
+  );
 
   const rows = 4;
   const cols = 4;

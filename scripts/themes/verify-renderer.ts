@@ -65,6 +65,18 @@ async function main() {
     { presetId: 'halloween' },
     'Una reunión de cumpleaños muy especial para José, María y toda nuestra familia · Muestra'
   );
+  assert.deepEqual([canvas.width, canvas.height], [2550, 3300]);
+  const livePreview = await renderBoardToCanvas(
+    cards.slice(0, 16),
+    { presetId: 'halloween' },
+    'Halloween de José y María',
+    { scale: 0.25 }
+  );
+  assert.deepEqual([livePreview.width, livePreview.height], [638, 825]);
+  await writeFile(
+    `${output}/live-preview.png`,
+    Buffer.from(livePreview.toDataURL('image/png').split(',')[1], 'base64')
+  );
   await writeFile(
     `${output}/long-title.png`,
     Buffer.from(canvas.toDataURL('image/png').split(',')[1], 'base64')

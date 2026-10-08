@@ -80,7 +80,6 @@ test.describe('themed Lotería', () => {
     await expect(
       page.getByRole('checkbox', { name: 'Incluir título en las tablas' })
     ).toBeChecked();
-    await page.getByText('Diseña tu juego', { exact: false }).first().click();
     await expect(page.locator('#photo-mode')).toHaveValue('original');
   });
 
@@ -126,11 +125,9 @@ test.describe('themed Lotería', () => {
     );
     await page.getByRole('button', { name: 'Save crop', exact: true }).click();
     expect((await cropSaved).ok()).toBe(true);
-    await page.getByText('Design your set', { exact: false }).first().click();
     await page.getByRole('radio', { name: 'Christmas', exact: true }).focus();
     await page.getByRole('radio', { name: 'Christmas', exact: true }).press('Space');
     await expect(page.getByRole('radio', { name: 'Christmas', exact: true })).toBeEnabled();
-    await page.getByRole('button', { name: 'Preview printed board', exact: true }).click();
     await expect(
       page.getByRole('img', { name: 'Your board rendered with the selected theme', exact: true })
     ).toBeVisible();
@@ -170,7 +167,6 @@ test.describe('themed Lotería', () => {
       await expect(titleToggle).toBeChecked({ checked: showTitle });
       await page.reload();
       await expect(titleToggle).toBeChecked({ checked: showTitle });
-      await page.getByRole('button', { name: 'Preview printed board', exact: true }).click();
       const preview = page.getByRole('img', {
         name: 'Your board rendered with the selected theme',
         exact: true,
