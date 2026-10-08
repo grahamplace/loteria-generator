@@ -516,6 +516,9 @@
     "Builder": {
       "title": "Design your set",
       "chooseTheme": "Choose a theme",
+      "change": "Change",
+      "changeTheme": "Change theme, currently {name}",
+      "closeThemePicker": "Close theme picker",
       "showTitle": "Include board title",
       "printedTitle": "Print “{name}” at the top of each board.",
       "photoMode": "New photo uploads",

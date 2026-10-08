@@ -1,13 +1,13 @@
 'use client';
 
 import { useId, useState } from 'react';
-import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { themePresets, type BoardStyleOptions, type PhotoMode } from '@/lib/themes/presets';
 import type { LotteriaCard } from '@/lib/generate-boards';
 import { BoardPreview } from '@/components/board-preview';
+import { BoardThemePicker } from '@/components/board-theme-picker';
 import { cn } from '@/lib/utils';
-import { Loader2, Check, ChevronDown } from 'lucide-react';
+import { Loader2, ChevronDown } from 'lucide-react';
 
 export function BoardAppearance({
   styles,
@@ -38,9 +38,12 @@ export function BoardAppearance({
     setSaving(true);
     setError('');
     try {
-      if (!(await onSave(settings))) setError(t('saveError'));
+      const saved = await onSave(settings);
+      if (!saved) setError(t('saveError'));
+      return saved;
     } catch {
       setError(t('saveError'));
+      return false;
     } finally {
       setSaving(false);
     }
@@ -50,7 +53,7 @@ export function BoardAppearance({
     <section className="rounded-xl border border-border bg-card p-4 md:p-5" aria-label={t('title')}>
       <div className="mb-4 flex min-h-11 flex-wrap items-baseline gap-x-3 gap-y-1 py-2">
         <h2 className="font-display text-lg font-semibold">{t('title')}</h2>
-        <span className="text-sm text-muted-foreground">
+        <span className="hidden text-sm text-muted-foreground lg:inline">
           {themePresets.find((p) => p.id === selected)?.name[locale]}
         </span>
       </div>
@@ -63,57 +66,20 @@ export function BoardAppearance({
         <div className="min-w-0">
           <fieldset disabled={saving} className="space-y-5">
             <legend className="sr-only">{t('chooseTheme')}</legend>
-            <div
-              role="radiogroup"
-              aria-label={t('chooseTheme')}
-              className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4"
-            >
-              {themePresets.map((preset) => (
-                <label
-                  key={preset.id}
-                  className={`relative flex min-h-14 min-w-0 cursor-pointer items-center gap-2 rounded-lg border px-2 py-1.5 transition-colors has-[:disabled]:cursor-wait has-[:disabled]:opacity-60 sm:gap-3 ${selected === preset.id ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-background/60 hover:border-primary/50 hover:bg-background'}`}
-                >
-                  <input
-                    type="radio"
-                    name="board-preset"
-                    value={preset.id}
-                    checked={selected === preset.id}
-                    onChange={() =>
-                      void save({
-                        styleOptions: {
-                          ...styles,
-                          presetId: preset.id,
-                          showTitle: styles?.showTitle ?? preset.id !== 'classic',
-                        },
-                      })
-                    }
-                    className="peer sr-only"
-                  />
-                  <span className="pointer-events-none absolute inset-0 rounded-lg peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary" />
-                  <span className="relative w-6 shrink-0 sm:w-8">
-                    <Image
-                      src={`/themes/picker/${preset.id}.webp`}
-                      width={32}
-                      height={42}
-                      alt=""
-                      unoptimized
-                      className="h-auto w-full rounded-sm border border-foreground/10 shadow-sm"
-                    />
-                    {selected === preset.id && (
-                      <span
-                        aria-hidden="true"
-                        className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-background"
-                      >
-                        <Check className="h-3 w-3" strokeWidth={3} />
-                      </span>
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1 break-words text-[0.8125rem] font-medium leading-tight text-foreground sm:text-sm">
-                    {preset.name[locale]}
-                  </span>
-                </label>
-              ))}
-            </div>
+            <BoardThemePicker
+              selected={selected}
+              saving={saving}
+              error={error}
+              onSelect={(presetId) =>
+                save({
+                  styleOptions: {
+                    ...styles,
+                    presetId,
+                    showTitle: styles?.showTitle ?? presetId !== 'classic',
+                  },
+                })
+              }
+            />
             <div>
               <label htmlFor="photo-mode" className="block font-medium mb-2">
                 {t('photoMode')}

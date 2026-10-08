@@ -522,6 +522,9 @@
     "Builder": {
       "title": "Diseña tu juego",
       "chooseTheme": "Elige un tema",
+      "change": "Cambiar",
+      "changeTheme": "Cambiar tema, actual: {name}",
+      "closeThemePicker": "Cerrar selector de temas",
       "showTitle": "Incluir título en las tablas",
       "printedTitle": "Imprime “{name}” en la parte superior de cada tabla.",
       "photoMode": "Nuevas fotos",

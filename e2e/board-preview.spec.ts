@@ -240,3 +240,113 @@ test('Spanish mobile pagination stays accessible and clamps an out-of-range link
     path: '.scratch/theme-work/pagination-mobile-es.png',
   });
 });
+
+test('mobile theme picker keeps the editor compact and saves a choice before closing', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openEditor(page);
+  const trigger = page.getByRole('button', { name: 'Change theme, currently Halloween' });
+  await expect(trigger).toBeInViewport();
+  expect((await trigger.boundingBox())!.height).toBeLessThanOrEqual(80);
+  await expect(page.getByRole('combobox', { name: 'New photo uploads' })).toBeInViewport();
+  await expect(page.getByRole('radiogroup', { name: 'Choose a theme' })).toHaveCount(0);
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/theme-picker-mobile.png',
+  });
+
+  await trigger.focus();
+  await trigger.press('Enter');
+  const sheet = page.getByRole('dialog', { name: 'Choose a theme' });
+  await expect(sheet.getByRole('button', { name: 'Halloween', exact: true })).toBeFocused();
+  await expect(sheet.getByRole('button', { name: 'Halloween', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/theme-picker-open.png',
+  });
+  const saved = page.waitForRequest((request) => request.method() === 'PATCH');
+  await sheet.getByRole('button', { name: 'Wedding', exact: true }).click();
+  expect((await saved).postDataJSON()).toEqual({
+    styleOptions: { presetId: 'wedding', showTitle: true },
+  });
+  await expect(sheet).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeFocused();
+  await expect(page).not.toHaveURL(/themePicker/);
+  await expect(page.getByRole('combobox', { name: 'New photo uploads' })).toHaveValue('original');
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeVisible();
+});
+
+test('theme picker keeps failed saves open and lets the user retry', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openEditor(page);
+  await expect(
+    page.getByRole('button', { name: 'Change theme, currently Halloween' })
+  ).toBeVisible();
+  let finishSave!: () => void;
+  const delayed = new Promise<void>((resolve) => {
+    finishSave = resolve;
+  });
+  await page.route(
+    '**/api/boards/preview-layout-fixture',
+    async (route) => {
+      await delayed;
+      await route.fulfill({ status: 500, json: { error: 'Could not save' } });
+    },
+    { times: 1 }
+  );
+  await page.getByRole('button', { name: 'Change theme, currently Halloween' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Choose a theme' });
+  await sheet.getByRole('button', { name: 'Wedding', exact: true }).click();
+  await expect(sheet.getByRole('status')).toHaveText('Saving…');
+  await expect(sheet.getByRole('button', { name: 'Wedding', exact: true })).toBeDisabled();
+  finishSave();
+  await expect(sheet.getByRole('alert')).toHaveText('Could not save. Please try again.');
+  await expect(sheet.getByRole('button', { name: 'Halloween', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  await sheet.getByRole('button', { name: 'Wedding', exact: true }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeFocused();
+});
+
+test('Spanish theme picker fits a small phone and supports Back, refresh, and desktop resizing', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await openEditor(page, { locale: 'es' });
+  await page.goto(`${page.url()}?previewPage=2&source=theme-check`);
+  const trigger = page.getByRole('button', { name: 'Cambiar tema, actual: Halloween' });
+  await trigger.click();
+  const sheet = page.getByRole('dialog', { name: 'Elige un tema' });
+  await expect(sheet).toBeVisible();
+  await page.goBack();
+  await expect(sheet).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await page.goForward();
+  await expect(sheet).toBeVisible();
+  await page.reload();
+  await expect(sheet.getByRole('button', { name: 'Halloween', exact: true })).toBeFocused();
+  const lastTheme = sheet.getByRole('button', { name: 'Pascua', exact: true });
+  await lastTheme.focus();
+  await expect(lastTheme).toBeInViewport();
+  await expect(sheet.getByRole('button', { name: 'Cerrar selector de temas' })).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/theme-picker-small-es.png',
+  });
+  await page.keyboard.press('Escape');
+  await expect(trigger).toBeFocused();
+  await expect(page).toHaveURL(/previewPage=2&source=theme-check$/);
+  await trigger.click();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(sheet).toHaveCount(0);
+  await expect(page.getByRole('radio', { name: 'Halloween', exact: true })).toBeChecked();
+  await expect(page).toHaveURL(/previewPage=2&source=theme-check$/);
+});
