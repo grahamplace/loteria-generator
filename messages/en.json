@@ -448,7 +448,8 @@
       "maybeLater": "Maybe later",
       "toasts": {
         "checkoutFailed": "Failed to start checkout. Please try again."
-      }
+      },
+      "unlockYourSet": "Unlock your set"
     },
     "DefaultCardsPicker": {
       "title": "Classic Lotería cards",

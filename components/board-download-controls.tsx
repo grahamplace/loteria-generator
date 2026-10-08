@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, Unlock } from 'lucide-react';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { generateLoteriaSetPdf, clampBoardCount } from '@/lib/generate-boards';
@@ -94,9 +94,16 @@ export function useBoardDownload({
   };
 }
 
-export function BoardDownloadControls({ state }: { state: ReturnType<typeof useBoardDownload> }) {
+export function BoardDownloadControls({
+  state,
+  onUnlock,
+}: {
+  state: ReturnType<typeof useBoardDownload>;
+  onUnlock?: () => void;
+}) {
   const t = useTranslations('BoardEditor.ActionBar');
   const themes = useTranslations('Themes.Builder');
+  const unlock = useTranslations('BoardEditor.UnlockPrompt');
   const { exportPdf, isExporting, progress, boardCount, setBoardCount, isSample, canExport } =
     state;
   return (
@@ -127,6 +134,16 @@ export function BoardDownloadControls({ state }: { state: ReturnType<typeof useB
         )}
         {themes(isSample ? 'downloadPreview' : 'downloadSet')}
       </Button>
+      {onUnlock && (
+        <Button
+          variant="outline"
+          className="min-h-11 w-full touch-manipulation border-primary/30 text-primary transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+          onClick={onUnlock}
+        >
+          <Unlock className="h-4 w-4" aria-hidden="true" />
+          {unlock('unlockButton')}
+        </Button>
+      )}
       <p className="text-center text-xs leading-relaxed text-muted-foreground">
         {themes(isSample ? 'sampleDownloadIncludes' : 'fullExport')}
       </p>

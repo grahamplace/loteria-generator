@@ -22,8 +22,13 @@ import {
 export function BoardPreviewPanel({
   onAddPhotos,
   canAddPhotos,
+  onUnlock,
   ...props
-}: BoardDownloadProps & { onAddPhotos: () => void; canAddPhotos: boolean }) {
+}: BoardDownloadProps & {
+  onAddPhotos: () => void;
+  canAddPhotos: boolean;
+  onUnlock: () => void;
+}) {
   const t = useTranslations('Themes.Builder');
   const [open, setOpen] = useState(false);
   // Both surfaces share the renderer, image cache, board count, and in-flight download.
@@ -48,7 +53,10 @@ export function BoardPreviewPanel({
         <h2 className="mb-3 font-display text-lg font-semibold">{t('livePreview')}</h2>
         <BoardPreviewImage state={preview} fitViewport />
         <div className="mt-4">
-          <BoardDownloadControls state={download} />
+          <BoardDownloadControls
+            state={download}
+            onUnlock={props.isUnlocked ? undefined : onUnlock}
+          />
         </div>
       </aside>
 
@@ -88,7 +96,10 @@ export function BoardPreviewPanel({
           </div>
           <div className="shrink-0 bg-background px-4 pb-4">
             <div className="mx-auto max-w-sm">
-              <BoardDownloadControls state={download} />
+              <BoardDownloadControls
+                state={download}
+                onUnlock={props.isUnlocked ? undefined : onUnlock}
+              />
             </div>
           </div>
         </SheetContent>

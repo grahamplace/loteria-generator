@@ -13,7 +13,7 @@ import { BoardAppearance } from '@/components/board-appearance';
 import { BoardPreviewPanel } from '@/components/board-preview-panel';
 import { BoardActionBar, BoardActionBarRef } from '@/components/board-action-bar';
 import { BoardCardGrid } from '@/components/board-card-grid';
-import { UnlockPrompt } from '@/components/unlock-prompt';
+import { UnlockPrompt, type UnlockTrigger } from '@/components/unlock-prompt';
 import { DefaultCardsPicker } from '@/components/default-cards-picker';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
@@ -55,7 +55,7 @@ export default function BoardEditorPage() {
   const [editedName, setEditedName] = useState('');
   const [unlockPromptOpen, setUnlockPromptOpen] = useState(false);
   const [defaultsPickerOpen, setDefaultsPickerOpen] = useState(false);
-  const [unlockTrigger, setUnlockTrigger] = useState<'card_limit'>('card_limit');
+  const [unlockTrigger, setUnlockTrigger] = useState<UnlockTrigger>('card_limit');
 
   // Completes the Google-OAuth signup conversion started on the sign-up page:
   // new users land here via /start, so the dashboard never sees them.
@@ -93,7 +93,7 @@ export default function BoardEditorPage() {
     setIsEditingName(false);
   }
 
-  function openUnlockPrompt(trigger: 'card_limit') {
+  function openUnlockPrompt(trigger: UnlockTrigger) {
     setUnlockTrigger(trigger);
     setUnlockPromptOpen(true);
     posthog.capture('unlock_prompt_shown', {
@@ -371,6 +371,7 @@ export default function BoardEditorPage() {
             isUnlocked={board.isUnlocked}
             canAddPhotos={cards.length < cardLimit || !board.isUnlocked}
             onAddPhotos={() => actionBarRef.current?.triggerFileSelect()}
+            onUnlock={() => openUnlockPrompt('preview')}
           />
         </div>
       </main>

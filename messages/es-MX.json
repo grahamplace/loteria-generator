@@ -454,7 +454,8 @@
       "maybeLater": "Tal vez después",
       "toasts": {
         "checkoutFailed": "No se pudo iniciar el pago. Por favor, inténtalo de nuevo."
-      }
+      },
+      "unlockYourSet": "Desbloquea tu juego"
     },
     "DefaultCardsPicker": {
       "title": "Cartas clásicas de Lotería",
