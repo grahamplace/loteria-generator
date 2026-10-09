@@ -899,6 +899,12 @@ for (const width of [1024, 1440, 2560]) {
     const image = panel.getByRole('img');
     await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
     const fittedBounds = (await viewport.boundingBox())!;
+    const expand = panel.getByRole('button', { name: 'Expand board preview' });
+    const fittedExpand = (await expand.boundingBox())!;
+    const fittedZoom = (await panel
+      .getByRole('button', { name: 'Zoom in', exact: true })
+      .boundingBox())!;
+    expect(fittedZoom.x + fittedZoom.width).toBeLessThanOrEqual(fittedExpand.x);
     await image.click({ position: { x: 80, y: 90 } });
     await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -910,6 +916,7 @@ for (const width of [1024, 1440, 2560]) {
     const bounds = (await viewport.boundingBox())!;
     expect(bounds.width).toBeCloseTo(fittedBounds.width, 0);
     expect(bounds.height).toBeCloseTo(fittedBounds.height, 0);
+    expect(await expand.boundingBox()).toEqual(fittedExpand);
     await expect(panel.getByRole('group', { name: 'Zoom level' })).toHaveCount(0);
     const zoomOut = (await panel
       .getByRole('button', { name: 'Zoom out', exact: true })
@@ -1020,7 +1027,7 @@ test('inline zoom supports keyboard and Spanish mobile preview without opening f
   await expect(sheet).toBeVisible();
   await expect(imageButton).toBeFocused();
   await expect(sheet.getByRole('group', { name: 'Nivel de zoom' })).toHaveCount(0);
-  await imageButton.press('Enter');
+  await sheet.getByRole('button', { name: 'Acercar', exact: true }).click();
   await sheet.getByRole('button', { name: 'Alejar', exact: true }).click();
   await expect(page).not.toHaveURL(/previewScale/);
   await expect(imageButton).toBeFocused();

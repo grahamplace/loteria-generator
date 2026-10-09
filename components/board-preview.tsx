@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getImageProps } from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { ChevronLeft, ChevronRight, Loader2, Maximize2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Maximize2, X, ZoomIn } from 'lucide-react';
 import { renderBoardToCanvas, type LotteriaCard } from '@/lib/generate-boards';
 import { MIN_EXPORT_CARD_COUNT } from '@/lib/constants';
 import type { BoardStyleOptions } from '@/lib/themes/presets';
@@ -260,8 +260,40 @@ export function BoardPreviewPagination({ state }: { state: ReturnType<typeof use
 
 export function BoardPreviewActions({ state }: { state: ReturnType<typeof useBoardPreview> }) {
   const t = useTranslations('Themes.Builder');
+  const zoomed = state.inlineZoom > 100;
   return (
     <div className="flex shrink-0 items-center gap-1">
+      <button
+        type="button"
+        aria-label={t(zoomed ? 'zoomOut' : 'zoomIn')}
+        title={t(zoomed ? 'zoomOut' : 'zoomIn')}
+        disabled={!zoomed && (!state.preview || !!state.previewError)}
+        data-board-inline-zoom
+        className="inline-flex size-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
+        onClick={(event) => {
+          if (zoomed) {
+            // Focus the image on this surface, not its hidden desktop/mobile counterpart.
+            event.currentTarget
+              .closest('[data-board-preview]')
+              ?.querySelector<HTMLButtonElement>('[data-board-preview-image]')
+              ?.focus({ preventScroll: true });
+          }
+          state.setInlineZoom(zoomed ? 100 : 200);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && zoomed) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.currentTarget.click();
+          }
+        }}
+      >
+        {zoomed ? (
+          <X className="size-4" aria-hidden="true" />
+        ) : (
+          <ZoomIn className="size-4" aria-hidden="true" />
+        )}
+      </button>
       <button
         type="button"
         onClick={state.expand}
@@ -273,32 +305,6 @@ export function BoardPreviewActions({ state }: { state: ReturnType<typeof useBoa
         <Maximize2 className="size-4" aria-hidden="true" />
         <span className="hidden min-[380px]:inline">{t('expand')}</span>
       </button>
-      {state.inlineZoom > 100 && (
-        <button
-          type="button"
-          aria-label={t('zoomOut')}
-          title={t('zoomOut')}
-          data-board-inline-zoom
-          className="inline-flex size-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          onClick={(event) => {
-            // Focus the image on this surface, not its hidden desktop/mobile counterpart.
-            event.currentTarget
-              .closest('[data-board-preview]')
-              ?.querySelector<HTMLButtonElement>('[data-board-preview-image]')
-              ?.focus({ preventScroll: true });
-            state.setInlineZoom(100);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') {
-              event.preventDefault();
-              event.stopPropagation();
-              event.currentTarget.click();
-            }
-          }}
-        >
-          <X className="size-4" aria-hidden="true" />
-        </button>
-      )}
     </div>
   );
 }

@@ -68,7 +68,7 @@ describe('automatic board preview', () => {
     const { rerender } = render(view({ styles: { font: 'Jost' } }));
     await screen.findByRole('img', { name: previewName });
     renderBoard.mockResolvedValueOnce(canvas('detail-jost'));
-    fireEvent.click(screen.getByRole('button', { name: 'Click to zoom in on the board' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
     await waitFor(() =>
       expect(screen.getByRole('img')).toHaveAttribute('src', canvas('detail-jost').toDataURL())
     );
