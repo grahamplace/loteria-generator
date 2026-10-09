@@ -22,26 +22,29 @@ import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
 import { BOARD_UNLOCK_PRICE_DISPLAY, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 
+export type UnlockTrigger = 'card_limit' | 'preview';
+
 interface UnlockPromptProps {
   boardId: string;
   boardName: string;
-  trigger: 'card_limit' | 'board_limit' | 'export';
+  trigger: UnlockTrigger;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 function UnlockContent({
-  boardName,
   isLoading,
   onUnlock,
   onDismiss,
   remainingCards,
+  trigger,
 }: {
   boardName: string;
   isLoading: boolean;
   onUnlock: () => void;
   onDismiss: () => void;
   remainingCards: number;
+  trigger: UnlockTrigger;
 }) {
   const t = useTranslations('BoardEditor.UnlockPrompt');
 
@@ -62,7 +65,7 @@ function UnlockContent({
 
       <div className="text-center">
         <div className="text-[10px] font-mono uppercase tracking-wider text-primary mb-1">
-          {t('freeLimitReached')}
+          {t(trigger === 'preview' ? 'unlockYourSet' : 'freeLimitReached')}
         </div>
         <div className="font-bold text-[22px] leading-tight tracking-tight">
           {t('keepBuildingPrefix')}{' '}
@@ -146,7 +149,7 @@ export function UnlockPrompt({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
+      <Drawer open={open} onOpenChange={onOpenChange} autoFocus>
         <DrawerContent
           className="rounded-t-[28px] border-t-0"
           style={{ background: 'linear-gradient(180deg, #faf5e6 0%, #f2e6c8 100%)' }}
@@ -164,6 +167,7 @@ export function UnlockPrompt({
             onUnlock={handleUnlock}
             onDismiss={() => onOpenChange(false)}
             remainingCards={remainingCards}
+            trigger={trigger}
           />
         </DrawerContent>
       </Drawer>
@@ -186,6 +190,7 @@ export function UnlockPrompt({
           onUnlock={handleUnlock}
           onDismiss={() => onOpenChange(false)}
           remainingCards={remainingCards}
+          trigger={trigger}
         />
       </DialogContent>
     </Dialog>

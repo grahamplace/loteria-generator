@@ -52,6 +52,23 @@ describe('ensureFirstBoard', () => {
     expect(insertValuesSpy).not.toHaveBeenCalled();
   });
 
+  it('restores the last-used board when it belongs to this user', async () => {
+    boardsFindMany.mockResolvedValue([{ id: 'newest' }, { id: 'last-used' }]);
+    const result = await ensureFirstBoard(USER, 'last-used');
+    expect(result.boardId).toBe('last-used');
+    expect(insertValuesSpy).not.toHaveBeenCalled();
+  });
+
+  it.each(['deleted-board', 'another-users-board'])(
+    'ignores an unavailable preference: %s',
+    async (preferred) => {
+      boardsFindMany.mockResolvedValue([{ id: 'own-board' }]);
+      const result = await ensureFirstBoard(USER, preferred);
+      expect(result.boardId).toBe('own-board');
+      expect(insertValuesSpy).not.toHaveBeenCalled();
+    }
+  );
+
   it('reports boardCount 1 for a user who already has exactly one board', async () => {
     boardsFindMany.mockResolvedValue([{ id: 'board-only' }]);
 

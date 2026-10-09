@@ -1,4 +1,6 @@
 'use client';
+import { filenameToLabel } from '@/lib/filename-label';
+import type { PhotoMode } from '@/lib/themes/presets';
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -48,10 +50,14 @@ export interface BoardCard {
   riddle: string | null;
   originalImageUrl: string | null;
   illustrationUrl: string | null;
+  savedIllustrationUrl?: string | null;
   status: CardStatus;
   errorMessage: string | null;
   isDefault: boolean;
   defaultCardId: string | null;
+  preserveOriginal?: boolean;
+  cropData?: Card['cropData'];
+  imageVersion?: number;
   // Local state for optimistic UI
   localOriginalImage?: string; // base64 for immediate display
   localIllustration?: string; // base64 for immediate display
@@ -66,6 +72,7 @@ interface UseBoardCardsReturn {
   addCards: (files: File[]) => Promise<void>;
   addDefaultCards: (defaultCardIds: string[]) => Promise<void>;
   updateCardLabel: (cardId: string, newLabel: string, newRiddle?: string) => Promise<void>;
+  changePhotoMode: (cardId: string, photoMode: PhotoMode) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   reorderCards: (startIndex: number, endIndex: number) => void;
   refreshCards: () => Promise<void>;
@@ -82,7 +89,11 @@ interface UseBoardCardsReturn {
  * Hook for managing cards for a specific board
  * Combines local state for instant UX with API persistence
  */
-export function useBoardCards(boardId: string, isUnlocked: boolean = false): UseBoardCardsReturn {
+export function useBoardCards(
+  boardId: string,
+  isUnlocked: boolean = false,
+  photoMode: PhotoMode = 'illustrated'
+): UseBoardCardsReturn {
   const [cards, setCards] = useState<BoardCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +105,6 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
     if (!boardId) return;
 
     try {
-      setIsLoading(true);
       setError(null);
 
       const response = await fetch(`/api/boards/${boardId}/cards`);
@@ -111,6 +121,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
       setCards(
         (data.cards || []).map((card: Card) => ({
           ...card,
+          imageVersion: new Date(card.updatedAt).getTime(),
           clientKey: card.id,
           isProcessing: card.status === 'processing',
         }))
@@ -123,6 +134,9 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
   }, [boardId, router]);
 
   useEffect(() => {
+    // Only the initial board load replaces the editor with a skeleton. Edits
+    // refresh cards in place so the live preview and download state stay mounted.
+    setIsLoading(true);
     fetchCards();
   }, [fetchCards]);
 
@@ -145,7 +159,11 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
       await Promise.all(
         Array.from(serverById.values())
           .filter((s) => s.status === 'completed' && s.illustrationUrl)
-          .map((s) => preloadImage(`/api/images/${boardId}/${s.id}/illustration`))
+          .map((s) =>
+            preloadImage(
+              `/api/images/${boardId}/${s.id}/illustration?v=${new Date(s.updatedAt).getTime()}`
+            )
+          )
       );
 
       setCards((prev) =>
@@ -160,6 +178,10 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
             label: server.label || local.label,
             originalImageUrl: server.originalImageUrl,
             illustrationUrl: server.illustrationUrl,
+            savedIllustrationUrl: server.savedIllustrationUrl,
+            preserveOriginal: server.preserveOriginal,
+            cropData: server.cropData,
+            imageVersion: new Date(server.updatedAt).getTime(),
             status: server.status,
             errorMessage: server.errorMessage,
             isProcessing: server.status === 'processing',
@@ -195,8 +217,13 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
               ...c,
               id: serverCard.id,
               number: serverCard.number,
+              preserveOriginal: serverCard.preserveOriginal,
+              cropData: serverCard.cropData,
+              ...(serverCard.status === 'completed' ? { localOriginalImage: undefined } : {}),
               originalImageUrl: serverCard.originalImageUrl,
               illustrationUrl: serverCard.illustrationUrl,
+              savedIllustrationUrl: serverCard.savedIllustrationUrl,
+              imageVersion: new Date(serverCard.updatedAt).getTime(),
               label: serverCard.label || c.label,
               status: serverCard.status,
               errorMessage: serverCard.errorMessage,
@@ -238,19 +265,17 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
         const createResponse = await fetch(`/api/boards/${boardId}/cards`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ originalImageBase64: base64Image, label: '' }),
+          body: JSON.stringify({
+            originalImageBase64: base64Image,
+            label: photoMode === 'original' ? filenameToLabel(file.name).slice(0, 200) : '',
+          }),
         });
 
         if (!createResponse.ok) {
           const data = await createResponse.json();
-          if (data.code === 'CARD_LIMIT_REACHED' || data.code === 'GENERATION_LIMIT_REACHED') {
+          if (data.code === 'CARD_LIMIT_REACHED') {
             setCards((prev) => prev.filter((c) => c.id !== tempId));
-            toast.error(
-              data.code === 'CARD_LIMIT_REACHED'
-                ? 'Card limit reached'
-                : 'Generation limit reached',
-              { description: data.message }
-            );
+            toast.error('Card limit reached', { description: data.message });
             return;
           }
           throw new Error('Failed to create card');
@@ -275,7 +300,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
         toast.error('Failed to create card');
       }
     },
-    [boardId, mergeServerCard]
+    [boardId, mergeServerCard, photoMode]
   );
 
   const addCards = useCallback(
@@ -284,6 +309,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
         files.map(async (file) => ({
           base64: await readFileAsDataURL(file),
           tempId: createTempId(),
+          label: photoMode === 'original' ? filenameToLabel(file.name).slice(0, 200) : '',
         }))
       );
 
@@ -314,12 +340,12 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
           const res = await fetch(`/api/boards/${boardId}/cards`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ originalImageBase64: fd.base64, label: '' }),
+            body: JSON.stringify({ originalImageBase64: fd.base64, label: fd.label }),
           });
 
           if (!res.ok) {
             const data = await res.json();
-            if (data.code === 'CARD_LIMIT_REACHED' || data.code === 'GENERATION_LIMIT_REACHED') {
+            if (data.code === 'CARD_LIMIT_REACHED') {
               setCards((prev) => prev.filter((c) => c.id !== fd.tempId));
               toast.error(
                 data.code === 'CARD_LIMIT_REACHED'
@@ -352,7 +378,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
         }
       }
     },
-    [boardId, mergeServerCard]
+    [boardId, mergeServerCard, photoMode]
   );
 
   const addDefaultCards = useCallback(
@@ -480,6 +506,20 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
     [boardId, fetchCards]
   );
 
+  const changePhotoMode = useCallback(
+    async (cardId: string, photoMode: PhotoMode) => {
+      const response = await fetch(`/api/boards/${boardId}/cards/${cardId}/photo-mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoMode }),
+      });
+      if (!response.ok) throw new Error('Failed to change card photo mode');
+      const { card } = await response.json();
+      mergeServerCard(cardId, card);
+    },
+    [boardId, mergeServerCard]
+  );
+
   const deleteCard = useCallback(
     async (cardId: string) => {
       // Optimistic update: remove card and renumber remaining cards
@@ -556,7 +596,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
       // card in the processing state until the browser has the image cached,
       // then flip atomically to completed (clearing the localOriginalImage
       // preview so the illustration URL wins the display-precedence chain).
-      await preloadImage(`/api/images/${boardId}/${cardId}/illustration`);
+      await preloadImage(`/api/images/${boardId}/${cardId}/illustration?v=${Date.now()}`);
       setCards((prev) =>
         prev.map((c) =>
           c.id === cardId
@@ -564,6 +604,10 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
                 ...c,
                 label: data.label,
                 illustrationUrl: data.illustrationUrl,
+                savedIllustrationUrl: c.preserveOriginal
+                  ? c.savedIllustrationUrl
+                  : data.illustrationUrl,
+                imageVersion: Date.now(),
                 status: 'completed' as CardStatus,
                 errorMessage: null,
                 isProcessing: false,
@@ -620,6 +664,7 @@ export function useBoardCards(boardId: string, isUnlocked: boolean = false): Use
     addCards,
     addDefaultCards,
     updateCardLabel,
+    changePhotoMode,
     deleteCard,
     reorderCards,
     refreshCards: fetchCards,

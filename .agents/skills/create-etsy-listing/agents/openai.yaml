@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Create Etsy Listing'
+  short_description: 'Create themed custom Lotería listings on Etsy'
+  default_prompt: 'Use $create-etsy-listing to create a themed custom Lotería listing from my existing Etsy offer.'

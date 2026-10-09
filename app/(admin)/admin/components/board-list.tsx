@@ -11,11 +11,14 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db/schema';
+import { BoardThemeBadge } from '@/components/board-theme-badge';
+import { boardBorderStyle, getTheme, type BoardStyleOptions } from '@/lib/themes/presets';
+import messages from '@/messages/en.json';
 
 interface BoardRow {
   id: string;
   name: string;
+  styleOptions: BoardStyleOptions | null;
   isUnlocked: boolean;
   imageGenerationsUsed: number;
   cardCount: number;
@@ -49,6 +52,7 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Theme</TableHead>
                 <TableHead>Owner</TableHead>
                 <TableHead>Cards</TableHead>
                 <TableHead>Generations</TableHead>
@@ -58,15 +62,25 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
             </TableHeader>
             <TableBody>
               {filtered.map((board) => {
-                const genLimit = board.isUnlocked
-                  ? IMAGE_GENERATION_LIMIT_PAID
-                  : IMAGE_GENERATION_LIMIT_FREE;
                 return (
                   <TableRow key={board.id}>
                     <TableCell className="whitespace-nowrap">
                       <Link href={`/admin/boards/${board.id}`} className="text-sm hover:underline">
                         {board.name}
                       </Link>
+                    </TableCell>
+                    <TableCell className="min-w-48 max-w-64 whitespace-normal">
+                      <BoardThemeBadge styles={board.styleOptions} />
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                        <span className="sr-only">Font: </span>
+                        {board.styleOptions?.font ?? getTheme(board.styleOptions?.presetId).font}
+                        <span aria-hidden="true"> · </span>
+                        <span className="sr-only">. Border: </span>
+                        {messages.Themes.Builder.borders[boardBorderStyle(board.styleOptions)]}
+                        <span aria-hidden="true"> · </span>
+                        <span className="sr-only">. </span>
+                        {board.styleOptions?.showTitle ? 'Title on' : 'Title off'}
+                      </p>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <Link
@@ -78,7 +92,7 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
                     </TableCell>
                     <TableCell className="text-sm tabular-nums">{board.cardCount}</TableCell>
                     <TableCell className="whitespace-nowrap text-sm tabular-nums">
-                      {board.imageGenerationsUsed}/{genLimit}
+                      {board.imageGenerationsUsed}
                     </TableCell>
                     <TableCell>
                       {board.isUnlocked ? (

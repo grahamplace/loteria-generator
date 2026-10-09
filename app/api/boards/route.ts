@@ -45,6 +45,7 @@ export async function GET() {
       return {
         id: board.id,
         name: board.name,
+        styleOptions: board.styleOptions,
         isUnlocked: board.isUnlocked,
         createdAt: board.createdAt,
         updatedAt: board.updatedAt,
@@ -54,20 +55,8 @@ export async function GET() {
       };
     });
 
-    // Calculate board limits: user can have (unlockedCount + 1) boards total
-    // This means they can always have exactly ONE unpaid board at a time
-    const unlockedCount = userBoards.filter((b) => b.isUnlocked).length;
-    const maxBoards = unlockedCount + 1;
-    const canCreateBoard = userBoards.length < maxBoards;
-
     return NextResponse.json({
       boards: boardsWithCounts,
-      limits: {
-        current: userBoards.length,
-        max: maxBoards,
-        unlockedCount,
-        canCreateBoard,
-      },
     });
   } catch (error) {
     console.error('Error fetching boards:', error);
@@ -96,7 +85,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { name } = parsed.data;
+    const { name, styleOptions, photoMode } = parsed.data;
     const isAdmin = isAdminEmail(session.user.email);
 
     // Ensure user profile exists
@@ -111,26 +100,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Check board limit: user can have (unlockedCount + 1) boards total
-    // This means they can always have exactly ONE unpaid board at a time
-    const existingBoards = await db.query.boards.findMany({
-      where: eq(boards.userId, session.user.id),
-    });
-
-    const unlockedCount = existingBoards.filter((b) => b.isUnlocked).length;
-    const maxBoards = unlockedCount + 1;
-
-    if (!isAdmin && existingBoards.length >= maxBoards) {
-      return NextResponse.json(
-        {
-          error: 'Board limit reached',
-          message: 'Unlock your current board to create more boards',
-          code: 'BOARD_LIMIT_REACHED',
-        },
-        { status: 403 }
-      );
-    }
-
     // Create the board. Admin-created boards are unlocked so the bulk-upload
     // tool can add a full 54-card deck. This applies to ANY board the admin
     // creates via this route (including the normal dashboard flow) — acceptable
@@ -140,6 +109,8 @@ export async function POST(request: NextRequest) {
       .values({
         userId: session.user.id,
         name: name || DEFAULT_BOARD_NAME,
+        styleOptions,
+        photoMode,
         isUnlocked: isAdmin,
       })
       .returning();

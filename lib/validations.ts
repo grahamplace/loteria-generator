@@ -1,4 +1,28 @@
 import { z } from 'zod';
+import {
+  isThemeId,
+  printFonts,
+  borderStyles,
+  legacyBorderStyles,
+  type BoardThemeId,
+} from '@/lib/themes/presets';
+
+const printColorSchema = z.string().regex(/^#[0-9a-f]{6}$/i, 'Use a six-digit hex color');
+
+export const boardStyleSchema = z.object({
+  backgroundColor: printColorSchema.optional(),
+  badgeColor: printColorSchema.optional(),
+  labelColor: printColorSchema.optional(),
+  numberColor: printColorSchema.optional(),
+  borderColor: printColorSchema.optional(),
+  font: z.enum(printFonts).optional(),
+  borderStyle: z.enum([...borderStyles, ...legacyBorderStyles]).optional(),
+  presetId: z
+    .custom<BoardThemeId>((value) => value === 'custom' || isThemeId(value), 'Unknown theme')
+    .optional(),
+  showTitle: z.boolean().optional(),
+});
+export const photoModeSchema = z.enum(['illustrated', 'original']);
 
 // Max base64 payload size: ~10MB decoded (base64 is ~33% larger than raw)
 const MAX_BASE64_LENGTH = 14_000_000; // ~10MB decoded
@@ -15,18 +39,15 @@ const cropDataSchema = z.object({
 // POST /api/boards
 export const createBoardSchema = z.object({
   name: z.string().max(200).optional(),
+  styleOptions: boardStyleSchema.optional(),
+  photoMode: photoModeSchema.optional(),
 });
 
 // PATCH /api/boards/[boardId]
 export const updateBoardSchema = z.object({
   name: z.string().max(200).optional(),
-  styleOptions: z
-    .object({
-      backgroundColor: z.string().max(50).optional(),
-      badgeColor: z.string().max(50).optional(),
-      labelColor: z.string().max(50).optional(),
-    })
-    .optional(),
+  styleOptions: boardStyleSchema.optional(),
+  photoMode: photoModeSchema.optional(),
 });
 
 // POST /api/boards/[boardId]/cards

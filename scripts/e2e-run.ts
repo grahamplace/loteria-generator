@@ -127,7 +127,11 @@ async function main(): Promise<number> {
     freePort(3006);
 
     process.stderr.write('running Playwright…\n');
-    exitCode = runInherit('pnpm', ['exec', 'playwright', 'test'], childEnv);
+    exitCode = runInherit(
+      'pnpm',
+      ['exec', 'playwright', 'test', ...process.argv.slice(2)],
+      childEnv
+    );
     return exitCode;
   } finally {
     await cleanup();

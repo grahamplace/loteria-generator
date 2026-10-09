@@ -45,6 +45,8 @@ export async function POST(request: NextRequest) {
 
     // Auto-apply a signup-nudge discount if the user arrived via /redeem.
     const cookieStore = await cookies();
+    const locale = cookieStore.get('LOCALE')?.value === 'es-MX' ? 'es-MX' : 'en';
+    const localePrefix = locale === 'es-MX' ? '/es' : '';
     const promoCode = cookieStore.get('loteria_promo')?.value;
     let promotionCodeId: string | undefined;
     if (promoCode) {
@@ -61,8 +63,10 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       userEmail: session.user.email,
       boardName: board.name,
-      successUrl: `${baseUrl}/boards/${boardId}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${baseUrl}/boards/${boardId}?payment=cancelled`,
+      theme: board.styleOptions?.presetId ?? 'classic',
+      locale,
+      successUrl: `${baseUrl}${localePrefix}/boards/${boardId}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}${localePrefix}/boards/${boardId}?payment=cancelled`,
       promotionCodeId,
     });
 
@@ -74,6 +78,8 @@ export async function POST(request: NextRequest) {
         properties: {
           board_id: board.id,
           board_name: board.name,
+          theme: board.styleOptions?.presetId ?? 'classic',
+          locale,
           discount_applied: Boolean(promotionCodeId),
           $set: { email: session.user.email, name: session.user.name },
         },

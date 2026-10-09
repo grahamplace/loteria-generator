@@ -1,0 +1,359 @@
+[
+  {
+    "id": "halloween",
+    "updatedAt": "2026-10-07",
+    "en": {
+      "name": "Halloween",
+      "intro": "Turn costume photos, your pumpkin carving, and the pet in a tiny cape into a Halloween game everyone recognizes. A midnight frame, cobweb corners, and warm gold lettering bring the spooky mood to your own pictures.",
+      "ideas": ["Costume portraits", "Carved pumpkins", "A pet in costume", "Your decorated front door", "Favorite candy", "Friends at the pumpkin patch"],
+      "play": "Ask players to guess who is behind each costume before calling its card. For a shorter party round, play for a row; for a longer finale, fill the board."
+    },
+    "es-MX": {
+      "name": "Halloween",
+      "intro": "Convierte las fotos de disfraces, tu calabaza tallada y la mascota con su capa en un juego de Halloween que todos reconozcan. Un marco oscuro, telarañas y letras doradas acompañan tus propias imágenes.",
+      "ideas": ["Retratos con disfraces", "Calabazas talladas", "La mascota disfrazada", "La puerta decorada", "Dulces favoritos", "Amigos entre calabazas"],
+      "play": "Antes de cantar la carta, invita al grupo a adivinar quién está detrás del disfraz. Jueguen por una línea para una ronda corta y por tabla llena para el gran final."
+    },
+    "published": true
+  },
+  {
+    "id": "christmas",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Christmas",
+      "intro": "Make your family the stars of Christmas Lotería. Combine holiday portraits, the tree you decorated together, favorite ornaments, and the cookies that disappear first. Evergreen colors and a gold border make a set worth bringing back next December.",
+      "ideas": ["Family holiday portraits", "Your Christmas tree", "A favorite ornament", "Matching pajamas", "Homemade cookies", "The family dog"],
+      "play": "Use family nicknames as labels and invite a different relative to call each round. Put a small wrapped prize aside for the first full board."
+    },
+    "es-MX": {
+      "name": "Navidad",
+      "intro": "Haz que tu familia protagonice la lotería de Navidad. Combina retratos, el árbol que decoraron juntos, adornos especiales y las galletas favoritas. Los tonos verdes y el marco dorado crean un juego para volver a disfrutar el próximo diciembre.",
+      "ideas": ["Retratos navideños", "El árbol de Navidad", "Un adorno especial", "Pijamas a juego", "Galletas caseras", "El perro de la familia"],
+      "play": "Usa los apodos familiares como nombres de las cartas y cambia de cantor en cada ronda. Aparta un regalo pequeño para quien complete primero su tabla."
+    },
+    "published": true
+  },
+  {
+    "id": "birthday",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Birthday",
+      "intro": "Build a birthday game around the person you are celebrating. Friends, favorite foods, funny photos, and a much-loved hobby become the cards. Bold lettering make it feel like a party before the first card is called.",
+      "ideas": ["The birthday person", "Best friends", "Favorite cake", "A childhood photo", "A favorite hobby", "The family pet"],
+      "play": "Let the guest of honor name the cards. Mix easily recognized portraits with a few surprising throwbacks so every generation has something to recognize."
+    },
+    "es-MX": {
+      "name": "Cumpleaños",
+      "intro": "Crea un juego de cumpleaños alrededor de la persona festejada. Amigos, comidas favoritas, fotos divertidas y pasatiempos se convierten en cartas. Las letras llamativas ponen el ambiente de fiesta desde el principio.",
+      "ideas": ["La persona festejada", "Sus mejores amigos", "Su pastel favorito", "Una foto de infancia", "Un pasatiempo", "La mascota familiar"],
+      "play": "Deja que la persona festejada nombre las cartas. Mezcla retratos conocidos con recuerdos inesperados para que todas las generaciones participen."
+    },
+    "published": true
+  },
+  {
+    "id": "family-reunion",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Family Reunion",
+      "intro": "Bring the whole family into one game, including the cousins who live far away. Build your deck from portraits, familiar places, recipes, and moments that connect generations. Warm paper and green lettering suit a keepsake full of family stories.",
+      "ideas": ["Grandparents", "Cousins together", "The family home", "A treasured recipe", "An old vacation photo", "A beloved pet"],
+      "play": "Use the same nickname everyone knows, and let relatives share a quick story when their card appears. Ask each household to contribute a few photos before the reunion."
+    },
+    "es-MX": {
+      "name": "Reunión familiar",
+      "intro": "Reúne a toda la familia en un juego, incluso a los primos que viven lejos. Usa retratos, lugares conocidos, recetas y momentos que conectan generaciones. El papel cálido y las letras verdes acompañan las historias familiares.",
+      "ideas": ["Los abuelos", "Los primos juntos", "La casa familiar", "Una receta especial", "Un viaje de hace años", "Una mascota querida"],
+      "play": "Usa los apodos que todos conocen y deja que cada familiar cuente una anécdota cuando salga su carta. Pide algunas fotos a cada familia antes de reunirse."
+    },
+    "published": true
+  },
+  {
+    "id": "quinceanera",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Quinceañera",
+      "intro": "Create a quinceañera activity featuring the celebrant, her court, family, and the details she chose for her day. Soft lilac tones frame everything from a dress portrait to a favorite childhood memory.",
+      "ideas": ["The quinceañera", "Her court", "Parents and grandparents", "The dress", "The bouquet", "A childhood portrait"],
+      "play": "Play during a relaxed moment before dancing. Include both people and celebration details so guests who have just met the family can join in."
+    },
+    "es-MX": {
+      "name": "Quinceañera",
+      "intro": "Crea una actividad de quinceañera con la festejada, su corte, la familia y los detalles que eligió para ese día. Los tonos lila enmarcan desde el vestido hasta un recuerdo de infancia.",
+      "ideas": ["La quinceañera", "Su corte", "Papás y abuelos", "El vestido", "El ramo", "Un retrato de infancia"],
+      "play": "Jueguen en un momento tranquilo antes del baile. Incluye personas y detalles de la fiesta para que también participen quienes apenas conocen a la familia."
+    },
+    "published": true
+  },
+  {
+    "id": "wedding",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Wedding",
+      "intro": "Tell your story as a couple through a wedding Lotería game. Your engagement photos, pets, favorite places, and wedding party can all become cards. An ivory and sage frame keeps the printed set elegant and personal.",
+      "ideas": ["The happy couple", "Engagement rings", "Your pet", "The wedding party", "Your first trip", "The venue"],
+      "play": "Place a tabla at each seat for a relaxed reception activity. Choose labels that guests can recognize without needing to know every inside joke."
+    },
+    "es-MX": {
+      "name": "Boda",
+      "intro": "Cuenta su historia como pareja con una lotería de boda. Las fotos del compromiso, las mascotas, los lugares favoritos y las personas que los acompañan pueden convertirse en cartas. El marco marfil y verde conserva un estilo elegante y personal.",
+      "ideas": ["La pareja", "Los anillos", "Su mascota", "Las damas y acompañantes", "Su primer viaje", "El lugar de la boda"],
+      "play": "Coloca una tabla en cada lugar para una actividad relajada durante la recepción. Elige nombres que los invitados puedan reconocer sin conocer todos los chistes de la pareja."
+    },
+    "published": true
+  },
+  {
+    "id": "baby-shower",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Baby Shower",
+      "intro": "Celebrate a new arrival with a game about the people who already love them. Add the parents-to-be, grandparents, nursery details, and tiny clothes. Gentle colors make the set feel warm and welcoming.",
+      "ideas": ["Parents-to-be", "Grandparents", "A baby photo of each parent", "Tiny shoes", "A nursery toy", "The family pet"],
+      "play": "Include baby photos of the adults for a guessing game within the game. Pick a caller who knows the family names and keep a reference sheet nearby."
+    },
+    "es-MX": {
+      "name": "Baby shower",
+      "intro": "Celebra la llegada del bebé con un juego sobre las personas que ya lo quieren. Agrega a los futuros papás, abuelos, detalles del cuarto y ropita. Los colores suaves crean un ambiente cálido.",
+      "ideas": ["Los futuros papás", "Los abuelos", "Fotos de los papás cuando eran bebés", "Zapatitos", "Un juguete del cuarto", "La mascota"],
+      "play": "Incluye fotos de los adultos cuando eran bebés para adivinar quién es quién. Elige a alguien que conozca los nombres de la familia para cantar las cartas."
+    },
+    "published": true
+  },
+  {
+    "id": "bridal-shower",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Bridal Shower",
+      "intro": "Make a bridal shower game from the bride’s favorite people and pieces of her love story. Family portraits, her bouquet, a favorite café, and wedding details fit a soft rose design.",
+      "ideas": ["The bride", "Her partner", "The bouquet", "Close friends", "A favorite café", "The proposal location"],
+      "play": "Invite guests to contribute a photo with the bride beforehand. Keep the cards focused on shared memories so the activity works across friends and family."
+    },
+    "es-MX": {
+      "name": "Despedida de soltera",
+      "intro": "Crea una lotería de despedida de soltera con las personas favoritas de la novia y los momentos de su historia de amor. Retratos familiares, el ramo, un café especial y los detalles de la boda combinan con un diseño en tonos rosa.",
+      "ideas": ["La novia", "Su pareja", "El ramo", "Amistades cercanas", "Un café favorito", "El lugar de la propuesta"],
+      "play": "Pide a los invitados una foto con la novia antes de la reunión. Elige recuerdos compartidos para que puedan participar tanto amistades como familiares."
+    },
+    "published": true
+  },
+  {
+    "id": "bachelorette",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Bachelorette",
+      "intro": "Put the bride and her crew into a Lotería set made for their celebration. Vacation snapshots, group selfies, outfits, and shared jokes become the cards. Rich berry colors give it its own personality.",
+      "ideas": ["The bride", "Each friend", "A group selfie", "Matching outfits", "A memorable trip", "The celebration location"],
+      "play": "Use short inside-joke labels that the whole group understands. Bring printed cards for a game night at the house or hotel before heading out."
+    },
+    "es-MX": {
+      "name": "Fiesta de amigas",
+      "intro": "Convierte a la novia y sus amigas en las protagonistas de su lotería. Fotos de viajes, selfies, atuendos y bromas compartidas se vuelven cartas. Los tonos intensos le dan personalidad propia.",
+      "ideas": ["La novia", "Cada amiga", "Una selfie de grupo", "Atuendos a juego", "Un viaje memorable", "El lugar de la fiesta"],
+      "play": "Usa nombres cortos con bromas que todo el grupo entienda. Lleva las cartas impresas para jugar en casa o en el hotel antes de salir."
+    },
+    "published": true
+  },
+  {
+    "id": "friendsgiving",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Friendsgiving",
+      "intro": "Turn your Friendsgiving table into a game about the people around it. Include friends, signature dishes, pets, and shared traditions. Warm autumn colors suit an evening of food and familiar stories.",
+      "ideas": ["Each friend", "The signature casserole", "A favorite pie", "A group vacation", "The host’s pet", "Last year’s dinner"],
+      "play": "Ask everyone to send one portrait and one dish photo. Play after dinner, with the person whose card appears sharing the story behind its label."
+    },
+    "es-MX": {
+      "name": "Cena de amigos",
+      "intro": "Convierte la cena de amigos en un juego sobre quienes se sientan a la mesa. Incluye amistades, sus platillos estrella, mascotas y tradiciones. Los colores de otoño acompañan una noche de comida y recuerdos.",
+      "ideas": ["Cada amistad", "El platillo estrella", "Un pay favorito", "Un viaje juntos", "La mascota del anfitrión", "La cena del año pasado"],
+      "play": "Pide a cada persona un retrato y una foto de su platillo. Jueguen después de cenar y cuenten la historia detrás del nombre de cada carta."
+    },
+    "published": true
+  },
+  {
+    "id": "graduation",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Graduation",
+      "intro": "Celebrate the graduate’s journey with photos of classmates, teachers, activities, and milestones. A cap-and-gown portrait can lead a deck full of memories. Deep navy and gold details give the set a celebratory finish.",
+      "ideas": ["The graduate", "Close classmates", "A favorite teacher", "The school", "A club or team", "A childhood school photo"],
+      "play": "Arrange the calling deck as a journey from early school days to graduation. Guests can recognize the milestones while the tablas stay randomized."
+    },
+    "es-MX": {
+      "name": "Graduación",
+      "intro": "Celebra el camino de quien se gradúa con fotos de compañeros, maestros, actividades y momentos importantes. Un retrato con toga y birrete puede encabezar un juego lleno de recuerdos, enmarcado en azul y dorado.",
+      "ideas": ["Quien se gradúa", "Compañeros cercanos", "Un maestro querido", "La escuela", "Un club o equipo", "Una foto escolar de infancia"],
+      "play": "Ordena las cartas del cantor desde los primeros días de escuela hasta la graduación. Los invitados reconocerán las etapas mientras las tablas tienen combinaciones distintas."
+    },
+    "published": true
+  },
+  {
+    "id": "classroom",
+    "updatedAt": "2026-10-07",
+    "en": {
+      "name": "Classroom",
+      "intro": "Make a classroom Lotería featuring your own school community. Students, teachers, the principal, reading corners, and everyday objects become recognizable cards. A notebook-inspired palette and pencil details give the game a school-day feel.",
+      "ideas": ["Student portraits", "The teacher", "The principal", "The reading corner", "Classroom supplies", "A class mascot"],
+      "play": "Use first names or agreed classroom labels, and choose photos you have permission to use. Let students take turns calling cards or describing the pictured object."
+    },
+    "es-MX": {
+      "name": "Salón de clases",
+      "intro": "Crea una lotería del salón con tu comunidad escolar. Estudiantes, docentes, la dirección, el rincón de lectura y objetos cotidianos se convierten en cartas conocidas. Los colores cálidos y los lápices le dan un toque escolar.",
+      "ideas": ["Retratos de estudiantes", "La maestra o maestro", "La directora o director", "El rincón de lectura", "Útiles escolares", "La mascota del grupo"],
+      "play": "Usa nombres de pila o etiquetas acordadas y fotos que tengas permiso de utilizar. Permite que los estudiantes canten las cartas por turnos o describan el objeto."
+    },
+    "published": true
+  },
+  {
+    "id": "anniversary",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Wedding Anniversary",
+      "intro": "Celebrate the years you have shared with a game that moves through your life together. Mix the wedding day with family portraits, homes, holidays, and recent memories. Warm ivory and rose details tie old and new photos together.",
+      "ideas": ["The wedding portrait", "A recent couple photo", "Your first home", "Family milestones", "A favorite holiday", "A treasured keepsake"],
+      "play": "Choose a few photos from each chapter of the relationship. Ask guests to name the year or place when a memory is called."
+    },
+    "es-MX": {
+      "name": "Aniversario de bodas",
+      "intro": "Celebren los años compartidos con un juego que recorra su vida juntos. Mezcla la boda con retratos familiares, casas, viajes y recuerdos recientes. Los tonos marfil y rosa unen las fotos de distintas épocas.",
+      "ideas": ["El retrato de boda", "Una foto reciente de la pareja", "Su primera casa", "Momentos familiares", "Un viaje favorito", "Un recuerdo especial"],
+      "play": "Elige algunas fotos de cada etapa de la relación. Invita a los asistentes a adivinar el año o el lugar cuando salga un recuerdo."
+    },
+    "published": true
+  },
+  {
+    "id": "soccer-team",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Soccer Team",
+      "intro": "Give the team a game starring its own players, coach, and season highlights. Use clear individual photos, a team portrait, the ball, and memorable match moments. Green field colors keep the set connected to the sport.",
+      "ideas": ["Each player", "The coach", "The team portrait", "The team ball", "The jersey", "A favorite match moment"],
+      "play": "Use the players’ familiar names and include the people who support the team. This works well as a relaxed activity at an end-of-season gathering."
+    },
+    "es-MX": {
+      "name": "Equipo de fútbol",
+      "intro": "Regala al equipo un juego protagonizado por sus jugadores, entrenador y momentos de la temporada. Usa retratos claros, una foto de grupo, el balón y recuerdos de partidos. Los tonos verdes mantienen el ambiente futbolero.",
+      "ideas": ["Cada jugador", "El entrenador", "La foto del equipo", "El balón", "La camiseta", "Un momento especial de un partido"],
+      "play": "Usa los nombres que conoce el equipo e incluye a quienes lo apoyan. Es una actividad tranquila para la convivencia de fin de temporada."
+    },
+    "published": true
+  },
+  {
+    "id": "new-years",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "New Year’s",
+      "intro": "Look back on your year through a personalized New Year’s Lotería. Friends, trips, new pets, celebrations, and little victories become the cards. Midnight blue and gold borders give your memories a festive frame.",
+      "ideas": ["A group celebration", "Your favorite trip", "A new pet", "A personal milestone", "A memorable meal", "The year’s funniest photo"],
+      "play": "Pick photos from throughout the year and use the labels to recall their stories. Finish a round before midnight or make it a New Year’s Day tradition."
+    },
+    "es-MX": {
+      "name": "Año Nuevo",
+      "intro": "Recuerda el año con una lotería personalizada de Año Nuevo. Amistades, viajes, nuevas mascotas, celebraciones y pequeños logros se convierten en cartas. El azul oscuro y los bordes dorados enmarcan tus recuerdos.",
+      "ideas": ["Una celebración en grupo", "El viaje favorito", "Una nueva mascota", "Un logro personal", "Una comida memorable", "La foto más divertida del año"],
+      "play": "Elige fotos de todo el año y usa los nombres para recordar sus historias. Terminen una ronda antes de medianoche o jueguen el primer día del año."
+    },
+    "published": true
+  },
+  {
+    "id": "milestone-birthday",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Milestone Birthday",
+      "intro": "Tell a life story through a birthday Lotería deck. For a 50th birthday, gather photos from childhood, teenage years, family life, travels, and today. Warm gold tones suit a celebration spanning generations.",
+      "ideas": ["A baby portrait", "School years", "A first job", "A wedding or family milestone", "A favorite journey", "A recent portrait"],
+      "play": "You do not need a photo from every year. Choose the clearest and most meaningful moments, then use labels such as a year, nickname, or place to help guests follow the story."
+    },
+    "es-MX": {
+      "name": "Cumpleaños especial",
+      "intro": "Cuenta una vida con una lotería de cumpleaños. Para celebrar los 50, reúne fotos de la infancia, adolescencia, vida familiar, viajes y el presente. Los tonos dorados acompañan una fiesta entre generaciones.",
+      "ideas": ["Un retrato de bebé", "Los años de escuela", "El primer trabajo", "Una boda o momento familiar", "Un viaje favorito", "Un retrato reciente"],
+      "play": "No necesitas una foto de cada año. Elige los momentos más claros y significativos, y usa años, apodos o lugares como nombres para contar la historia."
+    },
+    "published": true
+  },
+  {
+    "id": "destination-wedding",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Destination Wedding",
+      "intro": "Bring your guests, your story, and your destination into one wedding game. Use Cabo’s arch, a Cancún beach, or a favorite Mexico City street alongside portraits of the couple. Sea-glass colors travel beautifully on paper.",
+      "ideas": ["The couple", "Your destination", "A local landmark", "The wedding venue", "A group excursion", "A favorite local meal"],
+      "play": "Print the set before traveling and play at a welcome gathering. Mix destination photos with personal ones so guests can get to know each other and the place."
+    },
+    "es-MX": {
+      "name": "Boda de destino",
+      "intro": "Reúne a sus invitados, su historia y el destino en una lotería de boda. Combina el Arco de Cabo, una playa de Cancún o una calle de Ciudad de México con retratos de la pareja. Los tonos de mar acompañan el viaje.",
+      "ideas": ["La pareja", "El destino", "Un sitio emblemático", "El lugar de la boda", "Una excursión en grupo", "Una comida local favorita"],
+      "play": "Imprime el juego antes de viajar y úsalo en la reunión de bienvenida. Mezcla fotos del destino con fotos personales para conocer al grupo y al lugar."
+    },
+    "published": true
+  },
+  {
+    "id": "cinco-de-mayo",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Cinco de Mayo",
+      "intro": "Personalize your Cinco de Mayo gathering with familiar faces, food, and decorations. Your own photos become a Lotería set framed by warm colors. Choose the people and traditions that make your gathering yours.",
+      "ideas": ["Friends and family", "Your decorated table", "Papel picado", "A favorite dish", "The host", "A group portrait"],
+      "play": "Name cards for what is actually in your photos, and share the meaning behind any family traditions you include. Keep the game grounded in your own celebration."
+    },
+    "es-MX": {
+      "name": "Cinco de Mayo",
+      "intro": "Personaliza tu reunión del Cinco de Mayo con rostros conocidos, comida y decoraciones. Tus fotos se convierten en una lotería con colores cálidos. Elige las personas y tradiciones que hacen especial tu reunión.",
+      "ideas": ["Amigos y familiares", "La mesa decorada", "Papel picado", "Un platillo favorito", "La persona anfitriona", "Un retrato de grupo"],
+      "play": "Nombra las cartas según lo que aparece en tus fotos y comparte el significado de las tradiciones familiares que incluyas. Haz que el juego refleje tu propia celebración."
+    },
+    "published": true
+  },
+  {
+    "id": "original-photos",
+    "updatedAt": "2026-10-07",
+    "en": {
+      "name": "Original Photo",
+      "intro": "Keep the photographs you love as photographs. Build a personalized Lotería set from family portraits, pets, travel memories, and everyday favorites, with no re-illustration. Crop each image and edit its label while the original faces and details stay yours.",
+      "ideas": ["Family portraits", "Pets", "Travel snapshots", "Favorite objects", "Old family photos", "Everyday moments"],
+      "play": "Choose clear photos and crop around one recognizable subject. Use short labels so the caller and players can quickly match the image to its name."
+    },
+    "es-MX": {
+      "name": "Fotos originales",
+      "intro": "Conserva tus fotos como fotografías. Crea una lotería personalizada con retratos familiares, mascotas, viajes y recuerdos cotidianos, sin convertirlos en ilustraciones. Recorta cada imagen y edita su nombre sin cambiar los rostros ni sus detalles.",
+      "ideas": ["Retratos familiares", "Mascotas", "Fotos de viajes", "Objetos favoritos", "Fotos familiares antiguas", "Momentos cotidianos"],
+      "play": "Elige fotos claras y recorta alrededor de un sujeto reconocible. Usa nombres cortos para que el cantor y los jugadores identifiquen cada imagen con facilidad."
+    },
+    "published": true
+  },
+  {
+    "id": "hanukkah",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Hanukkah",
+      "intro": "Make a Hanukkah game from your family’s own celebration. Include the people at the table, the hanukkiah, dreidels, favorite foods, and memories from past years. Blue, ivory, and gold details make a personal seasonal keepsake.",
+      "ideas": ["Family portraits", "Your hanukkiah", "Dreidels", "Latkes", "Sufganiyot", "A family celebration"],
+      "play": "Use the spellings and names familiar to your family. Bring out the set during a gathering and invite relatives to explain the traditions pictured on their cards."
+    },
+    "es-MX": {
+      "name": "Janucá",
+      "intro": "Crea un juego de Janucá con la celebración de tu propia familia. Incluye a quienes se sientan a la mesa, la januquiá, los sevivonim, comidas favoritas y recuerdos de otros años. Los tonos azul, marfil y dorado enmarcan el juego.",
+      "ideas": ["Retratos familiares", "La januquiá", "Sevivonim", "Latkes", "Sufganiot", "Una celebración familiar"],
+      "play": "Usa los nombres y las formas de escribir que conoce tu familia. Jueguen durante una reunión e inviten a los familiares a contar las tradiciones de sus cartas."
+    },
+    "published": true
+  },
+  {
+    "id": "easter",
+    "updatedAt": "2026-10-08",
+    "en": {
+      "name": "Easter",
+      "intro": "Turn your Easter photos into a game full of familiar faces and spring details. Family portraits, decorated eggs, baskets, flowers, and a favorite pet all fit the deck. Soft colors carry the spring atmosphere into the printed boards.",
+      "ideas": ["Family portraits", "Decorated eggs", "An Easter basket", "Spring flowers", "The family pet", "An egg-hunt memory"],
+      "play": "Play after an egg hunt or around the family table. Combine recent photos with a few from previous years for a game that grows with your family."
+    },
+    "es-MX": {
+      "name": "Pascua",
+      "intro": "Convierte tus fotos de Pascua en un juego de rostros conocidos y detalles de primavera. Retratos, huevos decorados, canastas, flores y una mascota pueden formar parte del juego. Los colores suaves acompañan las tablas.",
+      "ideas": ["Retratos familiares", "Huevos decorados", "Una canasta de Pascua", "Flores de primavera", "La mascota", "Un recuerdo de la búsqueda de huevos"],
+      "play": "Jueguen después de buscar huevos o alrededor de la mesa. Mezcla fotos recientes con algunas de otros años para que el juego crezca con la familia."
+    },
+    "published": true
+  }
+]

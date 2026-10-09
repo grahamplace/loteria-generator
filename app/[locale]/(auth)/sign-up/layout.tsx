@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
@@ -26,5 +27,5 @@ export async function generateMetadata({
 }
 
 export default function SignUpLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <Suspense>{children}</Suspense>;
 }

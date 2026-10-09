@@ -1,9 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
-import { X, Trash2 } from 'lucide-react';
+import { PhotoCropDialog } from '@/components/photo-crop-dialog';
+import type { PixelRect } from '@/lib/crop-image';
+import { X, Trash2, ImageIcon, Sparkles, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import type { PhotoMode } from '@/lib/themes/presets';
 import { LotteriaCard } from '@/lib/generate-boards';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import posthog from 'posthog-js';
@@ -15,6 +19,79 @@ interface CardEditModalProps {
   onSave: (newLabel: string, newRiddle: string) => void;
   onDelete?: () => void;
   onClose: () => void;
+  cropData?: PixelRect | null;
+  onCrop?: (crop: PixelRect | null) => Promise<void>;
+  preserveOriginal?: boolean;
+  isProcessing?: boolean;
+  processingError?: string;
+  onChangePhotoMode?: (mode: PhotoMode) => Promise<void>;
+}
+
+// Keyed by source so a previous image's load event cannot dismiss the overlay.
+function CardFacePreview({
+  src,
+  alt,
+  switching,
+  isProcessing,
+}: {
+  src: string;
+  alt: string;
+  switching: boolean;
+  isProcessing: boolean;
+}) {
+  const t = useTranslations('BoardEditor.CardEditModal');
+  const [imageState, setImageState] = useState<'loading' | 'loaded' | 'error'>('loading');
+  const [attempt, setAttempt] = useState(0);
+  const busy = switching || isProcessing || imageState === 'loading';
+
+  return (
+    <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+      <Image
+        key={attempt}
+        {...cardImageProps(src, CARD_GRID_THUMB_WIDTH)}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 128px, 160px"
+        loading="eager"
+        className="object-cover"
+        onLoad={() => setImageState('loaded')}
+        onError={() => setImageState('error')}
+      />
+      {busy ? (
+        <div
+          role="status"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/85 px-3 text-center text-sm font-medium text-foreground backdrop-blur-[2px]"
+        >
+          <Loader2
+            className="size-5 shrink-0 animate-spin motion-reduce:animate-none"
+            aria-hidden="true"
+          />
+          <span>
+            {t(
+              isProcessing
+                ? 'creatingIllustration'
+                : switching
+                  ? 'switchingPhotoMode'
+                  : 'loadingImage'
+            )}
+          </span>
+        </div>
+      ) : imageState === 'error' ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background px-3 text-center text-sm">
+          <p role="alert">{t('imageLoadError')}</p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setImageState('loading');
+              setAttempt((value) => value + 1);
+            }}
+          >
+            {t('retryImage')}
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 export function CardEditModal({
@@ -23,21 +100,34 @@ export function CardEditModal({
   onSave,
   onDelete,
   onClose,
+  cropData,
+  onCrop,
+  preserveOriginal = false,
+  isProcessing = false,
+  processingError,
+  onChangePhotoMode,
 }: CardEditModalProps) {
   const t = useTranslations('BoardEditor.CardEditModal');
+  const themeText = useTranslations('Themes.Builder');
+  const [cropping, setCropping] = useState(false);
   const [label, setLabel] = useState(card.label);
   const [riddle, setRiddle] = useState(card.riddle ?? '');
-
-  // Handle Escape key to close modal
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+  const [switching, setSwitching] = useState(false);
+  const [modeError, setModeError] = useState('');
+  const mode: PhotoMode = preserveOriginal ? 'original' : 'illustrated';
+  const previewSrc = card.illustration || '/placeholder.svg';
+  async function changeMode(next: PhotoMode) {
+    if (!onChangePhotoMode || switching || isProcessing) return;
+    setSwitching(true);
+    setModeError('');
+    try {
+      await onChangePhotoMode(next);
+    } catch {
+      setModeError(t('photoModeError'));
+    } finally {
+      setSwitching(false);
     }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }
 
   const handleSave = () => {
     if (label.trim()) {
@@ -49,29 +139,105 @@ export function CardEditModal({
     }
   };
 
+  if (cropping && originalImage && onCrop)
+    return (
+      <PhotoCropDialog
+        src={originalImage}
+        initialCrop={cropData}
+        onSave={onCrop}
+        onClose={() => setCropping(false)}
+      />
+    );
+
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        className="max-w-[calc(100%-2rem)] sm:max-w-md max-h-[90dvh] flex flex-col gap-0 p-0 overflow-hidden"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b shrink-0">
-          <h2 className="text-lg font-semibold">{t('titleWithNumber', { number: card.number })}</h2>
+          <DialogTitle>{t('titleWithNumber', { number: card.number })}</DialogTitle>
           <button
             onClick={onClose}
             aria-label={t('closeAriaLabel')}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex size-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="px-4 md:px-6 py-3 md:py-4 space-y-3 overflow-y-auto">
+        <div className="px-4 md:px-6 py-3 md:py-4 space-y-3 overflow-y-auto overscroll-contain">
+          {originalImage && onChangePhotoMode && (
+            <fieldset disabled={switching || isProcessing} className="space-y-2">
+              <legend className="sr-only">{t('photoModeLabel')}</legend>
+              <div className="grid grid-cols-2 gap-2">
+                {(['original', 'illustrated'] as const).map((choice) => {
+                  const Icon = choice === 'original' ? ImageIcon : Sparkles;
+                  return (
+                    <label key={choice} className="relative min-w-0 cursor-pointer">
+                      <input
+                        type="radio"
+                        name={`card-photo-mode-${card.id}`}
+                        value={choice}
+                        checked={mode === choice}
+                        onChange={() => void changeMode(choice)}
+                        className="peer absolute inset-0 z-10 size-full cursor-pointer opacity-0 disabled:cursor-wait"
+                      />
+                      <span className="flex min-h-11 touch-manipulation items-center justify-center gap-2 rounded-md border border-border px-2 py-2 text-sm text-foreground peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary peer-disabled:cursor-wait peer-disabled:opacity-60">
+                        {mode === choice ? (
+                          <Check className="size-4 shrink-0" aria-hidden="true" />
+                        ) : (
+                          <Icon className="size-4 shrink-0" aria-hidden="true" />
+                        )}
+                        <span>
+                          {t(choice === 'original' ? 'useOriginalPhoto' : 'useIllustration')}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
+          {modeError && (
+            <p role="alert" className="text-sm text-destructive">
+              {modeError}
+            </p>
+          )}
+          {processingError && onChangePhotoMode && (
+            <div className="space-y-2">
+              <p role="alert" className="text-sm text-destructive">
+                {t('illustrationFailed')}
+              </p>
+              <Button
+                variant="outline"
+                disabled={switching || isProcessing}
+                onClick={() => void changeMode('illustrated')}
+              >
+                {switching && (
+                  <Loader2
+                    className="size-4 animate-spin motion-reduce:animate-none"
+                    aria-hidden="true"
+                  />
+                )}
+                {t('retryIllustration')}
+              </Button>
+            </div>
+          )}
           {/* Image preview */}
           <div className="flex justify-center gap-3">
             {originalImage && (
-              <div className="space-y-1">
+              <div className="min-w-0 flex-1 max-w-40 space-y-1">
                 <p className="text-xs text-muted-foreground text-center">{t('originalLabel')}</p>
-                <div className="relative w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                   <Image
                     {...cardImageProps(originalImage, CARD_GRID_THUMB_WIDTH)}
                     alt={t('originalLabel')}
@@ -82,26 +248,31 @@ export function CardEditModal({
                 </div>
               </div>
             )}
-            <div className="space-y-1">
+            <div className="min-w-0 flex-1 max-w-40 space-y-1">
               {originalImage && (
                 <p className="text-xs text-muted-foreground text-center">
-                  {t('illustrationLabel')}
+                  {preserveOriginal ? t('originalPhotoLabel') : t('illustrationLabel')}
                 </p>
               )}
-              <div className="relative w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
-                <Image
-                  {...cardImageProps(
-                    card.illustration || '/placeholder.svg',
-                    CARD_GRID_THUMB_WIDTH
-                  )}
-                  alt={card.label}
-                  fill
-                  sizes="(max-width: 768px) 128px, 160px"
-                  className="object-cover"
-                />
-              </div>
+              <CardFacePreview
+                key={previewSrc}
+                src={previewSrc}
+                alt={card.label}
+                switching={switching}
+                isProcessing={isProcessing}
+              />
             </div>
           </div>
+
+          {onCrop && originalImage && (
+            <Button
+              variant="outline"
+              disabled={switching || isProcessing}
+              onClick={() => setCropping(true)}
+            >
+              {themeText('crop')}
+            </Button>
+          )}
 
           {/* Label input */}
           <div>
@@ -167,7 +338,7 @@ export function CardEditModal({
             {t('saveButton')}
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

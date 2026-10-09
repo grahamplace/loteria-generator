@@ -16,6 +16,9 @@ const CARD_ASPECT_RATIO = 2 / 3;
 // The 4×4 grid is height-constrained, so this padding is the printed top and
 // bottom margin verbatim — 0.2" before the print-safe margin was added.
 const PADDING = 60 + PRINT_SAFE_MARGIN_PX;
+// A decorative frame reaches nearly to the legacy grid edge. Reserve another
+// 0.3" inside framed pages so cards and titles have space above and below them.
+const FRAME_PADDING = 90;
 
 export interface BoardLayout {
   cardWidth: number;
@@ -40,14 +43,17 @@ export function computeBoardLayout({
   width,
   height,
   titleBandHeight = 0,
+  hasFrame = false,
 }: {
   width: number;
   height: number;
   titleBandHeight?: number;
+  hasFrame?: boolean;
 }): BoardLayout {
   const band = Math.max(0, titleBandHeight);
-  const availableWidth = width - PADDING * 2 - CARD_SPACING * (COLS - 1);
-  const availableHeight = height - PADDING * 2 - CARD_SPACING * (ROWS - 1) - band;
+  const padding = PADDING + (hasFrame ? FRAME_PADDING : 0);
+  const availableWidth = width - padding * 2 - CARD_SPACING * (COLS - 1);
+  const availableHeight = height - padding * 2 - CARD_SPACING * (ROWS - 1) - band;
 
   const maxCardWidth = availableWidth / COLS;
   const maxCardHeight = availableHeight / ROWS;

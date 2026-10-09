@@ -42,7 +42,13 @@ export function LanguageSwitch() {
     }).catch(() => {
       // Silent — cookie is authoritative; unauthenticated users are expected.
     });
-    router.replace(pathname, { locale: next });
+    const query = new URLSearchParams(window.location.search);
+    const callback = query.get('callbackUrl');
+    if (callback && callback.startsWith('/') && !callback.startsWith('//')) {
+      const withoutLocale = callback.replace(/^\/es(?=\/|$)/, '');
+      query.set('callbackUrl', `${next === 'es-MX' ? '/es' : ''}${withoutLocale}`);
+    }
+    router.replace(`${pathname}${query.size ? `?${query}` : ''}`, { locale: next });
   }
 
   return (

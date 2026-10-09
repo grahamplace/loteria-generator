@@ -1,0 +1,124 @@
+{
+  "title": "Wedding Lotería",
+  "styles": {
+    "presetId": "wedding",
+    "showTitle": true
+  },
+  "cards": [
+    {
+      "id": "01-wedding-couple",
+      "label": "La Boda",
+      "number": 1,
+      "illustration": "public/themes/cards/f0711faab6b21734f4.webp",
+      "source": "lib/hero-cards-illustrations/01-wedding-couple.webp"
+    },
+    {
+      "id": "03-wedding-rings",
+      "label": "Los Anillos",
+      "number": 2,
+      "illustration": "public/themes/cards/3fddbd3da0433f34a1.webp",
+      "source": "lib/hero-cards-illustrations/03-wedding-rings.webp"
+    },
+    {
+      "id": "02-wedding-bouquet",
+      "label": "El Ramo",
+      "number": 3,
+      "illustration": "public/themes/cards/bd288e32f714582164.webp",
+      "source": "lib/hero-cards-illustrations/02-wedding-bouquet.webp"
+    },
+    {
+      "id": "07-family-portrait",
+      "label": "La Familia",
+      "number": 4,
+      "illustration": "public/themes/cards/fe93f6f2e21f1735a5.webp",
+      "source": "lib/hero-cards-illustrations/07-family-portrait.webp"
+    },
+    {
+      "id": "09-grandpa",
+      "label": "El Abuelo",
+      "number": 5,
+      "illustration": "public/themes/cards/70956b8edc87bccdc1.webp",
+      "source": "lib/hero-cards-illustrations/09-grandpa.webp"
+    },
+    {
+      "id": "10-grandma",
+      "label": "La Abuela",
+      "number": 6,
+      "illustration": "public/themes/cards/30afbee8297854e6f1.webp",
+      "source": "lib/hero-cards-illustrations/10-grandma.webp"
+    },
+    {
+      "id": "11-dog",
+      "label": "El Perro",
+      "number": 7,
+      "illustration": "public/themes/cards/472f18df46a9ef5438.webp",
+      "source": "lib/hero-cards-illustrations/11-dog.webp"
+    },
+    {
+      "id": "13-house",
+      "label": "La Casa",
+      "number": 8,
+      "illustration": "public/themes/cards/c2a536497ab938da48.webp",
+      "source": "lib/hero-cards-illustrations/13-house.webp"
+    },
+    {
+      "id": "04-quinceanera",
+      "label": "La Quinceañera",
+      "number": 9,
+      "illustration": "public/themes/cards/0dafe6bff848be6e81.webp",
+      "source": "lib/hero-cards-illustrations/04-quinceanera.webp"
+    },
+    {
+      "id": "05-birthday-candles",
+      "label": "El Cumpleaños",
+      "number": 10,
+      "illustration": "public/themes/cards/0e5e23c866dffbe47d.webp",
+      "source": "lib/hero-cards-illustrations/05-birthday-candles.webp"
+    },
+    {
+      "id": "08-baby",
+      "label": "El Bebé",
+      "number": 11,
+      "illustration": "public/themes/cards/374cb25f190615ab80.webp",
+      "source": "lib/hero-cards-illustrations/08-baby.webp"
+    },
+    {
+      "id": "12-cat",
+      "label": "El Gato",
+      "number": 12,
+      "illustration": "public/themes/cards/64a4e345ed306e1147.webp",
+      "source": "lib/hero-cards-illustrations/12-cat.webp"
+    },
+    {
+      "id": "14-car",
+      "label": "El Bochito",
+      "number": 13,
+      "illustration": "public/themes/cards/8b948c48d3fbea0ee5.webp",
+      "source": "lib/hero-cards-illustrations/14-car.webp"
+    },
+    {
+      "id": "15-guitar",
+      "label": "La Guitarra",
+      "number": 14,
+      "illustration": "public/themes/cards/1e0cc63e18eae5f2d4.webp",
+      "source": "lib/hero-cards-illustrations/15-guitar.webp"
+    },
+    {
+      "id": "17-camera",
+      "label": "La Cámara",
+      "number": 15,
+      "illustration": "public/themes/cards/a05ce3691a0cf677c5.webp",
+      "source": "lib/hero-cards-illustrations/17-camera.webp"
+    },
+    {
+      "id": "18-tacos",
+      "label": "Los Tacos",
+      "number": 16,
+      "illustration": "public/themes/cards/630519f82f345adb4e.webp",
+      "source": "lib/hero-cards-illustrations/18-tacos.webp"
+    }
+  ],
+  "compareId": "01-wedding-couple",
+  "sourcePackage": "output/etsy/variants-2026/05-wedding",
+  "etsyListingId": "4590856773"
+}
