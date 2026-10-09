@@ -420,8 +420,6 @@
       "useOriginalPhoto": "Use original photo",
       "useIllustration": "Use illustration",
       "originalPhotoLabel": "Original photo",
-      "illustrationOnDemand": "We’ll create an illustration when you choose it. This changes only this card.",
-      "photoModeHint": "This changes only this card. Your original photo is always kept.",
       "creatingIllustration": "Creating your illustration…",
       "switchingPhotoMode": "Switching image…",
       "photoModeError": "Couldn’t switch the image. Please try again.",

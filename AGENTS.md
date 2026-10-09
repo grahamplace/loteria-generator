@@ -165,6 +165,7 @@ Concise rules for building accessible, fast, delightful UIs. Use MUST/SHOULD/NEV
 
 ## Content & Accessibility
 
+- MUST: Respect the owner's strong preference for minimal UI copy: let clear controls speak for themselves. Add helper text only for non-obvious requirements, consequences, or recovery; omit explanations that merely narrate the visible button or interaction.
 - SHOULD: Inline help first; tooltips last resort
 - MUST: Skeletons mirror final content to avoid layout shift
 - MUST: `<title>` matches current context

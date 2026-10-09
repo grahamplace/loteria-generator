@@ -22,7 +22,6 @@ interface CardEditModalProps {
   cropData?: PixelRect | null;
   onCrop?: (crop: PixelRect | null) => Promise<void>;
   preserveOriginal?: boolean;
-  hasIllustration?: boolean;
   isProcessing?: boolean;
   processingError?: string;
   onChangePhotoMode?: (mode: PhotoMode) => Promise<void>;
@@ -37,7 +36,6 @@ export function CardEditModal({
   cropData,
   onCrop,
   preserveOriginal = false,
-  hasIllustration = false,
   isProcessing = false,
   processingError,
   onChangePhotoMode,
@@ -139,11 +137,6 @@ export function CardEditModal({
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  mode === 'original' && !hasIllustration ? 'illustrationOnDemand' : 'photoModeHint'
-                )}
-              </p>
             </fieldset>
           )}
           {(switching || isProcessing) && (

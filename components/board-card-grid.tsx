@@ -57,7 +57,6 @@ interface DisplayCard {
   error?: string;
   isDefault?: boolean;
   preserveOriginal?: boolean;
-  hasIllustration?: boolean;
   cropData?: import('@/lib/crop-image').PixelRect | null;
 }
 
@@ -462,7 +461,6 @@ export function BoardCardGrid({
         <CardEditModal
           key={editingCard.id}
           preserveOriginal={editingCard.preserveOriginal}
-          hasIllustration={editingCard.hasIllustration}
           isProcessing={editingCard.isProcessing}
           processingError={editingCard.error}
           onChangePhotoMode={

@@ -154,12 +154,6 @@ function BoardEditor({ boardId }: { boardId: string }) {
     label: card.label,
     riddle: card.riddle,
     preserveOriginal: card.preserveOriginal,
-    hasIllustration: Boolean(
-      card.savedIllustrationUrl ||
-      (!card.preserveOriginal &&
-        card.illustrationUrl &&
-        card.illustrationUrl !== card.originalImageUrl)
-    ),
     cropData: card.cropData,
     imageVersion: card.imageVersion,
     illustration:
