@@ -175,15 +175,12 @@ export function BoardAppearance({
                 })
               }
             />
-            <div>
-              <PhotoModeSwitch
-                photoMode={photoMode}
-                saving={photoModeSaving}
-                disabled={savingDesign}
-                onChange={(mode) => void save({ photoMode: mode })}
-              />
-              <p className="mt-2 text-sm text-muted-foreground">{t('futureUploads')}</p>
-            </div>
+            <PhotoModeSwitch
+              photoMode={photoMode}
+              saving={photoModeSaving}
+              disabled={savingDesign}
+              onChange={(mode) => void save({ photoMode: mode })}
+            />
           </fieldset>
           <div className="mt-3 border-t border-border pt-3">
             <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-medium">
