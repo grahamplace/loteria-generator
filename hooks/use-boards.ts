@@ -152,6 +152,7 @@ interface UseBoardReturn {
  * Hook for managing a single board
  */
 export function useBoard(boardId: string): UseBoardReturn {
+  const t = useTranslations('Themes.Builder');
   const [board, setBoard] = useState<BoardWithCards | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -212,11 +213,11 @@ export function useBoard(boardId: string): UseBoardReturn {
         setBoard((prev) => (prev ? { ...prev, ...data.board } : null));
         return true;
       } catch {
-        toast.error('Failed to update board');
+        toast.error(t('saveError'));
         return false;
       }
     },
-    [boardId]
+    [boardId, t]
   );
 
   return {

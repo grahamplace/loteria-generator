@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import {
   themePresets,
@@ -14,6 +14,8 @@ import { editableBoardStyle, presetBoardStyle } from '@/lib/themes/render-style'
 import { BoardDesignControls, openDesignControls } from '@/components/board-design-controls';
 import { BoardThemePicker } from '@/components/board-theme-picker';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Loader2, ChevronDown } from 'lucide-react';
 
 export function BoardAppearance({
@@ -30,19 +32,31 @@ export function BoardAppearance({
   cards?: LotteriaCard[];
   showPreview?: boolean;
   onSave: (settings: {
+    name?: string;
     styleOptions?: BoardStyleOptions;
     photoMode?: PhotoMode;
   }) => Promise<boolean>;
 }) {
   const t = useTranslations('Themes.Builder');
   const locale = useLocale() === 'es-MX' ? 'es-MX' : 'en';
-  const titleHelpId = useId();
+  const titleId = useId();
+  const titleErrorId = useId();
+  const titleInput = useRef<HTMLInputElement>(null);
+  const [titleDraft, setTitleDraft] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState('');
+  const [savingTitle, setSavingTitle] = useState(false);
+  const titleValue = titleDraft ?? boardName;
+  const titleChanged = titleValue !== boardName;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const savingRef = useRef(false);
   const selected = selectedBoardTheme(styles);
 
-  async function save(settings: { styleOptions?: BoardStyleOptions; photoMode?: PhotoMode }) {
+  async function save(settings: {
+    name?: string;
+    styleOptions?: BoardStyleOptions;
+    photoMode?: PhotoMode;
+  }) {
     if (savingRef.current) return false;
     savingRef.current = true;
     setSaving(true);
@@ -58,6 +72,38 @@ export function BoardAppearance({
       savingRef.current = false;
       setSaving(false);
     }
+  }
+
+  useEffect(() => {
+    if (!titleChanged) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [titleChanged]);
+
+  async function saveTitle(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (savingRef.current) return;
+    const name = titleValue.trim();
+    if (!name || name.length > 200) {
+      setTitleError(t('titleValidation'));
+      titleInput.current?.focus();
+      return;
+    }
+    setTitleError('');
+    titleInput.current?.focus();
+    if (name === boardName) {
+      setTitleDraft(null);
+      return;
+    }
+    setSavingTitle(true);
+    if (await save({ name })) {
+      setTitleDraft(null);
+    }
+    setSavingTitle(false);
   }
 
   return (
@@ -143,7 +189,6 @@ export function BoardAppearance({
                 type="checkbox"
                 checked={styles?.showTitle ?? false}
                 disabled={saving}
-                aria-describedby={titleHelpId}
                 onChange={(event) =>
                   void save({ styleOptions: { ...styles, showTitle: event.target.checked } })
                 }
@@ -151,9 +196,55 @@ export function BoardAppearance({
               />
               {t('showTitle')}
             </label>
-            <p id={titleHelpId} className="ml-8 break-words text-sm text-muted-foreground">
-              {t('printedTitle', { name: boardName })}
-            </p>
+            <form onSubmit={saveTitle} noValidate className="mt-1 max-w-xl">
+              <label htmlFor={titleId} className="sr-only">
+                {t('boardTitle')}
+              </label>
+              <div className="flex min-w-0 items-center gap-2">
+                <Input
+                  ref={titleInput}
+                  id={titleId}
+                  name="boardTitle"
+                  autoComplete="off"
+                  value={titleValue}
+                  readOnly={saving}
+                  aria-invalid={!!titleError}
+                  aria-describedby={titleError ? titleErrorId : undefined}
+                  onChange={(event) => {
+                    setTitleDraft(event.target.value);
+                    setTitleError('');
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape' && !saving) {
+                      setTitleDraft(null);
+                      setTitleError('');
+                    }
+                  }}
+                  className="h-11 flex-1 bg-background text-base"
+                />
+                {(titleChanged || savingTitle) && (
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    disabled={saving}
+                    className="min-h-11 shrink-0 touch-manipulation"
+                  >
+                    {savingTitle && (
+                      <Loader2
+                        className="size-4 animate-spin motion-reduce:animate-none"
+                        aria-hidden="true"
+                      />
+                    )}
+                    {t('saveTitle')}
+                  </Button>
+                )}
+              </div>
+              {titleError && (
+                <p id={titleErrorId} role="alert" className="mt-2 text-sm text-destructive">
+                  {titleError}
+                </p>
+              )}
+            </form>
           </div>
           <div className="mt-3 flex min-h-5 flex-wrap items-center gap-3">
             {saving && (

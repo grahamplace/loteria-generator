@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 // Browser-local fixtures: no request here can read or mutate a real board.
 async function editor(
   page: Page,
-  { locale = 'en', count = 2, failCreate = false, failList = false } = {}
+  { locale = 'en', count = 2, failCreate = false, failList = false, failRename = false } = {}
 ) {
   const base = 'http://localhost:3006';
   const boards = Array.from({ length: count }, (_, i) => ({
@@ -56,7 +56,13 @@ async function editor(
     if (board) {
       if (method === 'DELETE')
         return route.fulfill({ status: 500, json: { error: 'Retry deletion' } });
-      if (method === 'PATCH') Object.assign(board, route.request().postDataJSON());
+      if (method === 'PATCH') {
+        if (failRename) {
+          failRename = false;
+          return route.fulfill({ status: 500, json: { error: 'Retry rename' } });
+        }
+        Object.assign(board, route.request().postDataJSON());
+      }
       return route.fulfill({ json: { board } });
     }
     if (path.endsWith('/cards')) return route.fulfill({ json: { cards: [] } });
@@ -120,7 +126,7 @@ test('switches boards with localized links and remembers the selected board', as
   await expect(page.getByRole('button', { name: /Cambiar tablero: Our Halloween/ })).toBeVisible();
 });
 
-test('rename is keyboard accessible and reflected in the picker', async ({ page }) => {
+test('rename works from both the picker and the design panel', async ({ page }) => {
   await editor(page);
   const trigger = page.getByRole('button', { name: /Switch board:/ });
   await trigger.focus();
@@ -138,6 +144,23 @@ test('rename is keyboard accessible and reflected in the picker', async ({ page 
   await expect(
     page.getByRole('button', { name: 'Switch board: Our family celebration' })
   ).toBeFocused();
+  const title = page.getByRole('textbox', { name: 'Board title', exact: true });
+  await expect(title).toHaveValue('Our family celebration');
+  const image = page.getByRole('complementary', { name: 'Live preview' }).getByRole('img');
+  const before = await image.getAttribute('src');
+  await title.fill('  Día de la Familia  ');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(title).toHaveValue('Día de la Familia');
+  await expect(title).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Switch board: Día de la Familia' })).toBeVisible();
+  await expect.poll(() => image.getAttribute('src')).not.toBe(before);
+  await page.screenshot({
+    path: '.scratch/theme-work/board-title-desktop.png',
+    animations: 'disabled',
+  });
+  await page.reload();
+  await expect(title).toHaveValue('Día de la Familia');
+  await expect(page.getByRole('button', { name: 'Switch board: Día de la Familia' })).toBeVisible();
 });
 
 test('creation failure can be retried and successful creation opens the new board', async ({
@@ -178,4 +201,48 @@ test('large collections are paged and list failures have a retry', async ({ page
   await expect(page.getByRole('menuitem', { name: /Our Halloween/ })).toHaveCount(0);
   await page.getByRole('menuitem', { name: 'Previous boards' }).click();
   await expect(page.getByRole('menuitem', { name: /Our Halloween/ })).toBeVisible();
+});
+
+test('mobile title editing validates, retains failed saves, and works with the printed title off', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await editor(page, { locale: 'es', failRename: true });
+  const title = page.getByRole('textbox', { name: 'Título del tablero', exact: true });
+  const design = page.getByRole('region').filter({ has: title });
+  await title.fill('   ');
+  await title.press('Enter');
+  await expect(title).toBeFocused();
+  await expect(title).toHaveAttribute('aria-invalid', 'true');
+  await expect(design.getByRole('alert')).toHaveText(
+    'Escribe un título de entre 1 y 200 caracteres.'
+  );
+  await title.fill('Cumpleaños de la abuela');
+  await title.press('Enter');
+  await expect(design.getByRole('alert')).toHaveText('No se pudo guardar. Inténtalo de nuevo.');
+  await expect(title).toHaveValue('Cumpleaños de la abuela');
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Cambiar tablero: Cumpleaños de la abuela' })
+  ).toBeVisible();
+  await page.getByRole('checkbox', { name: 'Incluir título en las tablas' }).click();
+  await expect(
+    page.getByRole('checkbox', { name: 'Incluir título en las tablas' })
+  ).not.toBeChecked();
+  await title.fill('Fiesta familiar');
+  await title.press('Enter');
+  await expect(
+    page.getByRole('button', { name: 'Cambiar tablero: Fiesta familiar' })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('checkbox', { name: 'Incluir título en las tablas' })
+  ).not.toBeChecked();
+  await title.fill('Unsaved changes');
+  await title.press('Escape');
+  await expect(title).toHaveValue('Fiesta familiar');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({
+    path: '.scratch/theme-work/board-title-mobile.png',
+    animations: 'disabled',
+  });
 });
