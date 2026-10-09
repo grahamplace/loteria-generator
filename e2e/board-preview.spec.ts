@@ -99,7 +99,20 @@ for (const [locale, width] of [
     const choosePhotos = uploads.getByRole('button', {
       name: locale === 'en' ? 'Choose photos' : 'Seleccionar fotos',
     });
+    async function expectKnobAtEdge(control: Locator, on: boolean) {
+      await expect
+        .poll(async () =>
+          control.evaluate((el, checked) => {
+            const track = el.getBoundingClientRect();
+            const thumb = el.querySelector('[data-slot="switch-thumb"]')!.getBoundingClientRect();
+            return Math.round(checked ? track.right - thumb.right : thumb.left - track.left);
+          }, on)
+        )
+        .toBe(3);
+    }
     await expect(illustrated).not.toBeChecked();
+    await expectKnobAtEdge(illustrated, false);
+    await expectKnobAtEdge(setting, false);
     let release!: () => void;
     let fail = false;
     let delayed = true;
@@ -143,6 +156,8 @@ for (const [locale, width] of [
     await expect(illustrated).toBeChecked();
     await expect(illustrated).toBeEnabled();
     await expect(setting).toBeChecked();
+    await expectKnobAtEdge(illustrated, true);
+    await expectKnobAtEdge(setting, true);
     await uploads.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     expect(await uploads.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     await uploads.screenshot({ path: `.scratch/theme-work/upload-photo-mode-${locale}.png` });

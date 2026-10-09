@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Switch } from '@/components/ui/switch';
 import type { PhotoMode } from '@/lib/themes/presets';
+import styles from './photo-mode-switch.module.css';
 
 export function PhotoModeSwitch({
   photoMode,
@@ -31,8 +32,8 @@ export function PhotoModeSwitch({
         onCheckedChange={(checked) => onChange(checked ? 'illustrated' : 'original')}
         disabled={saving || disabled}
         aria-busy={saving}
-        className="h-6 w-10 cursor-pointer transition-colors motion-reduce:transition-none"
-        thumbClassName="size-5 motion-reduce:transition-none"
+        className={`${styles.track} cursor-pointer transition-colors motion-reduce:transition-none`}
+        thumbClassName={styles.thumb}
       />
       <span>{t('illustrated')}</span>
       <span className="size-4" aria-hidden="true">
