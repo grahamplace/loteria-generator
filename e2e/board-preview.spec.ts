@@ -74,6 +74,83 @@ async function enterHex(page: Page, field: Locator, value: string) {
   await field.press('Enter');
 }
 
+for (const [locale, width] of [
+  ['en', 1440],
+  ['es', 390],
+] as const) {
+  test(`upload-area photo mode stays in sync, waits for saving, and recovers (${locale})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await openEditor(page, { count: 2, locale });
+    const uploads = page.getByRole('region', {
+      name: locale === 'en' ? 'Drop photos to add cards' : 'Suelta fotos para agregar cartas',
+    });
+    const illustrated = uploads.getByRole('radio', {
+      name: locale === 'en' ? 'Illustrate my photos' : 'Ilustrar mis fotos',
+    });
+    const original = uploads.getByRole('radio', {
+      name: locale === 'en' ? 'Use original photos' : 'Usar fotos originales',
+    });
+    const setting = page.getByRole('combobox', {
+      name: locale === 'en' ? 'New photo uploads' : 'Nuevas fotos',
+    });
+    const choosePhotos = uploads.getByRole('button', {
+      name: locale === 'en' ? 'Choose photos' : 'Seleccionar fotos',
+    });
+    await expect(original).toBeChecked();
+    let release!: () => void;
+    let fail = false;
+    let delayed = true;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route('**/api/boards/preview-layout-fixture', async (route) => {
+      if (route.request().method() === 'PATCH') {
+        if (delayed) await gate;
+        if (fail) return route.fulfill({ status: 503, json: { error: 'Temporarily unavailable' } });
+      }
+      return route.fallback();
+    });
+    try {
+      await illustrated.click();
+      await expect(illustrated).toBeChecked();
+      await expect(choosePhotos).toBeDisabled();
+      await expect(setting).toBeDisabled();
+      await expect(setting).toHaveValue('illustrated');
+    } finally {
+      delayed = false;
+      release();
+    }
+    await expect(choosePhotos).toBeEnabled();
+    await page.reload();
+    await expect(illustrated).toBeChecked();
+    await expect(setting).toHaveValue('illustrated');
+    await setting.selectOption('original');
+    await expect(original).toBeChecked();
+    await expect(original).toBeEnabled();
+    fail = true;
+    await illustrated.click();
+    await expect(illustrated).toBeEnabled();
+    await expect(original).toBeChecked();
+    await expect(setting).toHaveValue('original');
+    fail = false;
+    await original.focus();
+    await page.keyboard.press('ArrowLeft');
+    await expect(illustrated).toBeChecked();
+    await expect(illustrated).toBeEnabled();
+    await expect(setting).toHaveValue('illustrated');
+    await uploads.scrollIntoViewIfNeeded();
+    expect(await uploads.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await uploads.screenshot({ path: `.scratch/theme-work/upload-photo-mode-${locale}.png` });
+    if (locale === 'en') {
+      await page.setViewportSize({ width: 2800, height: 1200 });
+      await expect(original).toBeVisible();
+      expect(await uploads.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    }
+  });
+}
+
 for (const width of [1024, 1440, 2560]) {
   test(`preview stays beside card editing while scrolling at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 1024 ? 700 : 900 });

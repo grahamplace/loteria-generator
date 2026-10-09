@@ -21,6 +21,7 @@ import { Loader2, ChevronDown } from 'lucide-react';
 export function BoardAppearance({
   styles,
   photoMode,
+  photoModeSaving = false,
   boardName,
   cards = [],
   showPreview = true,
@@ -28,6 +29,7 @@ export function BoardAppearance({
 }: {
   styles?: BoardStyleOptions | null;
   photoMode: PhotoMode;
+  photoModeSaving?: boolean;
   boardName: string;
   cards?: LotteriaCard[];
   showPreview?: boolean;
@@ -181,6 +183,7 @@ export function BoardAppearance({
                   id="photo-mode"
                   name="photoMode"
                   value={photoMode}
+                  disabled={photoModeSaving}
                   onChange={(event) => void save({ photoMode: event.target.value as PhotoMode })}
                   className="min-h-11 max-w-full appearance-none touch-manipulation rounded-md border border-input bg-background pl-3 pr-10 text-base text-foreground transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"
                 >

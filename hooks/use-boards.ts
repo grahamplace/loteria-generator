@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { Board, BoardStyleOptions } from '@/db/schema';
+import type { PhotoMode } from '@/lib/themes/presets';
 
 interface BoardSummary {
   id: string;
@@ -138,6 +139,7 @@ interface BoardWithCards extends Board {
 
 interface UseBoardReturn {
   board: BoardWithCards | null;
+  pendingPhotoMode: PhotoMode | null;
   isLoading: boolean;
   error: string | null;
   updateBoard: (updates: {
@@ -154,6 +156,8 @@ interface UseBoardReturn {
 export function useBoard(boardId: string): UseBoardReturn {
   const t = useTranslations('Themes.Builder');
   const [board, setBoard] = useState<BoardWithCards | null>(null);
+  const [pendingPhotoMode, setPendingPhotoMode] = useState<PhotoMode | null>(null);
+  const updateQueue = useRef(Promise.resolve());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -193,35 +197,45 @@ export function useBoard(boardId: string): UseBoardReturn {
   }, [fetchBoard]);
 
   const updateBoard = useCallback(
-    async (updates: {
+    (updates: {
       name?: string;
       styleOptions?: BoardStyleOptions;
       photoMode?: import('@/lib/themes/presets').PhotoMode;
     }): Promise<boolean> => {
-      try {
-        const response = await fetch(`/api/boards/${boardId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updates),
-        });
+      if (updates.photoMode) setPendingPhotoMode(updates.photoMode);
+      // Both the design panel and upload controls save this board. Keep their
+      // responses in order so a slower save cannot restore an older setting.
+      const request = updateQueue.current.then(async () => {
+        try {
+          const response = await fetch(`/api/boards/${boardId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+          });
 
-        if (!response.ok) {
-          throw new Error('Failed to update board');
+          if (!response.ok) {
+            throw new Error('Failed to update board');
+          }
+
+          const data = await response.json();
+          setBoard((prev) => (prev ? { ...prev, ...data.board } : null));
+          return true;
+        } catch {
+          toast.error(t('saveError'));
+          return false;
+        } finally {
+          if (updates.photoMode) setPendingPhotoMode(null);
         }
-
-        const data = await response.json();
-        setBoard((prev) => (prev ? { ...prev, ...data.board } : null));
-        return true;
-      } catch {
-        toast.error(t('saveError'));
-        return false;
-      }
+      });
+      updateQueue.current = request.then(() => {});
+      return request;
     },
     [boardId, t]
   );
 
   return {
     board,
+    pendingPhotoMode,
     isLoading,
     error,
     updateBoard,

@@ -42,7 +42,13 @@ function BoardEditor({ boardId }: { boardId: string }) {
   const searchParams = useSearchParams();
   const actionBarRef = useRef<BoardActionBarRef>(null);
 
-  const { board, isLoading: boardLoading, updateBoard, refreshBoard } = useBoard(boardId);
+  const {
+    board,
+    isLoading: boardLoading,
+    updateBoard,
+    refreshBoard,
+    pendingPhotoMode,
+  } = useBoard(boardId);
   const {
     cards,
     isLoading: cardsLoading,
@@ -293,7 +299,8 @@ function BoardEditor({ boardId }: { boardId: string }) {
           <div className="min-w-0 space-y-4">
             <BoardAppearance
               styles={board.styleOptions}
-              photoMode={board.photoMode}
+              photoMode={pendingPhotoMode ?? board.photoMode}
+              photoModeSaving={pendingPhotoMode !== null}
               boardName={board.name}
               showPreview={false}
               onSave={updateBoard}
@@ -305,7 +312,9 @@ function BoardEditor({ boardId }: { boardId: string }) {
               maxCards={cardLimit}
               processingCount={processingCards.length}
               styleOptions={board.styleOptions}
-              photoMode={board.photoMode}
+              photoMode={pendingPhotoMode ?? board.photoMode}
+              photoModeSaving={pendingPhotoMode !== null}
+              onPhotoModeChange={(photoMode) => updateBoard({ photoMode })}
               isUnlocked={board.isUnlocked}
               onUnlockRequired={handleCardLimitReached}
               onOpenDefaults={() => setDefaultsPickerOpen(true)}
@@ -388,7 +397,9 @@ function BoardEditor({ boardId }: { boardId: string }) {
             boardName={board.name}
             cards={displayCards}
             isUnlocked={board.isUnlocked}
-            canAddPhotos={cards.length < cardLimit || !board.isUnlocked}
+            canAddPhotos={
+              pendingPhotoMode === null && (cards.length < cardLimit || !board.isUnlocked)
+            }
             onAddPhotos={() => actionBarRef.current?.triggerFileSelect()}
             onUnlock={() => openUnlockPrompt('preview')}
           />
