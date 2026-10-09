@@ -64,27 +64,31 @@ export function BoardFontPicker({
     };
   }, [active, open, value, retry]);
 
-  function sample(font: PrintFont) {
+  function sample(font: PrintFont, compact = false) {
     return status[font] === 'ready' ? (
       <span
         aria-hidden="true"
         title={title}
         style={{ fontFamily: `'${font}', sans-serif` }}
-        className="block truncate text-[22px] font-normal leading-8"
+        className={
+          compact
+            ? 'min-w-0 flex-1 truncate text-xl font-normal leading-6'
+            : 'block truncate text-[22px] font-normal leading-8'
+        }
       >
         {title}
       </span>
     ) : (
       <span
         aria-hidden="true"
-        className="flex h-8 items-center gap-2 text-xs text-muted-foreground"
+        className={`flex min-w-0 items-center gap-2 text-xs text-muted-foreground ${compact ? 'h-6 flex-1' : 'h-8'}`}
       >
         {status[font] === 'error' ? (
-          t('fontPreviewError')
+          <span className="truncate">{t('fontPreviewError')}</span>
         ) : (
           <>
-            <Loader2 className="h-3 w-3 animate-spin motion-reduce:animate-none" />
-            {t('fontLoading')}
+            <Loader2 className="h-3 w-3 shrink-0 animate-spin motion-reduce:animate-none" />
+            <span className="truncate">{t('fontLoading')}</span>
           </>
         )}
       </span>
@@ -108,13 +112,15 @@ export function BoardFontPicker({
           id={id}
           aria-labelledby={`${id}-label`}
           data-value={value}
-          className="flex min-h-[76px] w-full min-w-0 touch-manipulation items-center gap-3 rounded-md border border-input bg-background px-3 py-2 text-left text-foreground hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"
+          className="flex h-11 w-full min-w-0 touch-manipulation items-center gap-3 rounded-md border border-input bg-background px-3 py-2 text-left text-foreground hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"
         >
-          <span className="min-w-0 flex-1">
+          <span className="flex min-w-0 flex-1 items-center gap-3">
             <Select.Value asChild>
-              <span className="block truncate text-xs text-muted-foreground">{value}</span>
+              <span className="max-w-[45%] shrink-0 truncate text-sm text-muted-foreground">
+                {value}
+              </span>
             </Select.Value>
-            {sample(value)}
+            {sample(value, true)}
           </span>
           <Select.Icon asChild>
             <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
