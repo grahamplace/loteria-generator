@@ -31,8 +31,8 @@ export function PhotoModeSwitch({
         onCheckedChange={(checked) => onChange(checked ? 'illustrated' : 'original')}
         disabled={saving || disabled}
         aria-busy={saving}
-        className="h-6 w-11 cursor-pointer transition-colors motion-reduce:transition-none"
-        thumbClassName="size-5 data-[state=checked]:translate-x-[22px] motion-reduce:transition-none"
+        className="h-6 w-10 cursor-pointer transition-colors motion-reduce:transition-none"
+        thumbClassName="size-5 motion-reduce:transition-none"
       />
       <span>{t('illustrated')}</span>
       <span className="size-4" aria-hidden="true">
