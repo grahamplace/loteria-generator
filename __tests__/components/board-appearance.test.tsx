@@ -74,8 +74,8 @@ describe('automatic board preview', () => {
     );
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(window.location.search).toBe('?previewScale=200');
-    fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
-    expect(screen.getByText('300%')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Zoom out' })).toBeVisible();
+    expect(screen.queryByRole('group', { name: 'Zoom level' })).not.toBeInTheDocument();
     expect(renderBoard).toHaveBeenCalledTimes(2);
 
     renderBoard.mockImplementation(async (_cards, style, _title, options) =>
@@ -88,7 +88,7 @@ describe('automatic board preview', () => {
         canvas('detail-Montserrat').toDataURL()
       )
     );
-    expect(screen.getByText('300%')).toBeVisible();
+    expect(window.location.search).toBe('?previewScale=200');
     expect(renderBoard).toHaveBeenCalledTimes(4);
     fireEvent.click(screen.getByRole('button', { name: 'Expand board preview' }));
     const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
@@ -99,7 +99,7 @@ describe('automatic board preview', () => {
     expect(renderBoard).toHaveBeenCalledTimes(4);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close expanded preview' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(screen.getByText('300%')).toBeVisible();
+    expect(window.location.search).toBe('?previewScale=200');
   });
 
   it('offers inline retry without losing the thumbnail or zoom when details fail', async () => {
@@ -111,15 +111,15 @@ describe('automatic board preview', () => {
       messages.Themes.Builder.previewError
     );
     expect(screen.getByRole('img')).toHaveAttribute('src', canvas('initial').toDataURL());
-    expect(screen.getByText('200%')).toBeVisible();
+    expect(window.location.search).toBe('?previewScale=200');
     renderBoard.mockResolvedValueOnce(canvas('retried-detail'));
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     await waitFor(() =>
       expect(screen.getByRole('img')).toHaveAttribute('src', canvas('retried-detail').toDataURL())
     );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    const controls = screen.getByRole('group', { name: 'Zoom level' });
-    fireEvent.click(within(controls).getByRole('button', { name: 'Fit board in live preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(window.location.search).toBe('');
     expect(screen.queryByRole('group', { name: 'Zoom level' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Click to zoom in on the board' })).toHaveFocus();
   });

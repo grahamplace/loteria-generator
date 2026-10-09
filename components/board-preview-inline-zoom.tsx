@@ -8,8 +8,7 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from 'react';
-import { useFormatter, useTranslations } from 'next-intl';
-import { Minus, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { useBoardPreview } from '@/components/board-preview';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +24,6 @@ export function BoardPreviewInlineZoom({
   children: ReactNode;
 }) {
   const t = useTranslations('Themes.Builder');
-  const format = useFormatter();
   const viewport = useRef<HTMLDivElement>(null);
   const imageButton = useRef<HTMLButtonElement>(null);
   const anchor = useRef<Point | null>(null);
@@ -34,10 +32,9 @@ export function BoardPreviewInlineZoom({
   const suppressClick = useRef(false);
   const [dragging, setDragging] = useState(false);
   const zoomed = state.inlineZoom > 100;
-  const zoomIndex = state.zoomLevels.indexOf(state.inlineZoom);
   const source = (zoomed ? state.detailPreview : null) ?? state.preview;
 
-  function zoomTo(value: number, point?: Point) {
+  function zoomTo(value: 100 | 200, point?: Point) {
     const element = viewport.current;
     if (element) {
       anchor.current = {
@@ -121,49 +118,6 @@ export function BoardPreviewInlineZoom({
 
   return (
     <>
-      {zoomed && (
-        <div
-          data-board-inline-zoom
-          role="group"
-          aria-label={t('previewZoom')}
-          className="mb-3 flex min-h-11 items-center justify-between gap-1 rounded-md border border-border bg-background px-1"
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') {
-              event.stopPropagation();
-              zoomTo(100);
-            }
-          }}
-        >
-          <button
-            type="button"
-            className={controlClassName}
-            aria-label={t('zoomOut')}
-            onClick={() => zoomTo(state.zoomLevels[zoomIndex - 1])}
-          >
-            <Minus className="size-4" aria-hidden="true" />
-          </button>
-          <span role="status" className="text-sm tabular-nums">
-            {format.number(state.inlineZoom / 100, { style: 'percent' })}
-          </span>
-          <button
-            type="button"
-            className={controlClassName}
-            aria-label={t('zoomIn')}
-            disabled={zoomIndex === state.zoomLevels.length - 1}
-            onClick={() => zoomTo(state.zoomLevels[zoomIndex + 1])}
-          >
-            <Plus className="size-4" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className={cn(controlClassName, 'text-primary')}
-            aria-label={t('fitInlinePreview')}
-            onClick={() => zoomTo(100)}
-          >
-            {t('fitPreview')}
-          </button>
-        </div>
-      )}
       {zoomed && state.detailError && (
         <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
           <p role="alert" className="min-w-0 flex-1">
@@ -195,6 +149,7 @@ export function BoardPreviewInlineZoom({
           {source && (
             <button
               ref={imageButton}
+              data-board-preview-image
               type="button"
               disabled={!!state.previewError}
               aria-label={t(zoomed ? 'fitInlinePreview' : 'zoomInlinePreview')}

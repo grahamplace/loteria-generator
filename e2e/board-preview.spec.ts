@@ -898,8 +898,9 @@ for (const width of [1024, 1440, 2560]) {
     const viewport = panel.getByRole('region', { name: 'Zoomable live board preview' });
     const image = panel.getByRole('img');
     await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+    const fittedBounds = (await viewport.boundingBox())!;
     await image.click({ position: { x: 80, y: 90 } });
-    await expect(panel.getByText('200%', { exact: true })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page).toHaveURL(/previewScale=200/);
     await expect
@@ -907,6 +908,13 @@ for (const width of [1024, 1440, 2560]) {
       .toBe(2550);
     await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
     const bounds = (await viewport.boundingBox())!;
+    expect(bounds.width).toBeCloseTo(fittedBounds.width, 0);
+    expect(bounds.height).toBeCloseTo(fittedBounds.height, 0);
+    await expect(panel.getByRole('group', { name: 'Zoom level' })).toHaveCount(0);
+    const zoomOut = (await panel
+      .getByRole('button', { name: 'Zoom out', exact: true })
+      .boundingBox())!;
+    expect(zoomOut.y + zoomOut.height).toBeLessThanOrEqual(bounds.y);
     expect((await image.boundingBox())!.width).toBeCloseTo(bounds.width * 2, 0);
     const beforePan = await viewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }));
     await page.mouse.move(bounds.x + bounds.width * 0.75, bounds.y + bounds.height * 0.75);
@@ -915,7 +923,7 @@ for (const width of [1024, 1440, 2560]) {
       steps: 8,
     });
     await page.mouse.up();
-    await expect(panel.getByText('200%', { exact: true })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
     const afterPan = await viewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }));
     expect(afterPan.left).toBeGreaterThan(beforePan.left);
     expect(afterPan.top).toBeGreaterThan(beforePan.top);
@@ -932,7 +940,7 @@ for (const width of [1024, 1440, 2560]) {
     await expect
       .poll(() => image.evaluate((el) => (el as HTMLImageElement).naturalWidth))
       .toBe(2550);
-    await expect(panel.getByText('200%', { exact: true })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
     expect(await viewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))).toEqual(
       savedPosition
     );
@@ -943,8 +951,8 @@ for (const width of [1024, 1440, 2560]) {
     expect(await viewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))).toEqual(
       savedPosition
     );
-    await panel.getByRole('button', { name: 'Zoom in', exact: true }).click();
-    await expect(panel.getByText('300%', { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/previewScale=200/);
+    await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
     await page.screenshot({
       animations: 'disabled',
       path: `.scratch/theme-work/preview-inline-${width}.png`,
@@ -954,18 +962,17 @@ for (const width of [1024, 1440, 2560]) {
     await expect(expanded).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(expanded).toHaveCount(0);
-    await expect(panel.getByText('300%', { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/previewScale=200/);
+    await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
     await page.reload();
-    await expect(panel.getByText('300%', { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/previewScale=200/);
+    await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
     await panel.getByRole('button', { name: 'Next preview page' }).click();
     await expect(panel.getByText('Cards 17–24', { exact: true })).toBeVisible();
     await expect
       .poll(() => viewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop })))
       .toEqual({ left: 0, top: 0 });
-    await panel
-      .getByRole('group', { name: 'Zoom level' })
-      .getByRole('button', { name: 'Fit board in live preview' })
-      .click();
+    await panel.getByRole('button', { name: 'Zoom out', exact: true }).click();
     await expect(panel.getByRole('group', { name: 'Zoom level' })).toHaveCount(0);
     await expect(
       panel.getByRole('button', { name: 'Click to zoom in on the board' })
@@ -973,14 +980,15 @@ for (const width of [1024, 1440, 2560]) {
     await expect(page).not.toHaveURL(/previewScale/);
     await expect(page).toHaveURL(/previewPage=2/);
     await page.goBack();
-    await expect(panel.getByText('300%', { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/previewScale=200/);
+    await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
   });
 }
 
 test('inline zoom supports keyboard and Spanish mobile preview without opening full screen', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 320, height: 568 });
   await openEditor(page, { count: 4, locale: 'es' });
   await page.getByRole('button', { name: 'Ver y descargar', exact: true }).click();
   const sheet = page.getByRole('dialog', { name: 'Vista previa en vivo', exact: true });
@@ -990,7 +998,10 @@ test('inline zoom supports keyboard and Spanish mobile preview without opening f
   });
   await imageButton.focus();
   await imageButton.press('Enter');
-  await expect(sheet.getByText('200', { exact: false })).toBeVisible();
+  await expect(page).toHaveURL(/previewScale=200/);
+  await expect(sheet.getByRole('button', { name: 'Alejar', exact: true })).toBeInViewport({
+    ratio: 1,
+  });
   await expect(page.getByRole('dialog', { name: 'Vista previa ampliada' })).toHaveCount(0);
   const viewport = sheet.getByRole('region', { name: 'Vista previa de la tabla con zoom' });
   await expect(sheet.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
@@ -1009,6 +1020,11 @@ test('inline zoom supports keyboard and Spanish mobile preview without opening f
   await expect(sheet).toBeVisible();
   await expect(imageButton).toBeFocused();
   await expect(sheet.getByRole('group', { name: 'Nivel de zoom' })).toHaveCount(0);
+  await imageButton.press('Enter');
+  await sheet.getByRole('button', { name: 'Alejar', exact: true }).click();
+  await expect(page).not.toHaveURL(/previewScale/);
+  await expect(imageButton).toBeFocused();
+  await expect(sheet).toBeVisible();
   await sheet.getByRole('button', { name: 'Cerrar vista previa', exact: true }).click();
   await expect(sheet).toHaveCount(0);
 });

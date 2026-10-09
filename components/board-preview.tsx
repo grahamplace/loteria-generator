@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getImageProps } from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { ChevronLeft, ChevronRight, Loader2, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Maximize2, X } from 'lucide-react';
 import { renderBoardToCanvas, type LotteriaCard } from '@/lib/generate-boards';
 import { MIN_EXPORT_CARD_COUNT } from '@/lib/constants';
 import type { BoardStyleOptions } from '@/lib/themes/presets';
@@ -47,7 +47,7 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
   const zoomParam = Number(searchParams.get('previewZoom'));
   const zoom = previewZoomLevels.find((value) => value === zoomParam) ?? 100;
   const inlineZoomParam = Number(searchParams.get('previewScale'));
-  const inlineZoom = previewZoomLevels.find((value) => value === inlineZoomParam) ?? 100;
+  const inlineZoom = inlineZoomParam > 100 ? 200 : 100;
   const needsDetail = expanded || inlineZoom > 100;
   const expandTrigger = useRef<HTMLElement | null>(null);
   const detailImages = useRef(new Map<string, Promise<HTMLImageElement>>());
@@ -195,12 +195,11 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
     expanded,
     zoom,
     inlineZoom,
-    setInlineZoom: (value: number) => {
+    setInlineZoom: (value: 100 | 200) => {
       const url = new URL(window.location.href);
       if (value === 100) url.searchParams.delete('previewScale');
       else url.searchParams.set('previewScale', String(value));
-      if (inlineZoom > 100 === value > 100) window.history.replaceState(null, '', url);
-      else window.history.pushState(null, '', url);
+      window.history.pushState(null, '', url);
     },
     zoomLevels: previewZoomLevels,
     detailPreview: detail?.signature === signature ? detail.src : null,
@@ -276,20 +275,48 @@ export function BoardPreviewPagination({ state }: { state: ReturnType<typeof use
   );
 }
 
-export function BoardPreviewExpand({ state }: { state: ReturnType<typeof useBoardPreview> }) {
+export function BoardPreviewActions({ state }: { state: ReturnType<typeof useBoardPreview> }) {
   const t = useTranslations('Themes.Builder');
   return (
-    <button
-      type="button"
-      onClick={state.expand}
-      disabled={!state.preview || !!state.previewError}
-      data-board-preview-expand
-      aria-label={t('expandPreview')}
-      className="inline-flex min-h-11 min-w-11 shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
-    >
-      <Maximize2 className="size-4" aria-hidden="true" />
-      <span className="hidden min-[380px]:inline">{t('expand')}</span>
-    </button>
+    <div className="flex shrink-0 items-center gap-1">
+      <button
+        type="button"
+        onClick={state.expand}
+        disabled={!state.preview || !!state.previewError}
+        data-board-preview-expand
+        aria-label={t('expandPreview')}
+        className="inline-flex min-h-11 min-w-11 shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
+      >
+        <Maximize2 className="size-4" aria-hidden="true" />
+        <span className="hidden min-[380px]:inline">{t('expand')}</span>
+      </button>
+      {state.inlineZoom > 100 && (
+        <button
+          type="button"
+          aria-label={t('zoomOut')}
+          title={t('zoomOut')}
+          data-board-inline-zoom
+          className="inline-flex size-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          onClick={(event) => {
+            // Focus the image on this surface, not its hidden desktop/mobile counterpart.
+            event.currentTarget
+              .closest('[data-board-preview]')
+              ?.querySelector<HTMLButtonElement>('[data-board-preview-image]')
+              ?.focus({ preventScroll: true });
+            state.setInlineZoom(100);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              event.stopPropagation();
+              event.currentTarget.click();
+            }
+          }}
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -313,12 +340,8 @@ export function BoardPreviewImage({
         viewportClassName={cn(
           fitViewport &&
             (state.pageCount > 1
-              ? inspecting
-                ? 'max-w-[min(100%,max(8rem,calc((100dvh-32.5rem)*17/22)))]'
-                : 'max-w-[min(100%,max(8rem,calc((100dvh-29rem)*17/22)))]'
-              : inspecting
-                ? 'max-w-[min(100%,max(8rem,calc((100dvh-28.5rem)*17/22)))]'
-                : 'max-w-[min(100%,max(8rem,calc((100dvh-25rem)*17/22)))]')
+              ? 'max-w-[min(100%,max(8rem,calc((100dvh-29rem)*17/22)))]'
+              : 'max-w-[min(100%,max(8rem,calc((100dvh-25rem)*17/22)))]')
         )}
       >
         {busy && (
@@ -372,12 +395,13 @@ export function BoardPreview(props: BoardPreviewProps) {
   return (
     <>
       <aside
+        data-board-preview
         aria-label={t('livePreview')}
         className="w-full min-w-0 max-w-sm justify-self-center rounded-xl border border-border bg-muted/30 p-3 lg:sticky lg:top-24"
       >
         <div className="mb-3 flex items-center justify-between gap-2">
           <h3 className="min-w-0 text-sm font-medium">{t('livePreview')}</h3>
-          <BoardPreviewExpand state={state} />
+          <BoardPreviewActions state={state} />
         </div>
         <BoardPreviewImage state={state} />
       </aside>
