@@ -564,7 +564,7 @@
       "uploadExport": "Agregar fotos y exportar",
       "processing": "Procesando {count} cartas…",
       "crop": "Recortar foto",
-      "cropHint": "Arrastra el recorte o usa las flechas del teclado en la selección. Se conserva tu foto original.",
+      "cropHint": "Arrastra para recortar. Tu foto original se guarda.",
       "resetCrop": "Usar foto completa",
       "saveCrop": "Guardar recorte",
       "cutInstruction": "Recorta por las líneas para separar las cartas",

@@ -558,7 +558,7 @@
       "uploadExport": "Add photos and export",
       "processing": "{count} cards processing…",
       "crop": "Crop photo",
-      "cropHint": "Drag a crop or use the arrow keys on the selection. Your original photo is kept.",
+      "cropHint": "Drag to crop. Your original photo is saved.",
       "resetCrop": "Use full photo",
       "saveCrop": "Save crop",
       "cutInstruction": "Cut along lines to make individual cards",
