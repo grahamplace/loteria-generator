@@ -152,7 +152,7 @@ test('rename works from both the picker and the design panel', async ({ page }) 
   const image = page.getByRole('complementary', { name: 'Live preview' }).getByRole('img');
   const before = await image.getAttribute('src');
   await title.fill('  Día de la Familia  ');
-  await page.getByRole('heading', { name: 'Design your set' }).click();
+  await page.getByRole('heading', { name: 'Drop photos to add cards' }).click();
   await expect(title).toHaveValue('Día de la Familia');
   await expect(title).not.toBeFocused();
   await expect(page.getByRole('button', { name: 'Switch board: Día de la Familia' })).toBeVisible();

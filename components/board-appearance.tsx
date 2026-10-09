@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import {
   themePresets,
   selectedBoardTheme,
@@ -17,7 +18,7 @@ import { PhotoModeSwitch } from '@/components/photo-mode-switch';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { ChevronDown, Loader2 } from 'lucide-react';
 
 export function BoardAppearance({
   styles,
@@ -42,6 +43,9 @@ export function BoardAppearance({
 }) {
   const t = useTranslations('Themes.Builder');
   const locale = useLocale() === 'es-MX' ? 'es-MX' : 'en';
+  const search = useSearchParams();
+  const open = search.get('designPanel') !== 'closed';
+  const contentId = useId();
   const titleId = useId();
   const titleErrorId = useId();
   const titleInput = useRef<HTMLInputElement>(null);
@@ -57,6 +61,17 @@ export function BoardAppearance({
   const pendingSaves = useRef(0);
   const titleSavingRef = useRef(false);
   const selected = selectedBoardTheme(styles);
+
+  function togglePanel() {
+    const url = new URL(window.location.href);
+    if (open) {
+      url.searchParams.set('designPanel', 'closed');
+      url.searchParams.delete('themePicker');
+    } else {
+      url.searchParams.delete('designPanel');
+    }
+    window.history.pushState(null, '', url);
+  }
 
   async function save(settings: {
     name?: string;
@@ -122,18 +137,37 @@ export function BoardAppearance({
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4 md:p-5" aria-label={t('title')}>
-      <div className="mb-4 flex min-h-11 flex-wrap items-baseline gap-x-3 gap-y-1 py-2">
-        <h2 className="font-display text-lg font-semibold">{t('title')}</h2>
-        <span className="hidden text-sm text-muted-foreground lg:inline">
-          {selected === 'custom'
-            ? t('custom')
-            : themePresets.find((p) => p.id === selected)?.name[locale]}
-        </span>
-      </div>
+    <section className="rounded-xl border border-border bg-card" aria-label={t('title')}>
+      <h2>
+        <button
+          type="button"
+          aria-label={t('title')}
+          aria-expanded={open}
+          aria-controls={contentId}
+          onClick={togglePanel}
+          className="flex min-h-14 w-full touch-manipulation items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:px-5"
+        >
+          <span className="min-w-0 flex-1 font-display text-lg font-semibold">{t('title')}</span>
+          <span className="max-w-[40%] truncate text-sm font-normal text-muted-foreground">
+            {selected === 'custom'
+              ? t('custom')
+              : themePresets.find((p) => p.id === selected)?.name[locale]}
+          </span>
+          <ChevronDown
+            aria-hidden="true"
+            className={cn(
+              'size-4 shrink-0 transition-transform motion-reduce:transition-none',
+              open && 'rotate-180'
+            )}
+          />
+        </button>
+      </h2>
       <div
+        id={contentId}
+        hidden={!open}
         className={cn(
-          'grid items-start gap-6',
+          'items-start gap-6 px-4 pb-4 pt-2 md:px-5 md:pb-5',
+          open ? 'grid' : 'hidden',
           showPreview && 'lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]'
         )}
       >
@@ -255,25 +289,27 @@ export function BoardAppearance({
               )}
             </form>
           </div>
-          <div className="mt-3 flex min-h-5 flex-wrap items-center gap-3">
-            {saving && (
-              <span role="status" className="flex gap-2 text-sm">
-                <Loader2
-                  className="h-4 w-4 animate-spin motion-reduce:animate-none"
-                  aria-hidden="true"
-                />
-                {t('saving')}
-              </span>
-            )}
-            {error && (
-              <p role="alert" className="text-sm text-destructive">
-                {error}
-              </p>
-            )}
-          </div>
         </div>
         {showPreview && <BoardPreview styles={styles} boardName={boardName} cards={cards} />}
       </div>
+      {(saving || error || (!open && titleError)) && (
+        <div className="flex min-h-5 flex-wrap items-center gap-3 px-4 pb-4 md:px-5 md:pb-5">
+          {saving && (
+            <span role="status" className="flex gap-2 text-sm">
+              <Loader2
+                className="h-4 w-4 animate-spin motion-reduce:animate-none"
+                aria-hidden="true"
+              />
+              {t('saving')}
+            </span>
+          )}
+          {(error || (!open && titleError)) && (
+            <p role="alert" className="text-sm text-destructive">
+              {error || titleError}
+            </p>
+          )}
+        </div>
+      )}
     </section>
   );
 }

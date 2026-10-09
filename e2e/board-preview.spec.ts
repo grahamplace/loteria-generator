@@ -78,6 +78,59 @@ for (const [locale, width] of [
   ['en', 1440],
   ['es', 390],
 ] as const) {
+  test(`design panel collapses without losing edits and restores through history (${locale})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await openEditor(page, { count: 20, locale });
+    const name = locale === 'en' ? 'Design your set' : 'Diseña tu juego';
+    const panel = page.getByRole('region', { name });
+    const toggle = panel.getByRole('button', { name, exact: true });
+    const title = panel.getByRole('textbox', {
+      name: locale === 'en' ? 'Board title' : 'Título del tablero',
+      exact: true,
+    });
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    const expandedHeight = (await panel.boundingBox())!.height;
+    await title.fill('Nuestra fiesta');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(title).toBeHidden();
+    await expect(page.getByRole('button', { name: /Nuestra fiesta/ })).toBeVisible();
+    await expect(toggle).toContainText('Halloween');
+    await expect(panel.getByRole('status')).toHaveCount(0);
+    const collapsedHeight = (await panel.boundingBox())!.height;
+    expect(collapsedHeight).toBeLessThan(90);
+    expect(expandedHeight - collapsedHeight).toBeGreaterThan(200);
+    await expect(page).toHaveURL(/designPanel=closed/);
+    await page.reload();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await toggle.focus();
+    await page.keyboard.press('Enter');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(title).toHaveValue('Nuestra fiesta');
+    await expect(toggle).toBeFocused();
+    await page.goBack();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await page.goForward();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await toggle.focus();
+    await page.keyboard.press('Space');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await page.screenshot({
+      path: `.scratch/theme-work/collapsed-design-${locale}.png`,
+      animations: 'disabled',
+    });
+    await toggle.click();
+    await title.fill('');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(panel.getByRole('alert')).toBeVisible();
+    await toggle.click();
+    await expect(title).toHaveValue('');
+    await expect(title).toHaveAttribute('aria-invalid', 'true');
+  });
+
   test(`upload-area photo mode stays in sync, waits for saving, and recovers (${locale})`, async ({
     page,
   }) => {
