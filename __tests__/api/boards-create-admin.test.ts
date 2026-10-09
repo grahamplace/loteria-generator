@@ -27,7 +27,7 @@ vi.mock('@/db', () => ({
 }));
 
 import { auth } from '@/lib/auth';
-import { POST } from '@/app/api/boards/route';
+import { GET, POST } from '@/app/api/boards/route';
 
 const ADMIN = { user: { email: 'graham@stonecutterlabs.com', id: 'admin-1' } };
 const USER = { user: { email: 'user@example.com', id: 'user-1' } };
@@ -69,5 +69,38 @@ describe('POST /api/boards admin behavior', () => {
     const res = await POST(makeReq({ name: 'Mine' }));
     expect(res.status).toBe(201);
     expect(insertValuesSpy).toHaveBeenCalledWith(expect.objectContaining({ isUnlocked: false }));
+  });
+});
+
+describe('GET /api/boards dashboard summaries', () => {
+  it('returns each saved design alongside the ordered, completed preview cards', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(USER as never);
+    const styles = { presetId: 'custom', backgroundColor: '#123456', borderStyle: 'double' };
+    boardsFindMany.mockResolvedValue([
+      {
+        id: 'custom-board',
+        name: 'My design',
+        styleOptions: styles,
+        cards: [
+          { id: 'second', number: 2, status: 'completed', illustrationUrl: '/second.webp' },
+          { id: 'pending', number: 3, status: 'processing', illustrationUrl: null },
+          { id: 'first', number: 1, status: 'completed', illustrationUrl: '/first.webp' },
+        ],
+      },
+      { id: 'legacy-board', name: 'Classic', styleOptions: null, cards: [] },
+    ]);
+    const res = await GET();
+    expect(res.status).toBe(200);
+    const { boards } = await res.json();
+    expect(boards[0]).toMatchObject({
+      styleOptions: styles,
+      cardCount: 3,
+      completedCardCount: 2,
+      previewCards: [
+        { id: 'first', number: 1 },
+        { id: 'second', number: 2 },
+      ],
+    });
+    expect(boards[1]).toMatchObject({ styleOptions: null, cardCount: 0, previewCards: [] });
   });
 });

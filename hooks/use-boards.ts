@@ -8,6 +8,7 @@ import type { Board, BoardStyleOptions } from '@/db/schema';
 interface BoardSummary {
   id: string;
   name: string;
+  styleOptions: BoardStyleOptions | null;
   isUnlocked: boolean;
   createdAt: Date;
   updatedAt: Date;

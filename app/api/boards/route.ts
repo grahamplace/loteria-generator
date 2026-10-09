@@ -45,6 +45,7 @@ export async function GET() {
       return {
         id: board.id,
         name: board.name,
+        styleOptions: board.styleOptions,
         isUnlocked: board.isUnlocked,
         createdAt: board.createdAt,
         updatedAt: board.updatedAt,

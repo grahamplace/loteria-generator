@@ -301,6 +301,7 @@
       "signOut": "Cerrar sesión"
     },
     "boardCard": {
+      "theme": "Tema",
       "cardsReady": "{completed} de {total} cartas listas",
       "unlockedAccess": "Acceso completo - hasta 54 cartas",
       "lockedAccess": "Vista previa gratis - hasta 4 cartas",

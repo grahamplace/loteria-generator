@@ -295,6 +295,7 @@
       "signOut": "Sign Out"
     },
     "boardCard": {
+      "theme": "Theme",
       "cardsReady": "{completed} of {total} cards ready",
       "unlockedAccess": "Full access - up to 54 cards",
       "lockedAccess": "Free preview - up to 4 cards",

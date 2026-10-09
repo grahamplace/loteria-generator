@@ -7,7 +7,8 @@ import { useBoards } from '@/hooks/use-boards';
 import { useSession } from '@/hooks/use-session';
 import { signOut } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { DashboardBoardTheme, DashboardBoardThumbnail } from '@/components/dashboard-board-design';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
@@ -163,14 +164,16 @@ export default function DashboardPage() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[1, 2, 3].map((i) => (
-              <Card key={i}>
-                <CardHeader>
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-4 w-full" />
-                </CardContent>
+              <Card key={i} className="p-4 sm:p-5">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="aspect-[17/22] w-20 shrink-0 min-[380px]:w-24 sm:w-32" />
+                  <div className="min-w-0 flex-1 space-y-3">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-6 w-28 rounded-full" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-3 w-3/4" />
+                  </div>
+                </div>
               </Card>
             ))}
           </div>
@@ -192,78 +195,76 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {boards.map((board) => {
               return (
-                <Link key={board.id} href={`/boards/${board.id}`} prefetch>
-                  <Card className="hover:shadow-md transition-shadow">
-                    <div className="flex items-stretch gap-2">
-                      <div className="shrink-0 w-44 px-5 py-4 self-center" aria-hidden="true">
-                        {board.completedCardCount > 0 ? (
-                          <Image
-                            src={`/api/boards/${board.id}/preview?v=${board.updatedAt}`}
-                            alt=""
-                            width={492}
-                            height={732}
-                            unoptimized
-                            className="w-full rounded-sm"
-                            draggable={false}
-                          />
-                        ) : (
-                          <div className="grid grid-cols-4 gap-0.5">
-                            {Array.from({ length: 16 }, (_, i) => (
-                              <div key={i} className="aspect-[2/3] bg-muted/40 rounded-[1px]" />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 flex items-start justify-between gap-2 py-6 pr-6">
-                        <div className="space-y-1 min-w-0">
-                          <div className="flex items-center gap-2 font-semibold">
-                            <span className="truncate">{board.name}</span>
-                            {board.isUnlocked ? (
-                              <Unlock className="h-4 w-4 text-green-600 shrink-0" />
-                            ) : (
-                              <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {t('boardCard.cardsReady', {
-                              completed: board.completedCardCount,
-                              total: board.cardCount,
-                            })}
-                          </p>
-                          <p className="text-xs text-muted-foreground pt-2">
-                            {board.isUnlocked
-                              ? t('boardCard.unlockedAccess')
-                              : t('boardCard.lockedAccess')}
-                          </p>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 shrink-0"
-                              aria-label={t('boardCard.moreActionsAriaLabel', { name: board.name })}
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setDeletingBoardId(board.id);
-                              }}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              {t('boardCard.deleteMenuItem')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                <Card
+                  key={board.id}
+                  className="relative h-full p-4 transition-shadow hover:shadow-md sm:p-5"
+                >
+                  <Link
+                    href={`/boards/${board.id}`}
+                    prefetch
+                    aria-label={board.name}
+                    className="absolute inset-0 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  />
+                  <div className="pointer-events-none flex items-center gap-3 sm:gap-4">
+                    <div className="w-20 shrink-0 min-[380px]:w-24 sm:w-32">
+                      <DashboardBoardThumbnail
+                        boardId={board.id}
+                        boardName={board.name}
+                        updatedAt={board.updatedAt}
+                        cardCount={board.previewCards.length}
+                        styles={board.styleOptions}
+                      />
                     </div>
-                  </Card>
-                </Link>
+                    <div className="min-w-0 flex-1">
+                      <div className="min-w-0 space-y-2">
+                        <h3 className="flex items-center gap-2 pr-8 font-semibold">
+                          <span className="line-clamp-2 break-words">{board.name}</span>
+                          {board.isUnlocked ? (
+                            <Unlock className="h-4 w-4 text-accent shrink-0" />
+                          ) : (
+                            <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
+                          )}
+                        </h3>
+                        <DashboardBoardTheme styles={board.styleOptions} />
+                        <p className="text-sm text-muted-foreground">
+                          {t('boardCard.cardsReady', {
+                            completed: board.completedCardCount,
+                            total: board.cardCount,
+                          })}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {board.isUnlocked
+                            ? t('boardCard.unlockedAccess')
+                            : t('boardCard.lockedAccess')}
+                        </p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="pointer-events-auto absolute right-2 top-2 z-10 size-11 touch-manipulation"
+                            aria-label={t('boardCard.moreActionsAriaLabel', { name: board.name })}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setDeletingBoardId(board.id);
+                            }}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {t('boardCard.deleteMenuItem')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                </Card>
               );
             })}
           </div>
