@@ -139,15 +139,6 @@ export function CardEditModal({
               </div>
             </fieldset>
           )}
-          {(switching || isProcessing) && (
-            <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2
-                className="size-4 shrink-0 animate-spin motion-reduce:animate-none"
-                aria-hidden="true"
-              />
-              {t(isProcessing ? 'creatingIllustration' : 'switchingPhotoMode')}
-            </p>
-          )}
           {modeError && (
             <p role="alert" className="text-sm text-destructive">
               {modeError}
@@ -206,6 +197,18 @@ export function CardEditModal({
                   sizes="(max-width: 768px) 128px, 160px"
                   className="object-cover"
                 />
+                {(switching || isProcessing) && (
+                  <div
+                    role="status"
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/85 px-3 text-center text-sm font-medium text-foreground backdrop-blur-[2px]"
+                  >
+                    <Loader2
+                      className="size-5 shrink-0 animate-spin motion-reduce:animate-none"
+                      aria-hidden="true"
+                    />
+                    <span>{t(isProcessing ? 'creatingIllustration' : 'switchingPhotoMode')}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
