@@ -75,10 +75,10 @@ test.describe('themed Lotería', () => {
     expect(data.board.photoMode).toBe('original');
     expect(data.board.styleOptions).toMatchObject({ presetId: 'halloween', showTitle: true });
     await expect(
-      page.getByRole('checkbox', { name: 'Incluir título en las tablas' })
+      page.getByRole('checkbox', { name: 'Mostrar título en las tablas' })
     ).toBeVisible();
     await expect(
-      page.getByRole('checkbox', { name: 'Incluir título en las tablas' })
+      page.getByRole('checkbox', { name: 'Mostrar título en las tablas' })
     ).toBeChecked();
     await expect(page.locator('#photo-mode')).toHaveValue('original');
   });
@@ -150,7 +150,7 @@ test.describe('themed Lotería', () => {
       label: 'Mi foto',
     });
     await page.reload();
-    const titleToggle = page.getByRole('checkbox', { name: 'Include board title', exact: true });
+    const titleToggle = page.getByRole('checkbox', { name: 'Show title on boards', exact: true });
     await expect(titleToggle).toBeVisible();
     await expect(titleToggle).toHaveAccessibleDescription(
       'Print “Spooky José” at the top of each board.'

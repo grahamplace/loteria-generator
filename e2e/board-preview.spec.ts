@@ -461,7 +461,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
     'double'
   );
-  await expect(page.getByRole('checkbox', { name: 'Include board title' })).toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Show title on boards' })).toBeChecked();
 });
 
 test('mobile custom controls are compact, validate colors, and preserve the saved design on failure', async ({

@@ -521,7 +521,7 @@
       "change": "Change",
       "changeTheme": "Change theme, currently {name}",
       "closeThemePicker": "Close theme picker",
-      "showTitle": "Include board title",
+      "showTitle": "Show title on boards",
       "printedTitle": "Print “{name}” at the top of each board.",
       "photoMode": "New photo uploads",
       "illustrated": "Illustrate my photos",

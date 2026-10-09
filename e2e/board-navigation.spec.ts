@@ -228,17 +228,17 @@ test('mobile title editing validates, retains failed saves, and works with the p
   await expect(
     page.getByRole('button', { name: 'Cambiar tablero: Cumpleaños de la abuela' })
   ).toBeVisible();
-  await page.getByRole('checkbox', { name: 'Incluir título en las tablas' }).click();
+  await page.getByRole('checkbox', { name: 'Mostrar título en las tablas' }).click();
   await expect(
-    page.getByRole('checkbox', { name: 'Incluir título en las tablas' })
+    page.getByRole('checkbox', { name: 'Mostrar título en las tablas' })
   ).not.toBeChecked();
-  const titleVisibility = page.getByRole('checkbox', { name: 'Incluir título en las tablas' });
+  const titleVisibility = page.getByRole('checkbox', { name: 'Mostrar título en las tablas' });
   await title.fill('Fiesta familiar');
   await titleVisibility.click();
   await expect(
     page.getByRole('button', { name: 'Cambiar tablero: Fiesta familiar' })
   ).toBeVisible();
-  await expect(page.getByRole('checkbox', { name: 'Incluir título en las tablas' })).toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Mostrar título en las tablas' })).toBeChecked();
   await title.fill('Unsaved changes');
   await title.press('Escape');
   await expect(title).toHaveValue('Fiesta familiar');
