@@ -1,16 +1,16 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page, type Route } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 // The editor/renderer are real; all card data and processing results stay in
 // browser-local fixtures. No customer data, database writes, or image API calls.
-async function editor(page: Page, locale = 'en') {
+async function editor(page: Page, locale = 'en', hasIllustration = false) {
   const boardId = 'photo-mode-fixture';
   const cardId = '00000000-0000-0000-0000-000000000001';
   const photo = '/themes/birthday/photo.webp';
   const drawing = '/themes/birthday/card.webp';
   let version = Date.now();
-  let generated = false;
+  let generated = hasIllustration;
   let failNext = false;
   let failGeneration = false;
   let generations = 0;
@@ -22,7 +22,7 @@ async function editor(page: Page, locale = 'en') {
     riddle: 'Un recuerdo',
     originalImageUrl: photo,
     illustrationUrl: photo,
-    savedIllustrationUrl: null as string | null,
+    savedIllustrationUrl: hasIllustration ? drawing : (null as string | null),
     preserveOriginal: true,
     isDefault: false,
     cropData: null,
@@ -125,6 +125,72 @@ for (const [locale, width] of [
   ['en', 1440],
   ['es', 390],
 ] as const) {
+  test(`keeps the preview covered until the selected image loads (${locale})`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await editor(page, locale, true);
+    const dialog = page.getByRole('dialog');
+    const preview = dialog.locator('img').last();
+    await expect
+      .poll(() => preview.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))
+      .toBe(true);
+    for (const choice of locale === 'en'
+      ? ['Use illustration', 'Use original photo']
+      : ['Usar ilustración', 'Usar foto original']) {
+      const previousSource = await preview.getAttribute('src');
+      const previousVersion = new URL(previousSource!, 'http://localhost:3006').searchParams.get(
+        'v'
+      );
+      let releaseImage!: () => void;
+      const imageGate = new Promise<void>((resolve) => {
+        releaseImage = resolve;
+      });
+      let requested = false;
+      const delayImage = async (route: Route) => {
+        const url = new URL(route.request().url());
+        if (
+          url.pathname.endsWith('/illustration') &&
+          url.searchParams.get('v') !== previousVersion
+        ) {
+          requested = true;
+          await imageGate;
+        }
+        await route.fallback();
+      };
+      await page.route('**/api/images/photo-mode-fixture/**', delayImage);
+      try {
+        await dialog
+          .getByRole('radio', {
+            name: choice,
+            exact: true,
+          })
+          .click();
+        await expect.poll(() => requested).toBe(true);
+        await expect(preview).not.toHaveAttribute('src', previousSource!);
+        await expect(dialog.getByRole('status')).toBeVisible();
+        // The request has finished; the selected image is still unavailable.
+        await expect(
+          dialog.getByRole('radio', {
+            name: choice,
+            exact: true,
+          })
+        ).toBeEnabled();
+        await expect(dialog.getByRole('status')).toBeVisible();
+        const frame = await preview.boundingBox();
+        const overlay = await dialog.getByRole('status').boundingBox();
+        expect(overlay).toEqual(frame);
+      } finally {
+        releaseImage();
+      }
+      await expect
+        .poll(() =>
+          preview.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)
+        )
+        .toBe(true);
+      await expect(dialog.getByRole('status')).toHaveCount(0);
+      await page.unroute('**/api/images/photo-mode-fixture/**', delayImage);
+    }
+  });
+
   test(`switch photo and illustration, reuse the drawing, and preserve edits (${locale})`, async ({
     page,
   }) => {
@@ -204,4 +270,35 @@ test('failed illustration can retry or return to the photo without losing the ca
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   await expect(page.getByText('El Cumpleaños', { exact: true })).toBeVisible();
+});
+
+test('a failed preview image can reload without generating another illustration', async ({
+  page,
+}) => {
+  const fixture = await editor(page, 'en', true);
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('status')).toHaveCount(0);
+  let failImage = true;
+  await page.route('**/api/images/photo-mode-fixture/**', async (route) => {
+    if (failImage && new URL(route.request().url()).pathname.endsWith('/illustration')) {
+      return route.fulfill({ status: 503, body: 'Unavailable' });
+    }
+    await route.fallback();
+  });
+  await dialog.getByRole('radio', { name: 'Use illustration', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toHaveText('Couldn’t load image.');
+  await expect(dialog.getByRole('status')).toHaveCount(0);
+  failImage = false;
+  await dialog.getByRole('button', { name: 'Retry', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toHaveCount(0);
+  await expect(dialog.getByRole('status')).toHaveCount(0);
+  await expect
+    .poll(() =>
+      dialog
+        .locator('img')
+        .last()
+        .evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)
+    )
+    .toBe(true);
+  expect(fixture.generations()).toBe(0);
 });

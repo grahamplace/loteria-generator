@@ -27,6 +27,73 @@ interface CardEditModalProps {
   onChangePhotoMode?: (mode: PhotoMode) => Promise<void>;
 }
 
+// Keyed by source so a previous image's load event cannot dismiss the overlay.
+function CardFacePreview({
+  src,
+  alt,
+  switching,
+  isProcessing,
+}: {
+  src: string;
+  alt: string;
+  switching: boolean;
+  isProcessing: boolean;
+}) {
+  const t = useTranslations('BoardEditor.CardEditModal');
+  const [imageState, setImageState] = useState<'loading' | 'loaded' | 'error'>('loading');
+  const [attempt, setAttempt] = useState(0);
+  const busy = switching || isProcessing || imageState === 'loading';
+
+  return (
+    <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+      <Image
+        key={attempt}
+        {...cardImageProps(src, CARD_GRID_THUMB_WIDTH)}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 128px, 160px"
+        loading="eager"
+        className="object-cover"
+        onLoad={() => setImageState('loaded')}
+        onError={() => setImageState('error')}
+      />
+      {busy ? (
+        <div
+          role="status"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/85 px-3 text-center text-sm font-medium text-foreground backdrop-blur-[2px]"
+        >
+          <Loader2
+            className="size-5 shrink-0 animate-spin motion-reduce:animate-none"
+            aria-hidden="true"
+          />
+          <span>
+            {t(
+              isProcessing
+                ? 'creatingIllustration'
+                : switching
+                  ? 'switchingPhotoMode'
+                  : 'loadingImage'
+            )}
+          </span>
+        </div>
+      ) : imageState === 'error' ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background px-3 text-center text-sm">
+          <p role="alert">{t('imageLoadError')}</p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setImageState('loading');
+              setAttempt((value) => value + 1);
+            }}
+          >
+            {t('retryImage')}
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function CardEditModal({
   card,
   originalImage,
@@ -48,6 +115,7 @@ export function CardEditModal({
   const [switching, setSwitching] = useState(false);
   const [modeError, setModeError] = useState('');
   const mode: PhotoMode = preserveOriginal ? 'original' : 'illustrated';
+  const previewSrc = card.illustration || '/placeholder.svg';
   async function changeMode(next: PhotoMode) {
     if (!onChangePhotoMode || switching || isProcessing) return;
     setSwitching(true);
@@ -109,7 +177,7 @@ export function CardEditModal({
         <div className="px-4 md:px-6 py-3 md:py-4 space-y-3 overflow-y-auto overscroll-contain">
           {originalImage && onChangePhotoMode && (
             <fieldset disabled={switching || isProcessing} className="space-y-2">
-              <legend className="mb-2 text-sm font-medium">{t('photoModeLabel')}</legend>
+              <legend className="sr-only">{t('photoModeLabel')}</legend>
               <div className="grid grid-cols-2 gap-2">
                 {(['original', 'illustrated'] as const).map((choice) => {
                   const Icon = choice === 'original' ? ImageIcon : Sparkles;
@@ -186,30 +254,13 @@ export function CardEditModal({
                   {preserveOriginal ? t('originalPhotoLabel') : t('illustrationLabel')}
                 </p>
               )}
-              <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-muted">
-                <Image
-                  {...cardImageProps(
-                    card.illustration || '/placeholder.svg',
-                    CARD_GRID_THUMB_WIDTH
-                  )}
-                  alt={card.label}
-                  fill
-                  sizes="(max-width: 768px) 128px, 160px"
-                  className="object-cover"
-                />
-                {(switching || isProcessing) && (
-                  <div
-                    role="status"
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/85 px-3 text-center text-sm font-medium text-foreground backdrop-blur-[2px]"
-                  >
-                    <Loader2
-                      className="size-5 shrink-0 animate-spin motion-reduce:animate-none"
-                      aria-hidden="true"
-                    />
-                    <span>{t(isProcessing ? 'creatingIllustration' : 'switchingPhotoMode')}</span>
-                  </div>
-                )}
-              </div>
+              <CardFacePreview
+                key={previewSrc}
+                src={previewSrc}
+                alt={card.label}
+                switching={switching}
+                isProcessing={isProcessing}
+              />
             </div>
           </div>
 
