@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Switch } from '@/components/ui/switch';
 import type { PhotoMode } from '@/lib/themes/presets';
@@ -37,7 +37,10 @@ export function PhotoModeSwitch({
           className={`${styles.track} cursor-pointer transition-colors motion-reduce:transition-none`}
           thumbClassName={styles.thumb}
         />
-        <span>{t('illustrated')}</span>
+        <span className="inline-flex items-center gap-2">
+          <Sparkles className="size-4 shrink-0" aria-hidden="true" />
+          {t('illustrated')}
+        </span>
         <span className="size-4" aria-hidden="true">
           {saving && <Loader2 className="size-4 animate-spin motion-reduce:animate-none" />}
         </span>
