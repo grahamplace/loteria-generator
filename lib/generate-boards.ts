@@ -460,6 +460,7 @@ export async function renderBoardToCanvas(
     width,
     height,
     titleBandHeight: hasTitle ? BOARD_TITLE_BAND_PX : 0,
+    hasFrame: resolved.themed,
   });
   const { cardWidth, cardHeight, cardSpacing, offsetX, offsetY, titleBand } = layout;
 
