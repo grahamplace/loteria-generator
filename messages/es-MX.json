@@ -367,7 +367,7 @@
       "moreNeeded": "{count} cartas más",
       "mobileCardsStatus": "{processed}/{max} cartas",
       "mobileSaved": "Guardado",
-      "addClassic": "Agregar clásica",
+      "addClassic": "Agregar cartas clásicas",
       "addClassicAriaLabel": "Agregar una carta clásica de Lotería a este tablero",
       "addClassicDisabledTitle": "Límite de cartas alcanzado",
       "callerSheetTitle": "Hoja del cantor",

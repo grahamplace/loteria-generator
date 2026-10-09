@@ -361,7 +361,7 @@
       "moreNeeded": "{count} more cards",
       "mobileCardsStatus": "{processed}/{max} cards",
       "mobileSaved": "Saved",
-      "addClassic": "Add classic",
+      "addClassic": "Add classic cards",
       "addClassicAriaLabel": "Add a classic Lotería card to this board",
       "addClassicDisabledTitle": "Card limit reached",
       "callerSheetTitle": "Caller Sheet",
