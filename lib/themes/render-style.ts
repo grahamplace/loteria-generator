@@ -1,5 +1,6 @@
 import {
   getTheme,
+  boardBorderStyle,
   type BoardStyleOptions,
   type BoardDesignValues,
   type ThemeId,
@@ -33,8 +34,7 @@ export function presetBoardStyle(id: ThemeId): BoardDesignValues {
     borderColor: color('accent'),
     numberColor: id === 'classic' ? printColor('--loteria-number-ink') : color('number'),
     font: preset.font,
-    borderStyle:
-      id === 'classic' ? 'hand-drawn' : preset.frame === 'none' ? 'double' : preset.frame,
+    borderStyle: boardBorderStyle({ presetId: id }),
   };
 }
 

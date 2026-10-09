@@ -221,6 +221,13 @@ export function isThemeId(value: unknown): value is ThemeId {
 export function getTheme(id?: string | null) {
   return themePresets.find((preset) => preset.id === id) ?? themePresets[0];
 }
+export function boardBorderStyle(options?: BoardStyleOptions | null): BorderStyle {
+  const preset = getTheme(options?.presetId);
+  return (
+    options?.borderStyle ??
+    (preset.id === 'classic' ? 'hand-drawn' : preset.frame === 'none' ? 'double' : preset.frame)
+  );
+}
 export function themeVariables(id: ThemeId) {
   return {
     '--theme-paper': `var(--loteria-${id}-paper)`,
@@ -228,5 +235,17 @@ export function themeVariables(id: ThemeId) {
     '--theme-badge': `var(--loteria-${id}-badge)`,
     '--theme-accent': `var(--loteria-${id}-accent)`,
     '--theme-font': `'${getTheme(id).font}', var(--font-jost), sans-serif`,
+  };
+}
+
+/** CSS colors for a saved design, including legacy and customized presets. */
+export function boardThemeVariables(options?: BoardStyleOptions | null) {
+  return {
+    ...themeVariables(getTheme(options?.presetId).id),
+    ...(options?.backgroundColor && { '--theme-paper': options.backgroundColor }),
+    ...(options?.labelColor && { '--theme-ink': options.labelColor }),
+    ...(options?.badgeColor && { '--theme-badge': options.badgeColor }),
+    ...(options?.borderColor && { '--theme-accent': options.borderColor }),
+    ...(options?.font && { '--theme-font': `'${options.font}', var(--font-jost), sans-serif` }),
   };
 }
