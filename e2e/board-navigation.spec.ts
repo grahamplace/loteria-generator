@@ -61,6 +61,9 @@ async function editor(
           failRename = false;
           return route.fulfill({ status: 500, json: { error: 'Retry rename' } });
         }
+        if (route.request().postDataJSON()?.name) {
+          await new Promise((resolve) => setTimeout(resolve, 120));
+        }
         Object.assign(board, route.request().postDataJSON());
       }
       return route.fulfill({ json: { board } });
@@ -149,9 +152,9 @@ test('rename works from both the picker and the design panel', async ({ page }) 
   const image = page.getByRole('complementary', { name: 'Live preview' }).getByRole('img');
   const before = await image.getAttribute('src');
   await title.fill('  Día de la Familia  ');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('heading', { name: 'Design your set' }).click();
   await expect(title).toHaveValue('Día de la Familia');
-  await expect(title).toBeFocused();
+  await expect(title).not.toBeFocused();
   await expect(page.getByRole('button', { name: 'Switch board: Día de la Familia' })).toBeVisible();
   await expect.poll(() => image.getAttribute('src')).not.toBe(before);
   await page.screenshot({
@@ -229,17 +232,20 @@ test('mobile title editing validates, retains failed saves, and works with the p
   await expect(
     page.getByRole('checkbox', { name: 'Incluir título en las tablas' })
   ).not.toBeChecked();
+  const titleVisibility = page.getByRole('checkbox', { name: 'Incluir título en las tablas' });
   await title.fill('Fiesta familiar');
-  await title.press('Enter');
+  await titleVisibility.click();
   await expect(
     page.getByRole('button', { name: 'Cambiar tablero: Fiesta familiar' })
   ).toBeVisible();
-  await expect(
-    page.getByRole('checkbox', { name: 'Incluir título en las tablas' })
-  ).not.toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Incluir título en las tablas' })).toBeChecked();
   await title.fill('Unsaved changes');
   await title.press('Escape');
   await expect(title).toHaveValue('Fiesta familiar');
+  await title.blur();
+  await expect(
+    page.getByRole('button', { name: 'Cambiar tablero: Fiesta familiar' })
+  ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({
     path: '.scratch/theme-work/board-title-mobile.png',

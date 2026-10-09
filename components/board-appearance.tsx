@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import {
   themePresets,
@@ -49,7 +49,10 @@ export function BoardAppearance({
   const titleChanged = titleValue !== boardName;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const savingRef = useRef(false);
+  const [savingDesign, setSavingDesign] = useState(false);
+  const saveQueue = useRef(Promise.resolve());
+  const pendingSaves = useRef(0);
+  const titleSavingRef = useRef(false);
   const selected = selectedBoardTheme(styles);
 
   async function save(settings: {
@@ -57,21 +60,29 @@ export function BoardAppearance({
     styleOptions?: BoardStyleOptions;
     photoMode?: PhotoMode;
   }) {
-    if (savingRef.current) return false;
-    savingRef.current = true;
+    const changesDesign = settings.name === undefined;
+    pendingSaves.current += 1;
     setSaving(true);
-    setError('');
-    try {
-      const saved = await onSave(settings);
-      if (!saved) setError(t('saveError'));
-      return saved;
-    } catch {
-      setError(t('saveError'));
-      return false;
-    } finally {
-      savingRef.current = false;
-      setSaving(false);
-    }
+    if (changesDesign) setSavingDesign(true);
+    // A blur save must not swallow the setting the user clicks next. Serialize
+    // the writes so full-board responses cannot restore an older title/design.
+    const request = saveQueue.current.then(async () => {
+      setError('');
+      try {
+        const saved = await onSave(settings);
+        if (!saved) setError(t('saveError'));
+        return saved;
+      } catch {
+        setError(t('saveError'));
+        return false;
+      } finally {
+        pendingSaves.current -= 1;
+        setSaving(pendingSaves.current > 0);
+        if (changesDesign) setSavingDesign(false);
+      }
+    });
+    saveQueue.current = request.then(() => {});
+    return request;
   }
 
   useEffect(() => {
@@ -84,25 +95,26 @@ export function BoardAppearance({
     return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
   }, [titleChanged]);
 
-  async function saveTitle(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (savingRef.current) return;
+  async function saveTitle(focusInput = false) {
+    if (titleSavingRef.current) return;
     const name = titleValue.trim();
     if (!name || name.length > 200) {
       setTitleError(t('titleValidation'));
-      titleInput.current?.focus();
+      if (focusInput) titleInput.current?.focus();
       return;
     }
     setTitleError('');
-    titleInput.current?.focus();
+    if (focusInput) titleInput.current?.focus();
     if (name === boardName) {
       setTitleDraft(null);
       return;
     }
+    titleSavingRef.current = true;
     setSavingTitle(true);
     if (await save({ name })) {
       setTitleDraft(null);
     }
+    titleSavingRef.current = false;
     setSavingTitle(false);
   }
 
@@ -123,11 +135,11 @@ export function BoardAppearance({
         )}
       >
         <div className="min-w-0">
-          <fieldset disabled={saving} className="space-y-5">
+          <fieldset disabled={savingDesign} className="space-y-5">
             <legend className="sr-only">{t('chooseTheme')}</legend>
             <BoardThemePicker
               selected={selected}
-              saving={saving}
+              saving={savingDesign}
               error={error}
               onSelect={async (presetId) => {
                 const saved = await save({
@@ -148,7 +160,7 @@ export function BoardAppearance({
             <BoardDesignControls
               styles={styles}
               boardName={boardName}
-              disabled={saving}
+              disabled={savingDesign}
               onChange={(patch) =>
                 void save({
                   styleOptions: {
@@ -188,7 +200,7 @@ export function BoardAppearance({
               <input
                 type="checkbox"
                 checked={styles?.showTitle ?? false}
-                disabled={saving}
+                disabled={savingDesign}
                 onChange={(event) =>
                   void save({ styleOptions: { ...styles, showTitle: event.target.checked } })
                 }
@@ -196,7 +208,14 @@ export function BoardAppearance({
               />
               {t('showTitle')}
             </label>
-            <form onSubmit={saveTitle} noValidate className="mt-1 max-w-xl">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void saveTitle(true);
+              }}
+              noValidate
+              className="mt-1 max-w-xl"
+            >
               <label htmlFor={titleId} className="sr-only">
                 {t('boardTitle')}
               </label>
@@ -210,6 +229,9 @@ export function BoardAppearance({
                   readOnly={saving}
                   aria-invalid={!!titleError}
                   aria-describedby={titleError ? titleErrorId : undefined}
+                  onBlur={() => {
+                    if (titleChanged) void saveTitle();
+                  }}
                   onChange={(event) => {
                     setTitleDraft(event.target.value);
                     setTitleError('');
