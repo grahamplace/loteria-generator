@@ -591,8 +591,8 @@
         "waves": "Olas",
         "papel": "Papel picado"
       },
-      "expand": "Ampliar",
-      "expandPreview": "Ampliar vista previa de la tabla",
+      "expand": "Pantalla completa",
+      "expandPreview": "Vista previa en pantalla completa",
       "expandedPreview": "Vista previa ampliada",
       "closeExpandedPreview": "Cerrar vista previa ampliada",
       "zoomIn": "Acercar",

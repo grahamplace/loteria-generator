@@ -571,7 +571,7 @@ for (const width of [1024, 1440, 2560]) {
     await page.setViewportSize({ width, height: 900 });
     await openEditor(page, { count: 54 });
     const panel = page.getByRole('complementary', { name: 'Live preview' });
-    const expand = panel.getByRole('button', { name: 'Expand board preview' });
+    const expand = panel.getByRole('button', { name: 'Full Screen preview' });
     await expect(expand).toBeVisible();
     const smallWidth = (await panel.getByRole('img').boundingBox())!.width;
     await expand.focus();
@@ -636,7 +636,7 @@ test('Spanish mobile expanded preview layers over the sheet and survives refresh
   const open = page.getByRole('button', { name: 'Ver y descargar', exact: true });
   await open.click();
   const sheet = page.getByRole('dialog', { name: 'Vista previa en vivo', exact: true });
-  const expand = sheet.getByRole('button', { name: 'Ampliar vista previa de la tabla' });
+  const expand = sheet.getByRole('button', { name: 'Vista previa en pantalla completa' });
   await expand.click();
   const viewer = page.getByRole('dialog', { name: 'Vista previa ampliada', exact: true });
   await expect(viewer).toBeVisible();
@@ -688,7 +688,7 @@ test('expanded preview stays usable on a slower device and connection', async ({
   await page.getByRole('button', { name: 'Preview & download', exact: true }).click();
   const expand = page
     .getByRole('dialog', { name: 'Live preview', exact: true })
-    .getByRole('button', { name: 'Expand board preview' });
+    .getByRole('button', { name: 'Full Screen preview' });
   await expect(expand).toBeVisible();
   const session = await context.newCDPSession(page);
   await session.send('Emulation.setCPUThrottlingRate', { rate: 4 });
@@ -899,12 +899,12 @@ for (const width of [1024, 1440, 2560]) {
     const image = panel.getByRole('img');
     await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
     const fittedBounds = (await viewport.boundingBox())!;
-    const expand = panel.getByRole('button', { name: 'Expand board preview' });
+    const expand = panel.getByRole('button', { name: 'Full Screen preview' });
     const fittedExpand = (await expand.boundingBox())!;
     const fittedZoom = (await panel
       .getByRole('button', { name: 'Zoom in', exact: true })
       .boundingBox())!;
-    expect(fittedZoom.x + fittedZoom.width).toBeLessThanOrEqual(fittedExpand.x);
+    expect(fittedExpand.x + fittedExpand.width).toBeLessThanOrEqual(fittedZoom.x);
     await image.click({ position: { x: 80, y: 90 } });
     await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -964,7 +964,7 @@ for (const width of [1024, 1440, 2560]) {
       animations: 'disabled',
       path: `.scratch/theme-work/preview-inline-${width}.png`,
     });
-    await panel.getByRole('button', { name: 'Expand board preview' }).click();
+    await panel.getByRole('button', { name: 'Full Screen preview' }).click();
     const expanded = page.getByRole('dialog', { name: 'Board preview', exact: true });
     await expect(expanded).toBeVisible();
     await page.keyboard.press('Escape');

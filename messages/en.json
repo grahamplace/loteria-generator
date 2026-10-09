@@ -585,8 +585,8 @@
         "waves": "Waves",
         "papel": "Papel picado"
       },
-      "expand": "Expand",
-      "expandPreview": "Expand board preview",
+      "expand": "Full Screen",
+      "expandPreview": "Full Screen preview",
       "expandedPreview": "Board preview",
       "closeExpandedPreview": "Close expanded preview",
       "zoomIn": "Zoom in",

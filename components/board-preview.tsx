@@ -265,6 +265,17 @@ export function BoardPreviewActions({ state }: { state: ReturnType<typeof useBoa
     <div className="flex shrink-0 items-center gap-1">
       <button
         type="button"
+        onClick={state.expand}
+        disabled={!state.preview || !!state.previewError}
+        data-board-preview-expand
+        aria-label={t('expandPreview')}
+        className="inline-flex min-h-11 min-w-11 shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
+      >
+        <Maximize2 className="size-4" aria-hidden="true" />
+        <span className="hidden min-[380px]:inline">{t('expand')}</span>
+      </button>
+      <button
+        type="button"
         aria-label={t(zoomed ? 'zoomOut' : 'zoomIn')}
         title={t(zoomed ? 'zoomOut' : 'zoomIn')}
         disabled={!zoomed && (!state.preview || !!state.previewError)}
@@ -293,17 +304,6 @@ export function BoardPreviewActions({ state }: { state: ReturnType<typeof useBoa
         ) : (
           <ZoomIn className="size-4" aria-hidden="true" />
         )}
-      </button>
-      <button
-        type="button"
-        onClick={state.expand}
-        disabled={!state.preview || !!state.previewError}
-        data-board-preview-expand
-        aria-label={t('expandPreview')}
-        className="inline-flex min-h-11 min-w-11 shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
-      >
-        <Maximize2 className="size-4" aria-hidden="true" />
-        <span className="hidden min-[380px]:inline">{t('expand')}</span>
       </button>
     </div>
   );
