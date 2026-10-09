@@ -297,7 +297,7 @@ test('mobile theme picker keeps the editor compact and saves a choice before clo
       showTitle: true,
       backgroundColor: '#f5efdf',
       font: 'Jost',
-      borderStyle: 'floral',
+      borderStyle: 'double',
     }),
   });
   await expect(sheet).toHaveCount(0);
@@ -459,7 +459,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
     'Jost'
   );
   await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
-    'floral'
+    'double'
   );
   await expect(page.getByRole('checkbox', { name: 'Include board title' })).toBeChecked();
 });

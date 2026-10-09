@@ -45,14 +45,17 @@ export function resolveBoardStyle(options: BoardStyleOptions = {}) {
     // Assign only defined fields; legacy boards may contain partial color settings.
     if (options[key] !== undefined) Object.assign(design, { [key]: options[key] });
   }
+  // Resolve retired decorations on read so existing boards and Custom history
+  // match the current picker and exports without rewriting saved designs.
+  design.borderStyle = boardBorderStyle(options);
   return {
     ...design,
     // Existing boards retain their typography until a design is explicitly saved.
     labelFont: options.font ?? 'Jost',
     numberFont: options.font ?? 'Caveat',
-    frame: (['hand-drawn', 'solid', 'double', 'dashed'].includes(design.borderStyle)
-      ? 'none'
-      : design.borderStyle) as FrameStyle,
+    frame: (design.borderStyle === 'web' || design.borderStyle === 'pencils'
+      ? design.borderStyle
+      : 'none') satisfies FrameStyle,
     themed: design.borderStyle !== 'hand-drawn' && design.borderStyle !== 'none',
   };
 }
@@ -110,35 +113,6 @@ export function drawThemeFrame(
         ctx.arc(0, 0, radius, 0, Math.PI / 2);
         ctx.stroke();
       }
-    } else if (style.frame === 'floral' || style.frame === 'leaves') {
-      for (let i = 0; i < 5; i++) {
-        ctx.save();
-        ctx.rotate((i * Math.PI) / 4);
-        ctx.beginPath();
-        ctx.ellipse(32, 0, 25, 9, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-      }
-    } else if (style.frame === 'waves') {
-      for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.arc(30, 30, 15 + i * 18, 0, Math.PI);
-        ctx.stroke();
-      }
-    } else if (style.frame === 'papel') {
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(120, 0);
-      ctx.lineTo(100, 55);
-      ctx.lineTo(60, 35);
-      ctx.lineTo(20, 55);
-      ctx.closePath();
-      ctx.stroke();
-    } else if (style.frame === 'sport') {
-      ctx.beginPath();
-      ctx.arc(25, 25, 30, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.strokeRect(10, 10, 30, 30);
     } else if (style.frame === 'pencils') {
       ctx.rotate(Math.PI / 4);
       ctx.strokeRect(0, -8, 90, 16);
@@ -147,19 +121,6 @@ export function drawThemeFrame(
       ctx.lineTo(108, 0);
       ctx.lineTo(90, 8);
       ctx.stroke();
-    } else if (style.frame !== 'none') {
-      for (let i = 0; i < 5; i++) {
-        ctx.save();
-        ctx.translate(i * 23, (i % 2) * 18);
-        ctx.rotate(i * 0.4);
-        ctx.beginPath();
-        ctx.moveTo(-8, 0);
-        ctx.lineTo(8, 0);
-        ctx.moveTo(0, -8);
-        ctx.lineTo(0, 8);
-        ctx.stroke();
-        ctx.restore();
-      }
     }
     ctx.restore();
   }

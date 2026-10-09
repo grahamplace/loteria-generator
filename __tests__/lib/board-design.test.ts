@@ -6,7 +6,13 @@ import {
   resolveBoardStyle,
   drawThemeFrame,
 } from '@/lib/themes/render-style';
-import { themePresets, selectedBoardTheme, mergeBoardStyles } from '@/lib/themes/presets';
+import {
+  themePresets,
+  selectedBoardTheme,
+  mergeBoardStyles,
+  boardBorderStyle,
+  legacyBorderStyles,
+} from '@/lib/themes/presets';
 import { boardStyleSchema } from '@/lib/validations';
 
 beforeEach(installPrintPalettes);
@@ -155,5 +161,46 @@ describe('editable print designs', () => {
       })
     );
     expect(ctx.save).not.toHaveBeenCalled();
+  });
+  it.each(legacyBorderStyles)(
+    'renders a saved %s decoration as a plain double border',
+    (borderStyle) => {
+      const saved = {
+        presetId: 'custom' as const,
+        borderStyle,
+        borderColor: '#123456',
+        backgroundColor: '#abcdef',
+      };
+      expect(boardStyleSchema.safeParse(saved).success).toBe(true);
+      expect(boardBorderStyle(saved)).toBe('double');
+      expect(editableBoardStyle(saved)).toMatchObject({
+        borderStyle: 'double',
+        borderColor: saved.borderColor,
+        backgroundColor: saved.backgroundColor,
+      });
+      // A minimal drawing surface also fails if any corner paths are attempted.
+      const ctx = {
+        save: vi.fn(),
+        restore: vi.fn(),
+        setLineDash: vi.fn(),
+        strokeRect: vi.fn(),
+        translate: vi.fn(),
+        rotate: vi.fn(),
+      };
+      drawThemeFrame(
+        ctx as unknown as CanvasRenderingContext2D,
+        2550,
+        3300,
+        resolveBoardStyle(saved)
+      );
+      expect(ctx.strokeRect).toHaveBeenCalledTimes(2);
+    }
+  );
+  it('keeps corner decorations only on Halloween and Classroom presets', () => {
+    for (const preset of themePresets) {
+      const expected =
+        preset.id === 'halloween' ? 'web' : preset.id === 'classroom' ? 'pencils' : 'none';
+      expect(resolveBoardStyle({ presetId: preset.id }).frame).toBe(expected);
+    }
   });
 });

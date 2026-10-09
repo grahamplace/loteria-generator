@@ -18,16 +18,19 @@ export const borderStyles = [
   'double',
   'dashed',
   'web',
+  'pencils',
+] as const;
+/** Still accepted from saved boards and older clients; rendered as a plain double border. */
+export const legacyBorderStyles = [
   'stars',
   'confetti',
   'leaves',
   'floral',
-  'pencils',
   'sport',
   'waves',
   'papel',
 ] as const;
-export type BorderStyle = (typeof borderStyles)[number];
+export type BorderStyle = (typeof borderStyles)[number] | (typeof legacyBorderStyles)[number];
 export type BoardThemeId = ThemeId | 'custom';
 export interface BoardDesignValues {
   backgroundColor: string;
@@ -94,17 +97,7 @@ export function mergeBoardStyles(
   if (latestCustom) next.customDesign = latestCustom;
   return next;
 }
-export type FrameStyle =
-  | 'none'
-  | 'web'
-  | 'stars'
-  | 'confetti'
-  | 'leaves'
-  | 'floral'
-  | 'pencils'
-  | 'sport'
-  | 'waves'
-  | 'papel';
+export type FrameStyle = 'none' | 'web' | 'pencils';
 export const themePresets = [
   { id: 'classic', name: { en: 'Classic', 'es-MX': 'Clásica' }, frame: 'none', font: 'Jost' },
   {
@@ -113,54 +106,54 @@ export const themePresets = [
     frame: 'web',
     font: 'Creepster',
   },
-  { id: 'christmas', name: { en: 'Christmas', 'es-MX': 'Navidad' }, frame: 'stars', font: 'Jost' },
+  { id: 'christmas', name: { en: 'Christmas', 'es-MX': 'Navidad' }, frame: 'none', font: 'Jost' },
   {
     id: 'birthday',
     name: { en: 'Birthday', 'es-MX': 'Cumpleaños' },
-    frame: 'confetti',
+    frame: 'none',
     font: 'Bebas Neue',
   },
   {
     id: 'family-reunion',
     name: { en: 'Family Reunion', 'es-MX': 'Reunión familiar' },
-    frame: 'leaves',
+    frame: 'none',
     font: 'Jost',
   },
   {
     id: 'quinceanera',
     name: { en: 'Quincea\u00f1era', 'es-MX': 'Quinceañera' },
-    frame: 'floral',
+    frame: 'none',
     font: 'Jost',
   },
-  { id: 'wedding', name: { en: 'Wedding', 'es-MX': 'Boda' }, frame: 'floral', font: 'Jost' },
+  { id: 'wedding', name: { en: 'Wedding', 'es-MX': 'Boda' }, frame: 'none', font: 'Jost' },
   {
     id: 'baby-shower',
     name: { en: 'Baby Shower', 'es-MX': 'Baby shower' },
-    frame: 'stars',
+    frame: 'none',
     font: 'Jost',
   },
   {
     id: 'bridal-shower',
     name: { en: 'Bridal Shower', 'es-MX': 'Despedida de soltera' },
-    frame: 'floral',
+    frame: 'none',
     font: 'Jost',
   },
   {
     id: 'bachelorette',
     name: { en: 'Bachelorette', 'es-MX': 'Fiesta de amigas' },
-    frame: 'confetti',
+    frame: 'none',
     font: 'Jost',
   },
   {
     id: 'friendsgiving',
     name: { en: 'Friendsgiving', 'es-MX': 'Cena de amigos' },
-    frame: 'leaves',
+    frame: 'none',
     font: 'Jost',
   },
   {
     id: 'graduation',
     name: { en: 'Graduation', 'es-MX': 'Graduación' },
-    frame: 'stars',
+    frame: 'none',
     font: 'Bebas Neue',
   },
   {
@@ -172,37 +165,37 @@ export const themePresets = [
   {
     id: 'anniversary',
     name: { en: 'Wedding Anniversary', 'es-MX': 'Aniversario de bodas' },
-    frame: 'floral',
+    frame: 'none',
     font: 'Jost',
   },
   {
     id: 'soccer-team',
     name: { en: 'Soccer Team', 'es-MX': 'Equipo de fútbol' },
-    frame: 'sport',
+    frame: 'none',
     font: 'Bebas Neue',
   },
   {
     id: 'new-years',
     name: { en: "New Year's", 'es-MX': 'Año Nuevo' },
-    frame: 'stars',
+    frame: 'none',
     font: 'Bebas Neue',
   },
   {
     id: 'milestone-birthday',
     name: { en: '50th Birthday', 'es-MX': 'Cumpleaños especial' },
-    frame: 'confetti',
+    frame: 'none',
     font: 'Bebas Neue',
   },
   {
     id: 'destination-wedding',
     name: { en: 'Destination Wedding', 'es-MX': 'Boda de destino' },
-    frame: 'waves',
+    frame: 'none',
     font: 'Jost',
   },
   {
     id: 'cinco-de-mayo',
     name: { en: 'Cinco de Mayo', 'es-MX': 'Cinco de Mayo' },
-    frame: 'papel',
+    frame: 'none',
     font: 'Jost',
   },
   {
@@ -211,8 +204,8 @@ export const themePresets = [
     frame: 'none',
     font: 'Jost',
   },
-  { id: 'hanukkah', name: { en: 'Hanukkah', 'es-MX': 'Janucá' }, frame: 'stars', font: 'Jost' },
-  { id: 'easter', name: { en: 'Easter', 'es-MX': 'Pascua' }, frame: 'floral', font: 'Jost' },
+  { id: 'hanukkah', name: { en: 'Hanukkah', 'es-MX': 'Janucá' }, frame: 'none', font: 'Jost' },
+  { id: 'easter', name: { en: 'Easter', 'es-MX': 'Pascua' }, frame: 'none', font: 'Jost' },
 ] as const;
 export type ThemeId = (typeof themePresets)[number]['id'];
 export function isThemeId(value: unknown): value is ThemeId {
@@ -223,10 +216,10 @@ export function getTheme(id?: string | null) {
 }
 export function boardBorderStyle(options?: BoardStyleOptions | null): BorderStyle {
   const preset = getTheme(options?.presetId);
-  return (
+  const border =
     options?.borderStyle ??
-    (preset.id === 'classic' ? 'hand-drawn' : preset.frame === 'none' ? 'double' : preset.frame)
-  );
+    (preset.id === 'classic' ? 'hand-drawn' : preset.frame === 'none' ? 'double' : preset.frame);
+  return legacyBorderStyles.some((legacy) => legacy === border) ? 'double' : border;
 }
 export function themeVariables(id: ThemeId) {
   return {

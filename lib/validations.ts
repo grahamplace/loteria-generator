@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { isThemeId, printFonts, borderStyles, type BoardThemeId } from '@/lib/themes/presets';
+import {
+  isThemeId,
+  printFonts,
+  borderStyles,
+  legacyBorderStyles,
+  type BoardThemeId,
+} from '@/lib/themes/presets';
 
 const printColorSchema = z.string().regex(/^#[0-9a-f]{6}$/i, 'Use a six-digit hex color');
 
@@ -10,7 +16,7 @@ export const boardStyleSchema = z.object({
   numberColor: printColorSchema.optional(),
   borderColor: printColorSchema.optional(),
   font: z.enum(printFonts).optional(),
-  borderStyle: z.enum(borderStyles).optional(),
+  borderStyle: z.enum([...borderStyles, ...legacyBorderStyles]).optional(),
   presetId: z
     .custom<BoardThemeId>((value) => value === 'custom' || isThemeId(value), 'Unknown theme')
     .optional(),
