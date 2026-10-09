@@ -329,6 +329,7 @@ export async function PATCH(
         const buffer = base64ToBuffer(illustrationBase64);
         const illustrationUrl = await uploadIllustration(session.user.id, boardId, cardId, buffer);
         updateData.illustrationUrl = illustrationUrl;
+        updateData.savedIllustrationUrl = illustrationUrl;
       } catch (uploadError) {
         console.error('Error uploading illustration:', uploadError);
         updateData.status = 'error';

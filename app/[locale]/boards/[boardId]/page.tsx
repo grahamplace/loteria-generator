@@ -49,6 +49,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
     addCards,
     addDefaultCards,
     updateCardLabel,
+    changePhotoMode,
     refreshCards,
     deleteCard,
     reorderCards,
@@ -56,7 +57,6 @@ function BoardEditor({ boardId }: { boardId: string }) {
     CardStreamSubscriptions,
   } = useBoardCards(boardId, board?.isUnlocked, board?.photoMode);
 
-  const [imageVersion, setImageVersion] = useState(0);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const wasEditingName = useRef(false);
@@ -154,6 +154,12 @@ function BoardEditor({ boardId }: { boardId: string }) {
     label: card.label,
     riddle: card.riddle,
     preserveOriginal: card.preserveOriginal,
+    hasIllustration: Boolean(
+      card.savedIllustrationUrl ||
+      (!card.preserveOriginal &&
+        card.illustrationUrl &&
+        card.illustrationUrl !== card.originalImageUrl)
+    ),
     cropData: card.cropData,
     imageVersion: card.imageVersion,
     illustration:
@@ -162,7 +168,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
       (card.isDefault && card.illustrationUrl
         ? card.illustrationUrl
         : card.illustrationUrl
-          ? `/api/images/${boardId}/${card.id}/illustration?v=${imageVersion}`
+          ? `/api/images/${boardId}/${card.id}/illustration?v=${card.imageVersion ?? 0}`
           : card.originalImageUrl
             ? `/api/images/${boardId}/${card.id}/original`
             : ''),
@@ -330,9 +336,9 @@ function BoardEditor({ boardId }: { boardId: string }) {
                       body: JSON.stringify({ cardId, cropData }),
                     });
                     if (!response.ok) throw new Error('Crop failed');
-                    setImageVersion((v) => v + 1);
                     await refreshCards();
                   }}
+                  onChangePhotoMode={changePhotoMode}
                   onDeleteCard={deleteCard}
                   onUpdateLabel={updateCardLabel}
                   onReorderCards={reorderCards}

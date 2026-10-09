@@ -50,6 +50,7 @@ export interface BoardCard {
   riddle: string | null;
   originalImageUrl: string | null;
   illustrationUrl: string | null;
+  savedIllustrationUrl?: string | null;
   status: CardStatus;
   errorMessage: string | null;
   isDefault: boolean;
@@ -71,6 +72,7 @@ interface UseBoardCardsReturn {
   addCards: (files: File[]) => Promise<void>;
   addDefaultCards: (defaultCardIds: string[]) => Promise<void>;
   updateCardLabel: (cardId: string, newLabel: string, newRiddle?: string) => Promise<void>;
+  changePhotoMode: (cardId: string, photoMode: PhotoMode) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   reorderCards: (startIndex: number, endIndex: number) => void;
   refreshCards: () => Promise<void>;
@@ -119,6 +121,7 @@ export function useBoardCards(
       setCards(
         (data.cards || []).map((card: Card) => ({
           ...card,
+          imageVersion: new Date(card.updatedAt).getTime(),
           clientKey: card.id,
           isProcessing: card.status === 'processing',
         }))
@@ -156,7 +159,11 @@ export function useBoardCards(
       await Promise.all(
         Array.from(serverById.values())
           .filter((s) => s.status === 'completed' && s.illustrationUrl)
-          .map((s) => preloadImage(`/api/images/${boardId}/${s.id}/illustration`))
+          .map((s) =>
+            preloadImage(
+              `/api/images/${boardId}/${s.id}/illustration?v=${new Date(s.updatedAt).getTime()}`
+            )
+          )
       );
 
       setCards((prev) =>
@@ -171,6 +178,10 @@ export function useBoardCards(
             label: server.label || local.label,
             originalImageUrl: server.originalImageUrl,
             illustrationUrl: server.illustrationUrl,
+            savedIllustrationUrl: server.savedIllustrationUrl,
+            preserveOriginal: server.preserveOriginal,
+            cropData: server.cropData,
+            imageVersion: new Date(server.updatedAt).getTime(),
             status: server.status,
             errorMessage: server.errorMessage,
             isProcessing: server.status === 'processing',
@@ -211,6 +222,8 @@ export function useBoardCards(
               ...(serverCard.status === 'completed' ? { localOriginalImage: undefined } : {}),
               originalImageUrl: serverCard.originalImageUrl,
               illustrationUrl: serverCard.illustrationUrl,
+              savedIllustrationUrl: serverCard.savedIllustrationUrl,
+              imageVersion: new Date(serverCard.updatedAt).getTime(),
               label: serverCard.label || c.label,
               status: serverCard.status,
               errorMessage: serverCard.errorMessage,
@@ -493,6 +506,20 @@ export function useBoardCards(
     [boardId, fetchCards]
   );
 
+  const changePhotoMode = useCallback(
+    async (cardId: string, photoMode: PhotoMode) => {
+      const response = await fetch(`/api/boards/${boardId}/cards/${cardId}/photo-mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoMode }),
+      });
+      if (!response.ok) throw new Error('Failed to change card photo mode');
+      const { card } = await response.json();
+      mergeServerCard(cardId, card);
+    },
+    [boardId, mergeServerCard]
+  );
+
   const deleteCard = useCallback(
     async (cardId: string) => {
       // Optimistic update: remove card and renumber remaining cards
@@ -569,7 +596,7 @@ export function useBoardCards(
       // card in the processing state until the browser has the image cached,
       // then flip atomically to completed (clearing the localOriginalImage
       // preview so the illustration URL wins the display-precedence chain).
-      await preloadImage(`/api/images/${boardId}/${cardId}/illustration`);
+      await preloadImage(`/api/images/${boardId}/${cardId}/illustration?v=${Date.now()}`);
       setCards((prev) =>
         prev.map((c) =>
           c.id === cardId
@@ -577,6 +604,10 @@ export function useBoardCards(
                 ...c,
                 label: data.label,
                 illustrationUrl: data.illustrationUrl,
+                savedIllustrationUrl: c.preserveOriginal
+                  ? c.savedIllustrationUrl
+                  : data.illustrationUrl,
+                imageVersion: Date.now(),
                 status: 'completed' as CardStatus,
                 errorMessage: null,
                 isProcessing: false,
@@ -633,6 +664,7 @@ export function useBoardCards(
     addCards,
     addDefaultCards,
     updateCardLabel,
+    changePhotoMode,
     deleteCard,
     reorderCards,
     refreshCards: fetchCards,

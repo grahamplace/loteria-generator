@@ -110,6 +110,7 @@ describe('generate-card-artwork skipLabeling', () => {
     expect(persisted).toBeDefined();
     expect(persisted).not.toHaveProperty('label');
     expect(persisted!.illustrationUrl).toBe('https://blob/illustration.png');
+    expect(persisted!.savedIllustrationUrl).toBe('https://blob/illustration.png');
   });
 
   it('runs AI labeling and persists the AI label when skipLabeling is falsy', async () => {

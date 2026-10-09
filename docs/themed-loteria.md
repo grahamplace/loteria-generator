@@ -64,3 +64,7 @@ After deployment, verify the live canonical/language pairs, sitemap, assets, aut
 - Both skill packages pass the skill validator.
 
 Review screenshots and PDFs are in `.scratch/theme-work/` and `.scratch/theme-verification/`. Deployment and Search Console checks remain pending.
+
+### Per-card photo mode
+
+The card editor can switch an uploaded card between its original photo and illustration independently of the board’s upload default. `cards.saved_illustration_url` retains the drawing while `illustration_url` points at the photo. Existing drawings without a retained URL can be recovered from their scoped illustration blob. Switching to a drawing starts the existing throttled generation job only when no drawing exists, preserves the label/riddle and photo crop, and claims the processing state before queueing to avoid duplicate jobs. Failed queue requests restore the previous face; failed generation can be retried or switched back to the photo. Card proxies use per-card image versions so edits update both the editor and print preview without stale cached faces. Migration `0013_gigantic_argent.sql` adds the nullable saved URL.

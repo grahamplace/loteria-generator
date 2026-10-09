@@ -125,6 +125,8 @@ export const cards = pgTable('cards', {
   riddle: text('riddle'),
   originalImageUrl: text('original_image_url'), // Vercel Blob URL - private
   illustrationUrl: text('illustration_url'), // Vercel Blob URL - private
+  // Retain the drawing while illustrationUrl points at the original photo.
+  savedIllustrationUrl: text('saved_illustration_url'),
   status: text('status').$type<CardStatus>().notNull().default('pending'),
   errorMessage: text('error_message'),
   promptOverlay: text('prompt_overlay'),

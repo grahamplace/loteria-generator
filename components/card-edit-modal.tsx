@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { PhotoCropDialog } from '@/components/photo-crop-dialog';
 import type { PixelRect } from '@/lib/crop-image';
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2, ImageIcon, Sparkles, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import type { PhotoMode } from '@/lib/themes/presets';
 import { LotteriaCard } from '@/lib/generate-boards';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import posthog from 'posthog-js';
@@ -19,6 +21,11 @@ interface CardEditModalProps {
   onClose: () => void;
   cropData?: PixelRect | null;
   onCrop?: (crop: PixelRect | null) => Promise<void>;
+  preserveOriginal?: boolean;
+  hasIllustration?: boolean;
+  isProcessing?: boolean;
+  processingError?: string;
+  onChangePhotoMode?: (mode: PhotoMode) => Promise<void>;
 }
 
 export function CardEditModal({
@@ -29,23 +36,32 @@ export function CardEditModal({
   onClose,
   cropData,
   onCrop,
+  preserveOriginal = false,
+  hasIllustration = false,
+  isProcessing = false,
+  processingError,
+  onChangePhotoMode,
 }: CardEditModalProps) {
   const t = useTranslations('BoardEditor.CardEditModal');
   const themeText = useTranslations('Themes.Builder');
   const [cropping, setCropping] = useState(false);
   const [label, setLabel] = useState(card.label);
   const [riddle, setRiddle] = useState(card.riddle ?? '');
-
-  // Handle Escape key to close modal
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+  const [switching, setSwitching] = useState(false);
+  const [modeError, setModeError] = useState('');
+  const mode: PhotoMode = preserveOriginal ? 'original' : 'illustrated';
+  async function changeMode(next: PhotoMode) {
+    if (!onChangePhotoMode || switching || isProcessing) return;
+    setSwitching(true);
+    setModeError('');
+    try {
+      await onChangePhotoMode(next);
+    } catch {
+      setModeError(t('photoModeError'));
+    } finally {
+      setSwitching(false);
     }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }
 
   const handleSave = () => {
     if (label.trim()) {
@@ -68,28 +84,108 @@ export function CardEditModal({
     );
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        className="max-w-[calc(100%-2rem)] sm:max-w-md max-h-[90dvh] flex flex-col gap-0 p-0 overflow-hidden"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b shrink-0">
-          <h2 className="text-lg font-semibold">{t('titleWithNumber', { number: card.number })}</h2>
+          <DialogTitle>{t('titleWithNumber', { number: card.number })}</DialogTitle>
           <button
             onClick={onClose}
             aria-label={t('closeAriaLabel')}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex size-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="px-4 md:px-6 py-3 md:py-4 space-y-3 overflow-y-auto">
+        <div className="px-4 md:px-6 py-3 md:py-4 space-y-3 overflow-y-auto overscroll-contain">
+          {originalImage && onChangePhotoMode && (
+            <fieldset disabled={switching || isProcessing} className="space-y-2">
+              <legend className="mb-2 text-sm font-medium">{t('photoModeLabel')}</legend>
+              <div className="grid grid-cols-2 gap-2">
+                {(['original', 'illustrated'] as const).map((choice) => {
+                  const Icon = choice === 'original' ? ImageIcon : Sparkles;
+                  return (
+                    <label key={choice} className="relative min-w-0 cursor-pointer">
+                      <input
+                        type="radio"
+                        name={`card-photo-mode-${card.id}`}
+                        value={choice}
+                        checked={mode === choice}
+                        onChange={() => void changeMode(choice)}
+                        className="peer absolute inset-0 z-10 size-full cursor-pointer opacity-0 disabled:cursor-wait"
+                      />
+                      <span className="flex min-h-11 touch-manipulation items-center justify-center gap-2 rounded-md border border-border px-2 py-2 text-sm text-foreground peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary peer-disabled:cursor-wait peer-disabled:opacity-60">
+                        {mode === choice ? (
+                          <Check className="size-4 shrink-0" aria-hidden="true" />
+                        ) : (
+                          <Icon className="size-4 shrink-0" aria-hidden="true" />
+                        )}
+                        <span>
+                          {t(choice === 'original' ? 'useOriginalPhoto' : 'useIllustration')}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  mode === 'original' && !hasIllustration ? 'illustrationOnDemand' : 'photoModeHint'
+                )}
+              </p>
+            </fieldset>
+          )}
+          {(switching || isProcessing) && (
+            <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2
+                className="size-4 shrink-0 animate-spin motion-reduce:animate-none"
+                aria-hidden="true"
+              />
+              {t(isProcessing ? 'creatingIllustration' : 'switchingPhotoMode')}
+            </p>
+          )}
+          {modeError && (
+            <p role="alert" className="text-sm text-destructive">
+              {modeError}
+            </p>
+          )}
+          {processingError && onChangePhotoMode && (
+            <div className="space-y-2">
+              <p role="alert" className="text-sm text-destructive">
+                {t('illustrationFailed')}
+              </p>
+              <Button
+                variant="outline"
+                disabled={switching || isProcessing}
+                onClick={() => void changeMode('illustrated')}
+              >
+                {switching && (
+                  <Loader2
+                    className="size-4 animate-spin motion-reduce:animate-none"
+                    aria-hidden="true"
+                  />
+                )}
+                {t('retryIllustration')}
+              </Button>
+            </div>
+          )}
           {/* Image preview */}
           <div className="flex justify-center gap-3">
             {originalImage && (
-              <div className="space-y-1">
+              <div className="min-w-0 flex-1 max-w-40 space-y-1">
                 <p className="text-xs text-muted-foreground text-center">{t('originalLabel')}</p>
-                <div className="relative w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                   <Image
                     {...cardImageProps(originalImage, CARD_GRID_THUMB_WIDTH)}
                     alt={t('originalLabel')}
@@ -100,13 +196,13 @@ export function CardEditModal({
                 </div>
               </div>
             )}
-            <div className="space-y-1">
+            <div className="min-w-0 flex-1 max-w-40 space-y-1">
               {originalImage && (
                 <p className="text-xs text-muted-foreground text-center">
-                  {onCrop ? themeText('original') : t('illustrationLabel')}
+                  {preserveOriginal ? t('originalPhotoLabel') : t('illustrationLabel')}
                 </p>
               )}
-              <div className="relative w-32 md:w-40 aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+              <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                 <Image
                   {...cardImageProps(
                     card.illustration || '/placeholder.svg',
@@ -122,7 +218,11 @@ export function CardEditModal({
           </div>
 
           {onCrop && originalImage && (
-            <Button variant="outline" onClick={() => setCropping(true)}>
+            <Button
+              variant="outline"
+              disabled={switching || isProcessing}
+              onClick={() => setCropping(true)}
+            >
               {themeText('crop')}
             </Button>
           )}
@@ -191,7 +291,7 @@ export function CardEditModal({
             {t('saveButton')}
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

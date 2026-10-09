@@ -86,6 +86,13 @@ export async function uploadIllustration(
   return uploadImage(file, path, 'image/png');
 }
 
+/** Recover drawings made before cards retained a separate illustration URL. */
+export async function findCardIllustration(userId: string, boardId: string, cardId: string) {
+  const pathname = `users/${userId}/boards/${boardId}/cards/${cardId}/illustration.png`;
+  const result = await list({ prefix: pathname, limit: 10, token: PRIVATE_BLOB_TOKEN });
+  return result.blobs.find((blob) => blob.pathname === pathname)?.url ?? null;
+}
+
 /**
  * List all blobs with a given prefix, handling pagination
  */

@@ -57,6 +57,7 @@ interface DisplayCard {
   error?: string;
   isDefault?: boolean;
   preserveOriginal?: boolean;
+  hasIllustration?: boolean;
   cropData?: import('@/lib/crop-image').PixelRect | null;
 }
 
@@ -64,6 +65,10 @@ interface BoardCardGridProps {
   cards: DisplayCard[];
   onDeleteCard: (id: string) => void;
   onCropCard?: (id: string, crop: import('@/lib/crop-image').PixelRect | null) => Promise<void>;
+  onChangePhotoMode?: (
+    id: string,
+    photoMode: import('@/lib/themes/presets').PhotoMode
+  ) => Promise<void>;
   onUpdateLabel: (id: string, label: string, riddle: string) => void;
   onReorderCards: (startIndex: number, endIndex: number) => void;
   onAddMore?: () => void;
@@ -206,6 +211,7 @@ export function BoardCardGrid({
   cards,
   onDeleteCard,
   onCropCard,
+  onChangePhotoMode,
   onUpdateLabel,
   onReorderCards,
   onAddMore,
@@ -217,7 +223,8 @@ export function BoardCardGrid({
 }: BoardCardGridProps) {
   const t = useTranslations('BoardEditor.CardGrid');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [editingCard, setEditingCard] = useState<DisplayCard | null>(null);
+  const [editingCardId, setEditingCard] = useState<string | null>(null);
+  const editingCard = cards.find((card) => card.id === editingCardId);
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   // Track the live-reordered cards during drag
   const [liveCards, setLiveCards] = useState<DisplayCard[]>(cards);
@@ -228,7 +235,7 @@ export function BoardCardGrid({
   function handleCardClick(card: DisplayCard) {
     if (justDragged.current) return;
     if (card.isProcessing) return;
-    setEditingCard(card);
+    setEditingCard(card.id);
   }
 
   function handleDeleteCard() {
@@ -453,6 +460,16 @@ export function BoardCardGrid({
 
       {editingCard && (
         <CardEditModal
+          key={editingCard.id}
+          preserveOriginal={editingCard.preserveOriginal}
+          hasIllustration={editingCard.hasIllustration}
+          isProcessing={editingCard.isProcessing}
+          processingError={editingCard.error}
+          onChangePhotoMode={
+            !editingCard.isDefault && editingCard.originalImage && onChangePhotoMode
+              ? (mode) => onChangePhotoMode(editingCard.id, mode)
+              : undefined
+          }
           card={{
             id: editingCard.id,
             label: editingCard.label,
