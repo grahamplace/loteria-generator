@@ -80,8 +80,7 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
     page * MIN_EXPORT_CARD_COUNT,
     (page + 1) * MIN_EXPORT_CARD_COUNT
   );
-  const isSample = complete.length < MIN_EXPORT_CARD_COUNT;
-  const signature = JSON.stringify([pageCards, styles, boardName, locale, isSample]);
+  const signature = JSON.stringify([pageCards, styles, boardName, locale]);
   const imageSources = JSON.stringify(complete.map((card) => card.illustration));
 
   // Removing cards can remove the current page. Keep the URL on a valid page.
@@ -100,18 +99,10 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
     let cancelled = false;
     setRendering(true);
     setPreviewError('');
-    renderBoardToCanvas(
-      pageCards,
-      styles ?? {},
-      isSample
-        ? [locale === 'es-MX' ? 'Muestra' : 'Sample', styles?.showTitle ? boardName : undefined]
-            .filter(Boolean)
-            .join(' · ')
-        : styles?.showTitle
-          ? boardName
-          : undefined,
-      { scale: 0.25, imageCache: previewImages.current }
-    )
+    renderBoardToCanvas(pageCards, styles ?? {}, styles?.showTitle ? boardName : undefined, {
+      scale: 0.25,
+      imageCache: previewImages.current,
+    })
       .then((canvas) => {
         if (!cancelled) setPreview(canvas.toDataURL('image/jpeg', 0.7));
       })
@@ -156,18 +147,10 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
     for (const src of detailImages.current.keys()) {
       if (!activeImages.has(src)) detailImages.current.delete(src);
     }
-    renderBoardToCanvas(
-      detailCards,
-      styles ?? {},
-      isSample
-        ? [locale === 'es-MX' ? 'Muestra' : 'Sample', styles?.showTitle ? boardName : undefined]
-            .filter(Boolean)
-            .join(' · ')
-        : styles?.showTitle
-          ? boardName
-          : undefined,
-      { scale: 1, imageCache: detailImages.current }
-    )
+    renderBoardToCanvas(detailCards, styles ?? {}, styles?.showTitle ? boardName : undefined, {
+      scale: 1,
+      imageCache: detailImages.current,
+    })
       .then((canvas) => {
         if (!cancelled) {
           const rendered = { signature, src: canvas.toDataURL('image/png') };

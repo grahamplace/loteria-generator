@@ -142,7 +142,7 @@ describe('automatic board preview', () => {
     expect(renderBoard).toHaveBeenLastCalledWith(
       [expect.objectContaining({ illustration: '/api/images/flower?w=800' })],
       { presetId: 'wedding', showTitle: true },
-      'Sample · Our party',
+      'Our party',
       expect.objectContaining({ scale: 1 })
     );
     fireEvent.click(within(dialog).getByRole('button', { name: 'Zoom in' }));
@@ -197,7 +197,7 @@ describe('automatic board preview', () => {
     expect(renderBoard).toHaveBeenCalledWith(
       [],
       { presetId: 'halloween', showTitle: true },
-      'Sample · Our party',
+      'Our party',
       expect.objectContaining({ scale: 0.25 })
     );
     expect(screen.getByText(messages.Themes.Builder.emptyPreview)).toBeVisible();
@@ -251,7 +251,7 @@ describe('automatic board preview', () => {
     expect(renderBoard).toHaveBeenLastCalledWith(
       [],
       { presetId: 'wedding', showTitle: false },
-      'Sample',
+      undefined,
       expect.objectContaining({ scale: 0.25 })
     );
   });
@@ -324,7 +324,7 @@ describe('automatic board preview', () => {
     rerender(view({ cards: ready.slice(0, 4) }));
     await waitFor(() => expect(window.location.search).toBe(''));
     expect(screen.queryByRole('navigation', { name: 'Preview pages' })).not.toBeInTheDocument();
-    expect(renderBoard.mock.lastCall?.[2]).toBe('Sample');
+    expect(renderBoard.mock.lastCall?.[2]).toBeUndefined();
     expect(renderBoard.mock.lastCall?.[0].map((card) => card.number)).toEqual([1, 2, 3, 4]);
   });
 });
