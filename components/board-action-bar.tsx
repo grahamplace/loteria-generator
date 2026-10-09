@@ -1,7 +1,7 @@
 'use client';
 
-import { useId, useRef, useState, useImperativeHandle, forwardRef } from 'react';
-import { Upload, Plus, Check, ImageIcon, Sparkles, Loader2 } from 'lucide-react';
+import { useRef, useState, useImperativeHandle, forwardRef } from 'react';
+import { Upload, Plus } from 'lucide-react';
 import type { BoardStyleOptions } from '@/lib/themes/presets';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
@@ -15,6 +15,7 @@ import {
   isUploadCandidate,
 } from '@/lib/convert-upload-image';
 import { Button } from '@/components/ui/button';
+import { PhotoModeSwitch } from '@/components/photo-mode-switch';
 import type { PhotoMode } from '@/lib/themes/presets';
 
 interface BoardActionBarProps {
@@ -54,7 +55,6 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
     const t = useTranslations('BoardEditor.ActionBar');
     const themes = useTranslations('Themes.Builder');
     const inputRef = useRef<HTMLInputElement>(null);
-    const photoModeName = useId();
     const [dragActive, setDragActive] = useState(false);
     useImperativeHandle(ref, () => ({
       triggerFileSelect() {
@@ -140,42 +140,13 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
               {cardCount}/{maxCards}
             </span>
           </div>
-          <fieldset
-            disabled={photoModeSaving}
-            aria-busy={photoModeSaving}
-            className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap"
-          >
-            <legend className="sr-only">{themes('photoMode')}</legend>
-            {(['illustrated', 'original'] as const).map((mode) => {
-              const Icon = mode === 'illustrated' ? Sparkles : ImageIcon;
-              const selected = photoMode === mode;
-              return (
-                <label key={mode} className="relative min-w-0 cursor-pointer">
-                  <input
-                    type="radio"
-                    name={photoModeName}
-                    value={mode}
-                    checked={selected}
-                    onChange={() => void onPhotoModeChange(mode)}
-                    className="peer absolute inset-0 z-10 size-full cursor-pointer opacity-0 disabled:cursor-wait"
-                  />
-                  <span className="flex h-full min-h-11 touch-manipulation items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-sm text-foreground transition-colors peer-hover:border-primary/50 peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary peer-disabled:opacity-60">
-                    {selected && photoModeSaving ? (
-                      <Loader2
-                        className="size-4 shrink-0 animate-spin motion-reduce:animate-none"
-                        aria-hidden="true"
-                      />
-                    ) : selected ? (
-                      <Check className="size-4 shrink-0" aria-hidden="true" />
-                    ) : (
-                      <Icon className="size-4 shrink-0" aria-hidden="true" />
-                    )}
-                    <span>{themes(mode)}</span>
-                  </span>
-                </label>
-              );
-            })}
-          </fieldset>
+          <div className="mt-1">
+            <PhotoModeSwitch
+              photoMode={photoMode}
+              saving={photoModeSaving}
+              onChange={(mode) => void onPhotoModeChange(mode)}
+            />
+          </div>
           {processingCount > 0 && (
             <p role="status" className="mt-2 text-sm text-muted-foreground">
               {themes('processing', { count: processingCount })}

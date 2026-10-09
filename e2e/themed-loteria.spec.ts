@@ -80,7 +80,11 @@ test.describe('themed Lotería', () => {
     await expect(
       page.getByRole('checkbox', { name: 'Mostrar título en las tablas' })
     ).toBeChecked();
-    await expect(page.locator('#photo-mode')).toHaveValue('original');
+    await expect(
+      page
+        .getByRole('region', { name: 'Diseña tu juego' })
+        .getByRole('switch', { name: 'Ilustrar mis fotos' })
+    ).not.toBeChecked();
   });
 
   test('existing work needs an explicit choice; new sets are free', async ({ page }) => {

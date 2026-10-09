@@ -86,19 +86,20 @@ for (const [locale, width] of [
     const uploads = page.getByRole('region', {
       name: locale === 'en' ? 'Drop photos to add cards' : 'Suelta fotos para agregar cartas',
     });
-    const illustrated = uploads.getByRole('radio', {
+    const illustrated = uploads.getByRole('switch', {
       name: locale === 'en' ? 'Illustrate my photos' : 'Ilustrar mis fotos',
     });
-    const original = uploads.getByRole('radio', {
-      name: locale === 'en' ? 'Use original photos' : 'Usar fotos originales',
-    });
-    const setting = page.getByRole('combobox', {
-      name: locale === 'en' ? 'New photo uploads' : 'Nuevas fotos',
-    });
+    const setting = page
+      .getByRole('region', {
+        name: locale === 'en' ? 'Design your set' : 'Diseña tu juego',
+      })
+      .getByRole('switch', {
+        name: locale === 'en' ? 'Illustrate my photos' : 'Ilustrar mis fotos',
+      });
     const choosePhotos = uploads.getByRole('button', {
       name: locale === 'en' ? 'Choose photos' : 'Seleccionar fotos',
     });
-    await expect(original).toBeChecked();
+    await expect(illustrated).not.toBeChecked();
     let release!: () => void;
     let fail = false;
     let delayed = true;
@@ -113,11 +114,13 @@ for (const [locale, width] of [
       return route.fallback();
     });
     try {
-      await illustrated.click();
+      await uploads
+        .getByText(locale === 'en' ? 'Illustrate my photos' : 'Ilustrar mis fotos', { exact: true })
+        .click();
       await expect(illustrated).toBeChecked();
       await expect(choosePhotos).toBeDisabled();
       await expect(setting).toBeDisabled();
-      await expect(setting).toHaveValue('illustrated');
+      await expect(setting).toBeChecked();
     } finally {
       delayed = false;
       release();
@@ -125,27 +128,27 @@ for (const [locale, width] of [
     await expect(choosePhotos).toBeEnabled();
     await page.reload();
     await expect(illustrated).toBeChecked();
-    await expect(setting).toHaveValue('illustrated');
-    await setting.selectOption('original');
-    await expect(original).toBeChecked();
-    await expect(original).toBeEnabled();
+    await expect(setting).toBeChecked();
+    await setting.click();
+    await expect(illustrated).not.toBeChecked();
+    await expect(illustrated).toBeEnabled();
     fail = true;
     await illustrated.click();
     await expect(illustrated).toBeEnabled();
-    await expect(original).toBeChecked();
-    await expect(setting).toHaveValue('original');
+    await expect(illustrated).not.toBeChecked();
+    await expect(setting).not.toBeChecked();
     fail = false;
-    await original.focus();
-    await page.keyboard.press('ArrowLeft');
+    await illustrated.focus();
+    await page.keyboard.press('Space');
     await expect(illustrated).toBeChecked();
     await expect(illustrated).toBeEnabled();
-    await expect(setting).toHaveValue('illustrated');
-    await uploads.scrollIntoViewIfNeeded();
+    await expect(setting).toBeChecked();
+    await uploads.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     expect(await uploads.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     await uploads.screenshot({ path: `.scratch/theme-work/upload-photo-mode-${locale}.png` });
     if (locale === 'en') {
       await page.setViewportSize({ width: 2800, height: 1200 });
-      await expect(original).toBeVisible();
+      await expect(illustrated).toBeVisible();
       expect(await uploads.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     }
   });
@@ -347,7 +350,11 @@ test('mobile theme picker keeps the editor compact and saves a choice before clo
   const trigger = page.getByRole('button', { name: 'Change theme, currently Halloween' });
   await expect(trigger).toBeInViewport();
   expect((await trigger.boundingBox())!.height).toBeLessThanOrEqual(80);
-  await expect(page.getByRole('combobox', { name: 'New photo uploads' })).toBeInViewport();
+  await expect(
+    page
+      .getByRole('region', { name: 'Design your set' })
+      .getByRole('switch', { name: 'Illustrate my photos' })
+  ).toBeInViewport();
   await expect(page.getByRole('radiogroup', { name: 'Choose a theme' })).toHaveCount(0);
   await page.screenshot({
     animations: 'disabled',
@@ -380,7 +387,11 @@ test('mobile theme picker keeps the editor compact and saves a choice before clo
   await expect(sheet).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeFocused();
   await expect(page).not.toHaveURL(/themePicker/);
-  await expect(page.getByRole('combobox', { name: 'New photo uploads' })).toHaveValue('original');
+  await expect(
+    page
+      .getByRole('region', { name: 'Design your set' })
+      .getByRole('switch', { name: 'Illustrate my photos' })
+  ).not.toBeChecked();
   await page.reload();
   await expect(page.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeVisible();
 });

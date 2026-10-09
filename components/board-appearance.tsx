@@ -13,10 +13,11 @@ import { BoardPreview } from '@/components/board-preview';
 import { editableBoardStyle, presetBoardStyle } from '@/lib/themes/render-style';
 import { BoardDesignControls, openDesignControls } from '@/components/board-design-controls';
 import { BoardThemePicker } from '@/components/board-theme-picker';
+import { PhotoModeSwitch } from '@/components/photo-mode-switch';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronDown } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export function BoardAppearance({
   styles,
@@ -175,26 +176,12 @@ export function BoardAppearance({
               }
             />
             <div>
-              <label htmlFor="photo-mode" className="block font-medium mb-2">
-                {t('photoMode')}
-              </label>
-              <div className="relative w-fit max-w-full">
-                <select
-                  id="photo-mode"
-                  name="photoMode"
-                  value={photoMode}
-                  disabled={photoModeSaving}
-                  onChange={(event) => void save({ photoMode: event.target.value as PhotoMode })}
-                  className="min-h-11 max-w-full appearance-none touch-manipulation rounded-md border border-input bg-background pl-3 pr-10 text-base text-foreground transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"
-                >
-                  <option value="illustrated">{t('illustrated')}</option>
-                  <option value="original">{t('original')}</option>
-                </select>
-                <ChevronDown
-                  aria-hidden="true"
-                  className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                />
-              </div>
+              <PhotoModeSwitch
+                photoMode={photoMode}
+                saving={photoModeSaving}
+                disabled={savingDesign}
+                onChange={(mode) => void save({ photoMode: mode })}
+              />
               <p className="mt-2 text-sm text-muted-foreground">{t('futureUploads')}</p>
             </div>
           </fieldset>
