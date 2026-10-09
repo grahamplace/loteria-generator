@@ -8,6 +8,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { auth } from '@/lib/auth';
 import { ensureFirstBoard } from '@/lib/boards/ensure-first-board';
+import { RECENT_BOARD_COOKIE } from '@/lib/boards/recent-board';
 import { SIGN_IN_LOOP_BREAKER_PARAM, SIGN_IN_LOOP_BREAKER_VALUE } from '@/lib/safe-redirect';
 
 /**
@@ -15,9 +16,9 @@ import { SIGN_IN_LOOP_BREAKER_PARAM, SIGN_IN_LOOP_BREAKER_VALUE } from '@/lib/sa
  * already-authenticated user off `/sign-in` / `/sign-up` all land here.
  *
  * It guarantees a board exists (`ensureFirstBoard` is idempotent, so this also
- * repairs users who somehow ended up with zero) and then routes by board count:
- * a user with exactly one board goes straight into it — nobody sees an empty
- * dashboard, a known drop-off point. Only multi-board users get the dashboard.
+ * repairs users who somehow ended up with zero), then opens their last-used
+ * board, falling back to their most recently updated board. Switching boards
+ * happens inside the editor; there is no intermediate board index.
  *
  * Every redirect below goes through next-intl's locale-aware `redirect` so a
  * Spanish visitor stays on `/es/…`. Since this route is now on the path of every
@@ -62,7 +63,8 @@ export default async function StartPage({
     return null;
   }
 
-  const { boardId, created, boardCount } = await ensureFirstBoard(session.user);
+  const store = await cookies();
+  const { boardId } = await ensureFirstBoard(session.user, store.get(RECENT_BOARD_COOKIE)?.value);
   if (entry) {
     const available = await db.query.boards.findMany({
       where: (board, { eq }) => eq(board.userId, session.user.id),
@@ -85,7 +87,6 @@ export default async function StartPage({
     );
   }
   // Saved preferences apply at the authenticated entry point, never on public pages.
-  const store = await cookies();
   if (!store.get('LOCALE')) {
     const profile = await db.query.userProfiles.findFirst({
       where: eq(userProfiles.id, session.user.id),
@@ -95,7 +96,7 @@ export default async function StartPage({
       redirect({ href: '/start', locale: profile.locale });
   }
   redirect({
-    href: created || boardCount === 1 ? `/boards/${boardId}` : '/dashboard',
+    href: `/boards/${boardId}`,
     locale,
   });
 }

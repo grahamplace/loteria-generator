@@ -334,7 +334,7 @@
       "emptyStateAddClassic": "Add classic card",
       "emptyStateFreePaidNote": "Start free with {free} cards · {price} unlocks all {total}",
       "boardNotFoundTitle": "Board not found",
-      "boardNotFoundCta": "Back to Dashboard",
+      "boardNotFoundCta": "Open my board",
       "toasts": {
         "boardUnlockedTitle": "Board unlocked!",
         "boardUnlockedDesc": "You now have full access to this board.",
@@ -485,7 +485,8 @@
       "description": "Your unlocked boards",
       "cardCount": "{count} cards"
     },
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "backToBoard": "Back to my board"
   },
   "Common": {
     "Buttons": {
@@ -648,5 +649,27 @@
       "error": "Could not prepare the set. Please try again.",
       "retry": "Try again"
     }
+  },
+  "BoardSwitcher": {
+    "open": "Switch board: {name}",
+    "title": "Your boards",
+    "theme": "Theme",
+    "new": "New board",
+    "rename": "Rename this board…",
+    "delete": "Delete this board…",
+    "deleteTitle": "Delete “{name}”?",
+    "deleteDescription": "This permanently deletes this board and all its cards. This cannot be undone.",
+    "deleteConfirm": "Delete board",
+    "cancel": "Cancel",
+    "loading": "Loading your boards…",
+    "loadError": "Your other boards couldn’t load.",
+    "retry": "Try again",
+    "createError": "Couldn’t create the board. Please try again.",
+    "deleteError": "Couldn’t delete the board. Please try again.",
+    "deleted": "Board deleted",
+    "signOutError": "Couldn’t sign out. Please try again.",
+    "page": "Page {page} of {count}",
+    "previous": "Previous boards",
+    "next": "More boards"
   }
 }

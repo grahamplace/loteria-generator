@@ -2,11 +2,9 @@ import { test, expect } from '@playwright/test';
 
 test.describe('sign out', () => {
   test('sign out button signs out a logged in user', async ({ page }) => {
-    // next-intl uses as-needed locale prefixes — the default locale (en)
-    // appears as /dashboard, other locales as /es-MX/dashboard. Assertions
-    // tolerate both shapes.
+    // Saved dashboard links go directly into the editor.
     await page.goto('/dashboard');
-    await expect(page).toHaveURL(/\/(en\/)?dashboard/);
+    await expect(page).toHaveURL(/\/boards\/[0-9a-f-]+/);
 
     await page.getByRole('button', { name: /open user menu/i }).click();
     await page.getByRole('menuitem', { name: /sign out/i }).click();

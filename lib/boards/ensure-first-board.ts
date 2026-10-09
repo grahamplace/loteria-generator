@@ -9,8 +9,7 @@ export interface EnsureFirstBoardResult {
   created: boolean;
   /**
    * How many boards the user has *after* this call. `created: true` always
-   * implies `boardCount: 1`. Callers use it to decide where to send the user:
-   * exactly one board means "drop them straight into it".
+   * implies `boardCount: 1`.
    */
   boardCount: number;
 }
@@ -27,17 +26,23 @@ export interface EnsureFirstBoardResult {
  * Idempotent: if the user already has boards it returns their most recent one
  * and creates nothing, so it is safe to hit on any post-auth redirect.
  */
-export async function ensureFirstBoard(user: {
-  id: string;
-  email?: string | null;
-}): Promise<EnsureFirstBoardResult> {
+export async function ensureFirstBoard(
+  user: { id: string; email?: string | null },
+  preferredBoardId?: string
+): Promise<EnsureFirstBoardResult> {
   const existing = await db.query.boards.findMany({
     where: eq(boards.userId, user.id),
-    orderBy: [desc(boards.createdAt)],
+    orderBy: [desc(boards.updatedAt), desc(boards.createdAt)],
   });
 
   if (existing.length > 0) {
-    return { boardId: existing[0].id, created: false, boardCount: existing.length };
+    // Never trust a cookie as authorization: only choose from this user's boards.
+    const preferred = existing.find((board) => board.id === preferredBoardId);
+    return {
+      boardId: preferred?.id ?? existing[0].id,
+      created: false,
+      boardCount: existing.length,
+    };
   }
 
   // Ensure the user profile row exists (mirrors POST /api/boards).

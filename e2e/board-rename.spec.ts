@@ -26,8 +26,10 @@ test.describe('board rename', () => {
   test('user can rename a board and the change persists', async ({ page }) => {
     await page.goto(`/boards/${boardId}`);
 
-    // Click the board name to open the rename input.
-    await page.getByRole('button', { name: /edit board name.*Original Name/i }).click();
+    // Rename is a board action in the picker.
+    await page.getByRole('button', { name: /switch board:.*Original Name/i }).click();
+
+    await page.getByRole('menuitem', { name: /rename this board/i }).click();
 
     const renameInput = page.getByRole('textbox', { name: /rename board/i });
     await renameInput.fill('Renamed Board');
@@ -40,15 +42,15 @@ test.describe('board rename', () => {
     await patchResponse;
 
     // The visible name should update.
-    await expect(page.getByRole('button', { name: /edit board name.*Renamed Board/i })).toBeVisible(
-      { timeout: 5_000 }
-    );
+    await expect(page.getByRole('button', { name: /switch board:.*Renamed Board/i })).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Reload and confirm persistence.
     await page.reload();
-    await expect(page.getByRole('button', { name: /edit board name.*Renamed Board/i })).toBeVisible(
-      { timeout: 10_000 }
-    );
+    await expect(page.getByRole('button', { name: /switch board:.*Renamed Board/i })).toBeVisible({
+      timeout: 10_000,
+    });
 
     const [row] = await db.select({ name: boards.name }).from(boards).where(eq(boards.id, boardId));
     expect(row.name).toBe('Renamed Board');

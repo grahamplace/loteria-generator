@@ -1,7 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { Link, useRouter } from '@/i18n/navigation';
 import Image from 'next/image';
 import { ArrowLeft, User, Mail } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -51,11 +50,11 @@ export default function AccountPage() {
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
+            <Button asChild variant="ghost" size="icon" className="size-11">
+              <Link href="/start" aria-label={t('backToBoard')}>
+                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+              </Link>
+            </Button>
             <h1 className="text-xl font-bold">{t('pageTitle')}</h1>
           </div>
           <LanguageSwitch />

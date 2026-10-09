@@ -340,7 +340,7 @@
       "emptyStateAddClassic": "Agregar clásica",
       "emptyStateFreePaidNote": "Empieza gratis con {free} cartas · {price} desbloquea las {total}",
       "boardNotFoundTitle": "Tabla no encontrada",
-      "boardNotFoundCta": "Volver al panel",
+      "boardNotFoundCta": "Abrir mi tablero",
       "toasts": {
         "boardUnlockedTitle": "¡Tabla desbloqueada!",
         "boardUnlockedDesc": "Ya tienes acceso completo a esta tabla.",
@@ -491,7 +491,8 @@
       "description": "Tus tablas desbloqueadas",
       "cardCount": "{count} cartas"
     },
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "backToBoard": "Volver a mi tablero"
   },
   "Common": {
     "Buttons": {
@@ -654,5 +655,27 @@
       "error": "No se pudo preparar el juego. Inténtalo de nuevo.",
       "retry": "Intentar de nuevo"
     }
+  },
+  "BoardSwitcher": {
+    "open": "Cambiar tablero: {name}",
+    "title": "Tus tableros",
+    "theme": "Tema",
+    "new": "Nuevo tablero",
+    "rename": "Cambiar nombre…",
+    "delete": "Eliminar este tablero…",
+    "deleteTitle": "¿Eliminar “{name}”?",
+    "deleteDescription": "Se eliminarán este tablero y todas sus cartas de forma permanente. No se puede deshacer.",
+    "deleteConfirm": "Eliminar tablero",
+    "cancel": "Cancelar",
+    "loading": "Cargando tus tableros…",
+    "loadError": "No se pudieron cargar tus otros tableros.",
+    "retry": "Intentar de nuevo",
+    "createError": "No se pudo crear el tablero. Intenta de nuevo.",
+    "deleteError": "No se pudo eliminar el tablero. Intenta de nuevo.",
+    "deleted": "Tablero eliminado",
+    "signOutError": "No se pudo cerrar sesión. Intenta de nuevo.",
+    "page": "Página {page} de {count}",
+    "previous": "Tableros anteriores",
+    "next": "Más tableros"
   }
 }

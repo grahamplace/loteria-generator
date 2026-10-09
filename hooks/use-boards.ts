@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { Board, BoardStyleOptions } from '@/db/schema';
 
@@ -29,7 +30,8 @@ interface UseBoardsReturn {
 /**
  * Hook for managing boards list
  */
-export function useBoards(): UseBoardsReturn {
+export function useBoards(enabled = true): UseBoardsReturn {
+  const t = useTranslations('BoardSwitcher');
   const [boards, setBoards] = useState<BoardSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,8 +62,8 @@ export function useBoards(): UseBoardsReturn {
   }, [router]);
 
   useEffect(() => {
-    fetchBoards();
-  }, [fetchBoards]);
+    if (enabled) void fetchBoards();
+  }, [enabled, fetchBoards]);
 
   const createBoard = useCallback(
     async (name?: string): Promise<Board | null> => {
@@ -82,12 +84,12 @@ export function useBoards(): UseBoardsReturn {
         await fetchBoards(); // Refresh the list
 
         return data.board;
-      } catch (err) {
-        toast.error('Failed to create board');
+      } catch {
+        toast.error(t('createError'));
         return null;
       }
     },
-    [fetchBoards]
+    [fetchBoards, t]
   );
 
   const deleteBoard = useCallback(
@@ -102,14 +104,14 @@ export function useBoards(): UseBoardsReturn {
         }
 
         await fetchBoards(); // Refresh the list
-        toast.success('Board deleted');
+        toast.success(t('deleted'));
         return true;
-      } catch (err) {
-        toast.error('Failed to delete board');
+      } catch {
+        toast.error(t('deleteError'));
         return false;
       }
     },
-    [fetchBoards]
+    [fetchBoards, t]
   );
 
   return {
@@ -209,7 +211,7 @@ export function useBoard(boardId: string): UseBoardReturn {
         const data = await response.json();
         setBoard((prev) => (prev ? { ...prev, ...data.board } : null));
         return true;
-      } catch (err) {
+      } catch {
         toast.error('Failed to update board');
         return false;
       }

@@ -3,12 +3,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import { Link, useRouter } from '@/i18n/navigation';
-import { ArrowLeft, Lock, Sparkles, Unlock, Upload } from 'lucide-react';
+import { Lock, Sparkles, Unlock, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBoard } from '@/hooks/use-boards';
 import { useBoardCards } from '@/hooks/use-board-cards';
+import { BoardSwitcher } from '@/components/board-switcher';
+import { AccountMenu } from '@/components/account-menu';
+import { rememberBoard } from '@/lib/boards/recent-board';
 import { BoardAppearance } from '@/components/board-appearance';
 import { BoardPreviewPanel } from '@/components/board-preview-panel';
 import { BoardActionBar, BoardActionBarRef } from '@/components/board-action-bar';
@@ -28,10 +31,13 @@ import { ANCHOR_UPLOAD, TOUR_BOARD_ADD_PHOTO } from '@/components/onboarding/onb
 import { firePurchaseConversion, consumePendingSignupConversion } from '@/lib/google-ads';
 
 export default function BoardEditorPage() {
+  const { boardId } = useParams<{ boardId: string }>();
+  return <BoardEditor key={boardId} boardId={boardId} />;
+}
+
+function BoardEditor({ boardId }: { boardId: string }) {
   const t = useTranslations('BoardEditor.Page');
   const locale = useLocale();
-  const params = useParams();
-  const boardId = params.boardId as string;
   const router = useRouter();
   const searchParams = useSearchParams();
   const actionBarRef = useRef<BoardActionBarRef>(null);
@@ -53,6 +59,7 @@ export default function BoardEditorPage() {
   const [imageVersion, setImageVersion] = useState(0);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const wasEditingName = useRef(false);
   const [unlockPromptOpen, setUnlockPromptOpen] = useState(false);
   const [defaultsPickerOpen, setDefaultsPickerOpen] = useState(false);
   const [unlockTrigger, setUnlockTrigger] = useState<UnlockTrigger>('card_limit');
@@ -78,6 +85,20 @@ export default function BoardEditorPage() {
       router.replace(`/boards/${boardId}`);
     }
   }, [searchParams, boardId, refreshBoard, router]);
+
+  useEffect(() => {
+    if (board?.id === boardId) {
+      rememberBoard(boardId);
+      document.title = `${board.name} — Lotería Generator`;
+    }
+  }, [boardId, board?.id, board?.name]);
+
+  useEffect(() => {
+    if (wasEditingName.current && !isEditingName) {
+      document.getElementById(`board-switcher-${boardId}`)?.focus();
+    }
+    wasEditingName.current = isEditingName;
+  }, [boardId, isEditingName]);
 
   // Update edited name when board loads
   useEffect(() => {
@@ -184,9 +205,9 @@ export default function BoardEditorPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">{t('boardNotFoundTitle')}</h2>
-          <Link href="/dashboard">
-            <Button>{t('boardNotFoundCta')}</Button>
-          </Link>
+          <Button asChild>
+            <Link href="/start">{t('boardNotFoundCta')}</Link>
+          </Button>
         </div>
       </div>
     );
@@ -197,16 +218,9 @@ export default function BoardEditorPage() {
       {/* Header */}
       <header className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link
-              href="/dashboard"
-              aria-label={t('backToDashboardAriaLabel')}
-              className="w-9 h-9 md:w-8 md:h-8 rounded-full md:rounded-md hover:bg-black/5 flex items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
+          <div className="flex flex-1 items-center gap-3 min-w-0">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 {isEditingName ? (
                   <Input
                     value={editedName}
@@ -216,18 +230,22 @@ export default function BoardEditorPage() {
                       if (e.key === 'Enter') handleSaveName();
                       if (e.key === 'Escape') setIsEditingName(false);
                     }}
-                    className="max-w-[200px] h-8"
+                    className="min-w-0 max-w-[240px] h-11 text-base"
+                    name="boardName"
+                    autoComplete="off"
                     autoFocus
                     aria-label={t('renameInputAriaLabel')}
                   />
                 ) : (
-                  <button
-                    onClick={() => setIsEditingName(true)}
-                    aria-label={t('editBoardNameAriaLabel', { name: board.name })}
-                    className="font-semibold text-[17px] md:text-[15px] md:font-bold tracking-tight truncate hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
-                  >
-                    {board.name}
-                  </button>
+                  <h1 className="min-w-0 text-[17px] md:text-[15px]">
+                    <BoardSwitcher
+                      board={board}
+                      onRename={() => {
+                        setEditedName(board.name);
+                        setIsEditingName(true);
+                      }}
+                    />
+                  </h1>
                 )}
                 {board.isUnlocked ? (
                   <span className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -235,7 +253,7 @@ export default function BoardEditorPage() {
                     {t('unlockedBadge')}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] md:text-[10px] font-mono uppercase tracking-wider md:tracking-normal md:font-medium bg-primary/10 text-primary border border-primary/20">
+                  <span className="hidden md:inline-flex shrink-0 items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] md:text-[10px] font-mono uppercase tracking-wider md:tracking-normal md:font-medium bg-primary/10 text-primary border border-primary/20">
                     <Lock className="w-2.5 h-2.5" />
                     {t('freeBadge')}
                   </span>
@@ -251,12 +269,13 @@ export default function BoardEditorPage() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <LanguageSwitch />
+            <AccountMenu />
             {!board.isUnlocked && atCardLimit && (
               <button
                 onClick={() => openUnlockPrompt('card_limit')}
-                className="px-3 h-8 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary/90 flex items-center gap-1 md:gap-1.5 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                className="hidden md:flex px-3 min-h-11 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 items-center gap-1 md:gap-1.5 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 <Unlock className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">{t('unlockButtonPrefix')}</span>{' '}
