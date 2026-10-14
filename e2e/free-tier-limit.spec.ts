@@ -28,9 +28,10 @@ test.describe('free tier limit', () => {
     // Wait for the board to render with all 4 seeded cards.
     await expect(page.getByText('4/4').first()).toBeVisible({ timeout: 10_000 });
 
-    // Strict regex `^unlock$` matches the inline tile button only ("Unlock"),
-    // not the header button ("Unlock for $5") that's always visible while locked.
-    const inlineUnlock = page.getByRole('button', { name: /^unlock$/i });
+    // Strict regex `^unlock$` skips the header button ("Unlock for $20"). The
+    // live preview has its own "Unlock" below the downloads; the inline tile
+    // comes first in the DOM.
+    const inlineUnlock = page.getByRole('button', { name: /^unlock$/i }).first();
     await expect(inlineUnlock).toBeVisible({ timeout: 5_000 });
 
     // Modal dialog isn't in the DOM until clicked.

@@ -638,7 +638,10 @@ test('mobile custom controls are compact, validate colors, and preserve the save
     { times: 1 }
   );
   await enterHex(page, background, '123456');
-  await expect(page.getByText('No se pudo guardar. Inténtalo de nuevo.')).toBeVisible();
+  // The same message also appears as a toast; check the inline alert.
+  await expect(page.getByRole('region', { name: 'Diseña tu juego' }).getByRole('alert')).toHaveText(
+    'No se pudo guardar. Inténtalo de nuevo.'
+  );
   await expect(page.getByRole('button', { name: 'Cambiar tema, actual: Halloween' })).toBeVisible();
   await enterHex(page, background, '123456');
   await expect(
