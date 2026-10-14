@@ -7,7 +7,7 @@ import {
   type ThemeId,
   type PrintFont,
 } from './presets';
-import { cornerIconDefinitions } from './corner-icons';
+import { cornerIconDefinitions, type CornerIconDefinition } from './corner-icons';
 import { loadPrintFont } from './fonts';
 
 export function printColor(token: string): string {
@@ -127,9 +127,10 @@ function drawCornerIcons(
   height: number,
   id: keyof typeof cornerIconDefinitions
 ) {
-  const icon = cornerIconDefinitions[id];
+  const icon: CornerIconDefinition = cornerIconDefinitions[id];
   const path = new Path2D(icon.path);
-  const scale = CORNER_ICON_PX / 100;
+  const artPx = CORNER_ICON_PX * (icon.size ?? 1);
+  const scale = artPx / (icon.viewBox ?? 100);
   const far = (edge: number) => edge - CORNER_INSET;
   // Corner points clockwise from top-left with the rotation that points the
   // icon's +x/+y quadrant into the page.
@@ -139,6 +140,7 @@ function drawCornerIcons(
     [far(width), far(height), Math.PI],
     [CORNER_INSET, far(height), -Math.PI / 2],
   ] as const;
+  ctx.fillStyle = ctx.strokeStyle;
   ctx.lineWidth = 2.5 / scale;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
@@ -149,13 +151,11 @@ function drawCornerIcons(
       ctx.rotate(angle);
     } else {
       // Keep the artwork upright; shift its box so it sits inside the corner.
-      ctx.translate(
-        x < width / 2 ? x : x - CORNER_ICON_PX,
-        y < height / 2 ? y : y - CORNER_ICON_PX
-      );
+      ctx.translate(x < width / 2 ? x : x - artPx, y < height / 2 ? y : y - artPx);
     }
     ctx.scale(scale, scale);
-    ctx.stroke(path);
+    if (icon.paint === 'fill') ctx.fill(path);
+    else ctx.stroke(path);
     ctx.restore();
   }
 }

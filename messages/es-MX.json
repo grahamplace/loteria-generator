@@ -595,7 +595,9 @@
         "pencil": "Lápices",
         "star": "Estrellas",
         "heart": "Corazones",
-        "flower": "Flores"
+        "flower": "Flores",
+        "soccer": "Balones de fútbol",
+        "cake": "Pasteles de cumpleaños"
       },
       "borders": {
         "hand-drawn": "A mano",

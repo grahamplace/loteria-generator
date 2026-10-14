@@ -580,7 +580,14 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await page.getByRole('option', { name: 'Bebas Neue', exact: true }).click();
   await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('dashed');
   await page.getByRole('combobox', { name: 'Corner icons', exact: true }).selectOption('heart');
+  // Reloading while this save is in flight would cancel it.
+  const borderColorSaved = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'PATCH' &&
+      response.request().postData()?.includes('#c0ffee') === true
+  );
   await enterHex(page, page.getByRole('textbox', { name: 'Border color', exact: true }), '#c0ffee');
+  expect((await borderColorSaved).ok()).toBe(true);
   await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toBeEnabled();
   await page.reload();
   await expect(page.getByRole('radio', { name: 'Custom', exact: true })).toBeChecked();

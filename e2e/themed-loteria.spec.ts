@@ -129,9 +129,12 @@ test.describe('themed Lotería', () => {
     );
     await page.getByRole('button', { name: 'Save crop', exact: true }).click();
     expect((await cropSaved).ok()).toBe(true);
-    // The card editor stays open after cropping and makes the page behind it inert.
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog', { name: 'Edit card #1' })).toBeHidden();
+    // The card editor hides behind the crop dialog and returns once the crop is
+    // saved; close it so the page behind it is no longer inert.
+    const editor = page.getByRole('dialog', { name: 'Edit card #1' });
+    await expect(editor).toBeVisible();
+    await editor.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(editor).toBeHidden();
     await page.getByRole('radio', { name: 'Christmas', exact: true }).focus();
     await page.getByRole('radio', { name: 'Christmas', exact: true }).press('Space');
     await expect(page.getByRole('radio', { name: 'Christmas', exact: true })).toBeEnabled();

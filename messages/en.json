@@ -589,7 +589,9 @@
         "pencil": "Pencils",
         "star": "Stars",
         "heart": "Hearts",
-        "flower": "Flowers"
+        "flower": "Flowers",
+        "soccer": "Soccer balls",
+        "cake": "Birthday cakes"
       },
       "borders": {
         "hand-drawn": "Hand drawn",
