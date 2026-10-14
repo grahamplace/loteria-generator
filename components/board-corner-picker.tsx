@@ -48,9 +48,7 @@ function CornerSwatch({
             strokeLinejoin="round"
           />
         </svg>
-      ) : (
-        <span className="h-px w-1/2 rotate-[-45deg]" style={{ backgroundColor: color }} />
-      )}
+      ) : null}
     </span>
   );
 }
