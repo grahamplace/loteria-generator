@@ -59,7 +59,7 @@ async function main() {
       }
       manifest = {
         title: `${theme.en.name} Lotería`,
-        styles: { presetId: theme.id, showTitle: true },
+        styles: { presetId: theme.presets[0], showTitle: true },
         cards: records,
         compareId,
         sourcePackage: source,

@@ -103,6 +103,7 @@
   },
   {
     "id": "baby-shower",
+    "presets": ["baby-shower-boy", "baby-shower-girl"],
     "updatedAt": "2026-10-08",
     "en": {
       "name": "Baby Shower",

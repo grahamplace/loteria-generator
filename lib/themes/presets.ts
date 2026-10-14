@@ -127,8 +127,14 @@ export const themePresets = [
   },
   { id: 'wedding', name: { en: 'Wedding', 'es-MX': 'Boda' }, frame: 'none', font: 'Jost' },
   {
-    id: 'baby-shower',
-    name: { en: 'Baby Shower', 'es-MX': 'Baby shower' },
+    id: 'baby-shower-boy',
+    name: { en: 'Baby Shower (Boy)', 'es-MX': 'Baby shower (niño)' },
+    frame: 'none',
+    font: 'Jost',
+  },
+  {
+    id: 'baby-shower-girl',
+    name: { en: 'Baby Shower (Girl)', 'es-MX': 'Baby shower (niña)' },
     frame: 'none',
     font: 'Jost',
   },

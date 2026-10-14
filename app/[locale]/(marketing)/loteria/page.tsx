@@ -55,7 +55,7 @@ export default async function ThemesHub({ params }: { params: Promise<{ locale: 
           <Link
             key={page.id}
             href={`/loteria/${page.id}`}
-            style={themeVariables(page.id) as CSSProperties}
+            style={themeVariables(page.presets[0]) as CSSProperties}
             className="theme-surface group overflow-hidden rounded-lg border border-border shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
           >
             <div className="px-12 pt-8 h-72 overflow-hidden">

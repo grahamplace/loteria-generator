@@ -14,7 +14,10 @@ export interface ThemePage {
     assets: { board: string; photo: string; card: string };
   };
   published: boolean;
-  id: ThemeId;
+  /** Landing slug; usually also the render preset. */
+  id: string;
+  /** Presets offered by this page's CTAs; the first sets the page colors. */
+  presets: ThemeId[];
   updatedAt: string;
   en: ThemeCopy;
   'es-MX': ThemeCopy;
@@ -22,10 +25,11 @@ export interface ThemePage {
 export const themePages: ThemePage[] = content
   .filter((page) => page.published)
   .map((page) => {
-    if (!isThemeId(page.id)) throw new Error(`Landing page has no render preset: ${page.id}`);
+    const presets: string[] = ('presets' in page && page.presets) || [page.id];
+    if (!presets.every(isThemeId)) throw new Error(`Landing page has no render preset: ${page.id}`);
     const sample = samples[page.id as keyof typeof samples];
     if (!sample) throw new Error(`Missing sample: ${page.id}`);
-    return { ...page, id: page.id, sample, published: page.published };
+    return { ...page, presets, sample, published: page.published };
   });
 export function getThemePage(id: string) {
   return themePages.find((page) => page.id === id);

@@ -10,13 +10,14 @@ describe('theme catalog and acquisition settings', () => {
     expect(themePages).toHaveLength(21);
     expect(new Set(themePages.map((page) => page.id)).size).toBe(21);
     for (const page of themePages) {
-      expect(themePresets.some((preset) => preset.id === page.id)).toBe(true);
+      for (const id of page.presets)
+        expect(themePresets.some((preset) => preset.id === id)).toBe(true);
       expect(page.en.ideas.length).toBeGreaterThanOrEqual(6);
       expect(page['es-MX'].ideas.length).toBeGreaterThanOrEqual(6);
       expect(page.en.intro).not.toEqual(page['es-MX'].intro);
       expect(page.sample.etsyListingId).toMatch(/^\d+$/);
       const sample = JSON.parse(readFileSync(page.sample.manifest, 'utf8'));
-      expect(sample.styles.presetId).toBe(page.id);
+      expect(page.presets).toContain(sample.styles.presetId);
       expect(
         new Set(sample.cards.map((card: { id: string }) => card.id)).size
       ).toBeGreaterThanOrEqual(16);

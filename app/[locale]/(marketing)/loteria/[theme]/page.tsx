@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { getThemePage, themePages, themeMode, themePath, themeTitle } from '@/lib/themes/catalog';
-import { themeVariables } from '@/lib/themes/presets';
+import { getTheme, themeVariables } from '@/lib/themes/presets';
 import { SITE_URL } from '@/lib/site-metadata';
 import { BOARD_UNLOCK_PRICE_DISPLAY, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 import { ThemeCta, ThemeVisit } from '@/components/theme-cta';
@@ -59,11 +59,20 @@ export default async function ThemeLandingPage({ params }: Props) {
   const copy = page[language];
   const t = await getTranslations('Themes.Page');
   const title = themeTitle(page, locale);
-  const cta = (
-    <ThemeCta theme={page.id} mode={themeMode(theme)}>
-      {t('create', { name: copy.name })}
-    </ThemeCta>
-  );
+  const cta =
+    page.presets.length > 1 ? (
+      <div className="flex flex-wrap gap-3">
+        {page.presets.map((preset) => (
+          <ThemeCta key={preset} theme={preset} mode={themeMode(theme)} tinted>
+            {getTheme(preset).name[language]}
+          </ThemeCta>
+        ))}
+      </div>
+    ) : (
+      <ThemeCta theme={page.presets[0]} mode={themeMode(theme)}>
+        {t('create', { name: copy.name })}
+      </ThemeCta>
+    );
   const relatedIds: Record<string, string[]> = {
     halloween: ['friendsgiving', 'christmas', 'new-years'],
     wedding: ['bridal-shower', 'destination-wedding', 'anniversary'],
@@ -105,7 +114,7 @@ export default async function ThemeLandingPage({ params }: Props) {
     ],
   };
   return (
-    <article id="theme-content" style={themeVariables(page.id) as CSSProperties}>
+    <article id="theme-content" style={themeVariables(page.presets[0]) as CSSProperties}>
       <ThemeVisit theme={page.id} mode={themeMode(theme)} />
 
       <script
