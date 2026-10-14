@@ -29,10 +29,14 @@ const colorKeys = [
 function ColorControl({
   label,
   value,
+  onLive,
   onChange,
 }: {
   label: string;
   value: string;
+  /** Every valid in-progress color, for an immediate preview. */
+  onLive: (value: string) => void;
+  /** A finished choice: picker closed, Enter, or blur. */
   onChange: (value: string) => void;
 }) {
   const id = useId();
@@ -92,7 +96,8 @@ function ColorControl({
     }
     setInvalid(false);
     setDraft(normalized);
-    if (normalized.toLowerCase() !== value.toLowerCase()) onChange(normalized);
+    // The live preview may already show this color; committing still saves it now.
+    onChange(normalized.toLowerCase());
   }
   return (
     <div className="group/color grid min-w-0 grid-cols-[minmax(0,1fr)_8.5rem] items-center gap-x-2 min-[380px]:block">
@@ -123,6 +128,7 @@ function ColorControl({
           onInput={(event) => {
             setDraft(event.currentTarget.value);
             setInvalid(false);
+            onLive(event.currentTarget.value);
           }}
           onChange={() => {}}
           className="h-11 w-11 shrink-0 cursor-pointer touch-manipulation rounded-l-md border-0 bg-transparent p-1.5 outline-none disabled:cursor-wait"
@@ -141,6 +147,9 @@ function ColorControl({
           onChange={(event) => {
             setDraft(event.target.value);
             setInvalid(false);
+            const typed = event.target.value.trim();
+            const normalized = `${typed.startsWith('#') ? '' : '#'}${typed}`;
+            if (/^#[0-9a-f]{6}$/i.test(normalized)) onLive(normalized.toLowerCase());
           }}
           onBlur={commitText}
           onKeyDown={(event) => {
@@ -169,11 +178,14 @@ export function BoardDesignControls({
   styles,
   boardName,
   disabled,
+  onPreview,
   onChange,
 }: {
   styles?: BoardStyleOptions | null;
   boardName: string;
   disabled: boolean;
+  /** Show an in-progress edit right away; saved shortly after it settles. */
+  onPreview: (patch: Partial<BoardDesignValues>) => void;
   onChange: (patch: Partial<BoardDesignValues>) => void;
 }) {
   const t = useTranslations('Themes.Builder');
@@ -225,6 +237,7 @@ export function BoardDesignControls({
                   key={key}
                   label={t(key)}
                   value={values[key]}
+                  onLive={(value) => onPreview({ [key]: value })}
                   onChange={(value) => onChange({ [key]: value })}
                 />
               ))}

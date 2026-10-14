@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import {
   themePresets,
   selectedBoardTheme,
+  type BoardDesignValues,
   type BoardStyleOptions,
   type PhotoMode,
 } from '@/lib/themes/presets';
@@ -20,6 +21,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Loader2 } from 'lucide-react';
 
+/** Quiet period after the last in-progress edit before it is saved. */
+const DESIGN_SAVE_DELAY_MS = 400;
+
 export function BoardAppearance({
   styles,
   photoMode,
@@ -27,6 +31,7 @@ export function BoardAppearance({
   boardName,
   cards = [],
   showPreview = true,
+  onDraftStylesChange,
   onSave,
 }: {
   styles?: BoardStyleOptions | null;
@@ -35,6 +40,8 @@ export function BoardAppearance({
   boardName: string;
   cards?: LotteriaCard[];
   showPreview?: boolean;
+  /** Unsaved design shown while edits settle; null once saved or reverted. */
+  onDraftStylesChange?: (styles: BoardStyleOptions | null) => void;
   onSave: (settings: {
     name?: string;
     styleOptions?: BoardStyleOptions;
@@ -60,7 +67,77 @@ export function BoardAppearance({
   const saveQueue = useRef(Promise.resolve());
   const pendingSaves = useRef(0);
   const titleSavingRef = useRef(false);
-  const selected = selectedBoardTheme(styles);
+  // Design changes show immediately and save in the background. The draft is
+  // what the controls and preview render until the board catches up.
+  const [draftStyles, setDraftStyles] = useState<BoardStyleOptions | null>(null);
+  const draftRef = useRef<BoardStyleOptions | null>(null);
+  const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shownStyles = draftStyles ?? styles;
+  const selected = selectedBoardTheme(shownStyles);
+  const reportDraft = useRef(onDraftStylesChange);
+  reportDraft.current = onDraftStylesChange;
+
+  useEffect(() => {
+    reportDraft.current?.(draftStyles);
+  }, [draftStyles]);
+
+  useEffect(() => {
+    if (!draftStyles) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [draftStyles]);
+
+  useEffect(
+    () => () => {
+      if (persistTimer.current) clearTimeout(persistTimer.current);
+    },
+    []
+  );
+
+  function setDraft(next: BoardStyleOptions | null) {
+    draftRef.current = next;
+    setDraftStyles(next);
+  }
+
+  function customDesign(patch: Partial<BoardDesignValues>): BoardStyleOptions {
+    const current = draftRef.current ?? styles ?? {};
+    return {
+      ...editableBoardStyle(current),
+      ...patch,
+      presetId: 'custom',
+      showTitle: current.showTitle ?? false,
+    };
+  }
+
+  function previewDesign(patch: Partial<BoardDesignValues>) {
+    setDraft(customDesign(patch));
+    if (persistTimer.current) clearTimeout(persistTimer.current);
+    persistTimer.current = setTimeout(flushDesign, DESIGN_SAVE_DELAY_MS);
+  }
+
+  function flushDesign() {
+    if (persistTimer.current) clearTimeout(persistTimer.current);
+    persistTimer.current = null;
+    if (draftRef.current) void save({ styleOptions: draftRef.current }, false);
+  }
+
+  function commitDesign(patch: Partial<BoardDesignValues>) {
+    const next = customDesign(patch);
+    const current = editableBoardStyle(draftRef.current ?? styles ?? {});
+    const unchanged =
+      !persistTimer.current &&
+      selectedBoardTheme(draftRef.current ?? styles) === 'custom' &&
+      (Object.keys(patch) as (keyof BoardDesignValues)[]).every(
+        (key) => String(current[key]).toLowerCase() === String(next[key]).toLowerCase()
+      );
+    if (unchanged) return;
+    setDraft(next);
+    flushDesign();
+  }
 
   function togglePanel() {
     const url = new URL(window.location.href);
@@ -73,12 +150,23 @@ export function BoardAppearance({
     window.history.pushState(null, '', url);
   }
 
-  async function save(settings: {
-    name?: string;
-    styleOptions?: BoardStyleOptions;
-    photoMode?: PhotoMode;
-  }) {
-    const changesDesign = settings.name === undefined;
+  async function save(
+    settings: {
+      name?: string;
+      styleOptions?: BoardStyleOptions;
+      photoMode?: PhotoMode;
+    },
+    // Lock the controls only for whole-theme changes; edits stay interactive.
+    lock = true
+  ) {
+    const changesDesign = settings.name === undefined && lock;
+    if (settings.styleOptions) {
+      if (persistTimer.current && lock) {
+        clearTimeout(persistTimer.current);
+        persistTimer.current = null;
+      }
+      setDraft(settings.styleOptions);
+    }
     pendingSaves.current += 1;
     setSaving(true);
     if (changesDesign) setSavingDesign(true);
@@ -86,8 +174,9 @@ export function BoardAppearance({
     // the writes so full-board responses cannot restore an older title/design.
     const request = saveQueue.current.then(async () => {
       setError('');
+      let saved = false;
       try {
-        const saved = await onSave(settings);
+        saved = await onSave(settings);
         if (!saved) setError(t('saveError'));
         return saved;
       } catch {
@@ -97,6 +186,14 @@ export function BoardAppearance({
         pendingSaves.current -= 1;
         setSaving(pendingSaves.current > 0);
         if (changesDesign) setSavingDesign(false);
+        if (settings.styleOptions && !saved) {
+          // Show the board as saved rather than a design that didn't persist.
+          if (persistTimer.current) clearTimeout(persistTimer.current);
+          persistTimer.current = null;
+          setDraft(null);
+        } else if (pendingSaves.current === 0 && !persistTimer.current) {
+          setDraft(null);
+        }
       }
     });
     saveQueue.current = request.then(() => {});
@@ -182,12 +279,12 @@ export function BoardAppearance({
                 const saved = await save({
                   styleOptions: {
                     ...(presetId === 'custom'
-                      ? styles?.customDesign
+                      ? shownStyles?.customDesign
                         ? {}
-                        : editableBoardStyle(styles ?? {})
+                        : editableBoardStyle(shownStyles ?? {})
                       : presetBoardStyle(presetId)),
                     presetId,
-                    showTitle: styles?.showTitle ?? presetId !== 'classic',
+                    showTitle: shownStyles?.showTitle ?? presetId !== 'classic',
                   },
                 });
                 if (saved && presetId === 'custom') openDesignControls();
@@ -195,19 +292,11 @@ export function BoardAppearance({
               }}
             />
             <BoardDesignControls
-              styles={styles}
+              styles={shownStyles}
               boardName={boardName}
               disabled={savingDesign}
-              onChange={(patch) =>
-                void save({
-                  styleOptions: {
-                    ...editableBoardStyle(styles ?? {}),
-                    ...patch,
-                    presetId: 'custom',
-                    showTitle: styles?.showTitle ?? false,
-                  },
-                })
-              }
+              onPreview={previewDesign}
+              onChange={commitDesign}
             />
             <PhotoModeSwitch
               photoMode={photoMode}
@@ -220,10 +309,10 @@ export function BoardAppearance({
             <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-medium">
               <input
                 type="checkbox"
-                checked={styles?.showTitle ?? false}
+                checked={shownStyles?.showTitle ?? false}
                 disabled={savingDesign}
                 onChange={(event) =>
-                  void save({ styleOptions: { ...styles, showTitle: event.target.checked } })
+                  void save({ styleOptions: { ...shownStyles, showTitle: event.target.checked } })
                 }
                 className="h-5 w-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               />
@@ -290,7 +379,7 @@ export function BoardAppearance({
             </form>
           </div>
         </div>
-        {showPreview && <BoardPreview styles={styles} boardName={boardName} cards={cards} />}
+        {showPreview && <BoardPreview styles={shownStyles} boardName={boardName} cards={cards} />}
       </div>
       {(saving || error || (!open && titleError)) && (
         <div className="flex min-h-5 flex-wrap items-center gap-3 px-4 pb-4 md:px-5 md:pb-5">

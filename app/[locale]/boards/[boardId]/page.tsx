@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import type { BoardStyleOptions } from '@/lib/themes/presets';
 import { useSearchParams, useParams } from 'next/navigation';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Lock, Sparkles, Unlock, Upload } from 'lucide-react';
@@ -68,6 +69,8 @@ function BoardEditor({ boardId }: { boardId: string }) {
   const wasEditingName = useRef(false);
   const [unlockPromptOpen, setUnlockPromptOpen] = useState(false);
   const [defaultsPickerOpen, setDefaultsPickerOpen] = useState(false);
+  // In-progress design edits, shown in the preview before they finish saving.
+  const [designDraft, setDesignDraft] = useState<BoardStyleOptions | null>(null);
   const [unlockTrigger, setUnlockTrigger] = useState<UnlockTrigger>('card_limit');
 
   // Completes the Google-OAuth signup conversion started on the sign-up page:
@@ -303,6 +306,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
               photoModeSaving={pendingPhotoMode !== null}
               boardName={board.name}
               showPreview={false}
+              onDraftStylesChange={setDesignDraft}
               onSave={updateBoard}
             />
             <BoardActionBar
@@ -392,7 +396,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
             )}
           </div>
           <BoardPreviewPanel
-            styles={board.styleOptions}
+            styles={designDraft ?? board.styleOptions}
             photoMode={board.photoMode}
             boardName={board.name}
             cards={displayCards}

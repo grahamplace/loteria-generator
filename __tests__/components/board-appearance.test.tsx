@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSyncExternalStore, type ComponentProps } from 'react';
 import { BoardAppearance } from '@/components/board-appearance';
+import type { BoardStyleOptions } from '@/lib/themes/presets';
 import { renderBoardToCanvas } from '@/lib/generate-boards';
 import messages from '@/messages/en.json';
 import { installPrintPalettes } from '../helpers/print-palettes';
@@ -326,5 +327,70 @@ describe('automatic board preview', () => {
     expect(screen.queryByRole('navigation', { name: 'Preview pages' })).not.toBeInTheDocument();
     expect(renderBoard.mock.lastCall?.[2]).toBeUndefined();
     expect(renderBoard.mock.lastCall?.[0].map((card) => card.number)).toEqual([1, 2, 3, 4]);
+  });
+});
+
+describe('live color edits', () => {
+  it('shows typed colors immediately and saves them once typing settles', async () => {
+    window.history.replaceState(null, '', '/?design=1');
+    const onDraftStylesChange = vi.fn();
+    // Like the board page, show the saved settings once a save succeeds.
+    const onSave = vi.fn(async (settings: { styleOptions?: BoardStyleOptions }) => {
+      rerender(view({ styles: settings.styleOptions, onSave, onDraftStylesChange }));
+      return true;
+    });
+    const { rerender } = render(
+      view({ styles: { presetId: 'halloween', showTitle: true }, onSave, onDraftStylesChange })
+    );
+    const background = await screen.findByRole('textbox', { name: 'Background' });
+    vi.useFakeTimers();
+    try {
+      fireEvent.change(background, { target: { value: '#12345' } });
+      expect(onDraftStylesChange).not.toHaveBeenCalledWith(
+        expect.objectContaining({ backgroundColor: '#12345' })
+      );
+      fireEvent.change(background, { target: { value: '#123456' } });
+      expect(onDraftStylesChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ presetId: 'custom', backgroundColor: '#123456' })
+      );
+      expect(screen.getByRole('radio', { name: 'Custom' })).toBeChecked();
+      expect(background).toBeEnabled();
+      expect(onSave).not.toHaveBeenCalled();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(400);
+      });
+      expect(onSave).toHaveBeenCalledTimes(1);
+      expect(onSave).toHaveBeenCalledWith({
+        styleOptions: expect.objectContaining({ presetId: 'custom', backgroundColor: '#123456' }),
+      });
+      // Committing the color already saved does not write it again.
+      fireEvent.blur(background);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(400);
+      });
+      expect(onSave).toHaveBeenCalledTimes(1);
+      expect(onDraftStylesChange).toHaveBeenLastCalledWith(null);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('reverts to the saved design when a live edit fails to save', async () => {
+    window.history.replaceState(null, '', '/?design=1');
+    const onDraftStylesChange = vi.fn();
+    render(
+      view({
+        styles: { presetId: 'halloween', showTitle: true },
+        onSave: async () => false,
+        onDraftStylesChange,
+      })
+    );
+    const background = await screen.findByRole('textbox', { name: 'Background' });
+    fireEvent.change(background, { target: { value: '#123456' } });
+    fireEvent.keyDown(background, { key: 'Enter' });
+    await waitFor(() => expect(onDraftStylesChange).toHaveBeenLastCalledWith(null));
+    expect(screen.getByRole('radio', { name: 'Halloween' })).toBeChecked();
+    expect(background).toHaveValue('#21152e');
+    expect(await screen.findByText('Could not save. Please try again.')).toBeVisible();
   });
 });

@@ -626,7 +626,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await page.getByRole('radio', { name: 'Wedding', exact: true }).press('Space');
   await expect(background).toHaveValue('#f5efdf');
   await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toHaveValue(
-    '#7b946c'
+    '#b38d4d'
   );
   await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
     'data-value',
@@ -1129,7 +1129,7 @@ for (const width of [1024, 1440, 2560]) {
       savedPosition
     );
     before = await image.getAttribute('src');
-    await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('double');
+    await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('dashed');
     await expect.poll(() => image.getAttribute('src')).not.toBe(before);
     await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
     expect(await viewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))).toEqual(
