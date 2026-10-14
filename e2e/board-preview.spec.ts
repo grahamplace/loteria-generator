@@ -948,7 +948,7 @@ test('font picker previews the actual title, loads on demand, and exports every 
   await page.keyboard.press('m');
   await expect(page.getByRole('option', { name: 'Montserrat', exact: true })).toBeFocused();
   // Browsing options does not save until Enter commits the choice.
-  await expect(page.locator('[role=combobox][data-value]')).toHaveAttribute(
+  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
     'data-value',
     'Creepster'
   );

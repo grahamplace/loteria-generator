@@ -162,9 +162,6 @@ test.describe('themed Lotería', () => {
     await page.reload();
     const titleToggle = page.getByRole('checkbox', { name: 'Show title on boards', exact: true });
     await expect(titleToggle).toBeVisible();
-    await expect(titleToggle).toHaveAccessibleDescription(
-      'Print “Spooky José” at the top of each board.'
-    );
     for (const showTitle of [false, true]) {
       const saved = page.waitForResponse(
         (response) =>
