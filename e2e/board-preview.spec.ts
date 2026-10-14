@@ -947,11 +947,9 @@ test('font picker previews the actual title, loads on demand, and exports every 
   });
   await page.keyboard.press('m');
   await expect(page.getByRole('option', { name: 'Montserrat', exact: true })).toBeFocused();
-  // Browsing options does not save until Enter commits the choice.
-  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
-    'data-value',
-    'Creepster'
-  );
+  // Browsing options does not save until Enter commits the choice. The open
+  // menu hides the trigger from role queries, so find it by its label.
+  await expect(page.getByLabel('Font', { exact: true })).toHaveAttribute('data-value', 'Creepster');
   await page.keyboard.press('Enter');
   await expect(trigger).toBeFocused();
   const rendered = new Set<string | null>();
