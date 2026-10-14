@@ -1,10 +1,19 @@
+import { themePages } from '@/lib/themes/catalog';
+import { SITE_URL } from '@/lib/site-metadata';
 import { MetadataRoute } from 'next';
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://loteria-generator-eta.vercel.app';
+const siteUrl = SITE_URL;
 
 const indexedRoutes = [
   { path: '/', changeFrequency: 'weekly' as const, priority: 1 },
   { path: '/faq', changeFrequency: 'monthly' as const, priority: 0.8 },
+  { path: '/loteria', changeFrequency: 'monthly' as const, priority: 0.8 },
+  ...themePages.map((page) => ({
+    path: `/loteria/${page.id}`,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+    updatedAt: page.updatedAt,
+  })),
 ];
 
 function localized(path: string, locale: 'en' | 'es') {
@@ -13,7 +22,9 @@ function localized(path: string, locale: 'en' | 'es') {
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
+  const updated = new Map(
+    themePages.map((page) => [`/loteria/${page.id}`, new Date(page.updatedAt)])
+  );
   return indexedRoutes.flatMap(({ path, changeFrequency, priority }) => {
     const languages = {
       en: localized(path, 'en'),
@@ -23,14 +34,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return [
       {
         url: localized(path, 'en'),
-        lastModified: now,
+        lastModified: updated.get(path),
         changeFrequency,
         priority,
         alternates: { languages },
       },
       {
         url: localized(path, 'es'),
-        lastModified: now,
+        lastModified: updated.get(path),
         changeFrequency,
         priority,
         alternates: { languages },

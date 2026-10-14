@@ -11,13 +11,13 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
 ## Database
 
 - There **is** a separate dev database: a Neon branch, distinct from the production branch. `DATABASE_URL` in `.env.local` points at it, so `pnpm db:migrate` / `db:push`, seeds, and destructive queries run locally hit dev data, not customers.
-- Before any DB-mutating command, confirm which branch you are actually on — a stale `.env.local` copied from an older checkout is the way this goes wrong:
-
-  ```bash
-  grep '^DATABASE_URL' .env.local | sed -E 's|.*@([^/]*)/([^?]*).*|host=\1 db=\2|'
-  ```
-
-  Compare the host against the dev branch's endpoint in the Neon console. If it matches the production branch, stop and repoint before running anything.
+- The owner confirmed on **2026-10-07** that this checkout's `.env.local`
+  points to the dev database and is safe for local migrations and test data.
+  The confirmed dev host is `ep-purple-pine-ahl2mh42-pooler.c-3.us-east-1.aws.neon.tech`.
+- Before DB-mutating commands, check the configured host without printing credentials.
+  If it matches the confirmed dev host above, proceed with authorized development work.
+  If the host changes or an environment file came from another checkout, verify the
+  target branch before mutating it; never assume a new endpoint is dev.
 
 - New worktrees do not inherit `.env.local` — copy it from an existing checkout (along with `.npmrc` and, for e2e, `.env.test`).
 - Schema changes still reach production the usual way, through a deploy. A migration that is correct against dev is not automatically safe against production data: check for rows that violate a new constraint before shipping.
@@ -165,6 +165,7 @@ Concise rules for building accessible, fast, delightful UIs. Use MUST/SHOULD/NEV
 
 ## Content & Accessibility
 
+- MUST: Respect the owner's strong preference for minimal UI copy: let clear controls speak for themselves. Add helper text only for non-obvious requirements, consequences, or recovery; omit explanations that merely narrate the visible button or interaction.
 - SHOULD: Inline help first; tooltips last resort
 - MUST: Skeletons mirror final content to avoid layout shift
 - MUST: `<title>` matches current context

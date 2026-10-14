@@ -5,12 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import { RetryFailedButton } from '../../components/retry-failed-button';
-import { AdminExportButton } from '../../components/admin-export-button';
-import { AdminPreviewBoardsButton } from '../../components/admin-preview-boards-button';
+import { AdminBoardAppearance } from '../../components/admin-board-appearance';
 import { AdminBoardCardsGrid } from '../../components/admin-board-cards-grid';
-import type { BoardStyleOptions } from '@/lib/generate-boards';
 import Link from 'next/link';
-import { IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db/schema';
 import { isRetriableCard } from '@/lib/admin';
 
 async function getBoardWithOwner(boardId: string) {
@@ -46,7 +43,6 @@ export default async function AdminBoardDetailPage({
   }
 
   const { board, ownerEmail, ownerName, ownerId } = data;
-  const genLimit = board.isUnlocked ? IMAGE_GENERATION_LIMIT_PAID : IMAGE_GENERATION_LIMIT_FREE;
   const now = new Date();
   const errorCount = boardCards.filter((c) => isRetriableCard(c, now)).length;
 
@@ -67,16 +63,6 @@ export default async function AdminBoardDetailPage({
             <CardTitle className="text-sm font-medium">Board Info</CardTitle>
             <div className="flex flex-wrap items-center gap-2">
               <RetryFailedButton boardId={id} errorCount={errorCount} />
-              <AdminExportButton
-                boardName={board.name}
-                cards={boardCards}
-                styleOptions={board.styleOptions as BoardStyleOptions | null}
-              />
-              <AdminPreviewBoardsButton
-                boardName={board.name}
-                cards={boardCards}
-                styleOptions={board.styleOptions as BoardStyleOptions | null}
-              />
               {board.isUnlocked ? (
                 <Badge variant="default">Unlocked</Badge>
               ) : (
@@ -99,9 +85,7 @@ export default async function AdminBoardDetailPage({
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Generations</p>
-              <p>
-                {board.imageGenerationsUsed}/{genLimit}
-              </p>
+              <p>{board.imageGenerationsUsed}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -130,6 +114,8 @@ export default async function AdminBoardDetailPage({
           )}
         </CardContent>
       </Card>
+
+      <AdminBoardAppearance board={board} cards={boardCards} />
 
       {/* Cards grid (client component with realtime subscription) */}
       <AdminBoardCardsGrid

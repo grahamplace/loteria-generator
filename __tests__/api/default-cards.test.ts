@@ -28,6 +28,9 @@ vi.mock('@/db', () => ({
   IMAGE_GENERATION_LIMIT_PAID: 100,
 }));
 
+vi.mock('@/lib/boards/add-cards', () => ({
+  insertCardsWithinLimit: (...args: unknown[]) => insertReturning(...args),
+}));
 vi.mock('@/lib/invalidate-board-preview', () => ({
   invalidateBoardPreview: vi.fn().mockResolvedValue(undefined),
 }));

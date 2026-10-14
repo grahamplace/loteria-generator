@@ -1,8 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { redirect as localeRedirect } from '@/i18n/navigation';
 import Link from 'next/link';
 import { LocaleBanner } from '@/components/locale-banner';
 import Image from 'next/image';
@@ -12,8 +9,6 @@ import quinceaneraPhoto from '@/scripts/example-images/source-photos/04-quincean
 import weddingCouplePhoto from '@/scripts/example-images/source-photos/01-wedding-couple.jpg';
 import familyPhoto from '@/scripts/example-images/source-photos/07-family-portrait.jpg';
 import birthdayCandlesPhoto from '@/scripts/example-images/source-photos/05-birthday-candles.jpg';
-import { auth } from '@/lib/auth';
-import { isAdminEmail } from '@/lib/admin';
 import { LandingHero } from '@/components/landing-hero';
 import { HeroCard } from '@/components/hero-card';
 import { TablaBoard } from '@/components/tabla-board';
@@ -83,21 +78,6 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const session = await auth.api.getSession({ headers: await headers() });
-
-  if (session?.user) {
-    if (isAdminEmail(session.user.email)) {
-      // '/admin' lives outside the [locale] tree, so it must stay unprefixed.
-      redirect('/admin');
-    }
-    // '/start' (not '/dashboard'): it ensures the user has a board and drops a
-    // single-board user straight into it. Locale-aware on purpose — a bare
-    // '/start' would land in the English tree, and for a user whose saved
-    // profile locale is es-MX the [locale] layout's DB→cookie locale sync then
-    // redirects back to '/es', which redirects here again: an infinite bounce.
-    localeRedirect({ href: '/start', locale });
-  }
-
   const tHowItWorks = await getTranslations('Marketing.HowItWorks');
   const tOccasions = await getTranslations('Marketing.Occasions');
   const tPricing = await getTranslations('Marketing.Pricing');
@@ -159,6 +139,17 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
       />
 
       <LandingHero />
+
+      <div className="mx-auto max-w-[1240px] px-6 pb-8 text-center">
+        <Link
+          href={locale === 'es-MX' ? '/es/loteria' : '/loteria'}
+          className="text-primary font-semibold underline underline-offset-4"
+        >
+          {locale === 'es-MX'
+            ? 'Explora todos los temas de lotería →'
+            : 'Explore every Lotería theme →'}
+        </Link>
+      </div>
 
       {/* How It Works — dark inverted */}
       <section

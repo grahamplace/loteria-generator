@@ -32,6 +32,18 @@ vi.mock('@/db', () => ({
   IMAGE_GENERATION_LIMIT_PAID: 100,
 }));
 
+vi.mock('@/lib/boards/add-cards', () => ({
+  insertCardsWithinLimit: async (
+    _board: string,
+    _user: string,
+    inputs: Record<string, unknown>[]
+  ) =>
+    inputs.map((v) => {
+      insertValuesSpy(v);
+      return { id: 'new-card', ...v };
+    }),
+}));
+
 vi.mock('@/lib/inngest/client', () => ({ inngest: { send: (...a: unknown[]) => sendMock(...a) } }));
 vi.mock('@/lib/blob', () => ({
   uploadOriginalImage: vi.fn(async () => 'https://blob/original.png'),
@@ -108,7 +120,7 @@ describe('POST /api/boards/[boardId]/cards admin skipLabeling', () => {
     expect(sendMock.mock.calls[0][0].data.skipLabeling).toBeFalsy();
   });
 
-  it('admin bypasses the card limit', async () => {
+  it('admin respects the maximum card limit', async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN as never);
     boardsFindFirst.mockResolvedValue({
       id: 'board-1',
@@ -121,7 +133,7 @@ describe('POST /api/boards/[boardId]/cards admin skipLabeling', () => {
     const res = await POST(makeReq({ originalImageBase64: IMG, label: 'X', skipLabeling: true }), {
       params,
     });
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(403);
   });
 
   it('non-admin still hits the card limit', async () => {
@@ -258,6 +270,39 @@ describe('POST /api/boards/[boardId]/cards finalizes no-AI preserve cards synchr
       makeReq({ originalImageBase64: IMG, label: '', skipIllustration: true, skipLabeling: false }),
       { params }
     );
+    expect(res.status).toBe(201);
+    expect(sendMock).toHaveBeenCalledOnce();
+  });
+});
+
+describe('original photo mode', () => {
+  it('completes an original photo without any AI event for a consumer', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(USER as never);
+    boardsFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'user-1',
+      isUnlocked: false,
+      photoMode: 'original',
+      imageGenerationsUsed: 999,
+    });
+    const res = await POST(makeReq({ originalImageBase64: IMG, label: 'Mi Familia' }), { params });
+    expect(res.status).toBe(201);
+    expect(insertValuesSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ label: 'Mi Familia', preserveOriginal: true })
+    );
+    expect(sendMock).not.toHaveBeenCalled();
+    expect((await res.json()).card.status).toBe('completed');
+  });
+  it('does not limit illustration generations over the lifetime of a set', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(USER as never);
+    boardsFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'user-1',
+      isUnlocked: false,
+      photoMode: 'illustrated',
+      imageGenerationsUsed: 999,
+    });
+    const res = await POST(makeReq({ originalImageBase64: IMG }), { params });
     expect(res.status).toBe(201);
     expect(sendMock).toHaveBeenCalledOnce();
   });

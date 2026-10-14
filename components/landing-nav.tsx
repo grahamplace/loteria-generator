@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitch } from '@/components/language-switch';
 import { getTranslations } from 'next-intl/server';
@@ -23,7 +23,7 @@ export async function LandingNav() {
             {t('howItWorks')}
           </Link>
           <Link
-            href="/#occasions"
+            href="/loteria"
             className="hidden text-sm font-medium text-foreground hover:text-primary md:inline"
           >
             {t('occasions')}

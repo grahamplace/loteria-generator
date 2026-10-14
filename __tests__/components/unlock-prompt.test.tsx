@@ -20,8 +20,8 @@ vi.mock('next-intl', () => ({
         keepBuildingSuffix: 'await',
         moreCards: '{count} more cards',
         featureCards: 'Up to 54 cards',
-        featureExports: 'Unlimited exports',
-        featureWatermarks: 'No watermarks',
+        featureExports: 'More people, pets, and memories',
+        featureWatermarks: 'One-time payment · keep your set',
         unlockButton: 'Unlock',
         redirectingButton: 'Redirecting…',
         maybeLater: 'Maybe later',
@@ -73,12 +73,12 @@ describe('UnlockPrompt', () => {
     render(<UnlockPrompt {...defaultProps} />);
 
     expect(screen.getByText('Up to 54 cards')).toBeInTheDocument();
-    expect(screen.getByText('Unlimited exports')).toBeInTheDocument();
-    expect(screen.getByText('No watermarks')).toBeInTheDocument();
+    expect(screen.getByText('More people, pets, and memories')).toBeInTheDocument();
+    expect(screen.getByText('One-time payment · keep your set')).toBeInTheDocument();
   });
 
   it('should show the free-limit headline regardless of trigger', () => {
-    for (const trigger of ['card_limit', 'board_limit', 'export'] as const) {
+    for (const trigger of ['card_limit'] as const) {
       const { unmount } = render(<UnlockPrompt {...defaultProps} trigger={trigger} />);
       expect(screen.getByText(/You['']ve reached the free limit/i)).toBeInTheDocument();
       unmount();

@@ -30,7 +30,11 @@ next-env.d.ts
 
 .claude/*
 !.claude/skills/
-.agents
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/create-etsy-listing/
+!.agents/skills/create-themed-landing-page/
 .claude-cache
 .cursor
 .opencode

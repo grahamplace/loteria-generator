@@ -1,7 +1,9 @@
+import { mergeBoardStyles } from '@/lib/themes/presets';
+import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { db, boards, IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db';
+import { db, boards } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { deleteBoardImages } from '@/lib/blob';
 import { updateBoardSchema } from '@/lib/validations';
@@ -37,17 +39,7 @@ export async function GET(
       return NextResponse.json({ error: 'Board not found' }, { status: 404 });
     }
 
-    // Include generation limit info
-    const generationLimit = board.isUnlocked
-      ? IMAGE_GENERATION_LIMIT_PAID
-      : IMAGE_GENERATION_LIMIT_FREE;
-    const generationsRemaining = Math.max(0, generationLimit - board.imageGenerationsUsed);
-
-    return NextResponse.json({
-      board,
-      generationLimit,
-      generationsRemaining,
-    });
+    return NextResponse.json({ board });
   } catch (error) {
     console.error('Error fetching board:', error);
     return NextResponse.json({ error: 'Failed to fetch board' }, { status: 500 });
@@ -79,7 +71,7 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    const { name, styleOptions } = parsed.data;
+    const { name, styleOptions, photoMode } = parsed.data;
 
     // Verify ownership
     const existingBoard = await db.query.boards.findFirst({
@@ -100,8 +92,12 @@ export async function PATCH(
     }
 
     if (styleOptions !== undefined) {
-      updateData.styleOptions = styleOptions;
+      updateData.styleOptions = mergeBoardStyles(existingBoard.styleOptions, styleOptions);
     }
+
+    if (photoMode !== undefined) updateData.photoMode = photoMode;
+    if (styleOptions !== undefined || name !== undefined)
+      await invalidateBoardPreview(boardId, session.user.id);
 
     const [updatedBoard] = await db
       .update(boards)

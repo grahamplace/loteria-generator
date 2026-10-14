@@ -1,0 +1,16 @@
+.track[data-slot='switch'] {
+  width: 44px;
+  height: 24px;
+  padding: 2px;
+}
+
+.track .thumb[data-slot='switch-thumb'] {
+  width: 18px;
+  height: 18px;
+  margin-left: 0;
+  translate: none;
+}
+
+.track[data-state='checked'] .thumb[data-slot='switch-thumb'] {
+  margin-left: auto;
+}

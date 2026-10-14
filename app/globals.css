@@ -240,3 +240,140 @@
     box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 35%, transparent);
   }
 }
+
+/* Printable theme palettes: also read by the sample renderer. */
+:root {
+  --loteria-classic-paper: #f5f0e1;
+  --loteria-classic-ink: #000000;
+  --loteria-classic-badge: #eb865a;
+  --loteria-classic-accent: #000000;
+  --loteria-halloween-paper: #21152e;
+  --loteria-halloween-ink: #ffe8af;
+  --loteria-halloween-badge: #bc441f;
+  --loteria-halloween-number: #ffffff;
+  --loteria-halloween-accent: #d9a952;
+  --loteria-christmas-paper: #103b30;
+  --loteria-christmas-ink: #fff3dc;
+  --loteria-christmas-badge: #c62b2f;
+  --loteria-christmas-number: #ffffff;
+  --loteria-christmas-accent: #d8b66d;
+  --loteria-birthday-paper: #122c49;
+  --loteria-birthday-ink: #fff2d0;
+  --loteria-birthday-badge: #e9ac3f;
+  --loteria-birthday-number: #17202a;
+  --loteria-birthday-accent: #ef7c73;
+  --loteria-family-reunion-paper: #f3e9d4;
+  --loteria-family-reunion-ink: #334631;
+  --loteria-family-reunion-badge: #b14c35;
+  --loteria-family-reunion-number: #ffffff;
+  --loteria-family-reunion-accent: #a97c37;
+  --loteria-quinceanera-paper: #eeddea;
+  --loteria-quinceanera-ink: #58345c;
+  --loteria-quinceanera-badge: #955fa7;
+  --loteria-quinceanera-number: #ffffff;
+  --loteria-quinceanera-accent: #bb9249;
+  --loteria-wedding-paper: #f5efdf;
+  --loteria-wedding-ink: #304f40;
+  --loteria-wedding-badge: #b38d4d;
+  --loteria-wedding-number: #ffffff;
+  --loteria-wedding-accent: #b38d4d;
+  --loteria-baby-shower-boy-paper: #deedf8;
+  --loteria-baby-shower-boy-ink: #234a6e;
+  --loteria-baby-shower-boy-badge: #9ccaee;
+  --loteria-baby-shower-boy-number: #17202a;
+  --loteria-baby-shower-boy-accent: #6ea6d4;
+  --loteria-baby-shower-girl-paper: #fce4ee;
+  --loteria-baby-shower-girl-ink: #873a5d;
+  --loteria-baby-shower-girl-badge: #de7aa3;
+  --loteria-baby-shower-girl-number: #ffffff;
+  --loteria-baby-shower-girl-accent: #e48db0;
+  --loteria-bridal-shower-paper: #fcf3f1;
+  --loteria-bridal-shower-ink: #6e3446;
+  --loteria-bridal-shower-badge: #c06a80;
+  --loteria-bridal-shower-number: #ffffff;
+  --loteria-bridal-shower-accent: #d2ad6b;
+  --loteria-bachelorette-paper: #fffaf5;
+  --loteria-bachelorette-ink: #5c1a4c;
+  --loteria-bachelorette-badge: #d93d7e;
+  --loteria-bachelorette-number: #ffffff;
+  --loteria-bachelorette-accent: #d4a54a;
+  --loteria-friendsgiving-paper: #f3ddbb;
+  --loteria-friendsgiving-ink: #713d2e;
+  --loteria-friendsgiving-badge: #bd663b;
+  --loteria-friendsgiving-number: #ffffff;
+  --loteria-friendsgiving-accent: #a6823f;
+  --loteria-graduation-paper: #152d43;
+  --loteria-graduation-ink: #fbefd2;
+  --loteria-graduation-badge: #dfb24f;
+  --loteria-graduation-number: #17202a;
+  --loteria-graduation-accent: #8cafa4;
+  --loteria-classroom-paper: #f5eacb;
+  --loteria-classroom-ink: #214b46;
+  --loteria-classroom-badge: #cc6340;
+  --loteria-classroom-number: #ffffff;
+  --loteria-classroom-accent: #a89a49;
+  --loteria-anniversary-paper: #fdf9f2;
+  --loteria-anniversary-ink: #6a2a3a;
+  --loteria-anniversary-badge: #b38f57;
+  --loteria-anniversary-number: #ffffff;
+  --loteria-anniversary-accent: #cdb07a;
+  --loteria-soccer-team-paper: #e7f0df;
+  --loteria-soccer-team-ink: #214e35;
+  --loteria-soccer-team-badge: #dc9544;
+  --loteria-soccer-team-number: #17202a;
+  --loteria-soccer-team-accent: #88aa66;
+  --loteria-new-years-paper: #182b3c;
+  --loteria-new-years-ink: #f8efda;
+  --loteria-new-years-badge: #d6ae57;
+  --loteria-new-years-number: #17202a;
+  --loteria-new-years-accent: #ad9870;
+  --loteria-milestone-birthday-paper: #fff5e3;
+  --loteria-milestone-birthday-ink: #4b2a7b;
+  --loteria-milestone-birthday-badge: #e3457c;
+  --loteria-milestone-birthday-number: #ffffff;
+  --loteria-milestone-birthday-accent: #1fb3aa;
+  --loteria-destination-wedding-paper: #f4ecd9;
+  --loteria-destination-wedding-ink: #1d6668;
+  --loteria-destination-wedding-badge: #d68a64;
+  --loteria-destination-wedding-number: #17202a;
+  --loteria-destination-wedding-accent: #b9a675;
+  --loteria-cinco-de-mayo-paper: #fff0d0;
+  --loteria-cinco-de-mayo-ink: #246b56;
+  --loteria-cinco-de-mayo-badge: #d85340;
+  --loteria-cinco-de-mayo-number: #ffffff;
+  --loteria-cinco-de-mayo-accent: #ddaf42;
+  --loteria-hanukkah-paper: #e8eef9;
+  --loteria-hanukkah-ink: #243e70;
+  --loteria-hanukkah-badge: #5d79b4;
+  --loteria-hanukkah-number: #ffffff;
+  --loteria-hanukkah-accent: #b9a766;
+  --loteria-easter-paper: #fdf6d9;
+  --loteria-easter-ink: #5b4a8c;
+  --loteria-easter-badge: #b5e3c8;
+  --loteria-easter-number: #2e2652;
+  --loteria-easter-accent: #c4abe8;
+  --loteria-number-ink: #ffffff;
+  --loteria-cut-guide: #9ca3af;
+  --loteria-white: #ffffff;
+}
+
+@font-face {
+  font-family: 'Creepster';
+  src: url('/fonts/themes/Creepster-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Bebas Neue';
+  src: url('/fonts/themes/BebasNeue-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+.theme-surface {
+  background: var(--theme-paper);
+  color: var(--theme-ink);
+}
+.theme-heading {
+  font-family: var(--theme-font);
+}
+.theme-rule {
+  border-color: var(--theme-accent);
+}

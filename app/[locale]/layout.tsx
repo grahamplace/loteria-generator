@@ -5,15 +5,10 @@ import { Toaster } from '@/components/ui/sonner';
 import { OnboardingProvider } from '@/components/onboarding/onboarding-provider';
 import { GoogleAdsTag } from '@/components/google-ads-tag';
 import { Agentation } from 'agentation';
-import { notFound, redirect } from 'next/navigation';
-import { cookies, headers } from 'next/headers';
+import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { routing, type Locale } from '@/i18n/routing';
-import { eq } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
-import { db } from '@/db';
-import { userProfiles } from '@/db/schema';
 import { fontVariables } from '@/lib/fonts';
 import { SITE_URL, THEME_COLOR, ogImages } from '@/lib/site-metadata';
 
@@ -105,34 +100,6 @@ export default async function LocaleLayout({
   }
 
   setRequestLocale(locale);
-
-  // DB→cookie sync: on first authenticated page load without a LOCALE cookie,
-  // read the user's saved locale from user_profiles and redirect if needed.
-  const cookieStore = await cookies();
-  const cookieLocale = cookieStore.get('LOCALE')?.value;
-  if (!cookieLocale) {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (session?.user) {
-      const [profile] = await db
-        .select({ locale: userProfiles.locale })
-        .from(userProfiles)
-        .where(eq(userProfiles.id, session.user.id))
-        .limit(1);
-
-      const dbLocale = profile?.locale;
-      if (dbLocale === 'es-MX' || dbLocale === 'en') {
-        // Next 16 forbids cookieStore.set() inside Server Components — the
-        // DB→cookie write needs to live in a Route Handler / Server Action.
-        // For now, just redirect when the URL locale doesn't match the saved
-        // preference; subsequent loads re-do this DB read until we move the
-        // sync elsewhere.
-        if (dbLocale !== locale) {
-          const target = dbLocale === 'en' ? '/' : '/es';
-          redirect(target);
-        }
-      }
-    }
-  }
 
   const messages = await getMessages();
 
