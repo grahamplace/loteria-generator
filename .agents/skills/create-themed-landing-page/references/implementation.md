@@ -1,6 +1,6 @@
 # Implementation map
 
-- `lib/themes/presets.ts`: lightweight preset IDs, localized names, font/frame choice, shared board-style type. Website palette values live in `app/globals.css`; the canvas resolver and Node adapter read those tokens.
+- `lib/themes/presets.ts`: lightweight preset IDs, localized names, font and default corner icon, shared board-style type. Corner icons are SVG path data in `lib/themes/corner-icons.ts`; add an entry there plus `Themes.corners` labels to offer a new one. Website palette values live in `app/globals.css`; the canvas resolver and Node adapter read those tokens.
 - `lib/themes/content.json`: occasion-specific English and Mexican Spanish content and an explicit published flag. `catalog.ts` validates preset references and provides route helpers.
 - `app/[locale]/(marketing)/loteria/`: server-rendered hub and theme pages. English `/loteria/<id>` pairs with Spanish `/es/loteria/<id>`; stable slugs are shared across languages.
 - `lib/themes/samples.json`: catalog references to each sample manifest, optimized asset URLs, and the matching Etsy ID. Add the new theme here before rendering.

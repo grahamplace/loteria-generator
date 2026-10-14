@@ -582,6 +582,15 @@
       "borderStyle": "Border style",
       "pickColor": "Choose {name} color",
       "invalidColor": "Enter a 6-digit hex color.",
+      "cornerIcon": "Corner icons",
+      "corners": {
+        "none": "None",
+        "cobweb": "Spiderwebs",
+        "pencil": "Pencils",
+        "star": "Stars",
+        "heart": "Hearts",
+        "flower": "Flowers"
+      },
       "borders": {
         "hand-drawn": "Hand drawn",
         "none": "None",

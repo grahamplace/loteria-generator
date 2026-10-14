@@ -1,12 +1,13 @@
 import {
   getTheme,
   boardBorderStyle,
+  boardCornerIcon,
   type BoardStyleOptions,
   type BoardDesignValues,
   type ThemeId,
-  type FrameStyle,
   type PrintFont,
 } from './presets';
+import { cornerIconDefinitions } from './corner-icons';
 import { loadPrintFont } from './fonts';
 
 export function printColor(token: string): string {
@@ -35,6 +36,7 @@ export function presetBoardStyle(id: ThemeId): BoardDesignValues {
     numberColor: id === 'classic' ? printColor('--loteria-number-ink') : color('number'),
     font: preset.font,
     borderStyle: boardBorderStyle({ presetId: id }),
+    cornerIcon: boardCornerIcon({ presetId: id }),
   };
 }
 
@@ -48,22 +50,40 @@ export function resolveBoardStyle(options: BoardStyleOptions = {}) {
   // Resolve retired decorations on read so existing boards and Custom history
   // match the current picker and exports without rewriting saved designs.
   design.borderStyle = boardBorderStyle(options);
+  design.cornerIcon = boardCornerIcon(options);
+  const themed = design.borderStyle !== 'hand-drawn' && design.borderStyle !== 'none';
   return {
     ...design,
     // Existing boards retain their typography until a design is explicitly saved.
     labelFont: options.font ?? 'Jost',
     numberFont: options.font ?? 'Caveat',
-    frame: (design.borderStyle === 'web' || design.borderStyle === 'pencils'
-      ? design.borderStyle
-      : 'none') satisfies FrameStyle,
-    themed: design.borderStyle !== 'hand-drawn' && design.borderStyle !== 'none',
+    themed,
+    /** Inset the card grid when a frame or corner icons occupy the margin. */
+    framed: themed || design.cornerIcon !== 'none',
   };
 }
 
 export function editableBoardStyle(options: BoardStyleOptions = {}): BoardDesignValues {
-  const { backgroundColor, badgeColor, labelColor, borderColor, numberColor, font, borderStyle } =
-    resolveBoardStyle(options);
-  return { backgroundColor, badgeColor, labelColor, borderColor, numberColor, font, borderStyle };
+  const {
+    backgroundColor,
+    badgeColor,
+    labelColor,
+    borderColor,
+    numberColor,
+    font,
+    borderStyle,
+    cornerIcon,
+  } = resolveBoardStyle(options);
+  return {
+    backgroundColor,
+    badgeColor,
+    labelColor,
+    borderColor,
+    numberColor,
+    font,
+    borderStyle,
+    cornerIcon,
+  };
 }
 export type ResolvedBoardStyle = ReturnType<typeof resolveBoardStyle>;
 
@@ -78,51 +98,64 @@ export function drawThemeFrame(
   height: number,
   style: ResolvedBoardStyle
 ) {
-  if (!style.themed) return;
+  if (!style.framed) return;
   ctx.save();
   ctx.strokeStyle = style.borderColor;
-  ctx.fillStyle = style.borderColor;
   ctx.lineWidth = 5;
   const margin = 80;
-  if (style.borderStyle === 'dashed') ctx.setLineDash([24, 18]);
-  ctx.strokeRect(margin, margin, width - margin * 2, height - margin * 2);
-  ctx.setLineDash([]);
-  if (style.borderStyle !== 'solid' && style.borderStyle !== 'dashed') {
-    ctx.lineWidth = 2;
-    ctx.strokeRect(margin + 15, margin + 15, width - (margin + 15) * 2, height - (margin + 15) * 2);
-  }
-  for (const [cx, cy, angle] of [
-    [120, 120, 0],
-    [width - 120, 120, Math.PI / 2],
-    [width - 120, height - 120, Math.PI],
-    [120, height - 120, -Math.PI / 2],
-  ]) {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
-    if (style.frame === 'web') {
-      for (let i = 0; i <= 4; i++) {
-        const a = (i * Math.PI) / 8;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(Math.cos(a) * 145, Math.sin(a) * 145);
-        ctx.stroke();
-      }
-      for (const radius of [40, 80, 120]) {
-        ctx.beginPath();
-        ctx.arc(0, 0, radius, 0, Math.PI / 2);
-        ctx.stroke();
-      }
-    } else if (style.frame === 'pencils') {
-      ctx.rotate(Math.PI / 4);
-      ctx.strokeRect(0, -8, 90, 16);
-      ctx.beginPath();
-      ctx.moveTo(90, -8);
-      ctx.lineTo(108, 0);
-      ctx.lineTo(90, 8);
-      ctx.stroke();
+  if (style.themed) {
+    if (style.borderStyle === 'dashed') ctx.setLineDash([24, 18]);
+    ctx.strokeRect(margin, margin, width - margin * 2, height - margin * 2);
+    ctx.setLineDash([]);
+    if (style.borderStyle !== 'solid' && style.borderStyle !== 'dashed') {
+      ctx.lineWidth = 2;
+      const inner = margin + 15;
+      ctx.strokeRect(inner, inner, width - inner * 2, height - inner * 2);
     }
+  }
+  if (style.cornerIcon !== 'none') drawCornerIcons(ctx, width, height, style.cornerIcon);
+  ctx.restore();
+}
+
+/** Icon box size in board pixels; the 100-unit SVG box is scaled to this. */
+const CORNER_ICON_PX = 145;
+const CORNER_INSET = 120;
+
+function drawCornerIcons(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  id: keyof typeof cornerIconDefinitions
+) {
+  const icon = cornerIconDefinitions[id];
+  const path = new Path2D(icon.path);
+  const scale = CORNER_ICON_PX / 100;
+  const far = (edge: number) => edge - CORNER_INSET;
+  // Corner points clockwise from top-left with the rotation that points the
+  // icon's +x/+y quadrant into the page.
+  const corners = [
+    [CORNER_INSET, CORNER_INSET, 0],
+    [far(width), CORNER_INSET, Math.PI / 2],
+    [far(width), far(height), Math.PI],
+    [CORNER_INSET, far(height), -Math.PI / 2],
+  ] as const;
+  ctx.lineWidth = 2.5 / scale;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  for (const [x, y, angle] of corners) {
+    ctx.save();
+    if (icon.orient === 'rotate') {
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+    } else {
+      // Keep the artwork upright; shift its box so it sits inside the corner.
+      ctx.translate(
+        x < width / 2 ? x : x - CORNER_ICON_PX,
+        y < height / 2 ? y : y - CORNER_ICON_PX
+      );
+    }
+    ctx.scale(scale, scale);
+    ctx.stroke(path);
     ctx.restore();
   }
-  ctx.restore();
 }

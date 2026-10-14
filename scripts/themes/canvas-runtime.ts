@@ -1,5 +1,5 @@
 /** Node adapter for the exact browser canvas renderer, used only for sample assets/tests. */
-import { createCanvas, Image, GlobalFonts } from '@napi-rs/canvas';
+import { createCanvas, Image, GlobalFonts, Path2D } from '@napi-rs/canvas';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -13,6 +13,7 @@ export async function installCanvasRuntime() {
   );
   const globals = globalThis as unknown as Record<string, unknown>;
   globals.Image = Image;
+  globals.Path2D = Path2D;
   globals.document = {
     documentElement: {},
     createElement(tag: string) {

@@ -1,4 +1,6 @@
 /** Lightweight render definitions. Color values live in app/globals.css. */
+import { cornerIcons, type CornerIcon } from './corner-icons';
+export { cornerIcons, type CornerIcon };
 export type PhotoMode = 'illustrated' | 'original';
 export const printFonts = [
   'Jost',
@@ -11,17 +13,14 @@ export const printFonts = [
   'Roboto Slab',
 ] as const;
 export type PrintFont = (typeof printFonts)[number];
-export const borderStyles = [
-  'hand-drawn',
-  'none',
-  'solid',
-  'double',
-  'dashed',
+export const borderStyles = ['hand-drawn', 'none', 'solid', 'double', 'dashed'] as const;
+/**
+ * Still accepted from saved boards and older clients; rendered as a plain
+ * double border. `web` and `pencils` also imply their corner icon.
+ */
+export const legacyBorderStyles = [
   'web',
   'pencils',
-] as const;
-/** Still accepted from saved boards and older clients; rendered as a plain double border. */
-export const legacyBorderStyles = [
   'stars',
   'confetti',
   'leaves',
@@ -40,6 +39,7 @@ export interface BoardDesignValues {
   borderColor: string;
   font: PrintFont;
   borderStyle: BorderStyle;
+  cornerIcon: CornerIcon;
 }
 export interface BoardStyleOptions extends Partial<BoardDesignValues> {
   presetId?: BoardThemeId;
@@ -56,6 +56,7 @@ const designKeys = [
   'borderColor',
   'font',
   'borderStyle',
+  'cornerIcon',
 ] as const satisfies readonly (keyof BoardDesignValues)[];
 
 function designValues(options: BoardStyleOptions): Partial<BoardDesignValues> {
@@ -97,115 +98,114 @@ export function mergeBoardStyles(
   if (latestCustom) next.customDesign = latestCustom;
   return next;
 }
-export type FrameStyle = 'none' | 'web' | 'pencils';
 export const themePresets = [
-  { id: 'classic', name: { en: 'Classic', 'es-MX': 'Clásica' }, frame: 'none', font: 'Jost' },
+  { id: 'classic', name: { en: 'Classic', 'es-MX': 'Clásica' }, corner: 'none', font: 'Jost' },
   {
     id: 'halloween',
     name: { en: 'Halloween', 'es-MX': 'Halloween' },
-    frame: 'web',
+    corner: 'cobweb',
     font: 'Creepster',
   },
-  { id: 'christmas', name: { en: 'Christmas', 'es-MX': 'Navidad' }, frame: 'none', font: 'Jost' },
+  { id: 'christmas', name: { en: 'Christmas', 'es-MX': 'Navidad' }, corner: 'none', font: 'Jost' },
   {
     id: 'birthday',
     name: { en: 'Birthday', 'es-MX': 'Cumpleaños' },
-    frame: 'none',
+    corner: 'none',
     font: 'Bebas Neue',
   },
   {
     id: 'family-reunion',
     name: { en: 'Family Reunion', 'es-MX': 'Reunión familiar' },
-    frame: 'none',
+    corner: 'none',
     font: 'Jost',
   },
   {
     id: 'quinceanera',
     name: { en: 'Quincea\u00f1era', 'es-MX': 'Quinceañera' },
-    frame: 'none',
+    corner: 'none',
     font: 'Jost',
   },
-  { id: 'wedding', name: { en: 'Wedding', 'es-MX': 'Boda' }, frame: 'none', font: 'Jost' },
+  { id: 'wedding', name: { en: 'Wedding', 'es-MX': 'Boda' }, corner: 'none', font: 'Jost' },
   {
     id: 'baby-shower-boy',
     name: { en: 'Baby Shower (Boy)', 'es-MX': 'Baby shower (niño)' },
-    frame: 'none',
+    corner: 'none',
     font: 'Jost',
   },
   {
     id: 'baby-shower-girl',
     name: { en: 'Baby Shower (Girl)', 'es-MX': 'Baby shower (niña)' },
-    frame: 'none',
+    corner: 'none',
     font: 'Jost',
   },
   {
     id: 'bridal-shower',
     name: { en: 'Bridal Shower', 'es-MX': 'Despedida de soltera' },
-    frame: 'none',
+    corner: 'none',
     font: 'Jost',
   },
   {
     id: 'bachelorette',
     name: { en: 'Bachelorette', 'es-MX': 'Fiesta de amigas' },
-    frame: 'none',
+    corner: 'none',
     font: 'Jost',
   },
   {
     id: 'friendsgiving',
     name: { en: 'Friendsgiving', 'es-MX': 'Cena de amigos' },
-    frame: 'none',
+    corner: 'none',
     font: 'Jost',
   },
   {
     id: 'graduation',
     name: { en: 'Graduation', 'es-MX': 'Graduación' },
-    frame: 'none',
+    corner: 'none',
     font: 'Bebas Neue',
   },
   {
     id: 'classroom',
     name: { en: 'Classroom', 'es-MX': 'Salón de clases' },
-    frame: 'pencils',
+    corner: 'pencil',
     font: 'Bebas Neue',
   },
   {
     id: 'anniversary',
     name: { en: 'Wedding Anniversary', 'es-MX': 'Aniversario de bodas' },
-    frame: 'none',
+    corner: 'none',
     font: 'Jost',
   },
   {
     id: 'soccer-team',
     name: { en: 'Soccer Team', 'es-MX': 'Equipo de fútbol' },
-    frame: 'none',
+    corner: 'none',
     font: 'Bebas Neue',
   },
   {
     id: 'new-years',
     name: { en: "New Year's", 'es-MX': 'Año Nuevo' },
-    frame: 'none',
+    corner: 'none',
     font: 'Bebas Neue',
   },
   {
     id: 'milestone-birthday',
     name: { en: '50th Birthday', 'es-MX': 'Cumpleaños especial' },
-    frame: 'none',
+    corner: 'none',
     font: 'Bebas Neue',
   },
   {
     id: 'destination-wedding',
     name: { en: 'Destination Wedding', 'es-MX': 'Boda de destino' },
-    frame: 'none',
+    corner: 'none',
     font: 'Jost',
   },
   {
     id: 'cinco-de-mayo',
     name: { en: 'Cinco de Mayo', 'es-MX': 'Cinco de Mayo' },
-    frame: 'none',
+    corner: 'none',
     font: 'Jost',
   },
-  { id: 'hanukkah', name: { en: 'Hanukkah', 'es-MX': 'Janucá' }, frame: 'none', font: 'Jost' },
-  { id: 'easter', name: { en: 'Easter', 'es-MX': 'Pascua' }, frame: 'none', font: 'Jost' },
+  { id: 'hanukkah', name: { en: 'Hanukkah', 'es-MX': 'Janucá' }, corner: 'none', font: 'Jost' },
+  { id: 'easter', name: { en: 'Easter', 'es-MX': 'Pascua' }, corner: 'none', font: 'Jost' },
 ] as const;
 export type ThemeId = (typeof themePresets)[number]['id'];
 export function isThemeId(value: unknown): value is ThemeId {
@@ -216,10 +216,15 @@ export function getTheme(id?: string | null) {
 }
 export function boardBorderStyle(options?: BoardStyleOptions | null): BorderStyle {
   const preset = getTheme(options?.presetId);
-  const border =
-    options?.borderStyle ??
-    (preset.id === 'classic' ? 'hand-drawn' : preset.frame === 'none' ? 'double' : preset.frame);
+  const border = options?.borderStyle ?? (preset.id === 'classic' ? 'hand-drawn' : 'double');
   return legacyBorderStyles.some((legacy) => legacy === border) ? 'double' : border;
+}
+/** Explicit choice, then the corner implied by a legacy border, then the preset's. */
+export function boardCornerIcon(options?: BoardStyleOptions | null): CornerIcon {
+  if (options?.cornerIcon) return options.cornerIcon;
+  if (options?.borderStyle === 'web') return 'cobweb';
+  if (options?.borderStyle === 'pencils') return 'pencil';
+  return getTheme(options?.presetId).corner;
 }
 export function themeVariables(id: ThemeId) {
   return {

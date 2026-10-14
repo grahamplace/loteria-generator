@@ -41,7 +41,7 @@ describe('editable print designs', () => {
     const saved = { ...initial, presetId: 'custom' as const, badgeColor: '#abcdef' };
     expect(editableBoardStyle(saved)).toEqual({ ...initial, badgeColor: '#abcdef' });
     expect(selectedBoardTheme(saved)).toBe('custom');
-    expect(resolveBoardStyle(saved).frame).toBe('web');
+    expect(resolveBoardStyle(saved).cornerIcon).toBe('cobweb');
   });
   it('keeps legacy colors and identifies those boards as Custom', () => {
     const legacy = { backgroundColor: '#fefefe', badgeColor: '#123456' };
@@ -158,11 +158,12 @@ describe('editable print designs', () => {
         ...presetBoardStyle('halloween'),
         presetId: 'custom',
         borderStyle: 'none',
+        cornerIcon: 'none',
       })
     );
     expect(ctx.save).not.toHaveBeenCalled();
   });
-  it.each(legacyBorderStyles)(
+  it.each(legacyBorderStyles.filter((style) => style !== 'web' && style !== 'pencils'))(
     'renders a saved %s decoration as a plain double border',
     (borderStyle) => {
       const saved = {
@@ -196,11 +197,46 @@ describe('editable print designs', () => {
       expect(ctx.strokeRect).toHaveBeenCalledTimes(2);
     }
   );
-  it('keeps corner decorations only on Halloween and Classroom presets', () => {
+  it('keeps corner icons only on Halloween and Classroom presets', () => {
     for (const preset of themePresets) {
       const expected =
-        preset.id === 'halloween' ? 'web' : preset.id === 'classroom' ? 'pencils' : 'none';
-      expect(resolveBoardStyle({ presetId: preset.id }).frame).toBe(expected);
+        preset.id === 'halloween' ? 'cobweb' : preset.id === 'classroom' ? 'pencil' : 'none';
+      expect(resolveBoardStyle({ presetId: preset.id }).cornerIcon).toBe(expected);
     }
+  });
+  it.each([
+    ['web', 'cobweb'],
+    ['pencils', 'pencil'],
+  ] as const)('splits a saved %s border into a double border and %s corners', (old, corner) => {
+    const saved = { presetId: 'custom' as const, borderStyle: old };
+    expect(boardStyleSchema.safeParse(saved).success).toBe(true);
+    expect(editableBoardStyle(saved)).toMatchObject({ borderStyle: 'double', cornerIcon: corner });
+  });
+  it('chooses corner icons independently of the border style', () => {
+    const style = resolveBoardStyle({
+      presetId: 'custom',
+      borderStyle: 'none',
+      cornerIcon: 'heart',
+    });
+    expect(style).toMatchObject({ themed: false, framed: true, cornerIcon: 'heart' });
+    expect(resolveBoardStyle({ presetId: 'halloween', cornerIcon: 'none' }).framed).toBe(true);
+    expect(resolveBoardStyle({ presetId: 'custom', borderStyle: 'none' }).framed).toBe(false);
+    expect(boardStyleSchema.safeParse({ cornerIcon: 'unknown' }).success).toBe(false);
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      setLineDash: vi.fn(),
+      strokeRect: vi.fn(),
+      translate: vi.fn(),
+      rotate: vi.fn(),
+      scale: vi.fn(),
+      stroke: vi.fn(),
+    };
+    vi.stubGlobal('Path2D', class {});
+    drawThemeFrame(ctx as unknown as CanvasRenderingContext2D, 2550, 3300, style);
+    expect(ctx.strokeRect).not.toHaveBeenCalled();
+    expect(ctx.stroke).toHaveBeenCalledTimes(4);
+    expect(ctx.rotate).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });

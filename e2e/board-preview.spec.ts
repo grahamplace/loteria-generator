@@ -549,7 +549,10 @@ test('custom designs update the preview, persist, export, and reset to a preset'
     'Creepster'
   );
   await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
-    'web'
+    'double'
+  );
+  await expect(page.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveValue(
+    'cobweb'
   );
   const before = await panel.getByRole('img').getAttribute('src');
   const saved = page.waitForRequest((request) => request.method() === 'PATCH');
@@ -564,7 +567,8 @@ test('custom designs update the preview, persist, export, and reset to a preset'
       labelColor: '#ffe8af',
       borderColor: '#d9a952',
       font: 'Creepster',
-      borderStyle: 'web',
+      borderStyle: 'double',
+      cornerIcon: 'cobweb',
     },
   });
   await expect(page.getByRole('radio', { name: 'Custom', exact: true })).toBeChecked();
@@ -574,7 +578,8 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await enterHex(page, page.getByRole('textbox', { name: 'Number text', exact: true }), '#ffffaa');
   await page.getByRole('combobox', { name: 'Font', exact: true }).click();
   await page.getByRole('option', { name: 'Bebas Neue', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('double');
+  await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('dashed');
+  await page.getByRole('combobox', { name: 'Corner icons', exact: true }).selectOption('heart');
   await enterHex(page, page.getByRole('textbox', { name: 'Border color', exact: true }), '#c0ffee');
   await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toBeEnabled();
   await page.reload();
@@ -594,7 +599,10 @@ test('custom designs update the preview, persist, export, and reset to a preset'
     'Bebas Neue'
   );
   await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
-    'double'
+    'dashed'
+  );
+  await expect(page.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveValue(
+    'heart'
   );
   await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
   await page.screenshot({

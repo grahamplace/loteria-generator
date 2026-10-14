@@ -588,6 +588,15 @@
       "borderStyle": "Estilo del borde",
       "pickColor": "Elegir color: {name}",
       "invalidColor": "Ingresa un color hexadecimal de 6 dígitos.",
+      "cornerIcon": "Adornos en las esquinas",
+      "corners": {
+        "none": "Ninguno",
+        "cobweb": "Telarañas",
+        "pencil": "Lápices",
+        "star": "Estrellas",
+        "heart": "Corazones",
+        "flower": "Flores"
+      },
       "borders": {
         "hand-drawn": "A mano",
         "none": "Ninguno",

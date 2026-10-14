@@ -13,6 +13,7 @@ All card insertion paths use `lib/boards/add-cards.ts`: a parent-row lock and in
 ## Theme data and rendering
 
 - `lib/themes/presets.ts`: small builder catalog and shared style/photo-mode types.
+- `lib/themes/corner-icons.ts`: corner icon options as SVG path data, chosen separately from the border style.
 - `app/globals.css`: website and print palette variables, with licensed local display fonts.
 - `lib/themes/content.json`: bilingual occasion content, publication flag, meaningful modification date. Optional `presets` lets one page offer several presets (e.g. Baby Shower → Boy and Girl); the first sets the page colors.
 - `lib/themes/samples.json`: sample/asset/Etsy references.
