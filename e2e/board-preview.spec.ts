@@ -551,7 +551,8 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
     'double'
   );
-  await expect(page.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveValue(
+  await expect(page.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveAttribute(
+    'data-value',
     'cobweb'
   );
   const before = await panel.getByRole('img').getAttribute('src');
@@ -579,7 +580,8 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await page.getByRole('combobox', { name: 'Font', exact: true }).click();
   await page.getByRole('option', { name: 'Bebas Neue', exact: true }).click();
   await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('dashed');
-  await page.getByRole('combobox', { name: 'Corner icons', exact: true }).selectOption('heart');
+  await page.getByRole('combobox', { name: 'Corner icons', exact: true }).click();
+  await page.getByRole('option', { name: 'Hearts', exact: true }).click();
   // Reloading while this save is in flight would cancel it.
   const borderColorSaved = page.waitForResponse(
     (response) =>
@@ -608,7 +610,8 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
     'dashed'
   );
-  await expect(page.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveValue(
+  await expect(page.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveAttribute(
+    'data-value',
     'heart'
   );
   await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');

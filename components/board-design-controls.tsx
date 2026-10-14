@@ -4,14 +4,10 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
-import {
-  borderStyles,
-  cornerIcons,
-  type BoardDesignValues,
-  type BoardStyleOptions,
-} from '@/lib/themes/presets';
+import { borderStyles, type BoardDesignValues, type BoardStyleOptions } from '@/lib/themes/presets';
 import { editableBoardStyle } from '@/lib/themes/render-style';
 import { cn } from '@/lib/utils';
+import { BoardCornerPicker } from '@/components/board-corner-picker';
 import { BoardFontPicker } from '@/components/board-font-picker';
 
 export function openDesignControls() {
@@ -266,31 +262,13 @@ export function BoardDesignControls({
                   />
                 </span>
               </label>
-              <label className="min-w-0 text-sm font-medium">
-                <span className="mb-1.5 block">{t('cornerIcon')}</span>
-                <span className="relative block">
-                  <select
-                    name="cornerIcon"
-                    value={values.cornerIcon}
-                    onChange={(event) =>
-                      onChange({
-                        cornerIcon: event.target.value as BoardDesignValues['cornerIcon'],
-                      })
-                    }
-                    className={selectClassName}
-                  >
-                    {cornerIcons.map((icon) => (
-                      <option key={icon} value={icon}>
-                        {t(`corners.${icon}`)}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    aria-hidden="true"
-                    className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  />
-                </span>
-              </label>
+              <BoardCornerPicker
+                value={values.cornerIcon}
+                color={values.borderColor}
+                background={values.backgroundColor}
+                disabled={disabled}
+                onChange={(cornerIcon) => onChange({ cornerIcon })}
+              />
             </div>
           </>
         )}
