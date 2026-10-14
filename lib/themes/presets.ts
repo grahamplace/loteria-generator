@@ -204,12 +204,6 @@ export const themePresets = [
     frame: 'none',
     font: 'Jost',
   },
-  {
-    id: 'original-photos',
-    name: { en: 'Photo Loter\u00eda', 'es-MX': 'Fotos originales' },
-    frame: 'none',
-    font: 'Jost',
-  },
   { id: 'hanukkah', name: { en: 'Hanukkah', 'es-MX': 'Janucá' }, frame: 'none', font: 'Jost' },
   { id: 'easter', name: { en: 'Easter', 'es-MX': 'Pascua' }, frame: 'none', font: 'Jost' },
 ] as const;

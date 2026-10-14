@@ -47,8 +47,8 @@ describe('theme catalog and acquisition settings', () => {
     expect(parseThemeEntry('halloween', undefined)?.photoMode).toBe('illustrated');
     expect(parseThemeEntry('unknown', 'original')).toBeNull();
     expect(parseThemeEntry(undefined, undefined)).toBeNull();
-    expect(themeStartPath('original-photos', 'original', 'es-MX')).toBe(
-      '/es/start?theme=original-photos&mode=original'
+    expect(themeStartPath('classic', 'original', 'es-MX')).toBe(
+      '/es/start?theme=classic&mode=original'
     );
   });
 });
