@@ -30,6 +30,8 @@ vi.mock('@/db', () => ({
   cards: { number: 'cards.number', boardId: 'cards.boardId', id: 'cards.id' },
   IMAGE_GENERATION_LIMIT_FREE: 4,
   IMAGE_GENERATION_LIMIT_PAID: 100,
+  getGenerationLimit: (b: { isUnlocked: boolean; generationLimitOverride: number | null }) =>
+    b.generationLimitOverride ?? (b.isUnlocked ? 100 : 4),
 }));
 
 vi.mock('@/lib/inngest/client', () => ({ inngest: { send: (...a: unknown[]) => sendMock(...a) } }));

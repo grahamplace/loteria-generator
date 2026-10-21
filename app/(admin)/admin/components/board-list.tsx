@@ -11,13 +11,14 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db/schema';
+import { getGenerationLimit } from '@/db/schema';
 
 interface BoardRow {
   id: string;
   name: string;
   isUnlocked: boolean;
   imageGenerationsUsed: number;
+  generationLimitOverride: number | null;
   cardCount: number;
   ownerEmail: string;
   ownerId: string;
@@ -58,9 +59,7 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
             </TableHeader>
             <TableBody>
               {filtered.map((board) => {
-                const genLimit = board.isUnlocked
-                  ? IMAGE_GENERATION_LIMIT_PAID
-                  : IMAGE_GENERATION_LIMIT_FREE;
+                const genLimit = getGenerationLimit(board);
                 return (
                   <TableRow key={board.id}>
                     <TableCell className="whitespace-nowrap">
