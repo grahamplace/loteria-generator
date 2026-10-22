@@ -20,7 +20,7 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
   Compare the host against the dev branch's endpoint in the Neon console. If it matches the production branch, stop and repoint before running anything.
 
 - New worktrees do not inherit `.env.local` — copy it from an existing checkout (along with `.npmrc` and, for e2e, `.env.test`).
-- Schema changes still reach production the usual way, through a deploy. A migration that is correct against dev is not automatically safe against production data: check for rows that violate a new constraint before shipping.
+- Schema changes reach production through `.github/workflows/migrate-prod.yml`, which runs `pnpm db:migrate` against prod on every merge to main that touches `db/migrations/` (or manually via workflow_dispatch). It runs alongside the Vercel deploy, not before it, so a migration must work with both the old and new code (add columns nullable; drop in a later PR). A migration that is correct against dev is not automatically safe against production data: check for rows that violate a new constraint before shipping.
 - The e2e suite is separately isolated — `scripts/e2e-run.ts` provisions a throwaway Neon branch per run, migrates and seeds it, and destroys it afterwards. It touches neither dev nor production.
 
 ---

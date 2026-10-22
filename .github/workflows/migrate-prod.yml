@@ -1,0 +1,55 @@
+name: Migrate production DB
+
+# Applies pending Drizzle migrations to the production Neon branch whenever a
+# merge to main touches db/migrations. Migrations must be backward compatible
+# with the currently deployed code: Vercel deploys the same commit in parallel,
+# so either side may land first.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'db/migrations/**'
+  workflow_dispatch:
+
+# Never run two migrations at once, and never cancel one mid-flight.
+concurrency:
+  group: migrate-prod
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Migrate
+    runs-on: ubuntu-latest
+    # Holds PROD_DATABASE_URL. Add required reviewers on this environment to
+    # gate migrations behind a manual approval.
+    environment: production-db
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check secret
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::PROD_DATABASE_URL is not set on the production-db environment"
+            exit 1
+          fi
+
+      - name: Run migrations
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
