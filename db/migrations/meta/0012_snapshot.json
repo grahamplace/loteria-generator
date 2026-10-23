@@ -1,5 +1,5 @@
 {
-  "id": "a8cc4a2a-7a82-4c12-a004-8cb32aa1a6da",
+  "id": "5313b8a7-cc6a-42be-a1fb-c5eb9669970a",
   "prevId": "b73034d8-1b3e-4a61-aa52-5999c30348d3",
   "version": "7",
   "dialect": "postgresql",
@@ -161,6 +161,12 @@
           "notNull": true,
           "default": 0
         },
+        "generation_limit_override": {
+          "name": "generation_limit_override",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "preview_url": {
           "name": "preview_url",
           "type": "text",
@@ -172,13 +178,6 @@
           "type": "json",
           "primaryKey": false,
           "notNull": false
-        },
-        "photo_mode": {
-          "name": "photo_mode",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'illustrated'"
         },
         "created_at": {
           "name": "created_at",

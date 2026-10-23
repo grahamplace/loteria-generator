@@ -3,7 +3,7 @@ import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { db, boards } from '@/db';
+import { db, boards, getGenerationLimit } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { deleteBoardImages } from '@/lib/blob';
 import { updateBoardSchema } from '@/lib/validations';
@@ -39,7 +39,15 @@ export async function GET(
       return NextResponse.json({ error: 'Board not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ board });
+    // Include generation limit info
+    const generationLimit = getGenerationLimit(board);
+    const generationsRemaining = Math.max(0, generationLimit - board.imageGenerationsUsed);
+
+    return NextResponse.json({
+      board,
+      generationLimit,
+      generationsRemaining,
+    });
   } catch (error) {
     console.error('Error fetching board:', error);
     return NextResponse.json({ error: 'Failed to fetch board' }, { status: 500 });

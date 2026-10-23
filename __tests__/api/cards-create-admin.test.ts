@@ -30,6 +30,8 @@ vi.mock('@/db', () => ({
   cards: { number: 'cards.number', boardId: 'cards.boardId', id: 'cards.id' },
   IMAGE_GENERATION_LIMIT_FREE: 4,
   IMAGE_GENERATION_LIMIT_PAID: 100,
+  getGenerationLimit: (b: { isUnlocked: boolean; generationLimitOverride: number | null }) =>
+    b.generationLimitOverride ?? (b.isUnlocked ? 100 : 4),
 }));
 
 vi.mock('@/lib/boards/add-cards', () => ({
@@ -293,7 +295,7 @@ describe('original photo mode', () => {
     expect(sendMock).not.toHaveBeenCalled();
     expect((await res.json()).card.status).toBe('completed');
   });
-  it('does not limit illustration generations over the lifetime of a set', async () => {
+  it('enforces the generation limit for illustrated uploads', async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(USER as never);
     boardsFindFirst.mockResolvedValue({
       id: 'board-1',
@@ -301,9 +303,11 @@ describe('original photo mode', () => {
       isUnlocked: false,
       photoMode: 'illustrated',
       imageGenerationsUsed: 999,
+      generationLimitOverride: null,
     });
     const res = await POST(makeReq({ originalImageBase64: IMG }), { params });
-    expect(res.status).toBe(201);
-    expect(sendMock).toHaveBeenCalledOnce();
+    expect(res.status).toBe(403);
+    expect((await res.json()).code).toBe('GENERATION_LIMIT_REACHED');
+    expect(sendMock).not.toHaveBeenCalled();
   });
 });

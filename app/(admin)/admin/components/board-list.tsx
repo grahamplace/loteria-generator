@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { BoardThemeBadge } from '@/components/board-theme-badge';
 import { boardBorderStyle, getTheme, type BoardStyleOptions } from '@/lib/themes/presets';
 import messages from '@/messages/en.json';
+import { getGenerationLimit } from '@/db/schema';
 
 interface BoardRow {
   id: string;
@@ -21,6 +22,7 @@ interface BoardRow {
   styleOptions: BoardStyleOptions | null;
   isUnlocked: boolean;
   imageGenerationsUsed: number;
+  generationLimitOverride: number | null;
   cardCount: number;
   ownerEmail: string;
   ownerId: string;
@@ -62,6 +64,7 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
             </TableHeader>
             <TableBody>
               {filtered.map((board) => {
+                const genLimit = getGenerationLimit(board);
                 return (
                   <TableRow key={board.id}>
                     <TableCell className="whitespace-nowrap">
@@ -92,7 +95,7 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
                     </TableCell>
                     <TableCell className="text-sm tabular-nums">{board.cardCount}</TableCell>
                     <TableCell className="whitespace-nowrap text-sm tabular-nums">
-                      {board.imageGenerationsUsed}
+                      {board.imageGenerationsUsed}/{genLimit}
                     </TableCell>
                     <TableCell>
                       {board.isUnlocked ? (

@@ -90,6 +90,21 @@ export interface CropData {
   height: number;
 }
 
+// Generation limits
+export const IMAGE_GENERATION_LIMIT_FREE = 4;
+export const IMAGE_GENERATION_LIMIT_PAID = 100;
+
+// Per-board override (set by an admin) wins over the free/paid default.
+export function getGenerationLimit(board: {
+  isUnlocked: boolean;
+  generationLimitOverride: number | null;
+}): number {
+  return (
+    board.generationLimitOverride ??
+    (board.isUnlocked ? IMAGE_GENERATION_LIMIT_PAID : IMAGE_GENERATION_LIMIT_FREE)
+  );
+}
+
 // Boards table
 export const boards = pgTable('boards', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -101,6 +116,7 @@ export const boards = pgTable('boards', {
   stripePaymentId: text('stripe_payment_id'),
   unlockedAt: timestamp('unlocked_at'),
   imageGenerationsUsed: integer('image_generations_used').notNull().default(0),
+  generationLimitOverride: integer('generation_limit_override'),
   previewUrl: text('preview_url'),
   styleOptions: json('style_options').$type<BoardStyleOptions>(),
   photoMode: text('photo_mode').$type<PhotoMode>().notNull().default('illustrated'),

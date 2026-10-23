@@ -1,1 +1,0 @@
-ALTER TABLE "boards" ADD COLUMN "photo_mode" text DEFAULT 'illustrated' NOT NULL;

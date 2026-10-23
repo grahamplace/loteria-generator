@@ -273,7 +273,7 @@ export function useBoardCards(
 
         if (!createResponse.ok) {
           const data = await createResponse.json();
-          if (data.code === 'CARD_LIMIT_REACHED') {
+          if (data.code === 'CARD_LIMIT_REACHED' || data.code === 'GENERATION_LIMIT_REACHED') {
             setCards((prev) => prev.filter((c) => c.id !== tempId));
             toast.error('Card limit reached', { description: data.message });
             return;
@@ -345,7 +345,7 @@ export function useBoardCards(
 
           if (!res.ok) {
             const data = await res.json();
-            if (data.code === 'CARD_LIMIT_REACHED') {
+            if (data.code === 'CARD_LIMIT_REACHED' || data.code === 'GENERATION_LIMIT_REACHED') {
               setCards((prev) => prev.filter((c) => c.id !== fd.tempId));
               toast.error(
                 data.code === 'CARD_LIMIT_REACHED'

@@ -2,6 +2,7 @@ import { after } from 'next/server';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware } from 'better-auth/api';
+import { nextCookies } from 'better-auth/next-js';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { sendPasswordResetEmail } from '@/lib/email/send-password-reset';
@@ -91,7 +92,9 @@ export const auth = betterAuth({
     },
   },
   session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    // Sliding window: any session check more than `updateAge` after the last
+    // refresh pushes expiry `expiresIn` out again, in the DB row and the cookie.
+    expiresIn: 60 * 60 * 24 * 30, // 30 days
     updateAge: 60 * 60 * 24, // Update session every 24 hours
     cookieCache: {
       enabled: true,
@@ -124,6 +127,11 @@ export const auth = betterAuth({
       },
     },
   },
+  // Most session checks run server-side (route handlers, server actions), where
+  // better-auth can't write cookies on its own. Without this plugin a refresh
+  // extended the DB row but not the cookie, so the browser still dropped the
+  // cookie `expiresIn` after sign-in. Must stay last in `plugins`.
+  plugins: [nextCookies()],
 });
 
 // Export types for use throughout the app

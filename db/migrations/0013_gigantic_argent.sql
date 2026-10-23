@@ -1,1 +1,0 @@
-ALTER TABLE "cards" ADD COLUMN "saved_illustration_url" text;

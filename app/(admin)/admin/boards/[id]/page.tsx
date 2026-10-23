@@ -7,7 +7,9 @@ import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import { RetryFailedButton } from '../../components/retry-failed-button';
 import { AdminBoardAppearance } from '../../components/admin-board-appearance';
 import { AdminBoardCardsGrid } from '../../components/admin-board-cards-grid';
+import { GenerationLimitForm } from '../../components/generation-limit-form';
 import Link from 'next/link';
+import { getGenerationLimit } from '@/db/schema';
 import { isRetriableCard } from '@/lib/admin';
 
 async function getBoardWithOwner(boardId: string) {
@@ -43,6 +45,7 @@ export default async function AdminBoardDetailPage({
   }
 
   const { board, ownerEmail, ownerName, ownerId } = data;
+  const genLimit = getGenerationLimit(board);
   const now = new Date();
   const errorCount = boardCards.filter((c) => isRetriableCard(c, now)).length;
 
@@ -85,7 +88,13 @@ export default async function AdminBoardDetailPage({
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Generations</p>
-              <p>{board.imageGenerationsUsed}</p>
+              <p>
+                {board.imageGenerationsUsed}/{genLimit}
+                {board.generationLimitOverride !== null && (
+                  <span className="ml-1 text-xs text-muted-foreground">(override)</span>
+                )}
+              </p>
+              <GenerationLimitForm boardId={id} override={board.generationLimitOverride} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">

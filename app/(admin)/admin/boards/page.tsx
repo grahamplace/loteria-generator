@@ -15,6 +15,7 @@ async function getBoards() {
       styleOptions: boards.styleOptions,
       isUnlocked: boards.isUnlocked,
       imageGenerationsUsed: boards.imageGenerationsUsed,
+      generationLimitOverride: boards.generationLimitOverride,
       updatedAt: boards.updatedAt,
       ownerEmail: user.email,
       ownerId: user.id,

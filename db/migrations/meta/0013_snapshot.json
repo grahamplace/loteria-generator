@@ -1,6 +1,6 @@
 {
-  "id": "52661af8-4bca-4c7b-ab8f-eaadaf92f339",
-  "prevId": "a8cc4a2a-7a82-4c12-a004-8cb32aa1a6da",
+  "id": "24dbdfa1-85fa-419f-8a9b-4c8a75bba12b",
+  "prevId": "5313b8a7-cc6a-42be-a1fb-c5eb9669970a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -160,6 +160,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "generation_limit_override": {
+          "name": "generation_limit_override",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         },
         "preview_url": {
           "name": "preview_url",

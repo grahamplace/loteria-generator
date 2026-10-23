@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import Link from 'next/link';
+import { getGenerationLimit } from '@/db/schema';
 
 async function getUser(id: string) {
   const result = await db.query.user.findFirst({
@@ -37,6 +38,7 @@ async function getUserBoards(userId: string) {
       isUnlocked: boards.isUnlocked,
       stripePaymentId: boards.stripePaymentId,
       imageGenerationsUsed: boards.imageGenerationsUsed,
+      generationLimitOverride: boards.generationLimitOverride,
       createdAt: boards.createdAt,
       updatedAt: boards.updatedAt,
       cardCount: sql<number>`(select count(*) from cards where cards.board_id = "boards"."id")`.as(
@@ -136,6 +138,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
               </TableHeader>
               <TableBody>
                 {userBoards.map((board) => {
+                  const genLimit = getGenerationLimit(board);
                   return (
                     <TableRow key={board.id}>
                       <TableCell className="whitespace-nowrap">
@@ -148,7 +151,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                       </TableCell>
                       <TableCell className="text-sm tabular-nums">{board.cardCount}</TableCell>
                       <TableCell className="whitespace-nowrap text-sm tabular-nums">
-                        {board.imageGenerationsUsed}
+                        {board.imageGenerationsUsed}/{genLimit}
                       </TableCell>
                       <TableCell>
                         {board.isUnlocked ? (
