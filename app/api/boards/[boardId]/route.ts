@@ -1,3 +1,5 @@
+import { mergeBoardStyles } from '@/lib/themes/presets';
+import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
@@ -77,7 +79,7 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    const { name, styleOptions } = parsed.data;
+    const { name, styleOptions, photoMode } = parsed.data;
 
     // Verify ownership
     const existingBoard = await db.query.boards.findFirst({
@@ -98,8 +100,12 @@ export async function PATCH(
     }
 
     if (styleOptions !== undefined) {
-      updateData.styleOptions = styleOptions;
+      updateData.styleOptions = mergeBoardStyles(existingBoard.styleOptions, styleOptions);
     }
+
+    if (photoMode !== undefined) updateData.photoMode = photoMode;
+    if (styleOptions !== undefined || name !== undefined)
+      await invalidateBoardPreview(boardId, session.user.id);
 
     const [updatedBoard] = await db
       .update(boards)

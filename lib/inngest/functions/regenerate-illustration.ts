@@ -100,6 +100,7 @@ export const regenerateIllustration = inngest.createFunction(
         .update(cards)
         .set({
           illustrationUrl,
+          savedIllustrationUrl: illustrationUrl,
           status: 'completed',
           errorMessage: null,
           // cropData is kept so "Use original photo" can restore the same crop.

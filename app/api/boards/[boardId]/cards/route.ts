@@ -1,3 +1,5 @@
+import { insertCardsWithinLimit } from '@/lib/boards/add-cards';
+import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
@@ -18,8 +20,8 @@ import { getPostHogClient } from '@/lib/posthog-server';
 import { isAdminEmail } from '@/lib/admin';
 
 // Constants for limits
-const MAX_CARDS_FREE = 4;
-const MAX_CARDS_UNLOCKED = 54;
+const MAX_CARDS_FREE = FREE_CARD_LIMIT;
+const MAX_CARDS_UNLOCKED = TOTAL_CARD_COUNT;
 
 /**
  * GET /api/boards/[boardId]/cards - List all cards for a board
@@ -88,8 +90,8 @@ export async function POST(
     const { originalImageBase64, label } = parsed.data;
 
     const isAdmin = isAdminEmail(session.user.email);
-    const skipLabeling = isAdmin && parsed.data.skipLabeling === true;
-    const skipIllustration = isAdmin && parsed.data.skipIllustration === true;
+    let skipLabeling = isAdmin && parsed.data.skipLabeling === true;
+    let skipIllustration = isAdmin && parsed.data.skipIllustration === true;
     const cropData = isAdmin ? (parsed.data.cropData ?? null) : null;
 
     // Verify board ownership
@@ -108,7 +110,7 @@ export async function POST(
 
     const maxCards = board.isUnlocked ? MAX_CARDS_UNLOCKED : MAX_CARDS_FREE;
 
-    if (!isAdmin && existingCards.length >= maxCards) {
+    if (existingCards.length >= maxCards) {
       return NextResponse.json(
         {
           error: 'Card limit reached',
@@ -121,10 +123,15 @@ export async function POST(
       );
     }
 
+    if (board.photoMode === 'original') {
+      skipIllustration = true;
+      skipLabeling = true;
+    }
+
     // Check AI generation limit before creating the card so over-limit uploads
     // are rejected up front (the Inngest job increments the counter on success).
     const skipAIProcessing = process.env.NEXT_PUBLIC_SKIP_AI_PROCESSING === 'true';
-    if (originalImageBase64 && !skipAIProcessing && !isAdmin) {
+    if (originalImageBase64 && !skipAIProcessing && !isAdmin && !skipIllustration) {
       const generationLimit = getGenerationLimit(board);
       if (board.imageGenerationsUsed >= generationLimit) {
         return NextResponse.json(
@@ -141,23 +148,24 @@ export async function POST(
         );
       }
     }
-
-    // Compute next number inline in a single INSERT. neon-http has no
-    // transaction support, so we rely on the subquery being evaluated as part
-    // of the same statement.
     const initialStatus = originalImageBase64 && !skipAIProcessing ? 'processing' : 'pending';
-    const [newCard] = await db
-      .insert(cards)
-      .values({
-        boardId,
-        userId: session.user.id,
-        number: sql`COALESCE((SELECT MAX(${cards.number}) FROM ${cards} WHERE ${cards.boardId} = ${boardId}), 0) + 1`,
+    const [newCard] = await insertCardsWithinLimit(boardId, session.user.id, [
+      {
         label: label || '',
         status: initialStatus,
         preserveOriginal: skipIllustration,
         cropData,
-      })
-      .returning();
+      },
+    ]);
+    if (!newCard)
+      return NextResponse.json(
+        {
+          error: 'Card limit reached',
+          code: 'CARD_LIMIT_REACHED',
+          message: `This set allows ${maxCards} cards.`,
+        },
+        { status: 403 }
+      );
 
     // Upload original image to blob storage if provided
     if (originalImageBase64) {
@@ -227,19 +235,6 @@ export async function POST(
                 cropData: cropData ?? undefined,
               })
             );
-            const posthog = getPostHogClient();
-            if (posthog) {
-              posthog.capture({
-                distinctId: session.user.id,
-                event: 'card_upload_started',
-                properties: {
-                  board_id: boardId,
-                  card_id: newCard.id,
-                  board_is_unlocked: board.isUnlocked,
-                },
-              });
-              await posthog.shutdown();
-            }
           }
         }
       } catch (uploadError) {
@@ -251,6 +246,23 @@ export async function POST(
           .where(eq(cards.id, newCard.id));
         newCard.status = 'error';
       }
+    }
+
+    const posthog = getPostHogClient();
+    if (posthog) {
+      posthog.capture({
+        distinctId: session.user.id,
+        event: 'card_upload_started',
+        properties: {
+          board_id: boardId,
+          card_id: newCard.id,
+          board_is_unlocked: board.isUnlocked,
+          theme: board.styleOptions?.presetId ?? 'classic',
+          photo_mode: board.photoMode,
+          locale: request.cookies?.get('LOCALE')?.value === 'es-MX' ? 'es-MX' : 'en',
+        },
+      });
+      await posthog.shutdown();
     }
 
     await invalidateBoardPreview(boardId, session.user.id);
@@ -327,7 +339,7 @@ export async function PATCH(
       updateData.errorMessage = errorMessage;
     }
 
-    if (isAdmin && cropData !== undefined) {
+    if ((isAdmin || card.preserveOriginal) && cropData !== undefined) {
       updateData.cropData = cropData;
     }
 
@@ -337,6 +349,7 @@ export async function PATCH(
         const buffer = base64ToBuffer(illustrationBase64);
         const illustrationUrl = await uploadIllustration(session.user.id, boardId, cardId, buffer);
         updateData.illustrationUrl = illustrationUrl;
+        updateData.savedIllustrationUrl = illustrationUrl;
       } catch (uploadError) {
         console.error('Error uploading illustration:', uploadError);
         updateData.status = 'error';

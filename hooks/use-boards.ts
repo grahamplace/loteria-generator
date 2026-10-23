@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useRouter } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { Board, BoardStyleOptions } from '@/db/schema';
+import type { PhotoMode } from '@/lib/themes/presets';
 
 interface BoardSummary {
   id: string;
   name: string;
+  styleOptions: BoardStyleOptions | null;
   isUnlocked: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -16,16 +19,8 @@ interface BoardSummary {
   previewCards: Array<{ id: string; number: number }>;
 }
 
-interface BoardLimits {
-  current: number;
-  max: number;
-  unlockedCount: number;
-  canCreateBoard: boolean;
-}
-
 interface UseBoardsReturn {
   boards: BoardSummary[];
-  limits: BoardLimits | null;
   isLoading: boolean;
   error: string | null;
   createBoard: (name?: string) => Promise<Board | null>;
@@ -36,9 +31,9 @@ interface UseBoardsReturn {
 /**
  * Hook for managing boards list
  */
-export function useBoards(): UseBoardsReturn {
+export function useBoards(enabled = true): UseBoardsReturn {
+  const t = useTranslations('BoardSwitcher');
   const [boards, setBoards] = useState<BoardSummary[]>([]);
-  const [limits, setLimits] = useState<BoardLimits | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -60,7 +55,6 @@ export function useBoards(): UseBoardsReturn {
 
       const data = await response.json();
       setBoards(data.boards || []);
-      setLimits(data.limits || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch boards');
     } finally {
@@ -69,8 +63,8 @@ export function useBoards(): UseBoardsReturn {
   }, [router]);
 
   useEffect(() => {
-    fetchBoards();
-  }, [fetchBoards]);
+    if (enabled) void fetchBoards();
+  }, [enabled, fetchBoards]);
 
   const createBoard = useCallback(
     async (name?: string): Promise<Board | null> => {
@@ -84,13 +78,6 @@ export function useBoards(): UseBoardsReturn {
         if (!response.ok) {
           const data = await response.json();
 
-          if (data.code === 'BOARD_LIMIT_REACHED') {
-            toast.error('Board limit reached', {
-              description: data.message,
-            });
-            return null;
-          }
-
           throw new Error(data.error || 'Failed to create board');
         }
 
@@ -98,12 +85,12 @@ export function useBoards(): UseBoardsReturn {
         await fetchBoards(); // Refresh the list
 
         return data.board;
-      } catch (err) {
-        toast.error('Failed to create board');
+      } catch {
+        toast.error(t('createError'));
         return null;
       }
     },
-    [fetchBoards]
+    [fetchBoards, t]
   );
 
   const deleteBoard = useCallback(
@@ -118,19 +105,18 @@ export function useBoards(): UseBoardsReturn {
         }
 
         await fetchBoards(); // Refresh the list
-        toast.success('Board deleted');
+        toast.success(t('deleted'));
         return true;
-      } catch (err) {
-        toast.error('Failed to delete board');
+      } catch {
+        toast.error(t('deleteError'));
         return false;
       }
     },
-    [fetchBoards]
+    [fetchBoards, t]
   );
 
   return {
     boards,
-    limits,
     isLoading,
     error,
     createBoard,
@@ -153,9 +139,14 @@ interface BoardWithCards extends Board {
 
 interface UseBoardReturn {
   board: BoardWithCards | null;
+  pendingPhotoMode: PhotoMode | null;
   isLoading: boolean;
   error: string | null;
-  updateBoard: (updates: { name?: string; styleOptions?: BoardStyleOptions }) => Promise<boolean>;
+  updateBoard: (updates: {
+    name?: string;
+    styleOptions?: BoardStyleOptions;
+    photoMode?: import('@/lib/themes/presets').PhotoMode;
+  }) => Promise<boolean>;
   refreshBoard: () => Promise<void>;
 }
 
@@ -163,7 +154,10 @@ interface UseBoardReturn {
  * Hook for managing a single board
  */
 export function useBoard(boardId: string): UseBoardReturn {
+  const t = useTranslations('Themes.Builder');
   const [board, setBoard] = useState<BoardWithCards | null>(null);
+  const [pendingPhotoMode, setPendingPhotoMode] = useState<PhotoMode | null>(null);
+  const updateQueue = useRef(Promise.resolve());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -203,31 +197,45 @@ export function useBoard(boardId: string): UseBoardReturn {
   }, [fetchBoard]);
 
   const updateBoard = useCallback(
-    async (updates: { name?: string; styleOptions?: BoardStyleOptions }): Promise<boolean> => {
-      try {
-        const response = await fetch(`/api/boards/${boardId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updates),
-        });
+    (updates: {
+      name?: string;
+      styleOptions?: BoardStyleOptions;
+      photoMode?: import('@/lib/themes/presets').PhotoMode;
+    }): Promise<boolean> => {
+      if (updates.photoMode) setPendingPhotoMode(updates.photoMode);
+      // Both the design panel and upload controls save this board. Keep their
+      // responses in order so a slower save cannot restore an older setting.
+      const request = updateQueue.current.then(async () => {
+        try {
+          const response = await fetch(`/api/boards/${boardId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+          });
 
-        if (!response.ok) {
-          throw new Error('Failed to update board');
+          if (!response.ok) {
+            throw new Error('Failed to update board');
+          }
+
+          const data = await response.json();
+          setBoard((prev) => (prev ? { ...prev, ...data.board } : null));
+          return true;
+        } catch {
+          toast.error(t('saveError'));
+          return false;
+        } finally {
+          if (updates.photoMode) setPendingPhotoMode(null);
         }
-
-        const data = await response.json();
-        setBoard((prev) => (prev ? { ...prev, ...data.board } : null));
-        return true;
-      } catch (err) {
-        toast.error('Failed to update board');
-        return false;
-      }
+      });
+      updateQueue.current = request.then(() => {});
+      return request;
     },
-    [boardId]
+    [boardId, t]
   );
 
   return {
     board,
+    pendingPhotoMode,
     isLoading,
     error,
     updateBoard,

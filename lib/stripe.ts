@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { BOARD_UNLOCK_PRICE_CENTS } from '@/lib/constants';
+import { BOARD_UNLOCK_PRICE_CENTS, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 import { lazyClient, requireEnv } from '@/lib/lazy-client';
 
 // Server-side Stripe client. Constructed on first use, not at module scope —
@@ -23,6 +23,8 @@ export async function createBoardUnlockCheckout(params: {
   successUrl: string;
   cancelUrl: string;
   promotionCodeId?: string;
+  theme?: string;
+  locale?: string;
 }): Promise<Stripe.Checkout.Session> {
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
@@ -35,8 +37,7 @@ export async function createBoardUnlockCheckout(params: {
           unit_amount: BOARD_UNLOCK_PRICE_CENTS,
           product_data: {
             name: `Unlock Loteria Board: ${params.boardName}`,
-            description:
-              'Unlock full features: up to 54 cards, unlimited board generations, and all export options.',
+            description: `Increase this set from ${FREE_CARD_LIMIT} to ${TOTAL_CARD_COUNT} cards. All themes, photo modes, and repeated PDF exports are included at every card limit.`,
           },
         },
         quantity: 1,
@@ -49,6 +50,8 @@ export async function createBoardUnlockCheckout(params: {
     metadata: {
       boardId: params.boardId,
       userId: params.userId,
+      theme: params.theme ?? 'classic',
+      locale: params.locale ?? 'en',
     },
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,

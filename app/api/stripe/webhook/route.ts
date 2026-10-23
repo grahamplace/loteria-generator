@@ -94,6 +94,8 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       event: 'board_unlocked',
       properties: {
         board_id: boardId,
+        theme: session.metadata?.theme ?? 'classic',
+        locale: session.metadata?.locale ?? 'en',
         stripe_session_id: session.id,
         amount_total: session.amount_total,
       },

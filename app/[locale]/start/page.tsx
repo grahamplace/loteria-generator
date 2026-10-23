@@ -1,8 +1,14 @@
-import { headers } from 'next/headers';
+import { db, userProfiles } from '@/db';
+import { eq } from 'drizzle-orm';
+import { parseThemeEntry } from '@/lib/theme-entry';
+import { ThemeEntry } from '@/components/theme-entry';
+import { DEFAULT_BOARD_NAME } from '@/lib/constants';
+import { cookies, headers } from 'next/headers';
 import { setRequestLocale } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { auth } from '@/lib/auth';
 import { ensureFirstBoard } from '@/lib/boards/ensure-first-board';
+import { RECENT_BOARD_COOKIE } from '@/lib/boards/recent-board';
 import { SIGN_IN_LOOP_BREAKER_PARAM, SIGN_IN_LOOP_BREAKER_VALUE } from '@/lib/safe-redirect';
 
 /**
@@ -10,18 +16,26 @@ import { SIGN_IN_LOOP_BREAKER_PARAM, SIGN_IN_LOOP_BREAKER_VALUE } from '@/lib/sa
  * already-authenticated user off `/sign-in` / `/sign-up` all land here.
  *
  * It guarantees a board exists (`ensureFirstBoard` is idempotent, so this also
- * repairs users who somehow ended up with zero) and then routes by board count:
- * a user with exactly one board goes straight into it — nobody sees an empty
- * dashboard, a known drop-off point. Only multi-board users get the dashboard.
+ * repairs users who somehow ended up with zero), then opens their last-used
+ * board, falling back to their most recently updated board. Switching boards
+ * happens inside the editor; there is no intermediate board index.
  *
  * Every redirect below goes through next-intl's locale-aware `redirect` so a
  * Spanish visitor stays on `/es/…`. Since this route is now on the path of every
  * sign-in, a plain `next/navigation` redirect here would drop `es-MX` users into
  * the English tree on every single login.
  */
-export default async function StartPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function StartPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ theme?: string; mode?: string }>;
+}) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const query = await searchParams;
+  const entry = parseThemeEntry(query.theme, query.mode);
 
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) {
@@ -32,7 +46,14 @@ export default async function StartPage({ params }: { params: Promise<{ locale: 
     redirect({
       href: {
         pathname: '/sign-in',
-        query: { [SIGN_IN_LOOP_BREAKER_PARAM]: SIGN_IN_LOOP_BREAKER_VALUE },
+        query: {
+          [SIGN_IN_LOOP_BREAKER_PARAM]: SIGN_IN_LOOP_BREAKER_VALUE,
+          ...(entry
+            ? {
+                callbackUrl: `${locale === 'es-MX' ? '/es' : ''}/start?theme=${entry.theme}&mode=${entry.photoMode}`,
+              }
+            : {}),
+        },
       },
       locale,
     });
@@ -42,9 +63,40 @@ export default async function StartPage({ params }: { params: Promise<{ locale: 
     return null;
   }
 
-  const { boardId, created, boardCount } = await ensureFirstBoard(session.user);
+  const store = await cookies();
+  const { boardId } = await ensureFirstBoard(session.user, store.get(RECENT_BOARD_COOKIE)?.value);
+  if (entry) {
+    const available = await db.query.boards.findMany({
+      where: (board, { eq }) => eq(board.userId, session.user.id),
+      with: { cards: { columns: { id: true } } },
+    });
+    const starter =
+      available.length === 1 &&
+      available[0].name === DEFAULT_BOARD_NAME &&
+      !available[0].styleOptions &&
+      available[0].cards.length === 0
+        ? available[0].id
+        : undefined;
+    return (
+      <ThemeEntry
+        theme={entry.theme}
+        photoMode={entry.photoMode}
+        boards={available.map((b) => ({ id: b.id, name: b.name, cardCount: b.cards.length }))}
+        starterId={starter}
+      />
+    );
+  }
+  // Saved preferences apply at the authenticated entry point, never on public pages.
+  if (!store.get('LOCALE')) {
+    const profile = await db.query.userProfiles.findFirst({
+      where: eq(userProfiles.id, session.user.id),
+      columns: { locale: true },
+    });
+    if ((profile?.locale === 'en' || profile?.locale === 'es-MX') && profile.locale !== locale)
+      redirect({ href: '/start', locale: profile.locale });
+  }
   redirect({
-    href: created || boardCount === 1 ? `/boards/${boardId}` : '/dashboard',
+    href: `/boards/${boardId}`,
     locale,
   });
 }

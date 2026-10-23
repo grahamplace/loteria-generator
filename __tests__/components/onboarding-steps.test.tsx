@@ -5,9 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import messages from '@/messages/en.json';
 import {
   useOnboardingTours,
-  TOUR_DASHBOARD_START,
   TOUR_BOARD_ADD_PHOTO,
-  ANCHOR_CREATE_BOARD,
   ANCHOR_UPLOAD,
 } from '@/components/onboarding/onboarding-steps';
 
@@ -24,18 +22,17 @@ function renderTours() {
 }
 
 describe('useOnboardingTours', () => {
-  it('returns exactly 2 tours with the expected tour identifiers', () => {
+  it('returns the editor tour with the expected tour identifiers', () => {
     const tours = renderTours();
 
-    expect(tours).toHaveLength(2);
-    expect(tours.map((tour) => tour.tour)).toEqual([TOUR_DASHBOARD_START, TOUR_BOARD_ADD_PHOTO]);
+    expect(tours).toHaveLength(1);
+    expect(tours.map((tour) => tour.tour)).toEqual([TOUR_BOARD_ADD_PHOTO]);
   });
 
   it('gives each tour exactly one step targeting the matching anchor selector', () => {
     const tours = renderTours();
 
     const expectedSelectors: Record<string, string> = {
-      [TOUR_DASHBOARD_START]: `#${ANCHOR_CREATE_BOARD}`,
       [TOUR_BOARD_ADD_PHOTO]: `#${ANCHOR_UPLOAD}`,
     };
 
