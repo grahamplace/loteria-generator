@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, useImperativeHandle, forwardRef } from 'react';
-import { Upload, Plus } from 'lucide-react';
+import { Upload, Plus, Unlock } from 'lucide-react';
 import type { BoardStyleOptions } from '@/lib/themes/presets';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
@@ -16,6 +16,7 @@ import {
 } from '@/lib/convert-upload-image';
 import { Button } from '@/components/ui/button';
 import { PhotoModeSwitch } from '@/components/photo-mode-switch';
+import { useUnlockPriceDisplay } from '@/hooks/use-unlock-price';
 import type { PhotoMode } from '@/lib/themes/presets';
 
 interface BoardActionBarProps {
@@ -54,6 +55,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
   ) {
     const t = useTranslations('BoardEditor.ActionBar');
     const themes = useTranslations('Themes.Builder');
+    const unlockPrice = useUnlockPriceDisplay();
     const inputRef = useRef<HTMLInputElement>(null);
     const [dragActive, setDragActive] = useState(false);
     useImperativeHandle(ref, () => ({
@@ -153,18 +155,24 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
             </p>
           )}
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              className="min-h-11 touch-manipulation transition-colors"
-              onClick={() =>
-                cardCount >= maxCards && !isUnlocked
-                  ? onUnlockRequired()
-                  : inputRef.current?.click()
-              }
-              disabled={photoModeSaving || (cardCount >= maxCards && isUnlocked)}
-            >
-              <Upload className="mr-2 h-4 w-4" />
-              {t('choosePhotos')}
-            </Button>
+            {cardCount >= maxCards && !isUnlocked ? (
+              <Button
+                className="min-h-11 touch-manipulation transition-colors"
+                onClick={onUnlockRequired}
+              >
+                <Unlock className="mr-2 h-4 w-4" aria-hidden="true" />
+                {t('unlockMoreCards', { price: unlockPrice })}
+              </Button>
+            ) : (
+              <Button
+                className="min-h-11 touch-manipulation transition-colors"
+                onClick={() => inputRef.current?.click()}
+                disabled={photoModeSaving || cardCount >= maxCards}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {t('choosePhotos')}
+              </Button>
+            )}
             <Button
               className="min-h-11 touch-manipulation transition-colors"
               variant="outline"

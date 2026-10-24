@@ -357,7 +357,6 @@ function BoardEditor({ boardId }: { boardId: string }) {
                   onAddClassic={() => setDefaultsPickerOpen(true)}
                   isLocked={!board.isUnlocked}
                   atCardLimit={atCardLimit}
-                  maxCards={cardLimit}
                   onUnlockRequired={handleCardLimitReached}
                 />
               </div>

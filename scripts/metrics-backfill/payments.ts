@@ -12,7 +12,7 @@
 
 import { neon } from '@neondatabase/serverless';
 import Stripe from 'stripe';
-import { SESSION_DISCOUNT_EXPAND, paymentFieldsFromSession } from '../../lib/stripe';
+import { retrieveSessionPaymentFields } from '../../lib/stripe';
 
 const dryRun = process.argv.includes('--dry-run');
 
@@ -47,10 +47,8 @@ async function main() {
       continue;
     }
 
-    // List results can't expand this deep, so re-fetch the one session.
-    const fields = paymentFieldsFromSession(
-      await stripe.checkout.sessions.retrieve(session.id, { expand: [SESSION_DISCOUNT_EXPAND] })
-    );
+    // Same lookup the webhook uses, including the promotion code.
+    const fields = await retrieveSessionPaymentFields(session.id);
     const charges = await stripe.charges.list({ payment_intent: row.stripe_payment_id, limit: 10 });
     const refunded = charges.data.reduce((sum, c) => sum + c.amount_refunded, 0);
 
