@@ -17,7 +17,8 @@ import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { LanguageSwitch } from '@/components/language-switch';
 import { useTranslations } from 'next-intl';
-import { BOARD_UNLOCK_PRICE_DISPLAY, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
+import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
+import { useUnlockPriceDisplay } from '@/hooks/use-unlock-price';
 import {
   OnboardingTrigger,
   OnboardingCompleteWatcher,
@@ -27,6 +28,7 @@ import { firePurchaseConversion, consumePendingSignupConversion } from '@/lib/go
 
 export default function BoardEditorPage() {
   const t = useTranslations('BoardEditor.Page');
+  const unlockPrice = useUnlockPriceDisplay();
   const params = useParams();
   const boardId = params.boardId as string;
   const router = useRouter();
@@ -57,7 +59,9 @@ export default function BoardEditorPage() {
   // Completes the Google-OAuth signup conversion started on the sign-up page:
   // new users land here via /start, so the dashboard never sees them.
   useEffect(() => {
-    consumePendingSignupConversion();
+    if (consumePendingSignupConversion()) {
+      posthog.capture('signed_up', { method: 'google' });
+    }
   }, []);
 
   // Handle payment success/cancel from Stripe redirect
@@ -257,7 +261,7 @@ export default function BoardEditorPage() {
               >
                 <Unlock className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">{t('unlockButtonPrefix')}</span>{' '}
-                {t('unlockButtonShort', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
+                {t('unlockButtonShort', { price: unlockPrice })}
               </button>
             )}
           </div>
@@ -339,7 +343,7 @@ export default function BoardEditorPage() {
                 <p className="mt-5 font-mono text-[11px] tracking-wider text-muted-foreground">
                   {t('emptyStateFreePaidNote', {
                     free: FREE_CARD_LIMIT,
-                    price: BOARD_UNLOCK_PRICE_DISPLAY,
+                    price: unlockPrice,
                     total: TOTAL_CARD_COUNT,
                   })}
                 </p>

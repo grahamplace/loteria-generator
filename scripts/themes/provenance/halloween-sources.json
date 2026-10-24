@@ -1,0 +1,74 @@
+[
+  {
+    "stem": "01-pumpkin",
+    "label": "La Calabaza",
+    "photo_page": "https://www.pexels.com/photo/1456120/",
+    "download_url": "https://images.pexels.com/photos/1456120/pexels-photo-1456120.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "license": "https://www.pexels.com/license/",
+    "source": "output/imagegen/etsy-halloween/source-photos/01-pumpkin.jpg",
+    "illustration": "output/imagegen/etsy-halloween/illustrations/01-pumpkin.png"
+  },
+  {
+    "stem": "02-witch-kids",
+    "label": "Los Disfraces",
+    "photo_page": "https://www.pexels.com/photo/9740385/",
+    "download_url": "https://images.pexels.com/photos/9740385/pexels-photo-9740385.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "license": "https://www.pexels.com/license/",
+    "source": "output/imagegen/etsy-halloween/source-photos/02-witch-kids.jpg",
+    "illustration": "output/imagegen/etsy-halloween/illustrations/02-witch-kids.png"
+  },
+  {
+    "stem": "03-ghost",
+    "label": "Los Fantasmas",
+    "photo_page": "https://www.pexels.com/photo/14234307/",
+    "download_url": "https://images.pexels.com/photos/14234307/pexels-photo-14234307.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "license": "https://www.pexels.com/license/",
+    "source": "output/imagegen/etsy-halloween/source-photos/03-ghost.jpg",
+    "illustration": "output/imagegen/etsy-halloween/illustrations/03-ghost.png"
+  },
+  {
+    "stem": "04-cat",
+    "label": "El Gatito",
+    "photo_page": "https://www.pexels.com/photo/17833657/",
+    "download_url": "https://images.pexels.com/photos/17833657/pexels-photo-17833657.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "license": "https://www.pexels.com/license/",
+    "source": "output/imagegen/etsy-halloween/source-photos/04-cat.jpg",
+    "illustration": "output/imagegen/etsy-halloween/illustrations/04-cat.png"
+  },
+  {
+    "stem": "05-hat",
+    "label": "El Sombrero",
+    "photo_page": "https://www.pexels.com/photo/5422773/",
+    "download_url": "https://images.pexels.com/photos/5422773/pexels-photo-5422773.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "license": "https://www.pexels.com/license/",
+    "source": "output/imagegen/etsy-halloween/source-photos/05-hat.jpg",
+    "illustration": "output/imagegen/etsy-halloween/illustrations/05-hat.png"
+  },
+  {
+    "stem": "06-candy",
+    "label": "Los Dulces",
+    "photo_page": "https://www.pexels.com/photo/5744302/",
+    "download_url": "https://images.pexels.com/photos/5744302/pexels-photo-5744302.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "license": "https://www.pexels.com/license/",
+    "source": "output/imagegen/etsy-halloween/source-photos/06-candy.jpg",
+    "illustration": "output/imagegen/etsy-halloween/illustrations/06-candy.png"
+  },
+  {
+    "stem": "07-dog",
+    "label": "El Perrito",
+    "photo_page": "https://www.pexels.com/photo/29227305/",
+    "download_url": "https://images.pexels.com/photos/29227305/pexels-photo-29227305.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "license": "https://www.pexels.com/license/",
+    "source": "output/imagegen/etsy-halloween/source-photos/07-dog.jpg",
+    "illustration": "output/imagegen/etsy-halloween/illustrations/07-dog.png"
+  },
+  {
+    "stem": "08-family",
+    "label": "La Familia",
+    "photo_page": "https://www.pexels.com/photo/5581149/",
+    "download_url": "https://images.pexels.com/photos/5581149/pexels-photo-5581149.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "license": "https://www.pexels.com/license/",
+    "source": "output/imagegen/etsy-halloween/source-photos/08-family.jpg",
+    "illustration": "output/imagegen/etsy-halloween/illustrations/08-family.png"
+  }
+]

@@ -62,14 +62,17 @@ export function clearPendingSignupConversion() {
   }
 }
 
-export function consumePendingSignupConversion() {
+// Returns true when a pending signup was consumed, so callers can record the
+// same signup in other analytics.
+export function consumePendingSignupConversion(): boolean {
   try {
     if (sessionStorage.getItem(PENDING_SIGNUP_KEY) !== '1') {
-      return;
+      return false;
     }
     sessionStorage.removeItem(PENDING_SIGNUP_KEY);
   } catch {
-    return;
+    return false;
   }
   fireSignupConversion();
+  return true;
 }
