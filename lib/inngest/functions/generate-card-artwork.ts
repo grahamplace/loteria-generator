@@ -188,7 +188,6 @@ export const generateCardArtwork = inngest.createFunction(
         .set({
           ...(skipLabeling ? {} : { label }),
           illustrationUrl,
-          ...(skipIllustration ? {} : { savedIllustrationUrl: illustrationUrl }),
           status: 'completed',
           errorMessage: null,
           updatedAt: new Date(),

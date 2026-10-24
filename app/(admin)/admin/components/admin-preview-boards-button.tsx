@@ -12,6 +12,14 @@ import {
 import { adminCardImageSrc } from '@/lib/admin-card-image';
 import type { Card } from '@/db/schema';
 
+// Mirrors the consumer defaults in components/board-action-bar.tsx. Falls back to
+// these when the board has no persisted styleOptions.
+const DEFAULT_STYLE_OPTIONS: BoardStyleOptions = {
+  backgroundColor: '#f5f0e1',
+  badgeColor: '#eb865a',
+  labelColor: '#000000',
+};
+
 export function AdminPreviewBoardsButton({
   boardName,
   cards,
@@ -56,9 +64,8 @@ export function AdminPreviewBoardsButton({
 
       const pdfBlob = await generatePreviewBoardsPdf(
         previewCards,
-        styleOptions ?? {},
-        setProgress,
-        { boardTitle: styleOptions?.showTitle ? boardName : undefined }
+        styleOptions ?? DEFAULT_STYLE_OPTIONS,
+        setProgress
       );
 
       const url = URL.createObjectURL(pdfBlob);
