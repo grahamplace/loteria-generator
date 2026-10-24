@@ -354,6 +354,9 @@
   --loteria-easter-accent: #c4abe8;
   --loteria-number-ink: #ffffff;
   --loteria-cut-guide: #9ca3af;
+  /* Cut guides for boards saved before themes. */
+  --loteria-legacy-cut-guide: #d1d5db;
+  --loteria-legacy-caption: #9ca3af;
   --loteria-white: #ffffff;
 }
 

@@ -54,6 +54,20 @@ describe('editable print designs', () => {
     expect(selectedBoardTheme(legacy)).toBe('custom');
     expect(selectedBoardTheme({ showTitle: true })).toBe('classic');
   });
+  it('prints boards saved before themes in the old Classic colors', () => {
+    expect(resolveBoardStyle({})).toMatchObject({
+      backgroundColor: '#f5f0e1',
+      badgeColor: '#eb865a',
+      labelColor: '#000000',
+      borderColor: '#000000',
+      numberColor: '#ffffff',
+      borderStyle: 'hand-drawn',
+      cornerIcon: 'none',
+      legacy: true,
+      framed: false,
+    });
+    expect(resolveBoardStyle({ presetId: 'classic' }).legacy).toBe(false);
+  });
   it('uses the chosen font consistently while keeping existing board typography intact', () => {
     expect(resolveBoardStyle({ presetId: 'halloween' })).toMatchObject({
       font: 'Creepster',

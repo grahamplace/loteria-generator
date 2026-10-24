@@ -41,6 +41,9 @@ export function presetBoardStyle(id: ThemeId): BoardDesignValues {
 }
 
 export function resolveBoardStyle(options: BoardStyleOptions = {}) {
+  // Boards saved before themes have no presetId. They print in Classic colors,
+  // which match the old hardcoded export colors, and keep the old cut guides.
+  const legacy = !options.presetId;
   const defaults = presetBoardStyle(getTheme(options.presetId).id);
   const design: BoardDesignValues = { ...defaults };
   for (const key of Object.keys(defaults) as (keyof BoardDesignValues)[]) {
@@ -54,6 +57,7 @@ export function resolveBoardStyle(options: BoardStyleOptions = {}) {
   const themed = design.borderStyle !== 'hand-drawn' && design.borderStyle !== 'none';
   return {
     ...design,
+    legacy,
     // Existing boards retain their typography until a design is explicitly saved.
     labelFont: options.font ?? 'Jost',
     numberFont: options.font ?? 'Caveat',

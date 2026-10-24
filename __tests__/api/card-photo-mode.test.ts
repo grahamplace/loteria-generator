@@ -70,6 +70,7 @@ beforeEach(() => {
     cropData: crop,
     status: 'completed',
     errorMessage: null,
+    errorDismissedAt: null,
     promptOverlay: null,
     isDefault: false,
     defaultCardId: null,

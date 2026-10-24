@@ -7,7 +7,7 @@ import { Link } from '@/i18n/navigation';
 import { getThemePage, themePages, themeMode, themePath, themeTitle } from '@/lib/themes/catalog';
 import { getTheme, themeVariables } from '@/lib/themes/presets';
 import { SITE_URL } from '@/lib/site-metadata';
-import { BOARD_UNLOCK_PRICE_DISPLAY, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
+import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT, unlockPriceDisplay } from '@/lib/constants';
 import { ThemeCta, ThemeVisit } from '@/components/theme-cta';
 
 type Props = { params: Promise<{ locale: string; theme: string }> };
@@ -141,7 +141,7 @@ export default async function ThemeLandingPage({ params }: Props) {
               <div className="mt-6">{cta}</div>
               <p className="mt-4 text-sm">{t('freeNote', { free: FREE_CARD_LIMIT })}</p>
               <p className="mt-1 text-sm">
-                {t('priceNote', { price: BOARD_UNLOCK_PRICE_DISPLAY, total: TOTAL_CARD_COUNT })}
+                {t('priceNote', { price: unlockPriceDisplay(locale), total: TOTAL_CARD_COUNT })}
               </p>
             </div>
             <div className="relative mx-auto w-full max-w-[420px] py-6">
@@ -236,7 +236,7 @@ export default async function ThemeLandingPage({ params }: Props) {
             <p className="mt-3 leading-relaxed text-muted-foreground">
               {t(`answer${key}`, {
                 free: FREE_CARD_LIMIT,
-                price: BOARD_UNLOCK_PRICE_DISPLAY,
+                price: unlockPriceDisplay(locale),
                 total: TOTAL_CARD_COUNT,
               })}
             </p>

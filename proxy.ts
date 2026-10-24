@@ -149,10 +149,12 @@ export const config = {
      * - admin (the (admin) route group has no locale prefix; running
      *   next-intl's middleware here rewrites /admin → /en/admin which
      *   doesn't exist, producing a 404 before requireAdmin() can run)
+     * - ingest (the PostHog reverse proxy in next.config.mjs; rewriting it to
+     *   /<locale>/ingest/... 404s every analytics request)
      * - any path with a file extension (e.g. loteria-star.png, icon.ico,
      *   robots.txt, sitemap.xml). These live in /public and would otherwise
      *   be rewritten by next-intl's middleware to /<locale>/<file> and 404.
      */
-    '/((?!_next/static|_next/image|api/auth|admin|.*\\..*).*)',
+    '/((?!_next/static|_next/image|api/auth|admin|ingest|.*\\..*).*)',
   ],
 };

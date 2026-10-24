@@ -20,7 +20,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
-import { BOARD_UNLOCK_PRICE_DISPLAY, FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
+import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
+import { useUnlockPriceDisplay } from '@/hooks/use-unlock-price';
 
 export type UnlockTrigger = 'card_limit' | 'preview';
 
@@ -47,6 +48,7 @@ function UnlockContent({
   trigger: UnlockTrigger;
 }) {
   const t = useTranslations('BoardEditor.UnlockPrompt');
+  const unlockPrice = useUnlockPriceDisplay();
 
   const features = [t('featureCards'), t('featureExports'), t('featureWatermarks')];
 
@@ -58,7 +60,7 @@ function UnlockContent({
             <Unlock className="w-6 h-6" />
           </div>
           <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-secondary text-foreground flex items-center justify-center text-[12px] font-bold shadow">
-            {BOARD_UNLOCK_PRICE_DISPLAY}
+            {unlockPrice}
           </div>
         </div>
       </div>

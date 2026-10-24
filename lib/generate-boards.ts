@@ -374,7 +374,9 @@ export function drawCard(
     const bandPadX = 28;
     const sepY = bandTop + 8;
 
-    ctx.strokeStyle = printColor('--loteria-cut-guide');
+    ctx.strokeStyle = printColor(
+      styleOptions.legacy ? '--loteria-legacy-cut-guide' : '--loteria-cut-guide'
+    );
     ctx.lineWidth = 2;
     ctx.setLineDash([]);
     ctx.beginPath();
@@ -564,11 +566,13 @@ export async function renderDeckPageToCanvas(
 
   // Draw header label, sitting a fixed gap above the grid rather than centred in
   // a top band, so it moves down (away from the paper edge) with the grid.
-  ctx.fillStyle = labelColor;
-  ctx.font = '500 48px Jost, sans-serif';
+  ctx.fillStyle = resolved.legacy ? printColor('--loteria-legacy-caption') : labelColor;
+  ctx.font = resolved.legacy
+    ? '500 48px Arial, Helvetica, sans-serif'
+    : '500 48px Jost, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(cutInstruction, width / 2, offsetY - 44);
+  ctx.fillText(resolved.legacy ? `✂  ${cutInstruction}` : cutInstruction, width / 2, offsetY - 44);
 
   await loadPrintFonts(resolved.font);
 
@@ -587,7 +591,9 @@ export async function renderDeckPageToCanvas(
   }
 
   // Draw dashed cut lines between cards
-  ctx.strokeStyle = printColor('--loteria-cut-guide');
+  ctx.strokeStyle = printColor(
+    resolved.legacy ? '--loteria-legacy-cut-guide' : '--loteria-cut-guide'
+  );
   ctx.lineWidth = 2;
   ctx.setLineDash([16, 12]);
 
