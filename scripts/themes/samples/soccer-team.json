@@ -1,0 +1,124 @@
+{
+  "title": "Soccer Team Lotería",
+  "styles": {
+    "presetId": "soccer-team",
+    "showTitle": true
+  },
+  "cards": [
+    {
+      "id": "soccer-girl",
+      "label": "Sofia",
+      "number": 1,
+      "illustration": "public/themes/cards/0082432c76ce370f94.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/soccer-girl.png"
+    },
+    {
+      "id": "soccer-boy",
+      "label": "Mateo",
+      "number": 2,
+      "illustration": "public/themes/cards/ef48d414ca11687278.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/soccer-boy.png"
+    },
+    {
+      "id": "soccer-coach",
+      "label": "Coach Alex",
+      "number": 3,
+      "illustration": "public/themes/cards/ecfc9faa70f80b8002.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/soccer-coach.png"
+    },
+    {
+      "id": "soccer-team",
+      "label": "Nuestro Equipo",
+      "number": 4,
+      "illustration": "public/themes/cards/25a136ae115f7406a8.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/soccer-team.png"
+    },
+    {
+      "id": "student-maya",
+      "label": "Maya",
+      "number": 5,
+      "illustration": "public/themes/cards/344c20994cc584aa54.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/student-maya.png"
+    },
+    {
+      "id": "student-lucas",
+      "label": "Lucas",
+      "number": 6,
+      "illustration": "public/themes/cards/a561366eb0290438c3.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/student-lucas.png"
+    },
+    {
+      "id": "student-ava",
+      "label": "Ava",
+      "number": 7,
+      "illustration": "public/themes/cards/9a128cb90fbb0f0b57.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/student-ava.png"
+    },
+    {
+      "id": "student-noah",
+      "label": "Noah",
+      "number": 8,
+      "illustration": "public/themes/cards/0aabe82e6c112767c8.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/student-noah.png"
+    },
+    {
+      "id": "soccer-kit",
+      "label": "El Equipo",
+      "number": 9,
+      "illustration": "public/themes/cards/da71b658397413d963.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/soccer-kit.png"
+    },
+    {
+      "id": "16-soccer-ball",
+      "label": "El Futbolista",
+      "number": 10,
+      "illustration": "public/themes/cards/29911de742fdfbdab1.webp",
+      "source": "lib/hero-cards-illustrations/16-soccer-ball.webp"
+    },
+    {
+      "id": "11-dog",
+      "label": "El Perro",
+      "number": 11,
+      "illustration": "public/themes/cards/472f18df46a9ef5438.webp",
+      "source": "lib/hero-cards-illustrations/11-dog.webp"
+    },
+    {
+      "id": "17-camera",
+      "label": "La Cámara",
+      "number": 12,
+      "illustration": "public/themes/cards/a05ce3691a0cf677c5.webp",
+      "source": "lib/hero-cards-illustrations/17-camera.webp"
+    },
+    {
+      "id": "09-grandpa",
+      "label": "El Abuelo",
+      "number": 13,
+      "illustration": "public/themes/cards/70956b8edc87bccdc1.webp",
+      "source": "lib/hero-cards-illustrations/09-grandpa.webp"
+    },
+    {
+      "id": "10-grandma",
+      "label": "La Abuela",
+      "number": 14,
+      "illustration": "public/themes/cards/30afbee8297854e6f1.webp",
+      "source": "lib/hero-cards-illustrations/10-grandma.webp"
+    },
+    {
+      "id": "18-tacos",
+      "label": "Los Tacos",
+      "number": 15,
+      "illustration": "public/themes/cards/630519f82f345adb4e.webp",
+      "source": "lib/hero-cards-illustrations/18-tacos.webp"
+    },
+    {
+      "id": "07-family-portrait",
+      "label": "La Familia",
+      "number": 16,
+      "illustration": "public/themes/cards/fe93f6f2e21f1735a5.webp",
+      "source": "lib/hero-cards-illustrations/07-family-portrait.webp"
+    }
+  ],
+  "compareId": "soccer-girl",
+  "sourcePackage": "output/etsy/variants-2-2026/13-soccer-team",
+  "etsyListingId": "4590873001"
+}
