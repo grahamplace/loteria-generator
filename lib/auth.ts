@@ -3,6 +3,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware } from 'better-auth/api';
 import { nextCookies } from 'better-auth/next-js';
+import { oAuthProxy } from 'better-auth/plugins';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { sendPasswordResetEmail } from '@/lib/email/send-password-reset';
@@ -41,8 +42,23 @@ export async function createFirstBoardForNewUser(user: {
   }
 }
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3006';
+
+/**
+ * Vercel previews get a new hostname per deployment and branch, and Google only
+ * accepts the production callback URL. So previews hand Google sign-in to
+ * production via the OAuth proxy: production completes the exchange and sends
+ * the encrypted profile back to the preview, which creates the user and session
+ * in its own database. Production and localhost sign in directly as before.
+ */
+const isPreview = process.env.VERCEL_ENV === 'preview';
+const PRODUCTION_URL = 'https://loteriagenerator.com';
+// Matches this project's deployment and branch URLs, and nothing else on vercel.app.
+const PREVIEW_HOST = 'loteria-generator-*-stonecutter-labs.vercel.app';
+
 export const auth = betterAuth({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3006',
+  // Previews resolve their own origin per request, limited to PREVIEW_HOST.
+  baseURL: isPreview ? { allowedHosts: [PREVIEW_HOST], protocol: 'https' } : APP_URL,
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema,
@@ -117,7 +133,8 @@ export const auth = betterAuth({
       '/request-password-reset': { window: 300, max: 3 },
     },
   },
-  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3006'],
+  // Production must trust previews so it can send proxied sign-ins back to them.
+  trustedOrigins: [APP_URL, `https://${PREVIEW_HOST}`],
   databaseHooks: {
     user: {
       create: {
@@ -131,7 +148,15 @@ export const auth = betterAuth({
   // better-auth can't write cookies on its own. Without this plugin a refresh
   // extended the DB row but not the cookie, so the browser still dropped the
   // cookie `expiresIn` after sign-in. Must stay last in `plugins`.
-  plugins: [nextCookies()],
+  plugins: [
+    oAuthProxy({
+      // Outside previews this is the app's own URL, which turns the proxy off.
+      productionURL: isPreview ? PRODUCTION_URL : APP_URL,
+      // Shared by production and previews only; never the session secret.
+      secret: process.env.OAUTH_PROXY_SECRET,
+    }),
+    nextCookies(),
+  ],
 });
 
 // Export types for use throughout the app
