@@ -6,11 +6,8 @@ import { generateLoteriaSetPdf, clampBoardCount, BoardStyleOptions } from '@/lib
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
-import {
-  MIN_EXPORT_CARD_COUNT,
-  BOARD_UNLOCK_PRICE_DISPLAY,
-  DEFAULT_EXPORT_BOARD_COUNT,
-} from '@/lib/constants';
+import { MIN_EXPORT_CARD_COUNT, DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
+import { useUnlockPriceDisplay } from '@/hooks/use-unlock-price';
 import { partitionBySize, MAX_UPLOAD_DISPLAY } from '@/lib/upload-limits';
 import { UPLOAD_IMAGE_ACCEPT } from '@/lib/image-formats';
 import {
@@ -65,6 +62,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
     ref
   ) {
     const t = useTranslations('BoardEditor.ActionBar');
+    const unlockPrice = useUnlockPriceDisplay();
     const inputRef = useRef<HTMLInputElement>(null);
     const [dragActive, setDragActive] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
@@ -233,7 +231,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
     const mobileExportLabel = isExporting
       ? exportProgress || t('exportingButton')
       : hasUsedFreeExport
-        ? t('unlockExport', { price: BOARD_UNLOCK_PRICE_DISPLAY })
+        ? t('unlockExport', { price: unlockPrice })
         : canExport
           ? t('exportButton')
           : t('moreNeeded', { count: MIN_EXPORT_CARD_COUNT - processedCount });
@@ -420,7 +418,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                 ) : hasUsedFreeExport ? (
                   <>
                     <Unlock className="w-3.5 h-3.5" />
-                    {t('unlockExport', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
+                    {t('unlockExport', { price: unlockPrice })}
                   </>
                 ) : canExport ? (
                   <>
@@ -486,7 +484,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                 className="flex-1 h-12 rounded-xl bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 <Unlock className="w-4 h-4" aria-hidden="true" />
-                {t('unlockMoreCards', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
+                {t('unlockMoreCards', { price: unlockPrice })}
               </button>
             ) : (
               <button

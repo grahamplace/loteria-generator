@@ -23,7 +23,7 @@ export const DEFAULT_SAFE_REDIRECT = '/start';
  * `proxy.ts` runs at the edge and can only check whether a session *cookie
  * exists* — it cannot validate the token. "Cookie present" is therefore not the
  * same as "session valid", and the two diverge routinely: sessions expire
- * (7-day `expiresIn`) or get revoked while the cookie is still sitting in the
+ * (30-day `expiresIn`) or get revoked while the cookie is still sitting in the
  * browser.
  *
  * That asymmetry closes a cycle:

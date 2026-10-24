@@ -8,6 +8,15 @@ export const DEFAULT_BOARD_NAME = 'My Loteria Board';
 export const BOARD_UNLOCK_PRICE_CENTS = 2000;
 export const BOARD_UNLOCK_PRICE_DISPLAY = '$20';
 
+/**
+ * The unlock price as shown in a given locale. In Mexico a bare "$" reads as
+ * pesos (US$20 would look like ~US$1), so es-MX spells out the currency.
+ * Derived from BOARD_UNLOCK_PRICE_DISPLAY, so it never needs editing.
+ */
+export function unlockPriceDisplay(locale: string): string {
+  return locale === 'es-MX' ? `US${BOARD_UNLOCK_PRICE_DISPLAY}` : BOARD_UNLOCK_PRICE_DISPLAY;
+}
+
 // Single source of truth for export board counts. Never hardcode these elsewhere.
 /** Cards a board needs before its Lotería set can be generated. */
 export const MIN_EXPORT_CARD_COUNT = 16;

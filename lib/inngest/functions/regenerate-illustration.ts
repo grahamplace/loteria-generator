@@ -29,7 +29,12 @@ export const regenerateIllustration = inngest.createFunction(
       await step.run('persist-error', async () => {
         await db
           .update(cards)
-          .set({ status: 'error', errorMessage: message, updatedAt: new Date() })
+          .set({
+            status: 'error',
+            errorMessage: message,
+            errorDismissedAt: null,
+            updatedAt: new Date(),
+          })
           .where(eq(cards.id, cardId));
       });
 
@@ -100,6 +105,7 @@ export const regenerateIllustration = inngest.createFunction(
         .update(cards)
         .set({
           illustrationUrl,
+          savedIllustrationUrl: illustrationUrl,
           status: 'completed',
           errorMessage: null,
           // cropData is kept so "Use original photo" can restore the same crop.

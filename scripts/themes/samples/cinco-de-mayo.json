@@ -1,0 +1,124 @@
+{
+  "title": "Cinco de Mayo Lotería",
+  "styles": {
+    "presetId": "cinco-de-mayo",
+    "showTitle": true
+  },
+  "cards": [
+    {
+      "id": "cinco-fiesta",
+      "label": "La Fiesta",
+      "number": 1,
+      "illustration": "public/themes/cards/202c7d7305536d6f6e.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/cinco-fiesta.png"
+    },
+    {
+      "id": "18-tacos",
+      "label": "Los Tacos",
+      "number": 2,
+      "illustration": "public/themes/cards/630519f82f345adb4e.webp",
+      "source": "lib/hero-cards-illustrations/18-tacos.webp"
+    },
+    {
+      "id": "07-family-portrait",
+      "label": "La Familia",
+      "number": 3,
+      "illustration": "public/themes/cards/fe93f6f2e21f1735a5.webp",
+      "source": "lib/hero-cards-illustrations/07-family-portrait.webp"
+    },
+    {
+      "id": "15-guitar",
+      "label": "La Guitarra",
+      "number": 4,
+      "illustration": "public/themes/cards/1e0cc63e18eae5f2d4.webp",
+      "source": "lib/hero-cards-illustrations/15-guitar.webp"
+    },
+    {
+      "id": "new-years-friends",
+      "label": "La Medianoche",
+      "number": 5,
+      "illustration": "public/themes/cards/f8ed97d61e64cc7590.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/new-years-friends.png"
+    },
+    {
+      "id": "friendsgiving-table",
+      "label": "Los Amigos",
+      "number": 6,
+      "illustration": "public/themes/cards/5c94cbfb8500b03d9c.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/friendsgiving-table.png"
+    },
+    {
+      "id": "anniversary-couple",
+      "label": "Nuestro Amor",
+      "number": 7,
+      "illustration": "public/themes/cards/d3c6942fe286b9d6f4.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/anniversary-couple.png"
+    },
+    {
+      "id": "bachelorette-friends",
+      "label": "Las Amigas",
+      "number": 8,
+      "illustration": "public/themes/cards/3d4b9a078386f1c379.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/bachelorette-friends.png"
+    },
+    {
+      "id": "11-dog",
+      "label": "El Perro",
+      "number": 9,
+      "illustration": "public/themes/cards/472f18df46a9ef5438.webp",
+      "source": "lib/hero-cards-illustrations/11-dog.webp"
+    },
+    {
+      "id": "12-cat",
+      "label": "El Gato",
+      "number": 10,
+      "illustration": "public/themes/cards/64a4e345ed306e1147.webp",
+      "source": "lib/hero-cards-illustrations/12-cat.webp"
+    },
+    {
+      "id": "13-house",
+      "label": "La Casa",
+      "number": 11,
+      "illustration": "public/themes/cards/c2a536497ab938da48.webp",
+      "source": "lib/hero-cards-illustrations/13-house.webp"
+    },
+    {
+      "id": "14-car",
+      "label": "El Bochito",
+      "number": 12,
+      "illustration": "public/themes/cards/8b948c48d3fbea0ee5.webp",
+      "source": "lib/hero-cards-illustrations/14-car.webp"
+    },
+    {
+      "id": "17-camera",
+      "label": "La Cámara",
+      "number": 13,
+      "illustration": "public/themes/cards/a05ce3691a0cf677c5.webp",
+      "source": "lib/hero-cards-illustrations/17-camera.webp"
+    },
+    {
+      "id": "05-birthday-candles",
+      "label": "El Cumpleaños",
+      "number": 14,
+      "illustration": "public/themes/cards/0e5e23c866dffbe47d.webp",
+      "source": "lib/hero-cards-illustrations/05-birthday-candles.webp"
+    },
+    {
+      "id": "09-grandpa",
+      "label": "El Abuelo",
+      "number": 15,
+      "illustration": "public/themes/cards/70956b8edc87bccdc1.webp",
+      "source": "lib/hero-cards-illustrations/09-grandpa.webp"
+    },
+    {
+      "id": "10-grandma",
+      "label": "La Abuela",
+      "number": 16,
+      "illustration": "public/themes/cards/30afbee8297854e6f1.webp",
+      "source": "lib/hero-cards-illustrations/10-grandma.webp"
+    }
+  ],
+  "compareId": "cinco-fiesta",
+  "sourcePackage": "output/etsy/variants-2-2026/17-cinco-de-mayo",
+  "etsyListingId": "4590890034"
+}

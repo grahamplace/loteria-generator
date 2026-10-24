@@ -37,7 +37,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
-import { BOARD_UNLOCK_PRICE_DISPLAY, TOTAL_CARD_COUNT } from '@/lib/constants';
+import { TOTAL_CARD_COUNT } from '@/lib/constants';
+import { useUnlockPriceDisplay } from '@/hooks/use-unlock-price';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 
 interface DisplayCard {
@@ -210,6 +211,7 @@ export function BoardCardGrid({
   onUnlockRequired,
 }: BoardCardGridProps) {
   const t = useTranslations('BoardEditor.CardGrid');
+  const unlockPrice = useUnlockPriceDisplay();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingCard, setEditingCard] = useState<DisplayCard | null>(null);
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
@@ -381,7 +383,7 @@ export function BoardCardGrid({
                   className="px-3.5 py-2 rounded-lg bg-primary text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm whitespace-nowrap hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   <Unlock className="w-3.5 h-3.5" />
-                  {t('unlockButton', { price: BOARD_UNLOCK_PRICE_DISPLAY })}
+                  {t('unlockButton', { price: unlockPrice })}
                 </button>
               </div>
             ) : onAddMore || onAddClassic ? (

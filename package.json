@@ -5,6 +5,7 @@
   "packageManager": "pnpm@9.15.9",
   "scripts": {
     "build": "next build",
+    "vercel-build": "if [ \"$VERCEL_ENV\" = production ]; then pnpm db:migrate; fi && next build",
     "dev": "pnpm secrets:pull && concurrently --names next,inngest --prefix-colors cyan,magenta \"next dev --port 3006\" \"inngest-cli dev --no-discovery --port 8288 -u http://localhost:3006/api/inngest\"",
     "dev:next": "next dev --port 3006",
     "dev:inngest": "inngest-cli dev --no-discovery --port 8288 -u http://localhost:3006/api/inngest",
@@ -120,6 +121,7 @@
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.132.0",
     "@eslint/js": "^9.39.2",
+    "@napi-rs/canvas": "^1.0.10",
     "@next/eslint-plugin-next": "^16.1.4",
     "@playwright/test": "^1.59.1",
     "@react-email/render": "^2.0.9",

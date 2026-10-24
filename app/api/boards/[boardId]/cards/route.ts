@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { db, boards, cards, IMAGE_GENERATION_LIMIT_FREE, IMAGE_GENERATION_LIMIT_PAID } from '@/db';
+import { db, boards, cards, IMAGE_GENERATION_LIMIT_PAID, getGenerationLimit } from '@/db';
 import { eq, and, gt, sql } from 'drizzle-orm';
 import {
   uploadOriginalImage,
@@ -125,16 +125,14 @@ export async function POST(
     // are rejected up front (the Inngest job increments the counter on success).
     const skipAIProcessing = process.env.NEXT_PUBLIC_SKIP_AI_PROCESSING === 'true';
     if (originalImageBase64 && !skipAIProcessing && !isAdmin) {
-      const generationLimit = board.isUnlocked
-        ? IMAGE_GENERATION_LIMIT_PAID
-        : IMAGE_GENERATION_LIMIT_FREE;
+      const generationLimit = getGenerationLimit(board);
       if (board.imageGenerationsUsed >= generationLimit) {
         return NextResponse.json(
           {
             error: 'Generation limit reached',
             message: board.isUnlocked
-              ? `You've used all ${IMAGE_GENERATION_LIMIT_PAID} image generations for this board.`
-              : `You've used all ${IMAGE_GENERATION_LIMIT_FREE} free image generations. Unlock this board for ${IMAGE_GENERATION_LIMIT_PAID} total generations.`,
+              ? `You've used all ${generationLimit} image generations for this board.`
+              : `You've used all ${generationLimit} free image generations. Unlock this board for ${IMAGE_GENERATION_LIMIT_PAID} total generations.`,
             code: 'GENERATION_LIMIT_REACHED',
             limit: generationLimit,
             used: board.imageGenerationsUsed,

@@ -50,7 +50,12 @@ export const generateCardArtwork = inngest.createFunction(
       await step.run('persist-error', async () => {
         await db
           .update(cards)
-          .set({ status: 'error', errorMessage: message, updatedAt: new Date() })
+          .set({
+            status: 'error',
+            errorMessage: message,
+            errorDismissedAt: null,
+            updatedAt: new Date(),
+          })
           .where(eq(cards.id, cardId));
       });
 
@@ -188,6 +193,7 @@ export const generateCardArtwork = inngest.createFunction(
         .set({
           ...(skipLabeling ? {} : { label }),
           illustrationUrl,
+          ...(skipIllustration ? {} : { savedIllustrationUrl: illustrationUrl }),
           status: 'completed',
           errorMessage: null,
           updatedAt: new Date(),
