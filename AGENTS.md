@@ -74,6 +74,7 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
 
 - MUST: Change the unlock price by editing both constants in `lib/constants.ts`: `BOARD_UNLOCK_PRICE_CENTS` (integer cents, used by Stripe) and `BOARD_UNLOCK_PRICE_DISPLAY` (formatted string, e.g. `'$20'`, used in UI/FAQ copy). Keep the two values in sync.
 - NEVER: Hardcode the price in components, copy, Stripe calls, or tests — import from `@/lib/constants`.
+- MUST: Show the price to users through `unlockPriceDisplay(locale)` (server) or `useUnlockPriceDisplay()` (client), not the raw `BOARD_UNLOCK_PRICE_DISPLAY`. In Mexico a bare `$` means pesos, so es-MX renders `US$20`.
 
 ---
 
