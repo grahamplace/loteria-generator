@@ -21,6 +21,7 @@ function renderBar(props: { cardCount: number; maxCards: number; isUnlocked: boo
   render(
     <BoardActionBar
       {...props}
+      boardId="board-1"
       onFilesSelected={vi.fn()}
       processedCount={props.cardCount}
       processingCount={0}
