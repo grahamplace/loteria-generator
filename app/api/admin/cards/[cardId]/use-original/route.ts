@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/admin';
 import { db, cards } from '@/db';
 import { eq } from 'drizzle-orm';
-import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
+import { CardPhotoModeError, changeCardPhotoMode } from '@/lib/cards/photo-mode';
 
 /**
  * POST /api/admin/cards/[cardId]/use-original
@@ -30,22 +30,15 @@ export async function POST(
       return NextResponse.json({ error: 'Card has no uploaded photo to use' }, { status: 400 });
     }
 
-    const [updatedCard] = await db
-      .update(cards)
-      .set({
-        illustrationUrl: card.originalImageUrl,
-        status: 'completed',
-        errorMessage: null,
-        preserveOriginal: true,
-        updatedAt: new Date(),
-      })
-      .where(eq(cards.id, card.id))
-      .returning();
-
-    await invalidateBoardPreview(card.boardId, card.userId);
+    const updatedCard = await changeCardPhotoMode(card, 'original');
 
     return NextResponse.json({ card: updatedCard });
   } catch (error) {
+    if (error instanceof CardPhotoModeError)
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.code === 'NO_PHOTO' ? 400 : 409 }
+      );
     console.error('Error switching card to original photo:', error);
     return NextResponse.json({ error: 'Failed to use original photo' }, { status: 500 });
   }
