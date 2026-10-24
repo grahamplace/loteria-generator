@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   clampBoardCount,
   generateLoteriaSetPdf,
@@ -16,16 +15,8 @@ import { BoardCountStepper } from '@/components/board-count-stepper';
 import { DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
 import type { Card } from '@/db/schema';
 
-// Mirrors the consumer defaults in components/board-action-bar.tsx. Falls back to
-// these when the board has no persisted styleOptions.
-const DEFAULT_STYLE_OPTIONS: BoardStyleOptions = {
-  backgroundColor: '#f5f0e1',
-  badgeColor: '#eb865a',
-  labelColor: '#000000',
-};
-
-// generateBoards requires at least 16 completed cards.
-const MIN_EXPORT_CARDS = 16;
+// Small sets export a labeled sample; full sets export randomized boards.
+const MIN_EXPORT_CARDS = 1;
 
 export function AdminExportButton({
   boardName,
@@ -39,7 +30,6 @@ export function AdminExportButton({
   const [isExporting, setIsExporting] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
   const [boardCount, setBoardCount] = useState(DEFAULT_EXPORT_BOARD_COUNT);
-  const [includeTitle, setIncludeTitle] = useState(false);
 
   // Only completed cards with an illustration can be rendered into the set.
   const exportableCards = cards.filter((c) => c.status === 'completed' && c.illustrationUrl);
@@ -73,12 +63,12 @@ export function AdminExportButton({
 
       const pdfBlob = await generateLoteriaSetPdf(
         exportCards,
-        styleOptions ?? DEFAULT_STYLE_OPTIONS,
+        styleOptions ?? {},
         setProgress,
         // Keep the default caller-sheet labels — only the board count is overridden.
         undefined,
         boardCount,
-        { boardTitle: includeTitle ? boardName : undefined }
+        { boardTitle: styleOptions?.showTitle ? boardName : undefined }
       );
 
       const url = URL.createObjectURL(pdfBlob);
@@ -123,14 +113,6 @@ export function AdminExportButton({
         increaseLabel="More boards"
         size="sm"
       />
-      <label className="inline-flex min-h-6 cursor-pointer items-center gap-1.5 text-sm has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
-        <Checkbox
-          checked={includeTitle}
-          onCheckedChange={(checked) => setIncludeTitle(checked === true)}
-          disabled={isExporting || !canExport}
-        />
-        Include board title
-      </label>
       <Button
         size="sm"
         variant="outline"

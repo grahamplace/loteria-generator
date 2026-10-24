@@ -30,6 +30,28 @@ describe('computeBoardLayout', () => {
     expect(computeBoardLayout({ width: W, height: H, titleBandHeight: 0 }).titleBand).toBeNull();
   });
 
+  it.each([0, BOARD_TITLE_BAND_PX])(
+    'keeps framed content clear of the border with a %ipx title band',
+    (titleBandHeight) => {
+      const layout = computeBoardLayout({ width: W, height: H, titleBandHeight, hasFrame: true });
+      // The double frame's inner stroke reaches 96px from the page edge.
+      // Keep at least a quarter inch of clear paper inside it, on every side.
+      const innerEdge = 96;
+      const minimumClearance = 75;
+      const contentTop = layout.titleBand?.top ?? layout.offsetY;
+      const contentBottom = layout.offsetY + layout.gridHeight;
+      expect(contentTop - innerEdge).toBeGreaterThanOrEqual(minimumClearance);
+      expect(H - innerEdge - contentBottom).toBeGreaterThanOrEqual(minimumClearance);
+      expect(layout.offsetX - innerEdge).toBeGreaterThanOrEqual(minimumClearance);
+      expect(W - innerEdge - layout.offsetX - layout.gridWidth).toBeGreaterThanOrEqual(
+        minimumClearance
+      );
+      expect(contentTop).toBeCloseTo(H - contentBottom, 5);
+      expect(layout.cardWidth / layout.cardHeight).toBeCloseTo(2 / 3, 5);
+      expect(layout.cardSpacing).toBe(20);
+    }
+  );
+
   it('reserves a title band above a smaller grid inside the same margins', () => {
     const plain = computeBoardLayout({ width: W, height: H });
     const titled = computeBoardLayout({

@@ -1,0 +1,191 @@
+{
+  "classroom": {
+    "manifest": "scripts/themes/samples/classroom.json",
+    "etsyListingId": "4590870501",
+    "assets": {
+      "board": "/themes/classroom/board-1.webp",
+      "photo": "/themes/classroom/photo.webp",
+      "card": "/themes/classroom/card.webp"
+    }
+  },
+  "christmas": {
+    "manifest": "scripts/themes/samples/christmas.json",
+    "etsyListingId": "4590861292",
+    "assets": {
+      "board": "/themes/christmas/board-1.webp",
+      "photo": "/themes/christmas/photo.webp",
+      "card": "/themes/christmas/card.webp"
+    }
+  },
+  "easter": {
+    "manifest": "scripts/themes/samples/easter.json",
+    "etsyListingId": "4590881569",
+    "assets": {
+      "board": "/themes/easter/board-1.webp",
+      "photo": "/themes/easter/photo.webp",
+      "card": "/themes/easter/card.webp"
+    }
+  },
+  "soccer-team": {
+    "manifest": "scripts/themes/samples/soccer-team.json",
+    "etsyListingId": "4590873001",
+    "assets": {
+      "board": "/themes/soccer-team/board-1.webp",
+      "photo": "/themes/soccer-team/photo.webp",
+      "card": "/themes/soccer-team/card.webp"
+    }
+  },
+  "cinco-de-mayo": {
+    "manifest": "scripts/themes/samples/cinco-de-mayo.json",
+    "etsyListingId": "4590890034",
+    "assets": {
+      "board": "/themes/cinco-de-mayo/board-1.webp",
+      "photo": "/themes/cinco-de-mayo/photo.webp",
+      "card": "/themes/cinco-de-mayo/card.webp"
+    }
+  },
+  "original-photos": {
+    "manifest": "scripts/themes/samples/original-photos.json",
+    "etsyListingId": "4590891086",
+    "assets": {
+      "board": "/themes/original-photos/board-1.webp",
+      "photo": "/themes/original-photos/photo.webp",
+      "card": "/themes/original-photos/card.webp"
+    }
+  },
+  "friendsgiving": {
+    "manifest": "scripts/themes/samples/friendsgiving.json",
+    "etsyListingId": "4590861161",
+    "assets": {
+      "board": "/themes/friendsgiving/board-1.webp",
+      "photo": "/themes/friendsgiving/photo.webp",
+      "card": "/themes/friendsgiving/card.webp"
+    }
+  },
+  "birthday": {
+    "manifest": "scripts/themes/samples/birthday.json",
+    "etsyListingId": "4590863614",
+    "assets": {
+      "board": "/themes/birthday/board-1.webp",
+      "photo": "/themes/birthday/photo.webp",
+      "card": "/themes/birthday/card.webp"
+    }
+  },
+  "quinceanera": {
+    "manifest": "scripts/themes/samples/quinceanera.json",
+    "etsyListingId": "4590854821",
+    "assets": {
+      "board": "/themes/quinceanera/board-1.webp",
+      "photo": "/themes/quinceanera/photo.webp",
+      "card": "/themes/quinceanera/card.webp"
+    }
+  },
+  "family-reunion": {
+    "manifest": "scripts/themes/samples/family-reunion.json",
+    "etsyListingId": "4590865682",
+    "assets": {
+      "board": "/themes/family-reunion/board-1.webp",
+      "photo": "/themes/family-reunion/photo.webp",
+      "card": "/themes/family-reunion/card.webp"
+    }
+  },
+  "anniversary": {
+    "manifest": "scripts/themes/samples/anniversary.json",
+    "etsyListingId": "4590883478",
+    "assets": {
+      "board": "/themes/anniversary/board-1.webp",
+      "photo": "/themes/anniversary/photo.webp",
+      "card": "/themes/anniversary/card.webp"
+    }
+  },
+  "halloween": {
+    "manifest": "scripts/themes/samples/halloween.json",
+    "etsyListingId": "4590829386",
+    "assets": {
+      "board": "/themes/halloween/board-1.webp",
+      "photo": "/themes/halloween/photo.webp",
+      "card": "/themes/halloween/card.webp"
+    }
+  },
+  "wedding": {
+    "manifest": "scripts/themes/samples/wedding.json",
+    "etsyListingId": "4590856773",
+    "assets": {
+      "board": "/themes/wedding/board-1.webp",
+      "photo": "/themes/wedding/photo.webp",
+      "card": "/themes/wedding/card.webp"
+    }
+  },
+  "bridal-shower": {
+    "manifest": "scripts/themes/samples/bridal-shower.json",
+    "etsyListingId": "4590858801",
+    "assets": {
+      "board": "/themes/bridal-shower/board-1.webp",
+      "photo": "/themes/bridal-shower/photo.webp",
+      "card": "/themes/bridal-shower/card.webp"
+    }
+  },
+  "milestone-birthday": {
+    "manifest": "scripts/themes/samples/milestone-birthday.json",
+    "etsyListingId": "4590875423",
+    "assets": {
+      "board": "/themes/milestone-birthday/board-1.webp",
+      "photo": "/themes/milestone-birthday/photo.webp",
+      "card": "/themes/milestone-birthday/card.webp"
+    }
+  },
+  "hanukkah": {
+    "manifest": "scripts/themes/samples/hanukkah.json",
+    "etsyListingId": "4590892208",
+    "assets": {
+      "board": "/themes/hanukkah/board-1.webp",
+      "photo": "/themes/hanukkah/photo.webp",
+      "card": "/themes/hanukkah/card.webp"
+    }
+  },
+  "new-years": {
+    "manifest": "scripts/themes/samples/new-years.json",
+    "etsyListingId": "4590874143",
+    "assets": {
+      "board": "/themes/new-years/board-1.webp",
+      "photo": "/themes/new-years/photo.webp",
+      "card": "/themes/new-years/card.webp"
+    }
+  },
+  "bachelorette": {
+    "manifest": "scripts/themes/samples/bachelorette.json",
+    "etsyListingId": "4590860069",
+    "assets": {
+      "board": "/themes/bachelorette/board-1.webp",
+      "photo": "/themes/bachelorette/photo.webp",
+      "card": "/themes/bachelorette/card.webp"
+    }
+  },
+  "graduation": {
+    "manifest": "scripts/themes/samples/graduation.json",
+    "etsyListingId": "4590874216",
+    "assets": {
+      "board": "/themes/graduation/board-1.webp",
+      "photo": "/themes/graduation/photo.webp",
+      "card": "/themes/graduation/card.webp"
+    }
+  },
+  "destination-wedding": {
+    "manifest": "scripts/themes/samples/destination-wedding.json",
+    "etsyListingId": "4590877289",
+    "assets": {
+      "board": "/themes/destination-wedding/board-1.webp",
+      "photo": "/themes/destination-wedding/photo.webp",
+      "card": "/themes/destination-wedding/card.webp"
+    }
+  },
+  "baby-shower": {
+    "manifest": "scripts/themes/samples/baby-shower.json",
+    "etsyListingId": "4590857759",
+    "assets": {
+      "board": "/themes/baby-shower/board-1.webp",
+      "photo": "/themes/baby-shower/photo.webp",
+      "card": "/themes/baby-shower/card.webp"
+    }
+  }
+}

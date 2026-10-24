@@ -1,0 +1,124 @@
+{
+  "title": "Destination Wedding Lotería",
+  "styles": {
+    "presetId": "destination-wedding",
+    "showTitle": true
+  },
+  "cards": [
+    {
+      "id": "destination-beach-couple",
+      "label": "La Boda en la Playa",
+      "number": 1,
+      "illustration": "public/themes/cards/c3cf9e54a0175d1290.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/destination-beach-couple.png"
+    },
+    {
+      "id": "cabo-arch",
+      "label": "Cabo San Lucas",
+      "number": 2,
+      "illustration": "public/themes/cards/610e4fb83284e42dac.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/cabo-arch.png"
+    },
+    {
+      "id": "cancun-beach",
+      "label": "Cancún",
+      "number": 3,
+      "illustration": "public/themes/cards/9cd09a1bcb8d3aed65.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/cancun-beach.png"
+    },
+    {
+      "id": "mexico-city-couple",
+      "label": "Ciudad de México",
+      "number": 4,
+      "illustration": "public/themes/cards/8c1f0d8d76caa3be2e.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/mexico-city-couple.png"
+    },
+    {
+      "id": "03-wedding-rings",
+      "label": "Los Anillos",
+      "number": 5,
+      "illustration": "public/themes/cards/3fddbd3da0433f34a1.webp",
+      "source": "lib/hero-cards-illustrations/03-wedding-rings.webp"
+    },
+    {
+      "id": "02-wedding-bouquet",
+      "label": "El Ramo",
+      "number": 6,
+      "illustration": "public/themes/cards/bd288e32f714582164.webp",
+      "source": "lib/hero-cards-illustrations/02-wedding-bouquet.webp"
+    },
+    {
+      "id": "bachelorette-friends",
+      "label": "Las Amigas",
+      "number": 7,
+      "illustration": "public/themes/cards/3d4b9a078386f1c379.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/bachelorette-friends.png"
+    },
+    {
+      "id": "07-family-portrait",
+      "label": "La Familia",
+      "number": 8,
+      "illustration": "public/themes/cards/fe93f6f2e21f1735a5.webp",
+      "source": "lib/hero-cards-illustrations/07-family-portrait.webp"
+    },
+    {
+      "id": "17-camera",
+      "label": "La Cámara",
+      "number": 9,
+      "illustration": "public/themes/cards/a05ce3691a0cf677c5.webp",
+      "source": "lib/hero-cards-illustrations/17-camera.webp"
+    },
+    {
+      "id": "18-tacos",
+      "label": "Los Tacos",
+      "number": 10,
+      "illustration": "public/themes/cards/630519f82f345adb4e.webp",
+      "source": "lib/hero-cards-illustrations/18-tacos.webp"
+    },
+    {
+      "id": "anniversary-couple",
+      "label": "Nuestro Amor",
+      "number": 11,
+      "illustration": "public/themes/cards/d3c6942fe286b9d6f4.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/anniversary-couple.png"
+    },
+    {
+      "id": "11-dog",
+      "label": "El Perro",
+      "number": 12,
+      "illustration": "public/themes/cards/472f18df46a9ef5438.webp",
+      "source": "lib/hero-cards-illustrations/11-dog.webp"
+    },
+    {
+      "id": "15-guitar",
+      "label": "La Guitarra",
+      "number": 13,
+      "illustration": "public/themes/cards/1e0cc63e18eae5f2d4.webp",
+      "source": "lib/hero-cards-illustrations/15-guitar.webp"
+    },
+    {
+      "id": "14-car",
+      "label": "El Bochito",
+      "number": 14,
+      "illustration": "public/themes/cards/8b948c48d3fbea0ee5.webp",
+      "source": "lib/hero-cards-illustrations/14-car.webp"
+    },
+    {
+      "id": "13-house",
+      "label": "La Casa",
+      "number": 15,
+      "illustration": "public/themes/cards/c2a536497ab938da48.webp",
+      "source": "lib/hero-cards-illustrations/13-house.webp"
+    },
+    {
+      "id": "new-years-friends",
+      "label": "La Medianoche",
+      "number": 16,
+      "illustration": "public/themes/cards/f8ed97d61e64cc7590.webp",
+      "source": "output/imagegen/etsy-variants-2/illustrations/new-years-friends.png"
+    }
+  ],
+  "compareId": "destination-beach-couple",
+  "sourcePackage": "output/etsy/variants-2-2026/16-destination-wedding",
+  "etsyListingId": "4590877289"
+}
