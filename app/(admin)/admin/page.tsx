@@ -1,5 +1,5 @@
 import { db, user, boards, cards } from '@/db';
-import { count, eq, desc, sql } from 'drizzle-orm';
+import { and, count, eq, desc, isNotNull, isNull, sql } from 'drizzle-orm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -10,17 +10,23 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
+import { DismissErrorButton } from './components/dismiss-error-button';
+
+const openError = and(eq(cards.status, 'error'), isNull(cards.errorDismissedAt));
 
 async function getStats() {
-  const [[userCount], [boardCount], [unlockedCount], [cardCount], [errorCount]] = await Promise.all(
-    [
+  const [[userCount], [boardCount], [unlockedCount], [cardCount], [errorCount], [dismissedCount]] =
+    await Promise.all([
       db.select({ count: count() }).from(user),
       db.select({ count: count() }).from(boards),
       db.select({ count: count() }).from(boards).where(eq(boards.isUnlocked, true)),
       db.select({ count: count() }).from(cards),
-      db.select({ count: count() }).from(cards).where(eq(cards.status, 'error')),
-    ]
-  );
+      db.select({ count: count() }).from(cards).where(openError),
+      db
+        .select({ count: count() })
+        .from(cards)
+        .where(and(eq(cards.status, 'error'), isNotNull(cards.errorDismissedAt))),
+    ]);
 
   return {
     users: userCount.count,
@@ -28,6 +34,7 @@ async function getStats() {
     unlockedBoards: unlockedCount.count,
     cards: cardCount.count,
     errors: errorCount.count,
+    dismissedErrors: dismissedCount.count,
   };
 }
 
@@ -45,7 +52,7 @@ async function getRecentErrors() {
     .from(cards)
     .innerJoin(boards, eq(cards.boardId, boards.id))
     .innerJoin(user, eq(cards.userId, user.id))
-    .where(eq(cards.status, 'error'))
+    .where(openError)
     .orderBy(desc(cards.updatedAt))
     .limit(10);
 }
@@ -112,6 +119,9 @@ export default async function AdminOverview() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-destructive">{stats.errors}</p>
+            {stats.dismissedErrors > 0 && (
+              <p className="text-xs text-muted-foreground">{stats.dismissedErrors} dismissed</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -134,6 +144,9 @@ export default async function AdminOverview() {
                     <TableHead>Card</TableHead>
                     <TableHead>Error</TableHead>
                     <TableHead>Time</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -161,6 +174,9 @@ export default async function AdminOverview() {
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                         {error.cardCreatedAt.toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="w-0 py-0">
+                        <DismissErrorButton cardId={error.cardId} cardNumber={error.cardNumber} />
                       </TableCell>
                     </TableRow>
                   ))}
