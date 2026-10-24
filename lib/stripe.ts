@@ -99,27 +99,34 @@ export interface BoardPaymentFields {
   promotionCode: string | null;
 }
 
-// Expand path that makes the promotion code readable on a Checkout Session.
-export const SESSION_DISCOUNT_EXPAND = 'total_details.breakdown.discounts.discount.promotion_code';
+// Expanding the breakdown makes each discount readable. The promotion code
+// inside it sits one level deeper than Stripe's 4-level expansion limit, so it
+// stays an id and is fetched separately.
+const SESSION_DISCOUNT_EXPAND = 'total_details.breakdown';
 
 /**
  * What the customer paid for a board, read off a Checkout Session retrieved
- * with SESSION_DISCOUNT_EXPAND. Falls back to the coupon's name or id when the
- * discount wasn't applied through a promotion code.
+ * with the breakdown expanded. `promotionCode` is the code string when the
+ * caller has already looked it up; otherwise an expanded promotion code on the
+ * session is used, then the coupon's name or id.
  */
-export function paymentFieldsFromSession(session: Stripe.Checkout.Session): BoardPaymentFields {
+export function paymentFieldsFromSession(
+  session: Stripe.Checkout.Session,
+  promotionCode: string | null = null
+): BoardPaymentFields {
   const discount = session.total_details?.breakdown?.discounts[0]?.discount;
   const promo = discount?.promotion_code;
   const coupon = discount?.source?.coupon;
-  const promotionCode =
+  const code =
     (promo && typeof promo !== 'string' ? promo.code : null) ??
+    promotionCode ??
     (coupon && typeof coupon !== 'string' ? (coupon.name ?? coupon.id) : (coupon ?? null));
 
   return {
     amountPaidCents: session.amount_total,
     amountDiscountCents: session.total_details?.amount_discount ?? null,
     currency: session.currency,
-    promotionCode,
+    promotionCode: code,
   };
 }
 
@@ -127,5 +134,8 @@ export async function retrieveSessionPaymentFields(sessionId: string): Promise<B
   const session = await stripe.checkout.sessions.retrieve(sessionId, {
     expand: [SESSION_DISCOUNT_EXPAND],
   });
-  return paymentFieldsFromSession(session);
+  const promo = session.total_details?.breakdown?.discounts[0]?.discount.promotion_code;
+  const promotionCode =
+    typeof promo === 'string' ? (await stripe.promotionCodes.retrieve(promo)).code : null;
+  return paymentFieldsFromSession(session, promotionCode);
 }
