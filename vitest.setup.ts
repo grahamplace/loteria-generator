@@ -56,7 +56,6 @@ Object.defineProperty(window, 'matchMedia', {
 // with a plain <img> for tests — they only assert on labels and structure.
 vi.mock('next/image', () => ({
   __esModule: true,
-  getImageProps: (props: Record<string, unknown>) => ({ props: filterImgProps(props) }),
   default: ({
     src,
     alt,
@@ -72,12 +71,11 @@ vi.mock('next/image', () => ({
 }));
 
 function filterImgProps(props: Record<string, unknown>): Record<string, unknown> {
-  const { fill, sizes, placeholder, blurDataURL, priority, unoptimized, ...rest } = props;
+  const { fill, sizes, placeholder, blurDataURL, priority, ...rest } = props;
   void fill;
   void sizes;
   void placeholder;
   void blurDataURL;
   void priority;
-  void unoptimized;
   return rest;
 }

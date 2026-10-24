@@ -1,12 +1,3 @@
-import {
-  resolveBoardStyle,
-  loadPrintFonts,
-  drawThemeFrame,
-  printColor,
-  type ResolvedBoardStyle,
-} from './themes/render-style';
-import type { BoardStyleOptions } from './themes/presets';
-export type { BoardStyleOptions } from './themes/presets';
 import { jsPDF } from 'jspdf';
 import {
   shouldIncludeCallerSheet,
@@ -47,6 +38,15 @@ export interface LotteriaCard {
   riddle?: string | null;
   isProcessing?: boolean;
   error?: string;
+}
+
+/**
+ * Styling options for board generation
+ */
+export interface BoardStyleOptions {
+  backgroundColor?: string;
+  badgeColor?: string;
+  labelColor?: string;
 }
 
 /**
@@ -124,6 +124,15 @@ export function generateBoards(
 }
 
 /**
+ * Loads a Google Font for canvas rendering via FontFace API
+ */
+async function loadGoogleFont(family: string, url: string): Promise<void> {
+  const font = new FontFace(family, `url(${url})`);
+  const loaded = await font.load();
+  document.fonts.add(loaded);
+}
+
+/**
  * Draws a wobbly/hand-drawn rectangle on the canvas
  */
 function drawHandDrawnRect(
@@ -163,30 +172,20 @@ function drawHandDrawnRect(
   ctx.stroke();
 }
 
-function loadImage(
-  src: string,
-  cache?: Map<string, Promise<HTMLImageElement>>
-): Promise<HTMLImageElement> {
-  const cached = cache?.get(src);
-  if (cached) return cached;
-  const loading = new Promise<HTMLImageElement>((resolve, reject) => {
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;
   });
-  cache?.set(src, loading);
-  void loading.catch(() => {
-    if (cache?.get(src) === loading) cache.delete(src);
-  });
-  return loading;
 }
 
 /**
  * Draws a single card on the canvas at the specified position and size.
  * Includes hand-drawn border, feathered image, number badge, and label.
  */
-export function drawCard(
+function drawCard(
   ctx: CanvasRenderingContext2D,
   card: LotteriaCard,
   img: HTMLImageElement,
@@ -194,7 +193,7 @@ export function drawCard(
   y: number,
   cardWidth: number,
   cardHeight: number,
-  styleOptions: Pick<ResolvedBoardStyle, 'badgeColor' | 'labelColor'> & Partial<ResolvedBoardStyle>,
+  styleOptions: { badgeColor: string; labelColor: string },
   renderRiddle = false,
   badgeSize = 70
 ) {
@@ -207,22 +206,9 @@ export function drawCard(
   const riddleBandHeight = hasRiddle ? Math.round(cardHeight * 0.28) : 0;
 
   // Draw hand-drawn card border
-  if (styleOptions.themed) {
-    ctx.fillStyle = styleOptions.backgroundColor!;
-    ctx.fillRect(x, y, cardWidth, cardHeight);
-  }
-  ctx.strokeStyle = styleOptions.borderColor ?? printColor('--loteria-classic-ink');
+  ctx.strokeStyle = '#000000';
   ctx.lineWidth = 3;
-  ctx.save();
-  if (styleOptions.borderStyle === 'dashed') ctx.setLineDash([14, 10]);
-  if (['solid', 'double', 'dashed'].includes(styleOptions.borderStyle ?? '')) {
-    ctx.strokeRect(x, y, cardWidth, cardHeight);
-    if (styleOptions.borderStyle === 'double')
-      ctx.strokeRect(x + 7, y + 7, cardWidth - 14, cardHeight - 14);
-  } else if (styleOptions.borderStyle !== 'none') {
-    drawHandDrawnRect(ctx, x, y, cardWidth, cardHeight, 1);
-  }
-  ctx.restore();
+  drawHandDrawnRect(ctx, x, y, cardWidth, cardHeight, 1);
 
   // Draw card illustration (portrait orientation, centered with padding)
   const imagePadding = 5;
@@ -250,15 +236,11 @@ export function drawCard(
 
   // Draw image with feathered edges using an offscreen canvas + alpha mask
   const feather = 35;
-  // Match temporary bitmaps to the target resolution for live previews.
-  // Print rendering keeps its original full-resolution path.
-  const rasterScale = Math.min(1, Math.abs(ctx.getTransform().a));
 
   const maskCanvas = document.createElement('canvas');
-  maskCanvas.width = imageWidth * rasterScale;
-  maskCanvas.height = imageHeight * rasterScale;
+  maskCanvas.width = imageWidth;
+  maskCanvas.height = imageHeight;
   const maskCtx = maskCanvas.getContext('2d')!;
-  if (rasterScale !== 1) maskCtx.scale(rasterScale, rasterScale);
 
   maskCtx.fillStyle = '#fff';
   maskCtx.fillRect(0, 0, imageWidth, imageHeight);
@@ -290,10 +272,9 @@ export function drawCard(
   maskCtx.fillRect(0, imageHeight - feather, imageWidth, feather);
 
   const offscreen = document.createElement('canvas');
-  offscreen.width = imageWidth * rasterScale;
-  offscreen.height = imageHeight * rasterScale;
+  offscreen.width = imageWidth;
+  offscreen.height = imageHeight;
   const offCtx = offscreen.getContext('2d')!;
-  if (rasterScale !== 1) offCtx.scale(rasterScale, rasterScale);
 
   // Draw image with "object-fit: cover" behavior — crop to fill, centered
   const targetAspect = imageWidth / imageHeight;
@@ -315,13 +296,9 @@ export function drawCard(
   offCtx.drawImage(img, sx, sy, sw, sh, 0, 0, imageWidth, imageHeight);
 
   offCtx.globalCompositeOperation = 'destination-in';
-  if (rasterScale === 1) {
-    offCtx.drawImage(maskCanvas, 0, 0);
-    ctx.drawImage(offscreen, imageX, imageY);
-  } else {
-    offCtx.drawImage(maskCanvas, 0, 0, imageWidth, imageHeight);
-    ctx.drawImage(offscreen, imageX, imageY, imageWidth, imageHeight);
-  }
+  offCtx.drawImage(maskCanvas, 0, 0);
+
+  ctx.drawImage(offscreen, imageX, imageY);
 
   // Draw number badge (top-left corner). badgeSize is caller-controlled so
   // boards and the larger deck cards can use proportionally bigger numbers.
@@ -333,15 +310,14 @@ export function drawCard(
   ctx.arc(badgeX + badgeSize / 2, badgeY + badgeSize / 2, badgeSize / 2, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = styleOptions.numberColor ?? printColor('--loteria-number-ink');
+  ctx.fillStyle = '#ffffff';
   // Glyph fills ~60% of the circle; keep the ratio as the badge scales.
-  const numberFont = styleOptions.numberFont ?? 'Caveat';
-  ctx.font = `bold ${Math.round(badgeSize * 0.6)}px '${numberFont}', sans-serif`;
+  ctx.font = `bold ${Math.round(badgeSize * 0.6)}px Caveat, cursive`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   // Nudge left: Caveat digits sit slightly right of the glyph box, so centering
   // on the circle's center looks off without this correction (scales with size).
-  const badgeNudge = numberFont === 'Caveat' ? (badgeSize * 3) / 70 : 0;
+  const badgeNudge = (badgeSize * 3) / 70;
   ctx.fillText(card.number.toString(), badgeX + badgeSize / 2 - badgeNudge, badgeY + badgeSize / 2);
 
   // Draw label text (bottom of card)
@@ -349,8 +325,7 @@ export function drawCard(
 
   const labelText = card.label.toUpperCase();
   const baseFontSize = 40;
-  const labelFont = styleOptions.labelFont ?? 'Jost';
-  ctx.font = `normal ${baseFontSize}px '${labelFont}', Arial, Helvetica, sans-serif`;
+  ctx.font = `normal ${baseFontSize}px 'Jost', Arial, Helvetica, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
 
@@ -362,7 +337,7 @@ export function drawCard(
 
   while (metrics.width > maxLabelWidth && fontSize > 22) {
     fontSize -= 1;
-    ctx.font = `normal ${fontSize}px '${labelFont}', Arial, Helvetica, sans-serif`;
+    ctx.font = `normal ${fontSize}px 'Jost', Arial, Helvetica, sans-serif`;
     metrics = ctx.measureText(labelText);
   }
 
@@ -374,9 +349,7 @@ export function drawCard(
     const bandPadX = 28;
     const sepY = bandTop + 8;
 
-    ctx.strokeStyle = printColor(
-      styleOptions.legacy ? '--loteria-legacy-cut-guide' : '--loteria-cut-guide'
-    );
+    ctx.strokeStyle = '#d1d5db';
     ctx.lineWidth = 2;
     ctx.setLineDash([]);
     ctx.beginPath();
@@ -424,51 +397,52 @@ export function drawCard(
  * Board dimensions: 8.5" × 11" (US Letter) at 300 DPI = 2550 × 3300 pixels.
  * A non-blank title is drawn in a band above the grid; the cards shrink to
  * make room so the page margins are unchanged.
- * Optional scale reduces bitmap resolution for previews without changing layout.
  */
-export async function renderBoardToCanvas(
+async function renderBoardToCanvas(
   board: LotteriaCard[],
   styleOptions: BoardStyleOptions = {},
-  title?: string,
-  options: { scale?: number; imageCache?: Map<string, Promise<HTMLImageElement>> } = {}
+  title?: string
 ): Promise<HTMLCanvasElement> {
-  const scale = options.scale ?? 1;
-  if (!Number.isFinite(scale) || scale <= 0 || scale > 1) {
-    throw new Error('Board render scale must be greater than 0 and at most 1');
-  }
-  const resolved = resolveBoardStyle(styleOptions);
-  const { backgroundColor, labelColor } = resolved;
+  const {
+    backgroundColor = '#ffffff',
+    badgeColor = '#ff6b35',
+    labelColor = '#1f2937',
+  } = styleOptions;
 
   const width = 2550;
   const height = 3300;
   const canvas = document.createElement('canvas');
-  canvas.width = Math.round(width * scale);
-  canvas.height = Math.round(height * scale);
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext('2d');
 
   if (!ctx) {
     throw new Error('Could not get canvas context');
   }
-  if (scale !== 1) ctx.scale(scale, scale);
 
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
 
-  drawThemeFrame(ctx, width, height, resolved);
-  await loadPrintFonts(resolved.font);
+  // Loaded before any text is measured so the title fits against real Jost metrics.
+  await loadGoogleFont(
+    'Caveat',
+    'https://fonts.gstatic.com/s/caveat/v18/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9eIWpYQ.woff2'
+  );
+  await loadGoogleFont(
+    'Jost',
+    'https://fonts.gstatic.com/s/jost/v20/92zPtBhPNqw79Ij1E865zBUv7myjJTVBNIgun_HKOEo.woff2'
+  );
 
   const hasTitle = (title ?? '').trim() !== '';
   const layout = computeBoardLayout({
     width,
     height,
     titleBandHeight: hasTitle ? BOARD_TITLE_BAND_PX : 0,
-    hasFrame: resolved.framed,
   });
   const { cardWidth, cardHeight, cardSpacing, offsetX, offsetY, titleBand } = layout;
 
   if (titleBand) {
-    const titleFont = (fontPx: number) =>
-      `normal ${fontPx}px '${resolved.font}', Arial, Helvetica, sans-serif`;
+    const titleFont = (fontPx: number) => `normal ${fontPx}px 'Jost', Arial, Helvetica, sans-serif`;
     const fit = fitBoardTitle({
       text: title ?? '',
       maxWidth: layout.gridWidth,
@@ -489,9 +463,7 @@ export async function renderBoardToCanvas(
     }
   }
 
-  const cardImages = await Promise.all(
-    board.map((card) => loadImage(card.illustration, options.imageCache))
-  );
+  const cardImages = await Promise.all(board.map((card) => loadImage(card.illustration)));
 
   const rows = 4;
   const cols = 4;
@@ -507,7 +479,7 @@ export async function renderBoardToCanvas(
       const x = offsetX + col * (cardWidth + cardSpacing);
       const y = offsetY + row * (cardHeight + cardSpacing);
 
-      drawCard(ctx, card, img, x, y, cardWidth, cardHeight, resolved, false, 88);
+      drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor }, false, 88);
     }
   }
 
@@ -520,13 +492,15 @@ export async function renderBoardToCanvas(
  * Each card prints at exactly 3" × 5" (standard index card); only four
  * 3×5 cards fit per Letter sheet.
  */
-export async function renderDeckPageToCanvas(
+async function renderDeckPageToCanvas(
   cards: LotteriaCard[],
-  styleOptions: BoardStyleOptions = {},
-  cutInstruction = 'Cut along lines to make individual cards'
+  styleOptions: BoardStyleOptions = {}
 ): Promise<HTMLCanvasElement> {
-  const resolved = resolveBoardStyle(styleOptions);
-  const { backgroundColor, labelColor } = resolved;
+  const {
+    backgroundColor = '#ffffff',
+    badgeColor = '#ff6b35',
+    labelColor = '#1f2937',
+  } = styleOptions;
 
   const width = 2550;
   const height = 3300;
@@ -562,19 +536,22 @@ export async function renderDeckPageToCanvas(
   const offsetX = (width - gridWidth) / 2;
   const offsetY = height - bottomMargin - gridHeight;
 
-  await loadPrintFonts(resolved.font);
-
   // Draw header label, sitting a fixed gap above the grid rather than centred in
   // a top band, so it moves down (away from the paper edge) with the grid.
-  ctx.fillStyle = resolved.legacy ? printColor('--loteria-legacy-caption') : labelColor;
-  ctx.font = resolved.legacy
-    ? '500 48px Arial, Helvetica, sans-serif'
-    : '500 48px Jost, sans-serif';
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '500 48px Arial, Helvetica, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(resolved.legacy ? `✂  ${cutInstruction}` : cutInstruction, width / 2, offsetY - 44);
+  ctx.fillText('✂  Cut along lines to make individual cards', width / 2, offsetY - 44);
 
-  await loadPrintFonts(resolved.font);
+  await loadGoogleFont(
+    'Caveat',
+    'https://fonts.gstatic.com/s/caveat/v18/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9eIWpYQ.woff2'
+  );
+  await loadGoogleFont(
+    'Jost',
+    'https://fonts.gstatic.com/s/jost/v20/92zPtBhPNqw79Ij1E865zBUv7myjJTVBNIgun_HKOEo.woff2'
+  );
 
   const cardImages = await Promise.all(cards.map((card) => loadImage(card.illustration)));
 
@@ -587,13 +564,11 @@ export async function renderDeckPageToCanvas(
     const x = offsetX + col * (cardWidth + cardSpacing);
     const y = offsetY + row * (cardHeight + cardSpacing);
 
-    drawCard(ctx, card, img, x, y, cardWidth, cardHeight, resolved, true, 140);
+    drawCard(ctx, card, img, x, y, cardWidth, cardHeight, { badgeColor, labelColor }, true, 140);
   }
 
   // Draw dashed cut lines between cards
-  ctx.strokeStyle = printColor(
-    resolved.legacy ? '--loteria-legacy-cut-guide' : '--loteria-cut-guide'
-  );
+  ctx.strokeStyle = '#d1d5db';
   ctx.lineWidth = 2;
   ctx.setLineDash([16, 12]);
 
@@ -623,8 +598,6 @@ export async function renderDeckPageToCanvas(
 export interface LoteriaSetPdfOptions {
   /** Printed at the top of every player board page when non-blank. */
   boardTitle?: string;
-  sampleLabel?: string;
-  cutInstruction?: string;
 }
 
 /**
@@ -639,25 +612,14 @@ export async function generateLoteriaSetPdf(
   boardCount: number = DEFAULT_EXPORT_BOARD_COUNT,
   options: LoteriaSetPdfOptions = {}
 ): Promise<Blob> {
-  const completed = cards.filter((card) => !card.isProcessing && !card.error);
-  if (completed.length === 0) throw new Error('Add at least one completed card to export');
-  const isSample = completed.length < 16;
-  const boards = isSample
-    ? [[...completed].sort((a, b) => a.number - b.number)]
-    : generateBoards(completed, clampBoardCount(boardCount));
+  const boards = generateBoards(cards, clampBoardCount(boardCount));
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'in', format: 'letter' });
 
   // Generate the board pages
   for (let i = 0; i < boards.length; i++) {
     onProgress?.(`Generating board ${i + 1} of ${boards.length}…`);
     if (i > 0) pdf.addPage('letter', 'portrait');
-    const canvas = await renderBoardToCanvas(
-      boards[i],
-      styleOptions,
-      isSample
-        ? [options.sampleLabel ?? 'Sample', options.boardTitle].filter(Boolean).join(' · ')
-        : options.boardTitle
-    );
+    const canvas = await renderBoardToCanvas(boards[i], styleOptions, options.boardTitle);
     const imgData = canvas.toDataURL('image/jpeg', PDF_PAGE_JPEG_QUALITY);
     pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
   }
@@ -675,7 +637,7 @@ export async function generateLoteriaSetPdf(
     onProgress?.(`Generating deck page ${i + 1} of ${totalPages}…`);
     pdf.addPage('letter', 'portrait');
     const pageCards = processedCards.slice(i * cardsPerPage, (i + 1) * cardsPerPage);
-    const canvas = await renderDeckPageToCanvas(pageCards, styleOptions, options.cutInstruction);
+    const canvas = await renderDeckPageToCanvas(pageCards, styleOptions);
     const imgData = canvas.toDataURL('image/jpeg', PDF_PAGE_JPEG_QUALITY);
     pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
   }
@@ -702,8 +664,7 @@ export async function generateLoteriaSetPdf(
 export async function generatePreviewBoardsPdf(
   cards: LotteriaCard[],
   styleOptions: BoardStyleOptions = {},
-  onProgress?: (message: string) => void,
-  options: LoteriaSetPdfOptions = {}
+  onProgress?: (message: string) => void
 ): Promise<Blob> {
   const orderedCards = cards
     .filter((c) => !c.isProcessing && !c.error)
@@ -722,13 +683,7 @@ export async function generatePreviewBoardsPdf(
     onProgress?.(`Generating preview board ${i + 1} of ${totalPages}…`);
     if (i > 0) pdf.addPage('letter', 'portrait');
     const pageCards = orderedCards.slice(i * cardsPerBoard, (i + 1) * cardsPerBoard);
-    const canvas = await renderBoardToCanvas(
-      pageCards,
-      styleOptions,
-      orderedCards.length < 16
-        ? [options.sampleLabel ?? 'Sample', options.boardTitle].filter(Boolean).join(' · ')
-        : options.boardTitle
-    );
+    const canvas = await renderBoardToCanvas(pageCards, styleOptions);
     const imgData = canvas.toDataURL('image/jpeg', PDF_PAGE_JPEG_QUALITY);
     pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
   }

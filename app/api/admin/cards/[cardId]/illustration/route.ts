@@ -72,7 +72,6 @@ export async function PUT(
       .update(cards)
       .set({
         illustrationUrl,
-        savedIllustrationUrl: illustrationUrl,
         status: 'completed',
         errorMessage: null,
         preserveOriginal: false,

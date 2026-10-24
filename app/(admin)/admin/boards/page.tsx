@@ -12,7 +12,6 @@ async function getBoards() {
     .select({
       id: boards.id,
       name: boards.name,
-      styleOptions: boards.styleOptions,
       isUnlocked: boards.isUnlocked,
       imageGenerationsUsed: boards.imageGenerationsUsed,
       generationLimitOverride: boards.generationLimitOverride,
