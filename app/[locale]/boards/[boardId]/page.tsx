@@ -400,6 +400,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
             )}
           </div>
           <BoardPreviewPanel
+            boardId={boardId}
             styles={designDraft ?? board.styleOptions}
             photoMode={board.photoMode}
             boardName={board.name}

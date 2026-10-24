@@ -7,6 +7,7 @@ import {
   json,
   uuid,
   unique,
+  index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -115,6 +116,14 @@ export const boards = pgTable('boards', {
   isUnlocked: boolean('is_unlocked').notNull().default(false),
   stripePaymentId: text('stripe_payment_id'),
   unlockedAt: timestamp('unlocked_at'),
+  // What the customer actually paid, captured from the Checkout Session at
+  // unlock. Null on boards unlocked before these columns existed and not yet
+  // backfilled (scripts/backfill-payments.ts), and on admin-unlocked boards.
+  amountPaidCents: integer('amount_paid_cents'),
+  amountDiscountCents: integer('amount_discount_cents'),
+  amountRefundedCents: integer('amount_refunded_cents').notNull().default(0),
+  currency: text('currency'),
+  promotionCode: text('promotion_code'),
   imageGenerationsUsed: integer('image_generations_used').notNull().default(0),
   generationLimitOverride: integer('generation_limit_override'),
   previewUrl: text('preview_url'),
@@ -176,6 +185,32 @@ export const lifecycleEmails = pgTable(
   (table) => [unique('lifecycle_emails_user_id_type_unique').on(table.userId, table.type)]
 );
 
+// One row per PDF export. Exports render in the browser, so the client reports
+// each one after the download succeeds (POST /api/boards/[boardId]/exports).
+export type BoardExportSource = 'user' | 'admin' | 'posthog_backfill';
+
+export const boardExports = pgTable(
+  'board_exports',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    boardId: uuid('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    source: text('source').$type<BoardExportSource>().notNull(),
+    boardCount: integer('board_count'),
+    cardCount: integer('card_count'),
+    wasUnlocked: boolean('was_unlocked'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('board_exports_board_id_idx').on(table.boardId),
+    index('board_exports_user_id_idx').on(table.userId),
+  ]
+);
+
 // Relations
 export const userProfilesRelations = relations(userProfiles, ({ many }) => ({
   boards: many(boards),
@@ -207,3 +242,4 @@ export type Board = typeof boards.$inferSelect;
 export type NewBoard = typeof boards.$inferInsert;
 export type Card = typeof cards.$inferSelect;
 export type NewCard = typeof cards.$inferInsert;
+export type BoardExport = typeof boardExports.$inferSelect;

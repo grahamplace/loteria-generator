@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyWebhookSignature } from '@/lib/stripe';
+import { verifyWebhookSignature, retrieveSessionPaymentFields } from '@/lib/stripe';
 import { db, boards } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import Stripe from 'stripe';
@@ -31,6 +31,12 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         await handleCheckoutComplete(session);
+        break;
+      }
+
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge;
+        await handleChargeRefunded(charge);
         break;
       }
 
@@ -74,6 +80,22 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     return;
   }
 
+  // The event payload doesn't expand the promotion code, so re-fetch the
+  // session. A Stripe hiccup here must not block the unlock itself — fall back
+  // to the amounts already on the payload.
+  let paymentFields;
+  try {
+    paymentFields = await retrieveSessionPaymentFields(session.id);
+  } catch (err) {
+    console.error('Failed to retrieve payment details for session:', session.id, err);
+    paymentFields = {
+      amountPaidCents: session.amount_total,
+      amountDiscountCents: session.total_details?.amount_discount ?? null,
+      currency: session.currency,
+      promotionCode: null,
+    };
+  }
+
   // Unlock the board
   await db
     .update(boards)
@@ -82,6 +104,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       stripePaymentId: session.payment_intent as string,
       unlockedAt: new Date(),
       updatedAt: new Date(),
+      ...paymentFields,
     })
     .where(and(eq(boards.id, boardId), eq(boards.userId, userId)));
 
@@ -102,4 +125,24 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     });
     await posthog.shutdown();
   }
+}
+
+/**
+ * Keep the board's refunded amount in sync. amount_refunded is cumulative on
+ * the charge, so partial refunds land correctly without summing events.
+ */
+async function handleChargeRefunded(charge: Stripe.Charge) {
+  const paymentIntentId =
+    typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
+  if (!paymentIntentId) {
+    console.error('Refunded charge has no payment intent:', charge.id);
+    return;
+  }
+
+  await db
+    .update(boards)
+    .set({ amountRefundedCents: charge.amount_refunded, updatedAt: new Date() })
+    .where(eq(boards.stripePaymentId, paymentIntentId));
+
+  console.log(`Recorded refund of ${charge.amount_refunded} for payment ${paymentIntentId}`);
 }

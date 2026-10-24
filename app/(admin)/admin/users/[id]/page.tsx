@@ -15,6 +15,8 @@ import {
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import Link from 'next/link';
 import { getGenerationLimit } from '@/db/schema';
+import { describeBoardPayment } from '@/lib/admin-metrics';
+import { ExportedCell } from '../../components/board-list';
 
 async function getUser(id: string) {
   const result = await db.query.user.findFirst({
@@ -37,6 +39,12 @@ async function getUserBoards(userId: string) {
       name: boards.name,
       isUnlocked: boards.isUnlocked,
       stripePaymentId: boards.stripePaymentId,
+      amountPaidCents: boards.amountPaidCents,
+      amountDiscountCents: boards.amountDiscountCents,
+      amountRefundedCents: boards.amountRefundedCents,
+      currency: boards.currency,
+      promotionCode: boards.promotionCode,
+      exportCount: sql<number>`(select count(*) from board_exports e where e.board_id = "boards"."id" and e.source <> 'admin')`,
       imageGenerationsUsed: boards.imageGenerationsUsed,
       generationLimitOverride: boards.generationLimitOverride,
       createdAt: boards.createdAt,
@@ -49,7 +57,12 @@ async function getUserBoards(userId: string) {
     .where(eq(boards.userId, userId))
     .orderBy(desc(boards.updatedAt));
 
-  return result.map((b) => ({ ...b, cardCount: Number(b.cardCount) }));
+  return result.map((b) => ({
+    ...b,
+    cardCount: Number(b.cardCount),
+    exportCount: Number(b.exportCount),
+    payment: describeBoardPayment(b),
+  }));
 }
 
 export default async function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -133,6 +146,8 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                   <TableHead>Cards</TableHead>
                   <TableHead>Generations</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Paid</TableHead>
+                  <TableHead>Exported</TableHead>
                   <TableHead>Updated</TableHead>
                 </TableRow>
               </TableHeader>
@@ -160,6 +175,10 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                           <Badge variant="secondary">Free</Badge>
                         )}
                       </TableCell>
+                      <TableCell className="whitespace-nowrap text-xs tabular-nums">
+                        {board.payment ?? <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                      <ExportedCell count={board.exportCount} />
                       <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                         {board.updatedAt.toLocaleDateString()}
                       </TableCell>

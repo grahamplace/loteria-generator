@@ -10,14 +10,17 @@ import { MIN_EXPORT_CARD_COUNT, DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constan
 import type { PhotoMode } from '@/lib/themes/presets';
 import type { BoardPreviewProps } from '@/components/board-preview';
 import { BoardCountStepper } from '@/components/board-count-stepper';
+import { recordBoardExport } from '@/lib/record-board-export';
 import { Button } from '@/components/ui/button';
 
 export interface BoardDownloadProps extends BoardPreviewProps {
+  boardId: string;
   photoMode: PhotoMode;
   isUnlocked: boolean;
 }
 
 export function useBoardDownload({
+  boardId,
   cards,
   styles: styleOptions,
   boardName,
@@ -63,6 +66,7 @@ export function useBoardDownload({
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+      recordBoardExport(boardId, { boardCount: count, cardCount: completed.length });
       posthog.capture('board_exported', {
         card_count: completed.length,
         board_count: count,

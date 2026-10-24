@@ -1,5 +1,5 @@
-import { db, boards, cards, user } from '@/db';
-import { eq } from 'drizzle-orm';
+import { db, boards, boardExports, cards, user } from '@/db';
+import { eq, sql } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { GenerationLimitForm } from '../../components/generation-limit-form';
 import Link from 'next/link';
 import { getGenerationLimit } from '@/db/schema';
 import { isRetriableCard } from '@/lib/admin';
+import { describeBoardPayment } from '@/lib/admin-metrics';
 
 async function getBoardWithOwner(boardId: string) {
   const result = await db
@@ -28,6 +29,28 @@ async function getBoardWithOwner(boardId: string) {
   return result[0] ?? null;
 }
 
+async function getExportSummary(boardId: string) {
+  const [row] = await db
+    .select({
+      customer: sql<number>`count(*) filter (where ${boardExports.source} <> 'admin')`,
+      backfilled: sql<number>`count(*) filter (where ${boardExports.source} = 'posthog_backfill')`,
+      admin: sql<number>`count(*) filter (where ${boardExports.source} = 'admin')`,
+      lastCustomerExport:
+        sql<Date | null>`max(${boardExports.createdAt}) filter (where ${boardExports.source} <> 'admin')`.mapWith(
+          boardExports.createdAt
+        ),
+    })
+    .from(boardExports)
+    .where(eq(boardExports.boardId, boardId));
+
+  return {
+    customer: Number(row.customer),
+    backfilled: Number(row.backfilled),
+    admin: Number(row.admin),
+    lastCustomerExport: row.lastCustomerExport,
+  };
+}
+
 async function getBoardCards(boardId: string) {
   return db.select().from(cards).where(eq(cards.boardId, boardId)).orderBy(cards.number);
 }
@@ -38,7 +61,11 @@ export default async function AdminBoardDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [data, boardCards] = await Promise.all([getBoardWithOwner(id), getBoardCards(id)]);
+  const [data, boardCards, exports] = await Promise.all([
+    getBoardWithOwner(id),
+    getBoardCards(id),
+    getExportSummary(id),
+  ]);
 
   if (!data) {
     notFound();
@@ -48,6 +75,7 @@ export default async function AdminBoardDetailPage({
   const genLimit = getGenerationLimit(board);
   const now = new Date();
   const errorCount = boardCards.filter((c) => isRetriableCard(c, now)).length;
+  const payment = describeBoardPayment(board);
 
   return (
     <div className="space-y-6">
@@ -105,6 +133,33 @@ export default async function AdminBoardDetailPage({
             <div>
               <p className="text-xs text-muted-foreground">Updated</p>
               <p>{board.updatedAt.toLocaleDateString()}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Customer exports</p>
+              <p className="tabular-nums">
+                {exports.customer === 0 ? 'Never exported' : exports.customer}
+                {exports.lastCustomerExport && (
+                  <span className="ml-1 text-xs text-muted-foreground">
+                    (last {exports.lastCustomerExport.toLocaleDateString()})
+                  </span>
+                )}
+              </p>
+              {(exports.backfilled > 0 || exports.admin > 0) && (
+                <p className="text-xs text-muted-foreground">
+                  {[
+                    exports.backfilled > 0 && `${exports.backfilled} from PostHog history`,
+                    exports.admin > 0 && `${exports.admin} by admin, not counted`,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Payment</p>
+              <p>{payment ?? (board.isUnlocked ? 'Unlocked without payment' : 'Not paid')}</p>
             </div>
             {board.stripePaymentId && (
               <div className="col-span-2 min-w-0 sm:col-span-1">

@@ -8,6 +8,7 @@ import {
 } from '@/components/board-download-controls';
 import { generateLoteriaSetPdf } from '@/lib/generate-boards';
 import { MAX_EXPORT_BOARD_COUNT } from '@/lib/constants';
+import { recordBoardExport } from '@/lib/record-board-export';
 import { toast } from 'sonner';
 import messages from '@/messages/en.json';
 
@@ -15,6 +16,7 @@ vi.mock('@/lib/generate-boards', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/generate-boards')>()),
   generateLoteriaSetPdf: vi.fn(),
 }));
+vi.mock('@/lib/record-board-export', () => ({ recordBoardExport: vi.fn() }));
 vi.mock('posthog-js', () => ({ default: { capture: vi.fn(), captureException: vi.fn() } }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 const generate = vi.mocked(generateLoteriaSetPdf);
@@ -31,6 +33,7 @@ function view(overrides: Partial<BoardDownloadProps> = {}) {
   return (
     <NextIntlClientProvider locale="en" timeZone="UTC" messages={messages}>
       <Controls
+        boardId="board-1"
         cards={cards.slice(0, 4)}
         boardName="Our Halloween"
         photoMode="original"
@@ -43,6 +46,7 @@ function view(overrides: Partial<BoardDownloadProps> = {}) {
 }
 beforeEach(() => {
   generate.mockReset().mockResolvedValue(new Blob(['pdf']));
+  vi.mocked(recordBoardExport).mockClear();
   vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
   URL.createObjectURL = vi.fn(() => 'blob:download');
   URL.revokeObjectURL = vi.fn();
@@ -74,6 +78,9 @@ describe('downloads beneath the live preview', () => {
       1,
       expect.objectContaining({ boardTitle: 'Our Halloween', sampleLabel: 'Sample' })
     );
+    // Each download is recorded for admin metrics, sample exports included.
+    expect(recordBoardExport).toHaveBeenCalledTimes(2);
+    expect(recordBoardExport).toHaveBeenLastCalledWith('board-1', { boardCount: 1, cardCount: 4 });
   });
   it('preserves full-set counts and clamps the technical maximum independently of payment', async () => {
     render(view({ cards, styles: { presetId: 'classic', showTitle: false } }));

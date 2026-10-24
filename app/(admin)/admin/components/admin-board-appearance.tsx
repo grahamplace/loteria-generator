@@ -42,6 +42,7 @@ export function AdminBoardAppearance({ board, cards }: { board: Board; cards: Ca
       </NextIntlClientProvider>
       <div className="flex flex-wrap gap-3">
         <AdminExportButton
+          boardId={board.id}
           boardName={settings.name}
           cards={cards}
           styleOptions={settings.styleOptions}
