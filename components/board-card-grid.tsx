@@ -37,6 +37,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { TOTAL_CARD_COUNT } from '@/lib/constants';
 import { useUnlockPriceDisplay } from '@/hooks/use-unlock-price';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 
@@ -67,7 +68,6 @@ interface BoardCardGridProps {
   onAddClassic?: () => void;
   isLocked?: boolean;
   atCardLimit?: boolean;
-  maxCards?: number;
   onUnlockRequired?: () => void;
 }
 
@@ -208,7 +208,6 @@ export function BoardCardGrid({
   onAddClassic,
   isLocked = false,
   atCardLimit = false,
-  maxCards = 54,
   onUnlockRequired,
 }: BoardCardGridProps) {
   const t = useTranslations('BoardEditor.CardGrid');
@@ -350,13 +349,8 @@ export function BoardCardGrid({
                   background: 'linear-gradient(135deg, #faf5e6 0%, #f2e6c8 100%)',
                 }}
               >
-                <div className="shrink-0 relative">
-                  <div className="w-11 h-11 md:w-14 md:h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg">
-                    <Unlock className="w-5 h-5 md:w-6 md:h-6" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-secondary text-foreground flex items-center justify-center text-[10px] font-bold shadow">
-                    {unlockPrice}
-                  </div>
+                <div className="shrink-0 w-11 h-11 md:w-14 md:h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg">
+                  <Unlock className="w-5 h-5 md:w-6 md:h-6" aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[9px] md:text-[10px] font-mono uppercase tracking-wider text-primary mb-0.5">
@@ -365,7 +359,7 @@ export function BoardCardGrid({
                   <div className="font-bold text-[13px] md:text-[14px] leading-tight">
                     {t('keepBuildingPrefix')}{' '}
                     <span className="font-caveat text-[18px] md:text-xl text-primary">
-                      {t('moreCards', { count: maxCards - cards.length })}
+                      {t('moreCards', { count: TOTAL_CARD_COUNT - cards.length })}
                     </span>{' '}
                     {t('keepBuildingSuffix')}
                   </div>
@@ -389,7 +383,7 @@ export function BoardCardGrid({
                   className="px-3.5 py-2 rounded-lg bg-primary text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm whitespace-nowrap hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   <Unlock className="w-3.5 h-3.5" />
-                  {t('unlockButton')}
+                  {t('unlockButton', { price: unlockPrice })}
                 </button>
               </div>
             ) : onAddMore || onAddClassic ? (
