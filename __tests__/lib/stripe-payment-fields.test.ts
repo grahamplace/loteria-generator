@@ -69,4 +69,24 @@ describe('paymentFieldsFromSession', () => {
     );
     expect(fields.promotionCode).toBe('Friends');
   });
+
+  it('uses a promotion code looked up separately when it is not expanded', () => {
+    const fields = paymentFieldsFromSession(
+      session({
+        total_details: {
+          amount_discount: 1000,
+          breakdown: {
+            discounts: [
+              {
+                amount: 1000,
+                discount: { promotion_code: 'promo_123', source: { coupon: 'coupon_abc' } },
+              },
+            ],
+          },
+        },
+      }),
+      'WELCOME50'
+    );
+    expect(fields.promotionCode).toBe('WELCOME50');
+  });
 });
