@@ -14,15 +14,18 @@ import { adminCardImageSrc } from '@/lib/admin-card-image';
 import { BoardCountStepper } from '@/components/board-count-stepper';
 import { DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
 import type { Card } from '@/db/schema';
+import { recordBoardExport } from '@/lib/record-board-export';
 
 // Small sets export a labeled sample; full sets export randomized boards.
 const MIN_EXPORT_CARDS = 1;
 
 export function AdminExportButton({
+  boardId,
   boardName,
   cards,
   styleOptions,
 }: {
+  boardId: string;
   boardName: string;
   cards: Card[];
   styleOptions?: BoardStyleOptions | null;
@@ -86,6 +89,7 @@ export function AdminExportButton({
 
       // Report what actually rendered: generateLoteriaSetPdf clamps the count.
       const exportedCount = clampBoardCount(boardCount);
+      recordBoardExport(boardId, { boardCount: exportedCount, cardCount: exportCards.length });
       toast.success('Export ready', {
         description: `The Loteria set PDF with ${exportedCount} ${
           exportedCount === 1 ? 'board' : 'boards'

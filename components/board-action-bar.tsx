@@ -17,6 +17,7 @@ import {
   isUploadCandidate,
 } from '@/lib/convert-upload-image';
 import { BoardCountStepper } from '@/components/board-count-stepper';
+import { recordBoardExport } from '@/lib/record-board-export';
 
 interface DisplayCard {
   id: string;
@@ -34,6 +35,7 @@ interface BoardActionBarProps {
   maxCards: number;
   processedCount: number;
   processingCount: number;
+  boardId: string;
   isUnlocked: boolean;
   cards: DisplayCard[];
   boardName: string;
@@ -53,6 +55,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
       maxCards,
       processedCount,
       processingCount,
+      boardId,
       isUnlocked,
       cards,
       boardName,
@@ -207,6 +210,10 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
         URL.revokeObjectURL(url);
 
         setGeneratedCount((prev) => prev + 1);
+        recordBoardExport(boardId, {
+          boardCount: exportedBoardCount,
+          cardCount: exportCards.length,
+        });
         posthog.capture('board_exported', {
           card_count: exportCards.length,
           board_name: boardName,

@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Grid2X2, Images, ArrowLeft, Menu } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Users, Grid2X2, Images, ArrowLeft, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const navItems = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
+  { href: '/admin/metrics', label: 'Metrics', icon: BarChart3 },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/boards', label: 'Boards', icon: Grid2X2 },
   { href: '/admin/cards', label: 'Cards', icon: Images },

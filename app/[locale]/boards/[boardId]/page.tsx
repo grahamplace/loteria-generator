@@ -281,6 +281,7 @@ export default function BoardEditorPage() {
               maxCards={cardLimit}
               processedCount={processedCards.length}
               processingCount={processingCards.length}
+              boardId={boardId}
               isUnlocked={board.isUnlocked}
               cards={displayCards}
               boardName={board.name}
