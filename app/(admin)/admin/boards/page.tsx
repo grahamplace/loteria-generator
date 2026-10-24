@@ -3,6 +3,7 @@ import { desc, eq, sql, gt } from 'drizzle-orm';
 import { AdminBreadcrumb } from '../components/admin-breadcrumb';
 import { AdminBulkUpload } from '../components/admin-bulk-upload';
 import { BoardList } from '../components/board-list';
+import { describeBoardPayment } from '@/lib/admin-metrics';
 
 async function getBoards() {
   const cardCount =
@@ -19,6 +20,13 @@ async function getBoards() {
       ownerEmail: user.email,
       ownerId: user.id,
       cardCount,
+      exportCount: sql<number>`(select count(*) from board_exports e where e.board_id = "boards"."id" and e.source <> 'admin')`,
+      stripePaymentId: boards.stripePaymentId,
+      amountPaidCents: boards.amountPaidCents,
+      amountDiscountCents: boards.amountDiscountCents,
+      amountRefundedCents: boards.amountRefundedCents,
+      currency: boards.currency,
+      promotionCode: boards.promotionCode,
     })
     .from(boards)
     .innerJoin(user, eq(boards.userId, user.id))
@@ -26,8 +34,16 @@ async function getBoards() {
     .orderBy(desc(boards.updatedAt));
 
   return result.map((b) => ({
-    ...b,
+    id: b.id,
+    name: b.name,
+    isUnlocked: b.isUnlocked,
+    imageGenerationsUsed: b.imageGenerationsUsed,
+    generationLimitOverride: b.generationLimitOverride,
+    ownerEmail: b.ownerEmail,
+    ownerId: b.ownerId,
     cardCount: Number(b.cardCount),
+    exportCount: Number(b.exportCount),
+    payment: describeBoardPayment(b),
     updatedAt: b.updatedAt.toISOString(),
   }));
 }

@@ -15,6 +15,7 @@ import { adminCardImageSrc } from '@/lib/admin-card-image';
 import { BoardCountStepper } from '@/components/board-count-stepper';
 import { DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
 import type { Card } from '@/db/schema';
+import { recordBoardExport } from '@/lib/record-board-export';
 
 // Mirrors the consumer defaults in components/board-action-bar.tsx. Falls back to
 // these when the board has no persisted styleOptions.
@@ -28,10 +29,12 @@ const DEFAULT_STYLE_OPTIONS: BoardStyleOptions = {
 const MIN_EXPORT_CARDS = 16;
 
 export function AdminExportButton({
+  boardId,
   boardName,
   cards,
   styleOptions,
 }: {
+  boardId: string;
   boardName: string;
   cards: Card[];
   styleOptions?: BoardStyleOptions | null;
@@ -96,6 +99,7 @@ export function AdminExportButton({
 
       // Report what actually rendered: generateLoteriaSetPdf clamps the count.
       const exportedCount = clampBoardCount(boardCount);
+      recordBoardExport(boardId, { boardCount: exportedCount, cardCount: exportCards.length });
       toast.success('Export ready', {
         description: `The Loteria set PDF with ${exportedCount} ${
           exportedCount === 1 ? 'board' : 'boards'

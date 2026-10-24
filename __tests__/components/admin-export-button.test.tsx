@@ -32,12 +32,12 @@ describe('AdminExportButton', () => {
   });
 
   it('leaves the board title checkbox unchecked by default', () => {
-    render(<AdminExportButton boardName="Boda de Ana" cards={cards} />);
+    render(<AdminExportButton boardId="board-1" boardName="Boda de Ana" cards={cards} />);
     expect(screen.getByRole('checkbox', { name: 'Include board title' })).not.toBeChecked();
   });
 
   it('exports without a title when unchecked', async () => {
-    render(<AdminExportButton boardName="Boda de Ana" cards={cards} />);
+    render(<AdminExportButton boardId="board-1" boardName="Boda de Ana" cards={cards} />);
     fireEvent.click(screen.getByRole('button', { name: /export/i }));
     await waitFor(() => expect(generateLoteriaSetPdf).toHaveBeenCalledTimes(1));
     const args = generateLoteriaSetPdf.mock.calls[0] as unknown[];
@@ -45,7 +45,7 @@ describe('AdminExportButton', () => {
   });
 
   it('passes the board name as the title when checked', async () => {
-    render(<AdminExportButton boardName="Boda de Ana" cards={cards} />);
+    render(<AdminExportButton boardId="board-1" boardName="Boda de Ana" cards={cards} />);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Include board title' }));
     fireEvent.click(screen.getByRole('button', { name: /export/i }));
     await waitFor(() => expect(generateLoteriaSetPdf).toHaveBeenCalledTimes(1));

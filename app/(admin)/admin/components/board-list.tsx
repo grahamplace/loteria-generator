@@ -20,9 +20,26 @@ interface BoardRow {
   imageGenerationsUsed: number;
   generationLimitOverride: number | null;
   cardCount: number;
+  exportCount: number;
+  payment: string | null;
   ownerEmail: string;
   ownerId: string;
   updatedAt: string;
+}
+
+export function ExportedCell({ count }: { count: number }) {
+  return (
+    <TableCell className="whitespace-nowrap text-sm tabular-nums">
+      {count > 0 ? (
+        <span>
+          <span aria-hidden="true">✓ </span>
+          {count === 1 ? 'Yes' : `Yes (${count}×)`}
+        </span>
+      ) : (
+        <span className="text-muted-foreground">No</span>
+      )}
+    </TableCell>
+  );
 }
 
 export function BoardList({ boards }: { boards: BoardRow[] }) {
@@ -54,6 +71,8 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
                 <TableHead>Cards</TableHead>
                 <TableHead>Generations</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Paid</TableHead>
+                <TableHead>Exported</TableHead>
                 <TableHead>Updated</TableHead>
               </TableRow>
             </TableHeader>
@@ -86,6 +105,10 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
                         <Badge variant="secondary">Free</Badge>
                       )}
                     </TableCell>
+                    <TableCell className="whitespace-nowrap text-xs tabular-nums">
+                      {board.payment ?? <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <ExportedCell count={board.exportCount} />
                     <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                       {new Date(board.updatedAt).toLocaleDateString()}
                     </TableCell>

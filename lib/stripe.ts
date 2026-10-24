@@ -91,3 +91,41 @@ export async function getOrCreateStripeCustomer(params: {
     },
   });
 }
+
+export interface BoardPaymentFields {
+  amountPaidCents: number | null;
+  amountDiscountCents: number | null;
+  currency: string | null;
+  promotionCode: string | null;
+}
+
+// Expand path that makes the promotion code readable on a Checkout Session.
+export const SESSION_DISCOUNT_EXPAND = 'total_details.breakdown.discounts.discount.promotion_code';
+
+/**
+ * What the customer paid for a board, read off a Checkout Session retrieved
+ * with SESSION_DISCOUNT_EXPAND. Falls back to the coupon's name or id when the
+ * discount wasn't applied through a promotion code.
+ */
+export function paymentFieldsFromSession(session: Stripe.Checkout.Session): BoardPaymentFields {
+  const discount = session.total_details?.breakdown?.discounts[0]?.discount;
+  const promo = discount?.promotion_code;
+  const coupon = discount?.source?.coupon;
+  const promotionCode =
+    (promo && typeof promo !== 'string' ? promo.code : null) ??
+    (coupon && typeof coupon !== 'string' ? (coupon.name ?? coupon.id) : (coupon ?? null));
+
+  return {
+    amountPaidCents: session.amount_total,
+    amountDiscountCents: session.total_details?.amount_discount ?? null,
+    currency: session.currency,
+    promotionCode,
+  };
+}
+
+export async function retrieveSessionPaymentFields(sessionId: string): Promise<BoardPaymentFields> {
+  const session = await stripe.checkout.sessions.retrieve(sessionId, {
+    expand: [SESSION_DISCOUNT_EXPAND],
+  });
+  return paymentFieldsFromSession(session);
+}
