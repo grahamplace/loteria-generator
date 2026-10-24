@@ -44,7 +44,7 @@ export async function insertCardsWithinLimit(boardId: string, userId: string, in
         sql`
       SELECT gen_random_uuid(), b.id, b.user_id,
         COALESCE((SELECT MAX(number) FROM cards WHERE board_id = b.id), 0) + entries.ordinality::integer,
-        i.label, NULL, NULL, i.illustration_url, NULL, i.status, NULL, NULL,
+        i.label, NULL, NULL, i.illustration_url, NULL, i.status, NULL, NULL, NULL,
         i.is_default, i.default_card_id, i.preserve_original, i.crop_data, NOW(), NOW()
       FROM boards b
       CROSS JOIN jsonb_array_elements(${payload}::jsonb) WITH ORDINALITY AS entries(value, ordinality)
