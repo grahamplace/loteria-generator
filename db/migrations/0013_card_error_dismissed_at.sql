@@ -1,0 +1,1 @@
+ALTER TABLE "cards" ADD COLUMN "error_dismissed_at" timestamp;
