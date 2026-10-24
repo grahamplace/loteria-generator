@@ -59,7 +59,9 @@ export default function BoardEditorPage() {
   // Completes the Google-OAuth signup conversion started on the sign-up page:
   // new users land here via /start, so the dashboard never sees them.
   useEffect(() => {
-    consumePendingSignupConversion();
+    if (consumePendingSignupConversion()) {
+      posthog.capture('signed_up', { method: 'google' });
+    }
   }, []);
 
   // Handle payment success/cancel from Stripe redirect
