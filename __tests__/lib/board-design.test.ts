@@ -54,11 +54,11 @@ describe('editable print designs', () => {
     expect(selectedBoardTheme(legacy)).toBe('custom');
     expect(selectedBoardTheme({ showTitle: true })).toBe('classic');
   });
-  it('keeps the original print look for boards saved before themes', () => {
+  it('prints boards saved before themes in the old Classic colors', () => {
     expect(resolveBoardStyle({})).toMatchObject({
-      backgroundColor: '#ffffff',
-      badgeColor: '#ff6b35',
-      labelColor: '#1f2937',
+      backgroundColor: '#f5f0e1',
+      badgeColor: '#eb865a',
+      labelColor: '#000000',
       borderColor: '#000000',
       numberColor: '#ffffff',
       borderStyle: 'hand-drawn',

@@ -40,23 +40,11 @@ export function presetBoardStyle(id: ThemeId): BoardDesignValues {
   };
 }
 
-/** Boards saved before themes existed keep their original print look until a theme is chosen. */
-function legacyBoardStyle(): BoardDesignValues {
-  return {
-    backgroundColor: printColor('--loteria-legacy-paper'),
-    badgeColor: printColor('--loteria-legacy-badge'),
-    labelColor: printColor('--loteria-legacy-ink'),
-    borderColor: printColor('--loteria-classic-ink'),
-    numberColor: printColor('--loteria-number-ink'),
-    font: 'Jost',
-    borderStyle: 'hand-drawn',
-    cornerIcon: 'none',
-  };
-}
-
 export function resolveBoardStyle(options: BoardStyleOptions = {}) {
+  // Boards saved before themes have no presetId. They print in Classic colors,
+  // which match the old hardcoded export colors, and keep the old cut guides.
   const legacy = !options.presetId;
-  const defaults = legacy ? legacyBoardStyle() : presetBoardStyle(getTheme(options.presetId).id);
+  const defaults = presetBoardStyle(getTheme(options.presetId).id);
   const design: BoardDesignValues = { ...defaults };
   for (const key of Object.keys(defaults) as (keyof BoardDesignValues)[]) {
     // Assign only defined fields; legacy boards may contain partial color settings.
