@@ -13,6 +13,7 @@ async function getBoards() {
     .select({
       id: boards.id,
       name: boards.name,
+      styleOptions: boards.styleOptions,
       isUnlocked: boards.isUnlocked,
       imageGenerationsUsed: boards.imageGenerationsUsed,
       generationLimitOverride: boards.generationLimitOverride,
@@ -36,6 +37,7 @@ async function getBoards() {
   return result.map((b) => ({
     id: b.id,
     name: b.name,
+    styleOptions: b.styleOptions,
     isUnlocked: b.isUnlocked,
     imageGenerationsUsed: b.imageGenerationsUsed,
     generationLimitOverride: b.generationLimitOverride,

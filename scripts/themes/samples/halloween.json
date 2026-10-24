@@ -1,0 +1,124 @@
+{
+  "title": "Halloween Lotería",
+  "styles": {
+    "presetId": "halloween",
+    "showTitle": true
+  },
+  "cards": [
+    {
+      "id": "01-pumpkin",
+      "label": "La Calabaza",
+      "number": 1,
+      "illustration": "public/themes/cards/8d9839effdeca20d67.webp",
+      "source": "output/imagegen/etsy-halloween/illustrations/01-pumpkin.png"
+    },
+    {
+      "id": "02-witch-kids",
+      "label": "Los Disfraces",
+      "number": 2,
+      "illustration": "public/themes/cards/6003011118974ace26.webp",
+      "source": "output/imagegen/etsy-halloween/illustrations/02-witch-kids.png"
+    },
+    {
+      "id": "03-ghost",
+      "label": "Los Fantasmas",
+      "number": 3,
+      "illustration": "public/themes/cards/2a03e2aa77257dc403.webp",
+      "source": "output/imagegen/etsy-halloween/illustrations/03-ghost.png"
+    },
+    {
+      "id": "04-cat",
+      "label": "El Gatito",
+      "number": 4,
+      "illustration": "public/themes/cards/357164334429ba67bd.webp",
+      "source": "output/imagegen/etsy-halloween/illustrations/04-cat.png"
+    },
+    {
+      "id": "05-hat",
+      "label": "El Sombrero",
+      "number": 5,
+      "illustration": "public/themes/cards/c5633679fc2a2e416c.webp",
+      "source": "output/imagegen/etsy-halloween/illustrations/05-hat.png"
+    },
+    {
+      "id": "06-candy",
+      "label": "Los Dulces",
+      "number": 6,
+      "illustration": "public/themes/cards/1b534d7b107ad164c4.webp",
+      "source": "output/imagegen/etsy-halloween/illustrations/06-candy.png"
+    },
+    {
+      "id": "07-dog",
+      "label": "El Perrito",
+      "number": 7,
+      "illustration": "public/themes/cards/2bc793f1e84ffcac41.webp",
+      "source": "output/imagegen/etsy-halloween/illustrations/07-dog.png"
+    },
+    {
+      "id": "08-family",
+      "label": "La Familia",
+      "number": 8,
+      "illustration": "public/themes/cards/e1888a0520413dd640.webp",
+      "source": "output/imagegen/etsy-halloween/illustrations/08-family.png"
+    },
+    {
+      "id": "10-grandma",
+      "label": "La Abuela",
+      "number": 9,
+      "illustration": "public/themes/cards/30afbee8297854e6f1.webp",
+      "source": "lib/hero-cards-illustrations/10-grandma.webp"
+    },
+    {
+      "id": "09-grandpa",
+      "label": "El Abuelo",
+      "number": 10,
+      "illustration": "public/themes/cards/70956b8edc87bccdc1.webp",
+      "source": "lib/hero-cards-illustrations/09-grandpa.webp"
+    },
+    {
+      "id": "13-house",
+      "label": "La Casa",
+      "number": 11,
+      "illustration": "public/themes/cards/c2a536497ab938da48.webp",
+      "source": "lib/hero-cards-illustrations/13-house.webp"
+    },
+    {
+      "id": "15-guitar",
+      "label": "La Guitarra",
+      "number": 12,
+      "illustration": "public/themes/cards/1e0cc63e18eae5f2d4.webp",
+      "source": "lib/hero-cards-illustrations/15-guitar.webp"
+    },
+    {
+      "id": "18-tacos",
+      "label": "Los Tacos",
+      "number": 13,
+      "illustration": "public/themes/cards/630519f82f345adb4e.webp",
+      "source": "lib/hero-cards-illustrations/18-tacos.webp"
+    },
+    {
+      "id": "17-camera",
+      "label": "La Cámara",
+      "number": 14,
+      "illustration": "public/themes/cards/a05ce3691a0cf677c5.webp",
+      "source": "lib/hero-cards-illustrations/17-camera.webp"
+    },
+    {
+      "id": "05-birthday-candles",
+      "label": "El Cumpleaños",
+      "number": 15,
+      "illustration": "public/themes/cards/0e5e23c866dffbe47d.webp",
+      "source": "lib/hero-cards-illustrations/05-birthday-candles.webp"
+    },
+    {
+      "id": "02-wedding-bouquet",
+      "label": "Las Flores",
+      "number": 16,
+      "illustration": "public/themes/cards/bd288e32f714582164.webp",
+      "source": "lib/hero-cards-illustrations/02-wedding-bouquet.webp"
+    }
+  ],
+  "compareId": "02-witch-kids",
+  "sourcePackage": "output/etsy/halloween-2026",
+  "etsyListingId": "4590829386"
+}

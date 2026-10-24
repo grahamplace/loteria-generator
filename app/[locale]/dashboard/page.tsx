@@ -50,7 +50,9 @@ export default function DashboardPage() {
 
   // Completes the Google-OAuth signup conversion started on the sign-up page.
   useEffect(() => {
-    consumePendingSignupConversion();
+    if (consumePendingSignupConversion()) {
+      posthog.capture('signed_up', { method: 'google' });
+    }
   }, []);
 
   async function handleCreateBoard() {

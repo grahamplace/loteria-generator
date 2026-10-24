@@ -107,8 +107,8 @@ describe('google-ads conversion helpers', () => {
     it('consumePendingSignupConversion fires once and clears the flag', () => {
       stubAdsEnv();
       setPendingSignupConversion();
-      consumePendingSignupConversion();
-      consumePendingSignupConversion();
+      expect(consumePendingSignupConversion()).toBe(true);
+      expect(consumePendingSignupConversion()).toBe(false);
       expect(gtagSpy).toHaveBeenCalledTimes(1);
       expect(gtagSpy).toHaveBeenCalledWith('event', 'conversion', {
         send_to: 'AW-123456/signupLbl',
@@ -117,7 +117,7 @@ describe('google-ads conversion helpers', () => {
 
     it('consumePendingSignupConversion no-ops when no flag is set', () => {
       stubAdsEnv();
-      consumePendingSignupConversion();
+      expect(consumePendingSignupConversion()).toBe(false);
       expect(gtagSpy).not.toHaveBeenCalled();
     });
 

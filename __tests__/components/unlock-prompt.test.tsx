@@ -7,7 +7,10 @@ import { BOARD_UNLOCK_PRICE_DISPLAY } from '@/lib/constants';
 global.fetch = vi.fn();
 
 // Mock next-intl with BoardEditor.UnlockPrompt messages
+const { locale } = vi.hoisted(() => ({ locale: { current: 'en' } }));
+
 vi.mock('next-intl', () => ({
+  useLocale: () => locale.current,
   useTranslations: (namespace: string) => {
     const messages: Record<string, Record<string, string>> = {
       'BoardEditor.UnlockPrompt': {
@@ -55,6 +58,7 @@ describe('UnlockPrompt', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    locale.current = 'en';
   });
 
   it('should render when open is true', () => {
@@ -67,6 +71,13 @@ describe('UnlockPrompt', () => {
     render(<UnlockPrompt {...defaultProps} />);
 
     expect(screen.getByText(BOARD_UNLOCK_PRICE_DISPLAY)).toBeInTheDocument();
+  });
+
+  it('spells out US dollars for es-MX, where a bare $ means pesos', () => {
+    locale.current = 'es-MX';
+    render(<UnlockPrompt {...defaultProps} />);
+
+    expect(screen.getByText(`US${BOARD_UNLOCK_PRICE_DISPLAY}`)).toBeInTheDocument();
   });
 
   it('should display the features list', () => {

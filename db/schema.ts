@@ -80,12 +80,8 @@ export const userProfiles = pgTable('user_profiles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Board style options type
-export interface BoardStyleOptions {
-  backgroundColor?: string;
-  badgeColor?: string;
-  labelColor?: string;
-}
+import type { BoardStyleOptions, PhotoMode } from '@/lib/themes/presets';
+export type { BoardStyleOptions } from '@/lib/themes/presets';
 
 // Crop rectangle in pixels of the stored (downscaled) original image.
 export interface CropData {
@@ -132,6 +128,7 @@ export const boards = pgTable('boards', {
   generationLimitOverride: integer('generation_limit_override'),
   previewUrl: text('preview_url'),
   styleOptions: json('style_options').$type<BoardStyleOptions>(),
+  photoMode: text('photo_mode').$type<PhotoMode>().notNull().default('illustrated'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -153,8 +150,13 @@ export const cards = pgTable('cards', {
   riddle: text('riddle'),
   originalImageUrl: text('original_image_url'), // Vercel Blob URL - private
   illustrationUrl: text('illustration_url'), // Vercel Blob URL - private
+  // Retain the drawing while illustrationUrl points at the original photo.
+  savedIllustrationUrl: text('saved_illustration_url'),
   status: text('status').$type<CardStatus>().notNull().default('pending'),
   errorMessage: text('error_message'),
+  // Set when an admin dismisses the error from the overview. Kept rather than
+  // clearing errorMessage so the history survives; reset when the card errors again.
+  errorDismissedAt: timestamp('error_dismissed_at'),
   promptOverlay: text('prompt_overlay'),
   isDefault: boolean('is_default').notNull().default(false),
   defaultCardId: text('default_card_id'),

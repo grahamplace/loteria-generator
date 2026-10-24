@@ -177,6 +177,12 @@ describe('proxy matcher', () => {
     expect(matcher.test('/admin/boards/abc-123')).toBe(false);
   });
 
+  it('excludes /ingest so PostHog requests reach the next.config rewrite', () => {
+    expect(matcher.test('/ingest/e/')).toBe(false);
+    expect(matcher.test('/ingest/flags/')).toBe(false);
+    expect(matcher.test('/ingest/i/v0/e/')).toBe(false);
+  });
+
   it('still matches application paths that need locale handling', () => {
     expect(matcher.test('/dashboard')).toBe(true);
     expect(matcher.test('/es/dashboard')).toBe(true);
