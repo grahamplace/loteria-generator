@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/sonner';
 import { OnboardingProvider } from '@/components/onboarding/onboarding-provider';
 import { GoogleAdsTag } from '@/components/google-ads-tag';
+import { PostHogIdentify } from '@/components/posthog-identify';
 import { Agentation } from 'agentation';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
@@ -108,6 +109,7 @@ export default async function LocaleLayout({
       <body className={`font-sans antialiased ${fontVariables}`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <OnboardingProvider>{children}</OnboardingProvider>
+          <PostHogIdentify />
         </NextIntlClientProvider>
         <Toaster />
         <Analytics />
