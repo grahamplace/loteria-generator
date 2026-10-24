@@ -145,6 +145,9 @@ export const cards = pgTable('cards', {
   savedIllustrationUrl: text('saved_illustration_url'),
   status: text('status').$type<CardStatus>().notNull().default('pending'),
   errorMessage: text('error_message'),
+  // Set when an admin dismisses the error from the overview. Kept rather than
+  // clearing errorMessage so the history survives; reset when the card errors again.
+  errorDismissedAt: timestamp('error_dismissed_at'),
   promptOverlay: text('prompt_overlay'),
   isDefault: boolean('is_default').notNull().default(false),
   defaultCardId: text('default_card_id'),
