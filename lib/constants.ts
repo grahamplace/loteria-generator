@@ -61,6 +61,15 @@ export const NO_BOARD_DISCOUNT_PERCENT = 25;
 export const NO_BOARD_EXPIRY_DAYS = 30;
 export const LIFECYCLE_EMAIL_TYPE_NO_BOARD = 'no_board_nudge';
 
+// Themes-launch campaign + discount: announces live preview and themed sets.
+// Codes carry their own prefix so a redemption in Stripe is attributable to
+// this email at a glance, not just by coupon id.
+export const THEMES_LAUNCH_COUPON_ID = 'themes-launch-25';
+export const THEMES_LAUNCH_DISCOUNT_PERCENT = 25;
+export const THEMES_LAUNCH_CODE_PREFIX = 'THEMES';
+export const THEMES_LAUNCH_EXPIRY_DAYS = 30;
+export const LIFECYCLE_EMAIL_TYPE_THEMES_LAUNCH = 'themes_launch';
+
 // Reply-to for lifecycle email that invites a human reply. Replies land in a real
 // inbox, so this must stay an address someone actually reads.
 export const SUPPORT_REPLY_TO_EMAIL = 'graham@stonecutterlabs.com';

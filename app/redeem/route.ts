@@ -3,13 +3,15 @@ import {
   REENGAGEMENT_EXPIRY_DAYS,
   SIGNUP_NUDGE_EXPIRY_DAYS,
   NO_BOARD_EXPIRY_DAYS,
+  THEMES_LAUNCH_EXPIRY_DAYS,
 } from '@/lib/constants';
 
 /** Longest-lived campaign code decides how long the promo cookie has to survive. */
 const PROMO_COOKIE_DAYS = Math.max(
   SIGNUP_NUDGE_EXPIRY_DAYS,
   REENGAGEMENT_EXPIRY_DAYS,
-  NO_BOARD_EXPIRY_DAYS
+  NO_BOARD_EXPIRY_DAYS,
+  THEMES_LAUNCH_EXPIRY_DAYS
 );
 
 /**
