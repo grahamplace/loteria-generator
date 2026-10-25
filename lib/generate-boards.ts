@@ -220,7 +220,7 @@ export function drawCard(
   if (cardBorder === 'hand-drawn') {
     drawHandDrawnRect(ctx, x, y, cardWidth, cardHeight, 1);
   } else if (cardBorder !== 'none') {
-    strokeBorder(ctx, x, y, cardWidth, cardHeight, cardBorder, { line: 3, gap: 7 });
+    strokeBorder(ctx, x, y, cardWidth, cardHeight, cardBorder, { line: 4, gap: 8 });
   }
 
   // Draw card illustration (portrait orientation, centered with padding)
