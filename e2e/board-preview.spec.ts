@@ -169,7 +169,7 @@ test('desktop design opens from the Theme row beside the preview and follows his
     'true'
   );
   await expect.poll(() => image.getAttribute('src')).not.toBe(before);
-  await expect(dialog.getByRole('status').first()).toHaveText('Saved');
+  await expect(dialog.getByRole('status').filter({ hasText: /^Sav/ })).toHaveText('Saved');
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   await expect(page).not.toHaveURL(/design=1/);
