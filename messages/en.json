@@ -535,7 +535,7 @@
       "showTitle": "Print the board name at the top",
       "showTitleHint": "“{name}” on every board page",
       "theme": "Theme",
-      "changeEllipsis": "Change…",
+      "customizeBoard": "Customize board",
       "designSubtitle": "Set your board’s colors and font, or start from a theme below.",
       "customizeColorsFont": "Customize colors & font",
       "customizeHint": "Changing anything here makes your theme <strong>Custom</strong>.",

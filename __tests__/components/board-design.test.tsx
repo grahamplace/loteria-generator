@@ -117,14 +117,14 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('desktop design dialog', () => {
-  it('shows the theme beside the preview and opens the dialog from Change…', async () => {
+  it('shows the theme beside the preview and opens the dialog from the row', async () => {
     view();
     const sidebar = screen.getByRole('complementary', { name: 'Live preview' });
     expect(within(sidebar).getByText('Halloween')).toBeVisible();
     const change = within(sidebar).getByRole('button', {
       name: 'Change theme, currently Halloween',
     });
-    expect(change).toHaveTextContent('Change…');
+    expect(change).toHaveTextContent('Customize board');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
     change.focus();

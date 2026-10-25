@@ -119,7 +119,7 @@ test('desktop design opens from the Theme row beside the preview and follows his
   expect((await uploads.boundingBox())!.y).toBeLessThan(200);
   const panel = page.getByRole('complementary', { name: 'Live preview' });
   const change = panel.getByRole('button', { name: 'Change theme, currently Halloween' });
-  await expect(change).toHaveText('Change…');
+  await expect(change).toContainText('Customize board');
   // Theme sits between the page navigation and the download controls.
   const navigation = (await panel
     .getByRole('navigation', { name: 'Preview pages' })

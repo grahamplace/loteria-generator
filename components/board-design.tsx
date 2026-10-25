@@ -135,7 +135,7 @@ export function BoardDesignEditor({
 
 /**
  * The current theme beside the preview. `compact` is the desktop sidebar row
- * with its own button; `row` makes the whole row the phone-sized target.
+ * with a button-styled cue; `row` is the taller phone-sized version.
  */
 export function BoardThemeRow({
   design,
@@ -184,22 +184,22 @@ export function BoardThemeRow({
       </button>
     );
   }
+  // The whole row opens the design: thumbnail, name, and the button-styled cue.
   return (
-    <div className="flex items-center gap-3">
+    <button
+      ref={ref}
+      type="button"
+      onClick={onChange}
+      aria-label={t('changeTheme', { name })}
+      className="group/theme -mx-2 flex w-[calc(100%+1rem)] touch-manipulation items-center gap-3 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none"
+    >
       <ThemeThumbnail id={design.selected} className="h-[34px] w-11" />
       {text}
-      <Button
-        ref={ref}
-        type="button"
-        variant="outline"
-        onClick={onChange}
-        aria-label={t('changeTheme', { name })}
-        className="min-h-11 shrink-0 touch-manipulation px-3 text-[13px] font-semibold transition-colors"
-      >
+      <span className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md border bg-background px-3 text-[13px] font-semibold shadow-xs transition-colors group-hover/theme:border-primary/50 motion-reduce:transition-none [&_svg]:size-4">
         <Palette aria-hidden="true" />
-        {t('changeEllipsis')}
-      </Button>
-    </div>
+        {t('customizeBoard')}
+      </span>
+    </button>
   );
 }
 
