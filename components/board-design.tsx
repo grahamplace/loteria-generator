@@ -255,20 +255,8 @@ export function BoardDesignDialog({
           event.preventDefault();
           returnFocusRef.current?.focus({ preventScroll: true });
         }}
-        className="flex h-[min(860px,calc(100dvh-3rem))] w-[calc(100%-3rem)] max-w-[1060px] gap-0 overflow-hidden rounded-2xl p-0 shadow-2xl outline-none sm:max-w-[1060px] motion-reduce:animate-none"
+        className="flex h-[min(860px,calc(100dvh-3rem))] w-[calc(100%-3rem)] max-w-[1240px] gap-0 overflow-hidden rounded-2xl p-0 shadow-2xl outline-none sm:max-w-[1240px] motion-reduce:animate-none"
       >
-        <section
-          aria-label={t('livePreview')}
-          className="flex w-[min(380px,38%)] shrink-0 flex-col gap-3.5 overflow-y-auto overscroll-contain border-r border-border bg-muted p-6"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="min-w-0 text-[13px] font-semibold tracking-widest text-muted-foreground uppercase">
-              {t('livePreview')}
-            </h3>
-            <BoardPreviewActions state={preview} />
-          </div>
-          <BoardPreviewImage state={preview} fitViewport />
-        </section>
         <section className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-start justify-between gap-3 px-6 pt-5 pb-3">
             <div className="min-w-0">
@@ -300,6 +288,18 @@ export function BoardDesignDialog({
               </Button>
             </DialogClose>
           </div>
+        </section>
+        <section
+          aria-label={t('livePreview')}
+          className="flex w-[min(520px,44%)] shrink-0 flex-col gap-3.5 overflow-y-auto overscroll-contain border-l border-border bg-muted p-6"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="min-w-0 text-[13px] font-semibold tracking-widest text-muted-foreground uppercase">
+              {t('livePreview')}
+            </h3>
+            <BoardPreviewActions state={preview} />
+          </div>
+          <BoardPreviewImage state={preview} fitViewport />
         </section>
       </DialogContent>
     </Dialog>

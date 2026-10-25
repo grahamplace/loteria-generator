@@ -284,7 +284,7 @@ export function BoardDesignControls({
             <div
               className={cn(
                 'grid gap-2.5',
-                row ? 'grid-cols-1' : 'grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))]'
+                row ? 'grid-cols-1' : 'grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]'
               )}
             >
               {colorKeys.map((key) => (

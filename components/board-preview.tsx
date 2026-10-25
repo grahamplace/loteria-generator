@@ -388,9 +388,10 @@ export function BoardPreviewImage({
                 'max-w-[min(100%,max(8rem,calc((100dvh-36.5rem)*17/22)))] xl:max-w-[min(100%,max(8rem,calc((100dvh-34.25rem)*17/22)))]'
               : 'max-w-[min(100%,max(8rem,calc((100dvh-32.5rem)*17/22)))] xl:max-w-[min(100%,max(8rem,calc((100dvh-30.25rem)*17/22)))]'
             : fitViewport &&
+                // The design dialog is at most 860px tall; leave room for its header and page nav.
                 (state.pageCount > 1
-                  ? 'max-w-[min(100%,max(8rem,calc((100dvh-29rem)*17/22)))]'
-                  : 'max-w-[min(100%,max(8rem,calc((100dvh-25rem)*17/22)))]')
+                  ? 'max-w-[min(100%,max(8rem,calc((min(860px,100dvh-3rem)-14rem)*17/22)))]'
+                  : 'max-w-[min(100%,max(8rem,calc((min(860px,100dvh-3rem)-10rem)*17/22)))]')
         )}
       >
         {busy && (
