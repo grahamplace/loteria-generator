@@ -269,14 +269,6 @@ function BoardEditor({ boardId }: { boardId: string }) {
                   </span>
                 )}
               </div>
-              {/* Mobile subtitle */}
-              {!isEditingName && (
-                <div className="md:hidden text-[11px] text-muted-foreground truncate">
-                  {cards.length > 0
-                    ? t('mobileSubtitleCards', { count: cards.length })
-                    : t('mobileSubtitleEmpty')}
-                </div>
-              )}
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">

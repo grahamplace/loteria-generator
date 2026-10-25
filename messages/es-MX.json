@@ -327,8 +327,6 @@
       "renameInputAriaLabel": "Cambiar el nombre de la tabla",
       "unlockedBadge": "Desbloqueada",
       "freeBadge": "Gratis",
-      "mobileSubtitleCards": "{count} {count, plural, one {carta} other {cartas}} · Actualizado hace un momento",
-      "mobileSubtitleEmpty": "Vista previa gratis",
       "unlockButtonShort": "{price}",
       "unlockButtonPrefix": "Desbloquear por",
       "yourCards": "Tus cartas",

@@ -321,8 +321,6 @@
       "renameInputAriaLabel": "Rename board",
       "unlockedBadge": "Unlocked",
       "freeBadge": "Free",
-      "mobileSubtitleCards": "{count} {count, plural, one {card} other {cards}} · Updated just now",
-      "mobileSubtitleEmpty": "Free preview",
       "unlockButtonShort": "{price}",
       "unlockButtonPrefix": "Unlock for",
       "yourCards": "Your cards",
