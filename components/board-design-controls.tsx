@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import {
+  boardBorderStyle,
   boardFrameStyles,
   borderStyles,
   type BoardDesignValues,
@@ -13,6 +14,7 @@ import {
 } from '@/lib/themes/presets';
 import { editableBoardStyle } from '@/lib/themes/render-style';
 import { cn } from '@/lib/utils';
+import { BoardBorderPicker } from '@/components/board-border-picker';
 import { BoardCornerPicker } from '@/components/board-corner-picker';
 import { BoardFontPicker } from '@/components/board-font-picker';
 
@@ -190,6 +192,12 @@ function ColorControl({
 
 export type DesignLayout = 'dialog' | 'sheet';
 
+/** The frame as printed: legacy styles draw double, and hand-drawn draws none. */
+function boardFrameValue(border: BorderStyle): CurrentBorderStyle {
+  const current = boardBorderStyle({ borderStyle: border });
+  return current === 'hand-drawn' ? 'none' : current;
+}
+
 /** The four colors shown in the Customize header, in print order. */
 const swatchKeys = ['backgroundColor', 'badgeColor', 'labelColor', 'borderColor'] as const;
 
@@ -311,66 +319,29 @@ export function BoardDesignControls({
                 onChange={(cornerIcon) => onChange({ cornerIcon })}
               />
             </div>
-            <BorderStylePicker
-              legend={t('boardBorder')}
-              options={boardFrameStyles}
-              value={values.borderStyle === 'hand-drawn' ? 'none' : values.borderStyle}
-              disabled={disabled}
-              onChange={(borderStyle) => onChange({ borderStyle })}
-            />
-            <BorderStylePicker
-              legend={t('cardBorder')}
-              options={borderStyles}
-              value={values.cardBorderStyle}
-              disabled={disabled}
-              onChange={(cardBorderStyle) => onChange({ cardBorderStyle })}
-            />
+            <div className={cn('grid gap-3', row ? 'grid-cols-1' : 'grid-cols-2')}>
+              <BoardBorderPicker
+                label={t('boardBorder')}
+                options={boardFrameStyles}
+                value={boardFrameValue(values.borderStyle)}
+                color={values.borderColor}
+                background={values.backgroundColor}
+                disabled={disabled}
+                onChange={(borderStyle) => onChange({ borderStyle })}
+              />
+              <BoardBorderPicker
+                label={t('cardBorder')}
+                options={borderStyles}
+                value={values.cardBorderStyle}
+                color={values.borderColor}
+                background={values.cardColor}
+                disabled={disabled}
+                onChange={(cardBorderStyle) => onChange({ cardBorderStyle })}
+              />
+            </div>
           </>
         )}
       </div>
     </div>
-  );
-}
-
-/** Segmented control backed by native radios, so arrow keys move the choice. */
-function BorderStylePicker<Style extends CurrentBorderStyle>({
-  legend,
-  options,
-  value,
-  disabled,
-  onChange,
-}: {
-  legend: string;
-  options: readonly Style[];
-  value: BorderStyle;
-  disabled: boolean;
-  onChange: (value: Style) => void;
-}) {
-  const t = useTranslations('Themes.Builder');
-  const name = useId();
-  return (
-    <fieldset className="min-w-0">
-      <legend className="mb-1.5 text-sm font-medium">{legend}</legend>
-      {/* Wrapped rows stretch to full width, so a short last row leaves no gaps. */}
-      <div className="flex flex-wrap gap-px overflow-hidden rounded-lg border border-input bg-input">
-        {options.map((border) => (
-          <label
-            key={border}
-            className="relative flex min-h-11 grow basis-[30%] min-[420px]:basis-[22%] cursor-pointer touch-manipulation items-center justify-center bg-background px-1.5 text-center text-[0.8125rem] leading-tight font-medium text-foreground transition-colors hover:bg-primary/5 has-[:checked]:bg-primary has-[:checked]:font-semibold has-[:checked]:text-primary-foreground has-[:disabled]:cursor-wait has-[:disabled]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-4 has-[:focus-visible]:outline-current motion-reduce:transition-none"
-          >
-            <input
-              type="radio"
-              name={name}
-              value={border}
-              checked={value === border}
-              disabled={disabled}
-              onChange={() => onChange(border)}
-              className="absolute inset-0 cursor-pointer appearance-none opacity-0 disabled:cursor-wait"
-            />
-            {t(`borders.${border as CurrentBorderStyle}`)}
-          </label>
-        ))}
-      </div>
-    </fieldset>
   );
 }
