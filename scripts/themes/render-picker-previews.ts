@@ -5,6 +5,7 @@ import sharp from 'sharp';
 import { installCanvasRuntime } from './canvas-runtime';
 import { renderBoardToCanvas } from '@/lib/generate-boards';
 import { themePresets } from '@/lib/themes/presets';
+import { presetBoardStyle } from '@/lib/themes/render-style';
 import type { SampleManifest } from './render-samples';
 
 async function main() {
@@ -20,7 +21,11 @@ async function main() {
   }));
   await mkdir('public/themes/picker', { recursive: true });
   for (const preset of themePresets) {
-    const canvas = await renderBoardToCanvas(cards, { presetId: preset.id }, 'Lotería');
+    const canvas = await renderBoardToCanvas(
+      cards,
+      { presetId: preset.id, ...presetBoardStyle(preset.id) },
+      'Lotería'
+    );
     const png = Buffer.from(canvas.toDataURL('image/png').split(',')[1], 'base64');
     await sharp(png)
       .resize(96)

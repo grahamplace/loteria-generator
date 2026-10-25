@@ -4,7 +4,12 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
-import { borderStyles, type BoardDesignValues, type BoardStyleOptions } from '@/lib/themes/presets';
+import {
+  borderStyles,
+  type BoardDesignValues,
+  type BoardStyleOptions,
+  type CurrentBorderStyle,
+} from '@/lib/themes/presets';
 import { editableBoardStyle } from '@/lib/themes/render-style';
 import { cn } from '@/lib/utils';
 import { BoardCornerPicker } from '@/components/board-corner-picker';
@@ -20,11 +25,50 @@ const selectClassName =
   'min-h-11 w-full min-w-0 appearance-none touch-manipulation rounded-md border border-input bg-background pl-3 pr-10 text-base text-foreground hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60';
 const colorKeys = [
   'backgroundColor',
-  'badgeColor',
-  'numberColor',
   'labelColor',
   'borderColor',
+  'cardColor',
+  'cardTextColor',
+  'badgeColor',
+  'numberColor',
 ] as const;
+
+function BorderStyleSelect({
+  name,
+  label,
+  value,
+  onChange,
+}: {
+  name: 'borderStyle' | 'cardBorderStyle';
+  label: string;
+  value: BoardDesignValues['borderStyle'];
+  onChange: (value: CurrentBorderStyle) => void;
+}) {
+  const t = useTranslations('Themes.Builder');
+  return (
+    <label className="min-w-0 text-sm font-medium">
+      <span className="mb-1.5 block">{label}</span>
+      <span className="relative block">
+        <select
+          name={name}
+          value={value}
+          onChange={(event) => onChange(event.target.value as CurrentBorderStyle)}
+          className={selectClassName}
+        >
+          {borderStyles.map((border) => (
+            <option key={border} value={border}>
+              {t(`borders.${border}`)}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          aria-hidden="true"
+          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+        />
+      </span>
+    </label>
+  );
+}
 
 function ColorControl({
   label,
@@ -250,31 +294,18 @@ export function BoardDesignControls({
                 disabled={disabled}
                 onChange={(font) => onChange({ font })}
               />
-              <label className="min-w-0 text-sm font-medium">
-                <span className="mb-1.5 block">{t('borderStyle')}</span>
-                <span className="relative block">
-                  <select
-                    name="borderStyle"
-                    value={values.borderStyle}
-                    onChange={(event) =>
-                      onChange({
-                        borderStyle: event.target.value as BoardDesignValues['borderStyle'],
-                      })
-                    }
-                    className={selectClassName}
-                  >
-                    {borderStyles.map((border) => (
-                      <option key={border} value={border}>
-                        {t(`borders.${border}`)}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    aria-hidden="true"
-                    className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  />
-                </span>
-              </label>
+              <BorderStyleSelect
+                name="borderStyle"
+                label={t('borderStyle')}
+                value={values.borderStyle}
+                onChange={(borderStyle) => onChange({ borderStyle })}
+              />
+              <BorderStyleSelect
+                name="cardBorderStyle"
+                label={t('cardBorderStyle')}
+                value={values.cardBorderStyle}
+                onChange={(cardBorderStyle) => onChange({ cardBorderStyle })}
+              />
               <BoardCornerPicker
                 value={values.cornerIcon}
                 color={values.borderColor}

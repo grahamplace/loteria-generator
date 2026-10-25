@@ -447,9 +447,10 @@ test('mobile theme picker keeps the editor compact and saves a choice before clo
     styleOptions: expect.objectContaining({
       presetId: 'wedding',
       showTitle: true,
-      backgroundColor: '#f5efdf',
-      font: 'Jost',
+      backgroundColor: '#e3e9dc',
+      font: 'Cinzel',
       borderStyle: 'double',
+      cardBorderStyle: 'solid',
     }),
   });
   await expect(sheet).toHaveCount(0);
@@ -548,7 +549,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
     'data-value',
     'Creepster'
   );
-  await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
+  await expect(page.getByRole('combobox', { name: 'Page border', exact: true })).toHaveValue(
     'double'
   );
   await expect(page.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveAttribute(
@@ -567,8 +568,11 @@ test('custom designs update the preview, persist, export, and reset to a preset'
       numberColor: '#ffffff',
       labelColor: '#ffe8af',
       borderColor: '#d9a952',
+      cardColor: '#2a1b3a',
+      cardTextColor: '#ffe8af',
       font: 'Creepster',
       borderStyle: 'double',
+      cardBorderStyle: 'solid',
       cornerIcon: 'cobweb',
     },
   });
@@ -579,7 +583,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await enterHex(page, page.getByRole('textbox', { name: 'Number text', exact: true }), '#ffffaa');
   await page.getByRole('combobox', { name: 'Font', exact: true }).click();
   await page.getByRole('option', { name: 'Bebas Neue', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('dashed');
+  await page.getByRole('combobox', { name: 'Page border', exact: true }).selectOption('dashed');
   await page.getByRole('combobox', { name: 'Corner icons', exact: true }).click();
   await page.getByRole('option', { name: 'Hearts', exact: true }).click();
   // Reloading while this save is in flight would cancel it.
@@ -607,7 +611,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
     'data-value',
     'Bebas Neue'
   );
-  await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
+  await expect(page.getByRole('combobox', { name: 'Page border', exact: true })).toHaveValue(
     'dashed'
   );
   await expect(page.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveAttribute(
@@ -624,15 +628,15 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await (await downloaded).saveAs('.scratch/theme-work/custom-design.pdf');
   await page.getByRole('radio', { name: 'Wedding', exact: true }).focus();
   await page.getByRole('radio', { name: 'Wedding', exact: true }).press('Space');
-  await expect(background).toHaveValue('#f5efdf');
+  await expect(background).toHaveValue('#e3e9dc');
   await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toHaveValue(
-    '#b38d4d'
+    '#a8844f'
   );
   await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
     'data-value',
-    'Jost'
+    'Cinzel'
   );
-  await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
+  await expect(page.getByRole('combobox', { name: 'Page border', exact: true })).toHaveValue(
     'double'
   );
   await expect(page.getByRole('checkbox', { name: 'Show title on boards' })).toBeChecked();
@@ -690,7 +694,7 @@ for (const width of [1440, 390]) {
     await enterHex(page, background, '#345678');
     await page.getByRole('combobox', { name: 'Font', exact: true }).click();
     await page.getByRole('option', { name: 'Caveat', exact: true }).click();
-    await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('dashed');
+    await page.getByRole('combobox', { name: 'Page border', exact: true }).selectOption('dashed');
     await expect(background).toBeEnabled();
     async function choose(name: string) {
       if (width >= 1024) {
@@ -710,9 +714,9 @@ for (const width of [1440, 390]) {
       }
     }
     await choose('Wedding');
-    await expect(background).toHaveValue('#f5efdf');
+    await expect(background).toHaveValue('#e3e9dc');
     await choose('Christmas');
-    await expect(background).toHaveValue('#103b30');
+    await expect(background).toHaveValue('#123d31');
     await page.reload();
     await choose('Custom');
     await expect(background).toHaveValue('#345678');
@@ -720,7 +724,7 @@ for (const width of [1440, 390]) {
       'data-value',
       'Caveat'
     );
-    await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
+    await expect(page.getByRole('combobox', { name: 'Page border', exact: true })).toHaveValue(
       'dashed'
     );
     await enterHex(page, background, '#abcdef');
@@ -733,7 +737,7 @@ for (const width of [1440, 390]) {
       'data-value',
       'Caveat'
     );
-    await expect(page.getByRole('combobox', { name: 'Border style', exact: true })).toHaveValue(
+    await expect(page.getByRole('combobox', { name: 'Page border', exact: true })).toHaveValue(
       'dashed'
     );
     await page.reload();
@@ -1127,7 +1131,7 @@ for (const width of [1024, 1440, 2560]) {
       savedPosition
     );
     before = await image.getAttribute('src');
-    await page.getByRole('combobox', { name: 'Border style', exact: true }).selectOption('dashed');
+    await page.getByRole('combobox', { name: 'Page border', exact: true }).selectOption('dashed');
     await expect.poll(() => image.getAttribute('src')).not.toBe(before);
     await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
     expect(await viewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))).toEqual(

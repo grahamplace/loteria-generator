@@ -4,13 +4,21 @@ import { createCanvas, Image } from '@napi-rs/canvas';
 import sharp from 'sharp';
 import { installCanvasRuntime } from './canvas-runtime';
 import { renderBoardToCanvas, drawCard } from '@/lib/generate-boards';
-import { resolveBoardStyle, loadPrintFonts } from '@/lib/themes/render-style';
+import { resolveBoardStyle, loadPrintFonts, presetBoardStyle } from '@/lib/themes/render-style';
 import type { BoardStyleOptions } from '@/lib/themes/presets';
 
 export interface SampleManifest {
   title: string;
   styles: BoardStyleOptions;
   cards: { id: string; number: number; label: string; illustration: string }[];
+}
+/**
+ * Print a preset the way a board does after picking it, which saves the
+ * preset's concrete design, fonts included.
+ */
+export function sampleStyles(styles: BoardStyleOptions): BoardStyleOptions {
+  const id = styles.presetId;
+  return id && id !== 'custom' ? { ...presetBoardStyle(id), ...styles } : styles;
 }
 export async function renderSamples(manifest: SampleManifest, output: string) {
   await installCanvasRuntime();
@@ -24,11 +32,12 @@ export async function renderSamples(manifest: SampleManifest, output: string) {
     ...card,
     illustration: resolve(card.illustration),
   }));
+  const styles = sampleStyles(manifest.styles);
   for (const [i, order] of [
     cards.slice(0, 16),
     [...cards.slice(8, 16), ...cards.slice(0, 8)],
   ].entries()) {
-    const board = await renderBoardToCanvas(order, manifest.styles, manifest.title);
+    const board = await renderBoardToCanvas(order, styles, manifest.title);
     const data = Buffer.from(board.toDataURL('image/png').split(',')[1], 'base64');
     await writeFile(join(output, `sample-board-${i + 1}.png`), data);
     await sharp(data)
@@ -37,7 +46,7 @@ export async function renderSamples(manifest: SampleManifest, output: string) {
       .toFile(join(output, `board-${i + 1}.webp`));
   }
   await loadPrintFonts();
-  const style = resolveBoardStyle(manifest.styles);
+  const style = resolveBoardStyle(styles);
   for (const card of cards) {
     const canvas = createCanvas(604, 904);
     const ctx = canvas.getContext('2d');
