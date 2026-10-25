@@ -7,7 +7,11 @@ import type { BoardThemeId } from '@/lib/themes/presets';
 import type { BoardDesign } from '@/hooks/use-board-design';
 import { BoardThemeGrid, ThemeThumbnail, useThemeName } from '@/components/board-theme-grid';
 import { BoardDesignControls, type DesignLayout } from '@/components/board-design-controls';
-import { BoardPreviewImage, type useBoardPreview } from '@/components/board-preview';
+import {
+  BoardPreviewActions,
+  BoardPreviewImage,
+  type useBoardPreview,
+} from '@/components/board-preview';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -229,21 +233,26 @@ export function BoardDesignDialog({
         onEscapeKeyDown={(event) => {
           if (isFieldEscape(event)) event.preventDefault();
         }}
+        // Start on the dialog itself; the first button (a page arrow) would show a ring.
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          (event.currentTarget as HTMLElement | null)?.focus({ preventScroll: true });
+        }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           returnFocusRef.current?.focus({ preventScroll: true });
         }}
-        className="flex h-[min(860px,calc(100dvh-3rem))] w-[calc(100%-3rem)] max-w-[1060px] gap-0 overflow-hidden rounded-2xl p-0 shadow-2xl sm:max-w-[1060px] motion-reduce:animate-none"
+        className="flex h-[min(860px,calc(100dvh-3rem))] w-[calc(100%-3rem)] max-w-[1060px] gap-0 overflow-hidden rounded-2xl p-0 shadow-2xl outline-none sm:max-w-[1060px] motion-reduce:animate-none"
       >
         <section
           aria-label={t('livePreview')}
           className="flex w-[min(380px,38%)] shrink-0 flex-col gap-3.5 overflow-y-auto overscroll-contain border-r border-border bg-muted p-6"
         >
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-[13px] font-semibold tracking-widest text-muted-foreground uppercase">
+            <h3 className="min-w-0 text-[13px] font-semibold tracking-widest text-muted-foreground uppercase">
               {t('livePreview')}
             </h3>
-            <DesignSaveStatus design={design} />
+            <BoardPreviewActions state={preview} />
           </div>
           <BoardPreviewImage state={preview} fitViewport />
         </section>
@@ -270,7 +279,8 @@ export function BoardDesignDialog({
           <div className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-1 pb-4">
             <BoardDesignEditor design={design} boardName={boardName} layout="dialog" />
           </div>
-          <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-3.5">
+          <div className="flex items-center justify-between gap-3 border-t border-border px-6 py-3.5">
+            <DesignSaveStatus design={design} />
             <DialogClose asChild>
               <Button type="button" className="min-h-11 px-6 touch-manipulation transition-colors">
                 {t('done')}
