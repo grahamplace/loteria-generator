@@ -130,8 +130,11 @@ test('switches boards with localized links and remembers the selected board', as
   await expect(page.getByRole('button', { name: /Cambiar tablero: Our Halloween/ })).toBeVisible();
 });
 
-test('rename works from both the picker and the design panel', async ({ page }) => {
+test('renaming from the picker updates the printed title in the live preview', async ({ page }) => {
   await editor(page);
+  const image = page.getByRole('complementary', { name: 'Live preview' }).getByRole('img');
+  await expect(image).toBeVisible();
+  const before = await image.getAttribute('src');
   const trigger = page.getByRole('button', { name: /Switch board:/ });
   await trigger.focus();
   await page.keyboard.press('Enter');
@@ -148,23 +151,17 @@ test('rename works from both the picker and the design panel', async ({ page }) 
   await expect(
     page.getByRole('button', { name: 'Switch board: Our family celebration' })
   ).toBeFocused();
-  const title = page.getByRole('textbox', { name: 'Board title', exact: true });
-  await expect(title).toHaveValue('Our family celebration');
-  const image = page.getByRole('complementary', { name: 'Live preview' }).getByRole('img');
-  const before = await image.getAttribute('src');
-  await title.fill('  Día de la Familia  ');
-  await page.getByRole('heading', { name: 'Drop photos to add cards' }).click();
-  await expect(title).toHaveValue('Día de la Familia');
-  await expect(title).not.toBeFocused();
-  await expect(page.getByRole('button', { name: 'Switch board: Día de la Familia' })).toBeVisible();
+  // The header is the one place to rename; the design controls have no title field.
+  await expect(page.getByRole('textbox', { name: 'Board title', exact: true })).toHaveCount(0);
   await expect.poll(() => image.getAttribute('src')).not.toBe(before);
   await page.screenshot({
     path: '.scratch/theme-work/board-title-desktop.png',
     animations: 'disabled',
   });
   await page.reload();
-  await expect(title).toHaveValue('Día de la Familia');
-  await expect(page.getByRole('button', { name: 'Switch board: Día de la Familia' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Switch board: Our family celebration' })
+  ).toBeVisible();
 });
 
 test('creation failure can be retried and successful creation opens the new board', async ({
@@ -207,46 +204,40 @@ test('large collections are paged and list failures have a retry', async ({ page
   await expect(page.getByRole('menuitem', { name: /Our Halloween/ })).toBeVisible();
 });
 
-test('mobile title editing validates, retains failed saves, and works with the printed title off', async ({
+test('mobile rename retries a failed save and the design view prints the new name', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await editor(page, { locale: 'es', failRename: true });
-  const title = page.getByRole('textbox', { name: 'Título del tablero', exact: true });
-  const design = page.getByRole('region').filter({ has: title });
-  await title.fill('   ');
-  await title.press('Enter');
-  await expect(title).toBeFocused();
-  await expect(title).toHaveAttribute('aria-invalid', 'true');
-  await expect(design.getByRole('alert')).toHaveText(
-    'Escribe un título de entre 1 y 200 caracteres.'
-  );
-  await title.fill('Cumpleaños de la abuela');
-  await title.press('Enter');
-  await expect(design.getByRole('alert')).toHaveText('No se pudo guardar. Inténtalo de nuevo.');
-  await expect(title).toHaveValue('Cumpleaños de la abuela');
-  await page.getByRole('button', { name: 'Guardar', exact: true }).click();
-  await expect(
-    page.getByRole('button', { name: 'Cambiar tablero: Cumpleaños de la abuela' })
-  ).toBeVisible();
-  await page.getByRole('checkbox', { name: 'Mostrar título en las tablas' }).click();
-  await expect(
-    page.getByRole('checkbox', { name: 'Mostrar título en las tablas' })
-  ).not.toBeChecked();
-  const titleVisibility = page.getByRole('checkbox', { name: 'Mostrar título en las tablas' });
-  await title.fill('Fiesta familiar');
-  await titleVisibility.click();
+  async function rename(name: string) {
+    await page.getByRole('button', { name: /Cambiar tablero:/ }).click();
+    await page.getByRole('menuitem', { name: 'Cambiar nombre…' }).click();
+    const input = page.getByRole('textbox', { name: 'Cambiar el nombre de la tabla' });
+    await input.fill(name);
+    await input.press('Enter');
+  }
+  await rename('Cumpleaños de la abuela');
+  await expect(page.getByText('No se pudo guardar. Inténtalo de nuevo.').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Cambiar tablero: Our Halloween/ })).toBeVisible();
+  await rename('Fiesta familiar');
   await expect(
     page.getByRole('button', { name: 'Cambiar tablero: Fiesta familiar' })
   ).toBeVisible();
-  await expect(page.getByRole('checkbox', { name: 'Mostrar título en las tablas' })).toBeChecked();
-  await title.fill('Unsaved changes');
-  await title.press('Escape');
-  await expect(title).toHaveValue('Fiesta familiar');
-  await title.blur();
-  await expect(
-    page.getByRole('button', { name: 'Cambiar tablero: Fiesta familiar' })
-  ).toBeVisible();
+  await page.getByRole('button', { name: 'Ver y descargar', exact: true }).click();
+  await page.getByRole('button', { name: /^Cambiar tema, actual: / }).click();
+  const design = page.getByRole('dialog', { name: 'Diseña tu juego', exact: true });
+  await design.getByRole('button', { name: 'Personalizar colores y tipografía' }).click();
+  const printTitle = design.getByRole('checkbox', { name: /Imprimir el nombre del juego arriba/ });
+  await expect(printTitle).toBeChecked();
+  await expect(design.getByText('“Fiesta familiar” en cada tabla')).toBeVisible();
+  const saved = page.waitForRequest((request) => request.method() === 'PATCH');
+  await printTitle.click();
+  expect((await saved).postDataJSON()).toEqual({
+    styleOptions: expect.objectContaining({ showTitle: false }),
+  });
+  await expect(printTitle).not.toBeChecked();
+  await printTitle.click();
+  await expect(printTitle).toBeChecked();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({
     path: '.scratch/theme-work/board-title-mobile.png',
