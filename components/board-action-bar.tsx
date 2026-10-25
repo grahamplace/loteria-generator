@@ -151,12 +151,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
               >
                 <ImagePlus className="size-5" />
               </span>
-              <div className="min-w-0">
-                <h2 className="font-semibold">{t('dropPhotos')}</h2>
-                <p className="text-xs text-muted-foreground">
-                  {t('acceptedFormats', { maxSize: MAX_UPLOAD_DISPLAY })}
-                </p>
-              </div>
+              <h2 className="min-w-0 font-semibold">{t('dropPhotos')}</h2>
             </div>
             <div className="flex gap-2 sm:shrink-0">
               {cardCount >= maxCards && !isUnlocked ? (
