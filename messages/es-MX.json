@@ -544,7 +544,6 @@
       "customizeBoard": "Personalizar tabla",
       "designSubtitle": "Elige los colores y la tipografía de tu juego, o empieza con uno de los temas de abajo.",
       "customizeColorsFont": "Personalizar colores y tipografía",
-      "customizeHint": "Si cambias algo aquí, tu tema pasa a <strong>Personalizado</strong>.",
       "themesHeading": "O empieza con un tema",
       "themesHint": "Al elegir un tema, se establecen los colores, la tipografía y los bordes de arriba. Desde ahí puedes seguir personalizando.",
       "done": "Listo",

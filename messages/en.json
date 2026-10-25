@@ -538,7 +538,6 @@
       "customizeBoard": "Customize board",
       "designSubtitle": "Set your board’s colors and font, or start from a theme below.",
       "customizeColorsFont": "Customize colors & font",
-      "customizeHint": "Changing anything here makes your theme <strong>Custom</strong>.",
       "themesHeading": "Or start from a theme",
       "themesHint": "Picking a theme sets the colors, font, and borders above. You can still customize from there.",
       "done": "Done",

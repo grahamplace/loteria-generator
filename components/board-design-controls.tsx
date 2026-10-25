@@ -308,9 +308,6 @@ export function BoardDesignControls({
                 className="size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               />
             </label>
-            <p className="text-xs text-muted-foreground">
-              {t.rich('customizeHint', { strong: (chunks) => <strong>{chunks}</strong> })}
-            </p>
           </>
         )}
       </div>
