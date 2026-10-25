@@ -203,7 +203,6 @@ test('Spanish phone sheet swaps to the design view, saves a theme, and deep-link
   await expect(design.getByRole('button', { name: 'Listo', exact: true })).toBeInViewport({
     ratio: 1,
   });
-  await expect(design.getByText('Tus cartas siguen iguales. Solo cambia la tabla.')).toBeVisible();
   await page.screenshot({
     animations: 'disabled',
     path: '.scratch/theme-work/design-view-mobile-es.png',

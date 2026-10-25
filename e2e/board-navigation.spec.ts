@@ -226,7 +226,6 @@ test('mobile rename retries a failed save and the design view prints the new nam
   await page.getByRole('button', { name: 'Ver y descargar', exact: true }).click();
   await page.getByRole('button', { name: /^Cambiar tema, actual: / }).click();
   const design = page.getByRole('dialog', { name: 'Diseña tu juego', exact: true });
-  await design.getByRole('button', { name: 'Personalizar colores y tipografía' }).click();
   const printTitle = design.getByRole('checkbox', { name: /Imprimir el nombre del juego arriba/ });
   await expect(printTitle).toBeChecked();
   await expect(design.getByText('“Fiesta familiar” en cada tabla')).toBeVisible();

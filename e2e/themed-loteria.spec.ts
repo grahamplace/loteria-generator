@@ -77,7 +77,6 @@ test.describe('themed Lotería', () => {
     // Design lives behind the Theme row beside the preview.
     await page.getByRole('button', { name: 'Cambiar tema, actual: Halloween' }).click();
     const design = page.getByRole('dialog', { name: 'Diseña tu juego' });
-    await design.getByRole('button', { name: 'Personalizar colores y tipografía' }).click();
     await expect(
       design.getByRole('checkbox', { name: /Imprimir el nombre del juego arriba/ })
     ).toBeChecked();
