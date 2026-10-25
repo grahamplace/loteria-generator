@@ -385,8 +385,8 @@ export function BoardPreviewImage({
           fitViewport === 'sidebar'
             ? state.pageCount > 1
               ? // The narrower sidebar below xl wraps its text onto extra lines.
-                'max-w-[min(100%,max(8rem,calc((100dvh-32.5rem)*17/22)))] xl:max-w-[min(100%,max(8rem,calc((100dvh-30.5rem)*17/22)))]'
-              : 'max-w-[min(100%,max(8rem,calc((100dvh-28.5rem)*17/22)))] xl:max-w-[min(100%,max(8rem,calc((100dvh-26.5rem)*17/22)))]'
+                'max-w-[min(100%,max(8rem,calc((100dvh-35.75rem)*17/22)))] xl:max-w-[min(100%,max(8rem,calc((100dvh-33.5rem)*17/22)))]'
+              : 'max-w-[min(100%,max(8rem,calc((100dvh-31.75rem)*17/22)))] xl:max-w-[min(100%,max(8rem,calc((100dvh-29.5rem)*17/22)))]'
             : fitViewport &&
                 (state.pageCount > 1
                   ? 'max-w-[min(100%,max(8rem,calc((100dvh-29rem)*17/22)))]'
