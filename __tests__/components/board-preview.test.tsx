@@ -82,7 +82,7 @@ describe('automatic board preview', () => {
     );
     expect(window.location.search).toBe('?previewScale=200');
     expect(renderBoard).toHaveBeenCalledTimes(4);
-    fireEvent.click(screen.getByRole('button', { name: 'Full Screen preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
     const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
     expect(within(dialog).getByRole('img')).toHaveAttribute(
       'src',
@@ -126,7 +126,7 @@ describe('automatic board preview', () => {
     await screen.findByRole('img', { name: previewName });
     expect(renderBoard).toHaveBeenCalledTimes(1);
     renderBoard.mockResolvedValueOnce(canvas('detailed'));
-    fireEvent.click(screen.getByRole('button', { name: 'Full Screen preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
     const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
     await waitFor(() =>
       expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('detailed').toDataURL())
@@ -143,7 +143,7 @@ describe('automatic board preview', () => {
     expect(renderBoard).toHaveBeenCalledTimes(2);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close expanded preview' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'Full Screen preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
     await screen.findByRole('dialog', { name: 'Board preview' });
     expect(renderBoard).toHaveBeenCalledTimes(2);
   });
@@ -160,7 +160,7 @@ describe('automatic board preview', () => {
     );
     render(view({ cards }));
     await screen.findByRole('img', { name: previewName });
-    fireEvent.click(screen.getByRole('button', { name: 'Full Screen preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
     const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
     await waitFor(() =>
       expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('detail-1').toDataURL())
@@ -197,7 +197,7 @@ describe('automatic board preview', () => {
     render(view());
     await screen.findByRole('img', { name: previewName });
     renderBoard.mockRejectedValueOnce(new Error('Detailed image failed'));
-    fireEvent.click(screen.getByRole('button', { name: 'Full Screen preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
     const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(
       messages.Themes.Builder.previewError

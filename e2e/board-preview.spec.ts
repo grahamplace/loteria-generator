@@ -807,7 +807,7 @@ for (const width of [1024, 1440, 2560]) {
     await page.setViewportSize({ width, height: 900 });
     await openEditor(page, { count: 54 });
     const panel = page.getByRole('complementary', { name: 'Live preview' });
-    const expand = panel.getByRole('button', { name: 'Full Screen preview' });
+    const expand = panel.getByRole('button', { name: 'Full screen preview' });
     await expect(expand).toBeVisible();
     const smallWidth = (await panel.getByRole('img').boundingBox())!.width;
     await expand.focus();
@@ -924,7 +924,7 @@ test('expanded preview stays usable on a slower device and connection', async ({
   await page.getByRole('button', { name: 'Preview & download', exact: true }).click();
   const expand = page
     .getByRole('dialog', { name: 'Live preview', exact: true })
-    .getByRole('button', { name: 'Full Screen preview' });
+    .getByRole('button', { name: 'Full screen preview' });
   await expect(expand).toBeVisible();
   const session = await context.newCDPSession(page);
   await session.send('Emulation.setCPUThrottlingRate', { rate: 4 });
@@ -1149,7 +1149,7 @@ for (const width of [1024, 1440, 2560]) {
     const image = panel.getByRole('img');
     await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
     const fittedBounds = (await viewport.boundingBox())!;
-    const expand = panel.getByRole('button', { name: 'Full Screen preview' });
+    const expand = panel.getByRole('button', { name: 'Full screen preview' });
     const fittedExpand = (await expand.boundingBox())!;
     const fittedZoom = (await panel
       .getByRole('button', { name: 'Zoom in', exact: true })
@@ -1227,7 +1227,7 @@ for (const width of [1024, 1440, 2560]) {
       animations: 'disabled',
       path: `.scratch/theme-work/preview-inline-${width}.png`,
     });
-    await panel.getByRole('button', { name: 'Full Screen preview' }).click();
+    await panel.getByRole('button', { name: 'Full screen preview' }).click();
     const expanded = page.getByRole('dialog', { name: 'Board preview', exact: true });
     await expect(expanded).toBeVisible();
     await page.keyboard.press('Escape');
