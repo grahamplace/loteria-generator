@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { and, eq, desc, isNull } from 'drizzle-orm';
 import { db, boards, userProfiles } from '@/db';
 import { isAdminEmail } from '@/lib/admin';
 import { DEFAULT_BOARD_NAME } from '@/lib/constants';
@@ -31,7 +31,7 @@ export async function ensureFirstBoard(
   preferredBoardId?: string
 ): Promise<EnsureFirstBoardResult> {
   const existing = await db.query.boards.findMany({
-    where: eq(boards.userId, user.id),
+    where: and(eq(boards.userId, user.id), isNull(boards.deletedAt)),
     orderBy: [desc(boards.updatedAt), desc(boards.createdAt)],
   });
 

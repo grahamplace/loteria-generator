@@ -698,7 +698,7 @@
     "rename": "Cambiar nombre…",
     "delete": "Eliminar este tablero…",
     "deleteTitle": "¿Eliminar “{name}”?",
-    "deleteDescription": "Se eliminarán este tablero y todas sus cartas de forma permanente. No se puede deshacer.",
+    "deleteDescription": "Este tablero y todas sus cartas se quitarán de tu cuenta.",
     "deleteConfirm": "Eliminar tablero",
     "cancel": "Cancelar",
     "loading": "Cargando tus tableros…",

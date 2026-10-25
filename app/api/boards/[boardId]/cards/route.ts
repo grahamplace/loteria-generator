@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db, boards, cards, IMAGE_GENERATION_LIMIT_PAID, getGenerationLimit } from '@/db';
-import { eq, and, gt, sql } from 'drizzle-orm';
+import { eq, and, gt, sql, isNull } from 'drizzle-orm';
 import {
   uploadOriginalImage,
   uploadIllustration,
@@ -43,7 +43,11 @@ export async function GET(
 
     // Verify board ownership
     const board = await db.query.boards.findFirst({
-      where: and(eq(boards.id, boardId), eq(boards.userId, session.user.id)),
+      where: and(
+        eq(boards.id, boardId),
+        eq(boards.userId, session.user.id),
+        isNull(boards.deletedAt)
+      ),
     });
 
     if (!board) {
@@ -96,7 +100,11 @@ export async function POST(
 
     // Verify board ownership
     const board = await db.query.boards.findFirst({
-      where: and(eq(boards.id, boardId), eq(boards.userId, session.user.id)),
+      where: and(
+        eq(boards.id, boardId),
+        eq(boards.userId, session.user.id),
+        isNull(boards.deletedAt)
+      ),
     });
 
     if (!board) {

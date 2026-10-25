@@ -21,6 +21,8 @@ interface BoardRow {
   name: string;
   styleOptions: BoardStyleOptions | null;
   isUnlocked: boolean;
+  /** The owner deleted it; it stays listed here so it can be restored. */
+  deleted: boolean;
   imageGenerationsUsed: number;
   generationLimitOverride: number | null;
   cardCount: number;
@@ -117,11 +119,14 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
                       {board.imageGenerationsUsed}/{genLimit}
                     </TableCell>
                     <TableCell>
-                      {board.isUnlocked ? (
-                        <Badge variant="default">Unlocked</Badge>
-                      ) : (
-                        <Badge variant="secondary">Free</Badge>
-                      )}
+                      <div className="flex flex-wrap gap-1">
+                        {board.isUnlocked ? (
+                          <Badge variant="default">Unlocked</Badge>
+                        ) : (
+                          <Badge variant="secondary">Free</Badge>
+                        )}
+                        {board.deleted && <Badge variant="destructive">Deleted</Badge>}
+                      </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-xs tabular-nums">
                       {board.payment ?? <span className="text-muted-foreground">—</span>}

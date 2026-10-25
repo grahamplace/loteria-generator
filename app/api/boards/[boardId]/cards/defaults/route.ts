@@ -1,7 +1,7 @@
 import { insertCardsWithinLimit } from '@/lib/boards/add-cards';
 import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db, boards, cards } from '@/db';
@@ -56,7 +56,11 @@ export async function POST(
 
     // Verify board ownership.
     const board = await db.query.boards.findFirst({
-      where: and(eq(boards.id, boardId), eq(boards.userId, session.user.id)),
+      where: and(
+        eq(boards.id, boardId),
+        eq(boards.userId, session.user.id),
+        isNull(boards.deletedAt)
+      ),
     });
     if (!board) {
       return NextResponse.json({ error: 'Board not found' }, { status: 404 });

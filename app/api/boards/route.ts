@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db, boards, userProfiles } from '@/db';
-import { eq, desc } from 'drizzle-orm';
+import { and, eq, desc, isNull } from 'drizzle-orm';
 import { createBoardSchema } from '@/lib/validations';
 import { isAdminEmail } from '@/lib/admin';
 import { DEFAULT_BOARD_NAME } from '@/lib/constants';
@@ -21,7 +21,7 @@ export async function GET() {
     }
 
     const userBoards = await db.query.boards.findMany({
-      where: eq(boards.userId, session.user.id),
+      where: and(eq(boards.userId, session.user.id), isNull(boards.deletedAt)),
       orderBy: [desc(boards.createdAt)],
       with: {
         cards: {

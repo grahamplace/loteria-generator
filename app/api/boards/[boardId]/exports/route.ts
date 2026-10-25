@@ -34,11 +34,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ boardId
 
     const board = await db.query.boards.findFirst({
       where: eq(boards.id, boardId),
-      columns: { id: true, userId: true, isUnlocked: true },
+      columns: { id: true, userId: true, isUnlocked: true, deletedAt: true },
     });
 
     const isAdmin = isAdminEmail(session.user.email);
-    if (!board || (board.userId !== session.user.id && !isAdmin)) {
+    // Admins can still export a deleted board, e.g. before restoring it.
+    if (!board || ((board.userId !== session.user.id || board.deletedAt) && !isAdmin)) {
       return NextResponse.json({ error: 'Board not found' }, { status: 404 });
     }
 

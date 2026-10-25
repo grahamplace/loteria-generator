@@ -41,7 +41,7 @@ export async function findEmptyBoardNudgeRecipients(
       locale: userProfiles.locale,
       boardId: sql<
         string | null
-      >`(select id::text from boards where boards.user_id = "user"."id" order by created_at desc limit 1)`.as(
+      >`(select id::text from boards where boards.user_id = "user"."id" and boards.deleted_at is null order by created_at desc limit 1)`.as(
         'board_id'
       ),
     })
@@ -51,7 +51,7 @@ export async function findEmptyBoardNudgeRecipients(
       and(
         gte(user.createdAt, gteDate),
         lt(user.createdAt, ltDate),
-        sql`(select count(*) from boards where boards.user_id = "user"."id") > 0`,
+        sql`(select count(*) from boards where boards.user_id = "user"."id" and boards.deleted_at is null) > 0`,
         sql`(select count(*) from cards where cards.user_id = "user"."id" and cards.is_default = false) = 0`,
         sql`not exists (select 1 from lifecycle_emails le where le.user_id = "user"."id" and le.type = 'empty_board_nudge')`
       )

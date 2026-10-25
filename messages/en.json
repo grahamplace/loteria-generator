@@ -692,7 +692,7 @@
     "rename": "Rename this board…",
     "delete": "Delete this board…",
     "deleteTitle": "Delete “{name}”?",
-    "deleteDescription": "This permanently deletes this board and all its cards. This cannot be undone.",
+    "deleteDescription": "This board and all its cards will be removed from your account.",
     "deleteConfirm": "Delete board",
     "cancel": "Cancel",
     "loading": "Loading your boards…",
