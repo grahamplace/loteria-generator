@@ -163,11 +163,7 @@ export function BoardThemeRow({
     <span className="min-w-0 flex-1">
       <span className="flex items-center gap-2 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
         {t('theme')}
-        {variant === 'compact' && (
-          <span className="ml-auto">
-            <DesignSwatches styles={design.shownStyles} overlap small />
-          </span>
-        )}
+        {variant === 'compact' && <DesignSwatches styles={design.shownStyles} small />}
       </span>
       <span
         className={cn(
@@ -190,7 +186,7 @@ export function BoardThemeRow({
       >
         <ThemeThumbnail id={design.selected} className="h-[34px] w-11" />
         {text}
-        <DesignSwatches styles={design.shownStyles} overlap />
+        <DesignSwatches styles={design.shownStyles} />
         <span className="flex shrink-0 items-center gap-0.5 text-[13px] font-semibold text-primary">
           {t('change')}
           <ChevronRight className="size-4" aria-hidden="true" />

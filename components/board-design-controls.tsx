@@ -192,16 +192,14 @@ export type DesignLayout = 'dialog' | 'sheet';
 const swatchKeys = ['backgroundColor', 'badgeColor', 'labelColor', 'borderColor'] as const;
 
 /**
- * The design's four main colors as small chips. `overlap` stacks them into a
- * compact cue for the Theme row. Resolved after mount: print colors come from CSS.
+ * The design's four main colors as small chips. `small` suits the Theme row's
+ * label line. Resolved after mount: print colors come from CSS.
  */
 export function DesignSwatches({
   styles,
-  overlap = false,
   small = false,
 }: {
   styles?: BoardStyleOptions | null;
-  overlap?: boolean;
   small?: boolean;
 }) {
   const [values, setValues] = useState<BoardDesignValues | null>(null);
@@ -209,7 +207,7 @@ export function DesignSwatches({
     setValues(editableBoardStyle(styles ?? {}));
   }, [styles]);
   return (
-    <span className={cn('flex shrink-0', overlap ? '-space-x-1' : 'gap-0.5')} aria-hidden="true">
+    <span className="flex shrink-0 gap-0.5" aria-hidden="true">
       {values &&
         swatchKeys.map((key) => (
           <span
@@ -217,8 +215,7 @@ export function DesignSwatches({
             style={{ backgroundColor: values[key] }}
             className={cn(
               'rounded-full border border-foreground/15',
-              small ? 'size-3' : 'size-3.5',
-              overlap && 'ring-2 ring-background'
+              small ? 'size-3' : 'size-3.5'
             )}
           />
         ))}
