@@ -138,7 +138,7 @@ test('desktop design opens from the Theme row beside the preview and follows his
   );
   await expect(dialog.getByRole('button', { name: 'Customize colors & font' })).toHaveAttribute(
     'aria-expanded',
-    'false'
+    'true'
   );
   await page.goBack();
   await expect(dialog).toHaveCount(0);
@@ -646,7 +646,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   );
   expect((await borderColorSaved).ok()).toBe(true);
   await expect(design.getByRole('combobox', { name: 'Font', exact: true })).toBeEnabled();
-  // ?design=1 survives the reload, and Customize opens on its own for a custom design.
+  // ?design=1 survives the reload with the custom design in Customize.
   await page.reload();
   await expect(design.getByRole('button', { name: 'Custom', exact: true })).toHaveAttribute(
     'aria-pressed',
@@ -708,8 +708,7 @@ test('mobile custom controls are compact, validate colors, and preserve the save
     name: 'Personalizar colores y tipografía',
     exact: true,
   });
-  await expect(customize).toHaveAttribute('aria-expanded', 'false');
-  await customize.click();
+  await expect(customize).toHaveAttribute('aria-expanded', 'true');
   const background = design.getByRole('textbox', { name: 'Fondo', exact: true });
   // Rows are phone-sized and the hex field is large enough that iOS will not zoom.
   const swatch = design.getByLabel('Elegir color: Fondo', { exact: true });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type Ref, type RefObject } from 'react';
+import { useId, useState, type Ref, type RefObject } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight, Loader2, Maximize2, Palette, X } from 'lucide-react';
 import type { BoardThemeId } from '@/lib/themes/presets';
@@ -71,7 +71,10 @@ export function DesignSaveStatus({ design }: { design: BoardDesign }) {
   );
 }
 
-/** Theme tiles plus the collapsible Customize card, shared by the dialog and the sheet. */
+/**
+ * The Customize card (open by default) and, below it, the theme tiles as
+ * starting points that fill in its values. Shared by the dialog and the sheet.
+ */
 export function BoardDesignEditor({
   design,
   boardName,
@@ -82,8 +85,8 @@ export function BoardDesignEditor({
   layout: DesignLayout;
 }) {
   const t = useTranslations('Themes.Builder');
-  // Opens on its own for a custom design, the one place its controls matter most.
-  const [customizeOpen, setCustomizeOpen] = useState(design.selected === 'custom');
+  const [customizeOpen, setCustomizeOpen] = useState(true);
+  const themesHeadingId = useId();
   const [pending, setPending] = useState<BoardThemeId | null>(null);
 
   async function select(id: BoardThemeId) {
@@ -99,14 +102,8 @@ export function BoardDesignEditor({
   }
 
   return (
-    <fieldset disabled={design.savingDesign} className="min-w-0 space-y-5">
+    <fieldset disabled={design.savingDesign} className="min-w-0 space-y-6">
       <legend className="sr-only">{t('title')}</legend>
-      <BoardThemeGrid
-        selected={design.selected}
-        pending={pending}
-        layout={layout === 'dialog' ? 'grid' : 'list'}
-        onSelect={(id) => void select(id)}
-      />
       <BoardDesignControls
         styles={design.shownStyles}
         boardName={boardName}
@@ -118,6 +115,20 @@ export function BoardDesignEditor({
         onChange={design.commitDesign}
         onShowTitleChange={(showTitle) => void design.setShowTitle(showTitle)}
       />
+      <section aria-labelledby={themesHeadingId} className="space-y-3">
+        <div>
+          <h3 id={themesHeadingId} className="text-sm font-semibold">
+            {t('themesHeading')}
+          </h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t('themesHint')}</p>
+        </div>
+        <BoardThemeGrid
+          selected={design.selected}
+          pending={pending}
+          layout={layout === 'dialog' ? 'grid' : 'list'}
+          onSelect={(id) => void select(id)}
+        />
+      </section>
     </fieldset>
   );
 }
@@ -235,7 +246,6 @@ export function BoardDesignDialog({
             <DesignSaveStatus design={design} />
           </div>
           <BoardPreviewImage state={preview} fitViewport />
-          <p className="text-center text-xs text-muted-foreground">{t('cardsNeverChange')}</p>
         </section>
         <section className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-start justify-between gap-3 px-6 pt-5 pb-3">
@@ -260,8 +270,7 @@ export function BoardDesignDialog({
           <div className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-1 pb-4">
             <BoardDesignEditor design={design} boardName={boardName} layout="dialog" />
           </div>
-          <div className="flex items-center justify-between gap-3 border-t border-border px-6 py-3.5">
-            <span className="text-xs text-muted-foreground">{t('savesAutomatically')}</span>
+          <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-3.5">
             <DialogClose asChild>
               <Button type="button" className="min-h-11 px-6 touch-manipulation transition-colors">
                 {t('done')}
@@ -333,7 +342,6 @@ export function BoardDesignSheetView({
             {t('livePreview')}
           </p>
           <p className="truncate font-bold">{themeName(design.selected)}</p>
-          <p className="text-xs text-muted-foreground">{t('cardsStaySame')}</p>
         </div>
         <Button
           type="button"

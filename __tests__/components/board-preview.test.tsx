@@ -300,7 +300,10 @@ describe('automatic board preview', () => {
     render(view({ cards, styles: { presetId: 'birthday', showTitle: true } }));
     await screen.findByRole('img', { name: previewName });
     expect(cards[0].number).toBe(54);
-    expect(screen.getByRole('button', { name: 'Previous preview page' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Previous preview page' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     for (let page = 0; page < 4; page++) {
       const first = page * 16 + 1;
       const last = Math.min(first + 15, 54);
@@ -315,7 +318,10 @@ describe('automatic board preview', () => {
       expect(screen.getByText(messages.Themes.Builder.fullPreview)).toBeVisible();
       if (page < 3) fireEvent.click(screen.getByRole('button', { name: 'Next preview page' }));
     }
-    expect(screen.getByRole('button', { name: 'Next preview page' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next preview page' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     expect(window.location.search).toBe('?previewPage=4');
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Previous preview page' }));

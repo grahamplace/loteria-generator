@@ -264,6 +264,11 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
   };
 }
 
+// aria-disabled, not disabled: a disabled button drops focus when the last page
+// is reached, and the focus trap's scripted refocus then shows a keyboard ring.
+const pageButtonClass =
+  'size-11 touch-manipulation transition-colors aria-disabled:cursor-default aria-disabled:opacity-50 aria-disabled:hover:bg-background aria-disabled:hover:text-foreground';
+
 export function BoardPreviewPagination({ state }: { state: ReturnType<typeof useBoardPreview> }) {
   const t = useTranslations('Themes.Builder');
   const { page, pageCount, firstNumber, lastNumber, goToPage } = state;
@@ -274,10 +279,10 @@ export function BoardPreviewPagination({ state }: { state: ReturnType<typeof use
         type="button"
         variant="outline"
         size="icon"
-        className="size-11 touch-manipulation transition-colors"
+        className={pageButtonClass}
         aria-label={t('previousPreviewPage')}
-        disabled={page === 0}
-        onClick={() => goToPage(page - 1)}
+        aria-disabled={page === 0}
+        onClick={() => page > 0 && goToPage(page - 1)}
       >
         <ChevronLeft aria-hidden="true" />
       </Button>
@@ -293,10 +298,10 @@ export function BoardPreviewPagination({ state }: { state: ReturnType<typeof use
         type="button"
         variant="outline"
         size="icon"
-        className="size-11 touch-manipulation transition-colors"
+        className={pageButtonClass}
         aria-label={t('nextPreviewPage')}
-        disabled={page === pageCount - 1}
-        onClick={() => goToPage(page + 1)}
+        aria-disabled={page === pageCount - 1}
+        onClick={() => page < pageCount - 1 && goToPage(page + 1)}
       >
         <ChevronRight aria-hidden="true" />
       </Button>

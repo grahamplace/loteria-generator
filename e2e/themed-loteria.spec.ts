@@ -170,9 +170,7 @@ test.describe('themed Lotería', () => {
     const titleToggle = design.getByRole('checkbox', {
       name: /Print the board name at the top/,
     });
-    const customize = design.getByRole('button', { name: 'Customize colors & font' });
     for (const showTitle of [false, true]) {
-      await customize.click();
       const saved = page.waitForResponse(
         (response) =>
           response.url().endsWith(`/api/boards/${board.id}`) &&
@@ -184,7 +182,6 @@ test.describe('themed Lotería', () => {
       await expect(titleToggle).toBeChecked({ checked: showTitle });
       // ?design=1 survives the reload; the saved setting does too.
       await page.reload();
-      await customize.click();
       await expect(titleToggle).toBeChecked({ checked: showTitle });
       await design.getByRole('button', { name: 'Done' }).click();
       await expect(design).toHaveCount(0);

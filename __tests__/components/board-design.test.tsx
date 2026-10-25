@@ -136,10 +136,13 @@ describe('desktop design dialog', () => {
       'true'
     );
     expect(within(dialog).getByRole('status')).toHaveTextContent('Saved');
-    expect(within(dialog).getByRole('button', { name: 'Customize colors & font' })).toHaveAttribute(
-      'aria-expanded',
-      'false'
-    );
+    // Colors and font come first and start open; themes are starting points below.
+    const customize = within(dialog).getByRole('button', { name: 'Customize colors & font' });
+    expect(customize).toHaveAttribute('aria-expanded', 'true');
+    const themes = within(dialog).getByRole('region', { name: 'Or start from a theme' });
+    expect(
+      customize.compareDocumentPosition(themes) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
     expect(
       within(dialog).getByRole('img', { name: messages.Themes.Builder.previewAlt })
     ).toBeVisible();
@@ -183,7 +186,7 @@ describe('desktop design dialog', () => {
     expect(screen.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeVisible();
   });
 
-  it('opens Customize for a custom design and saves the board-name setting', async () => {
+  it('shows a custom design in Customize and saves the board-name setting', async () => {
     window.history.replaceState(null, '', '/?design=1');
     const onSave = vi.fn(async () => true);
     view({ styles: { presetId: 'custom', backgroundColor: '#123456', showTitle: true }, onSave });
@@ -211,7 +214,6 @@ describe('desktop design dialog', () => {
     const onSave = vi.fn(async () => true);
     view({ onSave });
     const dialog = await screen.findByRole('dialog', { name: 'Design your set' });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Customize colors & font' }));
     const background = within(dialog).getByRole('textbox', { name: 'Background' });
     await waitFor(() => expect(renderBoard).toHaveBeenCalled());
     vi.useFakeTimers();
@@ -257,7 +259,6 @@ describe('desktop design dialog', () => {
     window.history.replaceState(null, '', '/?design=1');
     view({ onSave: async () => false });
     const dialog = await screen.findByRole('dialog', { name: 'Design your set' });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Customize colors & font' }));
     const background = within(dialog).getByRole('textbox', { name: 'Background' });
     fireEvent.change(background, { target: { value: '#123456' } });
     fireEvent.keyDown(background, { key: 'Enter' });
@@ -275,7 +276,6 @@ describe('desktop design dialog', () => {
     window.history.replaceState(null, '', '/?design=1');
     view();
     const dialog = await screen.findByRole('dialog', { name: 'Design your set' });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Customize colors & font' }));
     const field = within(dialog).getByRole('textbox', { name: 'Background' });
     fireEvent.change(field, { target: { value: '#12' } });
     const leaving = new Event('beforeunload', { cancelable: true });
@@ -304,9 +304,6 @@ describe('phone design view', () => {
     await waitFor(() =>
       expect(within(designView).getByRole('button', { name: 'Back to preview' })).toHaveFocus()
     );
-    expect(
-      within(designView).getByText('Your cards stay the same. Only the board changes.')
-    ).toBeVisible();
     fireEvent.click(within(designView).getByRole('button', { name: 'Birthday' }));
     await waitFor(() =>
       expect(within(designView).getByRole('button', { name: 'Birthday' })).toHaveAttribute(
