@@ -51,8 +51,9 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
   const needsDetail = expanded || inlineZoom > 100;
   const expandTrigger = useRef<HTMLElement | null>(null);
   const detailImages = useRef(new Map<string, Promise<HTMLImageElement>>());
-  const detailCache = useRef<{ signature: string; src: string } | null>(null);
-  const [detail, setDetail] = useState<{ signature: string; src: string } | null>(null);
+  // Detailed renders by page signature: in-flight or finished, so paging never renders twice.
+  const detailRenders = useRef(new Map<string, { promise: Promise<string>; src?: string }>());
+  const [detailSources, setDetailSources] = useState<ReadonlyMap<string, string>>(new Map());
   const [detailRendering, setDetailRendering] = useState(false);
   const [detailError, setDetailError] = useState('');
   const [detailAttempt, setDetailAttempt] = useState(0);
@@ -80,7 +81,16 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
     page * MIN_EXPORT_CARD_COUNT,
     (page + 1) * MIN_EXPORT_CARD_COUNT
   );
-  const signature = JSON.stringify([pageCards, styles, boardName, locale]);
+  const pageSignatures = Array.from({ length: pageCount }, (_, index) =>
+    JSON.stringify([
+      complete.slice(index * MIN_EXPORT_CARD_COUNT, (index + 1) * MIN_EXPORT_CARD_COUNT),
+      styles,
+      boardName,
+      locale,
+    ])
+  );
+  const signature = pageSignatures[page];
+  const allSignatures = JSON.stringify(pageSignatures);
   const imageSources = JSON.stringify(complete.map((card) => card.illustration));
 
   // Removing cards can remove the current page. Keep the URL on a valid page.
@@ -125,51 +135,87 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
       return;
     }
     setDetailError('');
-    if (detailCache.current?.signature === signature) {
-      setDetailRendering(false);
-      return;
+    const signatures: string[] = JSON.parse(allSignatures);
+    const renders = detailRenders.current;
+    const activeSignatures = new Set(signatures);
+    for (const key of renders.keys()) {
+      if (!activeSignatures.has(key)) renders.delete(key);
     }
-    let cancelled = false;
-    setDetailRendering(true);
-    // Both inline zoom and full-screen expansion share the current detailed page.
-    const detailCards = readyCards
-      .slice(page * MIN_EXPORT_CARD_COUNT, (page + 1) * MIN_EXPORT_CARD_COUNT)
-      .map((card) => ({
-        ...card,
-        illustration: getImageProps({
-          ...cardImageProps(card.illustration, CARD_DETAIL_THUMB_WIDTH),
-          width: 400,
-          height: 600,
-          alt: '',
-        }).props.src,
-      }));
+    setDetailSources((current) =>
+      [...current.keys()].every((key) => activeSignatures.has(key))
+        ? current
+        : new Map([...current].filter(([key]) => activeSignatures.has(key)))
+    );
+    // Inline zoom, full-screen expansion, and every page share one set of detailed renders.
+    const detailCards = readyCards.map((card) => ({
+      ...card,
+      illustration: getImageProps({
+        ...cardImageProps(card.illustration, CARD_DETAIL_THUMB_WIDTH),
+        width: 400,
+        height: 600,
+        alt: '',
+      }).props.src,
+    }));
     const activeImages = new Set(detailCards.map((card) => card.illustration));
     for (const src of detailImages.current.keys()) {
       if (!activeImages.has(src)) detailImages.current.delete(src);
     }
-    renderBoardToCanvas(detailCards, styles ?? {}, styles?.showTitle ? boardName : undefined, {
-      scale: 1,
-      imageCache: detailImages.current,
-    })
-      .then((canvas) => {
-        if (!cancelled) {
-          const rendered = { signature, src: canvas.toDataURL('image/png') };
-          detailCache.current = rendered;
-          setDetail(rendered);
+    function renderPage(index: number) {
+      const key = signatures[index];
+      const existing = renders.get(key);
+      if (existing) return existing.promise;
+      const entry: { promise: Promise<string>; src?: string } = {
+        promise: renderBoardToCanvas(
+          detailCards.slice(index * MIN_EXPORT_CARD_COUNT, (index + 1) * MIN_EXPORT_CARD_COUNT),
+          styles ?? {},
+          styles?.showTitle ? boardName : undefined,
+          { scale: 1, imageCache: detailImages.current }
+        ).then((canvas) => {
+          const src = canvas.toDataURL('image/png');
+          entry.src = src;
+          // A finished render stays valid for its signature even if the user moved on.
+          if (renders.get(key) === entry) {
+            setDetailSources((current) => new Map(current).set(key, src));
+          }
+          return src;
+        }),
+      };
+      entry.promise.catch(() => {
+        if (renders.get(key) === entry) renders.delete(key);
+      });
+      renders.set(key, entry);
+      return entry.promise;
+    }
+
+    let cancelled = false;
+    setDetailRendering(!renders.get(signature)?.src);
+    renderPage(page)
+      .then(async () => {
+        if (cancelled) return;
+        setDetailRendering(false);
+        // Warm the other pages, nearest first, so paging shows full detail immediately.
+        const others = signatures
+          .map((_, index) => index)
+          .filter((index) => index !== page)
+          .sort((a, b) => Math.abs(a - page) - Math.abs(b - page));
+        for (const index of others) {
+          if (cancelled) return;
+          // A failed warm-up retries on demand when the user opens that page.
+          await renderPage(index).catch(() => {});
         }
       })
       .catch(() => {
-        if (!cancelled) setDetailError(t('previewError'));
-      })
-      .finally(() => {
-        if (!cancelled) setDetailRendering(false);
+        if (!cancelled) {
+          setDetailError(t('previewError'));
+          setDetailRendering(false);
+        }
       });
     return () => {
       cancelled = true;
     };
-    // Zoom uses the same full-resolution render; only print inputs trigger new work.
+    // Zoom uses the same full-resolution renders; only print inputs trigger new work.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needsDetail, signature, detailAttempt]);
+  }, [needsDetail, allSignatures, page, detailAttempt]);
 
   return {
     preview,
@@ -185,7 +231,7 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
       window.history.pushState(null, '', url);
     },
     zoomLevels: previewZoomLevels,
-    detailPreview: detail?.signature === signature ? detail.src : null,
+    detailPreview: detailSources.get(signature) ?? null,
     detailRendering,
     detailError,
     retryDetail: () => setDetailAttempt((n) => n + 1),
