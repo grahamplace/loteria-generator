@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { GripVertical, AlertTriangle, Plus, Sparkles, Unlock, Check } from 'lucide-react';
+import { GripVertical, AlertTriangle, Layers, Plus, Sparkles, Unlock, Check } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,6 +73,8 @@ interface BoardCardGridProps {
   onReorderCards: (startIndex: number, endIndex: number) => void;
   onAddMore?: () => void;
   onAddClassic?: () => void;
+  /** New photos will be illustrated; the Add custom tile says so with a sparkle. */
+  illustrate?: boolean;
   isLocked?: boolean;
   atCardLimit?: boolean;
   onUnlockRequired?: () => void;
@@ -215,6 +217,7 @@ export function BoardCardGrid({
   onReorderCards,
   onAddMore,
   onAddClassic,
+  illustrate = false,
   isLocked = false,
   atCardLimit = false,
   onUnlockRequired,
@@ -408,7 +411,8 @@ export function BoardCardGrid({
                       <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center">
                         <Plus className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-semibold uppercase tracking-wider">
+                      <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider">
+                        {illustrate && <Sparkles className="size-3" aria-hidden="true" />}
                         {t('addMore')}
                       </span>
                     </div>
@@ -428,10 +432,7 @@ export function BoardCardGrid({
                   >
                     <div className="aspect-[2/3] flex flex-col items-center justify-center gap-1.5">
                       <div className="w-8 h-8 rounded-full bg-secondary/15 border border-secondary/40 flex items-center justify-center">
-                        <Sparkles
-                          className="w-4 h-4 text-secondary-foreground"
-                          aria-hidden="true"
-                        />
+                        <Layers className="w-4 h-4 text-secondary-foreground" aria-hidden="true" />
                       </div>
                       <span className="text-[10px] font-semibold uppercase tracking-wider">
                         {t('addClassicTile')}

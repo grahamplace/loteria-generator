@@ -472,7 +472,7 @@
     },
     "DefaultCardsPicker": {
       "title": "Cartas clásicas de Lotería",
-      "subtitle": "Agrega imágenes tradicionales a tu tablero — sin subir fotos.",
+      "subtitle": "Agrega cartas tradicionales de lotería a tu juego — sin subir fotos.",
       "addButton": "Agregar {count, plural, one {# clásica} other {# clásicas}} al tablero",
       "alreadyAdded": "Ya agregada",
       "cardLimitNote": "Has alcanzado el límite de {limit} cartas para este tablero.",

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import { Link, useRouter } from '@/i18n/navigation';
-import { Lock, Sparkles, Unlock, Upload } from 'lucide-react';
+import { Layers, Lock, Unlock, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -347,6 +347,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
                     onReorderCards={reorderCards}
                     onAddMore={() => actionBarRef.current?.triggerFileSelect()}
                     onAddClassic={() => setDefaultsPickerOpen(true)}
+                    illustrate={(pendingPhotoMode ?? board.photoMode) !== 'original'}
                     isLocked={!board.isUnlocked}
                     atCardLimit={atCardLimit}
                     onUnlockRequired={handleCardLimitReached}
@@ -375,7 +376,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
                         onClick={() => setDefaultsPickerOpen(true)}
                         className="px-5 py-3 rounded-lg bg-secondary/15 border border-secondary/40 text-foreground text-sm font-semibold flex items-center gap-2 hover:bg-secondary/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       >
-                        <Sparkles className="w-4 h-4" aria-hidden="true" />
+                        <Layers className="w-4 h-4" aria-hidden="true" />
                         {t('emptyStateAddClassic')}
                       </button>
                     </div>

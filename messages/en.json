@@ -466,7 +466,7 @@
     },
     "DefaultCardsPicker": {
       "title": "Classic Lotería cards",
-      "subtitle": "Add traditional images to your board — no upload needed.",
+      "subtitle": "Add traditional Lotería cards to your set — no upload needed.",
       "addButton": "Add {count, plural, one {# classic} other {# classics}} to board",
       "alreadyAdded": "Already added",
       "cardLimitNote": "You’ve hit the {limit}-card limit for this board.",
