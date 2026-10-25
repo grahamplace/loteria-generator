@@ -74,15 +74,17 @@ test.describe('themed Lotería', () => {
     const data = await (await page.request.get(`/api/boards/${starter.id}`)).json();
     expect(data.board.photoMode).toBe('original');
     expect(data.board.styleOptions).toMatchObject({ presetId: 'halloween', showTitle: true });
+    // Design lives behind the Theme row beside the preview.
+    await page.getByRole('button', { name: 'Cambiar tema, actual: Halloween' }).click();
+    const design = page.getByRole('dialog', { name: 'Diseña tu juego' });
+    await design.getByRole('button', { name: 'Personalizar colores y tipografía' }).click();
     await expect(
-      page.getByRole('checkbox', { name: 'Mostrar título en las tablas' })
-    ).toBeVisible();
-    await expect(
-      page.getByRole('checkbox', { name: 'Mostrar título en las tablas' })
+      design.getByRole('checkbox', { name: /Imprimir el nombre del juego arriba/ })
     ).toBeChecked();
+    await design.getByRole('button', { name: 'Listo' }).click();
     await expect(
       page
-        .getByRole('region', { name: 'Diseña tu juego' })
+        .getByRole('region', { name: 'Suelta fotos para agregar cartas' })
         .getByRole('switch', { name: 'Ilustrar mis fotos' })
     ).not.toBeChecked();
   });
@@ -135,11 +137,16 @@ test.describe('themed Lotería', () => {
     await expect(editor).toBeVisible();
     await editor.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(editor).toBeHidden();
-    await page.getByRole('radio', { name: 'Christmas', exact: true }).focus();
-    await page.getByRole('radio', { name: 'Christmas', exact: true }).press('Space');
-    await expect(page.getByRole('radio', { name: 'Christmas', exact: true })).toBeEnabled();
+    await page.getByRole('button', { name: 'Change theme, currently Halloween' }).click();
+    const design = page.getByRole('dialog', { name: 'Design your set' });
+    await design.getByRole('button', { name: 'Christmas', exact: true }).click();
+    await expect(design.getByRole('button', { name: 'Christmas', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    await expect(design.getByRole('button', { name: 'Christmas', exact: true })).toBeEnabled();
     await expect(
-      page.getByRole('img', { name: 'Your board rendered with the selected theme', exact: true })
+      design.getByRole('img', { name: 'Your board rendered with the selected theme', exact: true })
     ).toBeVisible();
     await page.screenshot({ path: '.scratch/theme-work/builder-desktop.png', fullPage: true });
 
@@ -159,10 +166,13 @@ test.describe('themed Lotería', () => {
       preserveOriginal: true,
       label: 'Mi foto',
     });
-    await page.reload();
-    const titleToggle = page.getByRole('checkbox', { name: 'Show title on boards', exact: true });
-    await expect(titleToggle).toBeVisible();
+    await page.goto(`/boards/${board.id}?design=1`);
+    const titleToggle = design.getByRole('checkbox', {
+      name: /Print the board name at the top/,
+    });
+    const customize = design.getByRole('button', { name: 'Customize colors & font' });
     for (const showTitle of [false, true]) {
+      await customize.click();
       const saved = page.waitForResponse(
         (response) =>
           response.url().endsWith(`/api/boards/${board.id}`) &&
@@ -172,12 +182,15 @@ test.describe('themed Lotería', () => {
       await titleToggle.click();
       expect((await saved).ok()).toBe(true);
       await expect(titleToggle).toBeChecked({ checked: showTitle });
+      // ?design=1 survives the reload; the saved setting does too.
       await page.reload();
+      await customize.click();
       await expect(titleToggle).toBeChecked({ checked: showTitle });
-      const preview = page.getByRole('img', {
-        name: 'Your board rendered with the selected theme',
-        exact: true,
-      });
+      await design.getByRole('button', { name: 'Done' }).click();
+      await expect(design).toHaveCount(0);
+      const preview = page
+        .getByRole('complementary', { name: 'Live preview' })
+        .getByRole('img', { name: 'Your board rendered with the selected theme', exact: true });
       await expect(preview).toBeVisible();
       await preview.screenshot({
         path: `.scratch/theme-work/consumer-title-${showTitle ? 'on' : 'off'}-preview.png`,
@@ -187,7 +200,9 @@ test.describe('themed Lotería', () => {
       const pdf = await download;
       expect(pdf.suggestedFilename()).toMatch(/\.pdf$/);
       await pdf.saveAs(`.scratch/theme-work/consumer-title-${showTitle ? 'on' : 'off'}.pdf`);
+      await page.getByRole('button', { name: /^Change theme, currently / }).click();
     }
+    await design.getByRole('button', { name: 'Done' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 });
