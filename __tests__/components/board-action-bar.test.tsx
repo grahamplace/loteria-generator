@@ -21,12 +21,11 @@ function renderBar(props: { cardCount: number; maxCards: number; isUnlocked: boo
   render(
     <BoardActionBar
       {...props}
-      boardId="board-1"
       onFilesSelected={vi.fn()}
-      processedCount={props.cardCount}
       processingCount={0}
-      cards={[]}
-      boardName="Test"
+      photoMode="illustrated"
+      photoModeSaving={false}
+      onPhotoModeChange={vi.fn()}
       onUnlockRequired={onUnlockRequired}
       onOpenDefaults={vi.fn()}
     />
@@ -36,7 +35,7 @@ function renderBar(props: { cardCount: number; maxCards: number; isUnlocked: boo
 
 const unlockLabel = `unlockMoreCards:${JSON.stringify({ price: BOARD_UNLOCK_PRICE_DISPLAY })}`;
 
-describe('BoardActionBar mobile footer', () => {
+describe('BoardActionBar card limit', () => {
   it('swaps Choose photos for an Unlock button at the free limit', () => {
     const { onUnlockRequired } = renderBar({ cardCount: 4, maxCards: 4, isUnlocked: false });
 
@@ -57,11 +56,5 @@ describe('BoardActionBar mobile footer', () => {
 
     expect(screen.getByRole('button', { name: 'choosePhotos' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: unlockLabel })).not.toBeInTheDocument();
-  });
-
-  it('no longer shows a Saved indicator', () => {
-    renderBar({ cardCount: 3, maxCards: 4, isUnlocked: false });
-
-    expect(screen.queryByText('mobileSaved')).not.toBeInTheDocument();
   });
 });

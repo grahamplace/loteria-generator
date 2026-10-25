@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { safeRedirectPath } from '@/lib/safe-redirect';
+import { Link } from '@/i18n/navigation';
 import posthog from 'posthog-js';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { signUp, signIn } from '@/lib/auth-client';
 import { signUpErrorKey } from '@/lib/auth-errors';
 import {
@@ -30,6 +31,11 @@ import { LanguageSwitch } from '@/components/language-switch';
 export default function SignUpPage() {
   const t = useTranslations('Auth.SignUp');
   const router = useRouter();
+  const locale = useLocale();
+  const safeTarget = safeRedirectPath(
+    useSearchParams().get('callbackUrl'),
+    locale === 'es-MX' ? '/es/start' : '/start'
+  );
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -70,7 +76,7 @@ export default function SignUpPage() {
         }
         posthog.capture('signed_up', { method: 'email' });
         fireSignupConversion();
-        router.push('/start');
+        router.push(safeTarget);
       }
     } catch (_err) {
       setError(t('errors.unexpectedError'));
@@ -89,7 +95,7 @@ export default function SignUpPage() {
       setPendingSignupConversion();
       await signIn.social({
         provider: 'google',
-        callbackURL: '/start',
+        callbackURL: safeTarget,
       });
     } catch (_err) {
       clearPendingSignupConversion();
@@ -196,7 +202,10 @@ export default function SignUpPage() {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             {t('haveAccountPrompt')}{' '}
-            <Link href="/sign-in" className="text-primary hover:underline font-medium">
+            <Link
+              href={`/sign-in?callbackUrl=${encodeURIComponent(safeTarget)}`}
+              className="text-primary hover:underline font-medium"
+            >
               {t('haveAccountCta')}
             </Link>
           </p>

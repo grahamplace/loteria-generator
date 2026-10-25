@@ -2,14 +2,11 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSyncExternalStore, type ComponentProps } from 'react';
-import { BoardAppearance } from '@/components/board-appearance';
-import type { BoardStyleOptions } from '@/lib/themes/presets';
+import { BoardPreview } from '@/components/board-preview';
 import { renderBoardToCanvas } from '@/lib/generate-boards';
 import messages from '@/messages/en.json';
 import { installPrintPalettes } from '../helpers/print-palettes';
 
-vi.mock('@/hooks/use-mobile', () => ({ useIsMobile: () => false }));
-vi.mock('@/lib/themes/fonts', () => ({ loadPrintFont: async () => {} }));
 vi.mock('@/lib/generate-boards', () => ({ renderBoardToCanvas: vi.fn() }));
 vi.mock('next/navigation', () => ({
   useSearchParams: () => {
@@ -31,16 +28,10 @@ function canvas(value: string) {
   output.toDataURL = () => `data:image/png;base64,${btoa(value)}`;
   return output;
 }
-function view(props: Partial<ComponentProps<typeof BoardAppearance>> = {}) {
+function view(props: Partial<ComponentProps<typeof BoardPreview>> = {}) {
   return (
     <NextIntlClientProvider locale="en" timeZone="UTC" messages={messages}>
-      <BoardAppearance
-        photoMode="illustrated"
-        boardName="Our party"
-        cards={[]}
-        onSave={async () => true}
-        {...props}
-      />
+      <BoardPreview boardName="Our party" cards={[]} {...props} />
     </NextIntlClientProvider>
   );
 }
@@ -91,7 +82,7 @@ describe('automatic board preview', () => {
     );
     expect(window.location.search).toBe('?previewScale=200');
     expect(renderBoard).toHaveBeenCalledTimes(4);
-    fireEvent.click(screen.getByRole('button', { name: 'Full Screen preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
     const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
     expect(within(dialog).getByRole('img')).toHaveAttribute(
       'src',
@@ -135,7 +126,7 @@ describe('automatic board preview', () => {
     await screen.findByRole('img', { name: previewName });
     expect(renderBoard).toHaveBeenCalledTimes(1);
     renderBoard.mockResolvedValueOnce(canvas('detailed'));
-    fireEvent.click(screen.getByRole('button', { name: 'Full Screen preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
     const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
     await waitFor(() =>
       expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('detailed').toDataURL())
@@ -152,16 +143,61 @@ describe('automatic board preview', () => {
     expect(renderBoard).toHaveBeenCalledTimes(2);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close expanded preview' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'Full Screen preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
     await screen.findByRole('dialog', { name: 'Board preview' });
     expect(renderBoard).toHaveBeenCalledTimes(2);
+  });
+
+  it('pages the full-screen preview with arrow keys using pre-rendered detail', async () => {
+    const cards = Array.from({ length: 20 }, (_, i) => ({
+      id: String(i + 1),
+      number: i + 1,
+      label: `Card ${i + 1}`,
+      illustration: `/card-${i + 1}.webp`,
+    }));
+    renderBoard.mockImplementation(async (pageCards, _style, _title, options) =>
+      canvas(`${options?.scale === 1 ? 'detail' : 'thumbnail'}-${pageCards[0]?.number}`)
+    );
+    render(view({ cards }));
+    await screen.findByRole('img', { name: previewName });
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
+    await waitFor(() =>
+      expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('detail-1').toDataURL())
+    );
+    // The second page is warmed in the background after the first.
+    await waitFor(() =>
+      expect(renderBoard).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.objectContaining({ number: 17 })]),
+        expect.anything(),
+        undefined,
+        expect.objectContaining({ scale: 1 })
+      )
+    );
+    await act(async () => {});
+    const detailCalls = () => renderBoard.mock.calls.filter(([, , , o]) => o?.scale === 1).length;
+    const before = detailCalls();
+
+    fireEvent.keyDown(within(dialog).getByRole('button', { name: 'Close expanded preview' }), {
+      key: 'ArrowRight',
+    });
+    expect(window.location.search).toBe('?previewZoom=100&previewPage=2');
+    expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('detail-17').toDataURL());
+    expect(within(dialog).getByText('Cards 17–20')).toBeVisible();
+
+    fireEvent.keyDown(within(dialog).getByRole('region'), { key: 'ArrowRight' });
+    expect(window.location.search).toBe('?previewZoom=100&previewPage=2');
+    fireEvent.keyDown(within(dialog).getByRole('region'), { key: 'ArrowLeft' });
+    expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('detail-1').toDataURL());
+    expect(detailCalls()).toBe(before);
+    await act(async () => {});
   });
 
   it('keeps the thumbnail available when a detailed render fails and supports retry', async () => {
     render(view());
     await screen.findByRole('img', { name: previewName });
     renderBoard.mockRejectedValueOnce(new Error('Detailed image failed'));
-    fireEvent.click(screen.getByRole('button', { name: 'Full Screen preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
     const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(
       messages.Themes.Builder.previewError
@@ -178,20 +214,6 @@ describe('automatic board preview', () => {
     expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('protects an unfinished color edit and lets Escape restore the saved color', async () => {
-    render(view({ styles: { presetId: 'halloween' } }));
-    fireEvent.click(screen.getByRole('button', { name: 'Customize' }));
-    const field = await screen.findByRole('textbox', { name: 'Background' });
-    fireEvent.change(field, { target: { value: '#12' } });
-    const leaving = new Event('beforeunload', { cancelable: true });
-    window.dispatchEvent(leaving);
-    expect(leaving.defaultPrevented).toBe(true);
-    fireEvent.keyDown(field, { key: 'Escape' });
-    expect(field).toHaveValue('#21152e');
-    const restored = new Event('beforeunload', { cancelable: true });
-    window.dispatchEvent(restored);
-    expect(restored.defaultPrevented).toBe(false);
-  });
   it('shows the selected design even before the first photo is ready', async () => {
     render(view({ styles: { presetId: 'halloween', showTitle: true } }));
     expect(await screen.findByRole('img', { name: previewName })).toBeVisible();
@@ -278,7 +300,10 @@ describe('automatic board preview', () => {
     render(view({ cards, styles: { presetId: 'birthday', showTitle: true } }));
     await screen.findByRole('img', { name: previewName });
     expect(cards[0].number).toBe(54);
-    expect(screen.getByRole('button', { name: 'Previous preview page' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Previous preview page' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     for (let page = 0; page < 4; page++) {
       const first = page * 16 + 1;
       const last = Math.min(first + 15, 54);
@@ -293,7 +318,10 @@ describe('automatic board preview', () => {
       expect(screen.getByText(messages.Themes.Builder.fullPreview)).toBeVisible();
       if (page < 3) fireEvent.click(screen.getByRole('button', { name: 'Next preview page' }));
     }
-    expect(screen.getByRole('button', { name: 'Next preview page' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next preview page' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     expect(window.location.search).toBe('?previewPage=4');
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Previous preview page' }));
@@ -327,70 +355,5 @@ describe('automatic board preview', () => {
     expect(screen.queryByRole('navigation', { name: 'Preview pages' })).not.toBeInTheDocument();
     expect(renderBoard.mock.lastCall?.[2]).toBeUndefined();
     expect(renderBoard.mock.lastCall?.[0].map((card) => card.number)).toEqual([1, 2, 3, 4]);
-  });
-});
-
-describe('live color edits', () => {
-  it('shows typed colors immediately and saves them once typing settles', async () => {
-    window.history.replaceState(null, '', '/?design=1');
-    const onDraftStylesChange = vi.fn();
-    // Like the board page, show the saved settings once a save succeeds.
-    const onSave = vi.fn(async (settings: { styleOptions?: BoardStyleOptions }) => {
-      rerender(view({ styles: settings.styleOptions, onSave, onDraftStylesChange }));
-      return true;
-    });
-    const { rerender } = render(
-      view({ styles: { presetId: 'halloween', showTitle: true }, onSave, onDraftStylesChange })
-    );
-    const background = await screen.findByRole('textbox', { name: 'Background' });
-    vi.useFakeTimers();
-    try {
-      fireEvent.change(background, { target: { value: '#12345' } });
-      expect(onDraftStylesChange).not.toHaveBeenCalledWith(
-        expect.objectContaining({ backgroundColor: '#12345' })
-      );
-      fireEvent.change(background, { target: { value: '#123456' } });
-      expect(onDraftStylesChange).toHaveBeenLastCalledWith(
-        expect.objectContaining({ presetId: 'custom', backgroundColor: '#123456' })
-      );
-      expect(screen.getByRole('radio', { name: 'Custom' })).toBeChecked();
-      expect(background).toBeEnabled();
-      expect(onSave).not.toHaveBeenCalled();
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(400);
-      });
-      expect(onSave).toHaveBeenCalledTimes(1);
-      expect(onSave).toHaveBeenCalledWith({
-        styleOptions: expect.objectContaining({ presetId: 'custom', backgroundColor: '#123456' }),
-      });
-      // Committing the color already saved does not write it again.
-      fireEvent.blur(background);
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(400);
-      });
-      expect(onSave).toHaveBeenCalledTimes(1);
-      expect(onDraftStylesChange).toHaveBeenLastCalledWith(null);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('reverts to the saved design when a live edit fails to save', async () => {
-    window.history.replaceState(null, '', '/?design=1');
-    const onDraftStylesChange = vi.fn();
-    render(
-      view({
-        styles: { presetId: 'halloween', showTitle: true },
-        onSave: async () => false,
-        onDraftStylesChange,
-      })
-    );
-    const background = await screen.findByRole('textbox', { name: 'Background' });
-    fireEvent.change(background, { target: { value: '#123456' } });
-    fireEvent.keyDown(background, { key: 'Enter' });
-    await waitFor(() => expect(onDraftStylesChange).toHaveBeenLastCalledWith(null));
-    expect(screen.getByRole('radio', { name: 'Halloween' })).toBeChecked();
-    expect(background).toHaveValue('#21152e');
-    expect(await screen.findByText('Could not save. Please try again.')).toBeVisible();
   });
 });

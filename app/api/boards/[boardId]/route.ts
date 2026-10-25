@@ -1,9 +1,10 @@
+import { mergeBoardStyles } from '@/lib/themes/presets';
+import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db, boards, getGenerationLimit } from '@/db';
-import { eq, and } from 'drizzle-orm';
-import { deleteBoardImages } from '@/lib/blob';
+import { eq, and, isNull } from 'drizzle-orm';
 import { updateBoardSchema } from '@/lib/validations';
 
 /**
@@ -25,7 +26,11 @@ export async function GET(
     const { boardId } = await params;
 
     const board = await db.query.boards.findFirst({
-      where: and(eq(boards.id, boardId), eq(boards.userId, session.user.id)),
+      where: and(
+        eq(boards.id, boardId),
+        eq(boards.userId, session.user.id),
+        isNull(boards.deletedAt)
+      ),
       with: {
         cards: {
           orderBy: (cards, { asc }) => [asc(cards.number)],
@@ -77,11 +82,15 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    const { name, styleOptions } = parsed.data;
+    const { name, styleOptions, photoMode } = parsed.data;
 
     // Verify ownership
     const existingBoard = await db.query.boards.findFirst({
-      where: and(eq(boards.id, boardId), eq(boards.userId, session.user.id)),
+      where: and(
+        eq(boards.id, boardId),
+        eq(boards.userId, session.user.id),
+        isNull(boards.deletedAt)
+      ),
     });
 
     if (!existingBoard) {
@@ -98,8 +107,12 @@ export async function PATCH(
     }
 
     if (styleOptions !== undefined) {
-      updateData.styleOptions = styleOptions;
+      updateData.styleOptions = mergeBoardStyles(existingBoard.styleOptions, styleOptions);
     }
+
+    if (photoMode !== undefined) updateData.photoMode = photoMode;
+    if (styleOptions !== undefined || name !== undefined)
+      await invalidateBoardPreview(boardId, session.user.id);
 
     const [updatedBoard] = await db
       .update(boards)
@@ -134,23 +147,20 @@ export async function DELETE(
 
     // Verify ownership
     const existingBoard = await db.query.boards.findFirst({
-      where: and(eq(boards.id, boardId), eq(boards.userId, session.user.id)),
+      where: and(
+        eq(boards.id, boardId),
+        eq(boards.userId, session.user.id),
+        isNull(boards.deletedAt)
+      ),
     });
 
     if (!existingBoard) {
       return NextResponse.json({ error: 'Board not found' }, { status: 404 });
     }
 
-    // Delete all images from blob storage
-    try {
-      await deleteBoardImages(session.user.id, boardId);
-    } catch (blobError) {
-      console.error('Error deleting board images:', blobError);
-      // Continue with board deletion even if blob cleanup fails
-    }
-
-    // Delete the board (cards will cascade delete)
-    await db.delete(boards).where(eq(boards.id, boardId));
+    // Soft delete: hide the board from its owner but keep the row, cards and
+    // images so an admin can restore it.
+    await db.update(boards).set({ deletedAt: new Date() }).where(eq(boards.id, boardId));
 
     return NextResponse.json({ success: true });
   } catch (error) {

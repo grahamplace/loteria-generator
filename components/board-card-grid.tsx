@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { GripVertical, AlertTriangle, Plus, Sparkles, Unlock, Check } from 'lucide-react';
+import { GripVertical, AlertTriangle, Layers, Plus, Sparkles, Unlock, Check } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,15 +57,24 @@ interface DisplayCard {
   isProcessing?: boolean;
   error?: string;
   isDefault?: boolean;
+  preserveOriginal?: boolean;
+  cropData?: import('@/lib/crop-image').PixelRect | null;
 }
 
 interface BoardCardGridProps {
   cards: DisplayCard[];
   onDeleteCard: (id: string) => void;
+  onCropCard?: (id: string, crop: import('@/lib/crop-image').PixelRect | null) => Promise<void>;
+  onChangePhotoMode?: (
+    id: string,
+    photoMode: import('@/lib/themes/presets').PhotoMode
+  ) => Promise<void>;
   onUpdateLabel: (id: string, label: string, riddle: string) => void;
   onReorderCards: (startIndex: number, endIndex: number) => void;
   onAddMore?: () => void;
   onAddClassic?: () => void;
+  /** New photos will be illustrated; the Add custom tile says so with a sparkle. */
+  illustrate?: boolean;
   isLocked?: boolean;
   atCardLimit?: boolean;
   onUnlockRequired?: () => void;
@@ -202,10 +211,13 @@ function DragOverlayCard({ card }: { card: DisplayCard }) {
 export function BoardCardGrid({
   cards,
   onDeleteCard,
+  onCropCard,
+  onChangePhotoMode,
   onUpdateLabel,
   onReorderCards,
   onAddMore,
   onAddClassic,
+  illustrate = false,
   isLocked = false,
   atCardLimit = false,
   onUnlockRequired,
@@ -213,7 +225,8 @@ export function BoardCardGrid({
   const t = useTranslations('BoardEditor.CardGrid');
   const unlockPrice = useUnlockPriceDisplay();
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [editingCard, setEditingCard] = useState<DisplayCard | null>(null);
+  const [editingCardId, setEditingCard] = useState<string | null>(null);
+  const editingCard = cards.find((card) => card.id === editingCardId);
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   // Track the live-reordered cards during drag
   const [liveCards, setLiveCards] = useState<DisplayCard[]>(cards);
@@ -224,7 +237,7 @@ export function BoardCardGrid({
   function handleCardClick(card: DisplayCard) {
     if (justDragged.current) return;
     if (card.isProcessing) return;
-    setEditingCard(card);
+    setEditingCard(card.id);
   }
 
   function handleDeleteCard() {
@@ -329,7 +342,7 @@ export function BoardCardGrid({
           items={displayCards.map((c) => c.clientKey)}
           strategy={rectSortingStrategy}
         >
-          <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
             <AnimatePresence>
               {displayCards.map((card) => (
                 <SortableCard
@@ -398,7 +411,13 @@ export function BoardCardGrid({
                       <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center">
                         <Plus className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-semibold uppercase tracking-wider">
+                      <span className="px-2 text-center text-[10px] font-semibold text-balance uppercase tracking-wider">
+                        {illustrate && (
+                          <Sparkles
+                            className="mr-1 inline size-3 align-[-2px]"
+                            aria-hidden="true"
+                          />
+                        )}
                         {t('addMore')}
                       </span>
                     </div>
@@ -418,12 +437,9 @@ export function BoardCardGrid({
                   >
                     <div className="aspect-[2/3] flex flex-col items-center justify-center gap-1.5">
                       <div className="w-8 h-8 rounded-full bg-secondary/15 border border-secondary/40 flex items-center justify-center">
-                        <Sparkles
-                          className="w-4 h-4 text-secondary-foreground"
-                          aria-hidden="true"
-                        />
+                        <Layers className="w-4 h-4 text-secondary-foreground" aria-hidden="true" />
                       </div>
-                      <span className="text-[10px] font-semibold uppercase tracking-wider">
+                      <span className="px-2 text-center text-[10px] font-semibold text-balance uppercase tracking-wider">
                         {t('addClassicTile')}
                       </span>
                     </div>
@@ -444,6 +460,15 @@ export function BoardCardGrid({
 
       {editingCard && (
         <CardEditModal
+          key={editingCard.id}
+          preserveOriginal={editingCard.preserveOriginal}
+          isProcessing={editingCard.isProcessing}
+          processingError={editingCard.error}
+          onChangePhotoMode={
+            !editingCard.isDefault && editingCard.originalImage && onChangePhotoMode
+              ? (mode) => onChangePhotoMode(editingCard.id, mode)
+              : undefined
+          }
           card={{
             id: editingCard.id,
             label: editingCard.label,
@@ -452,6 +477,12 @@ export function BoardCardGrid({
             riddle: editingCard.riddle,
           }}
           originalImage={editingCard.originalImage}
+          cropData={editingCard.cropData}
+          onCrop={
+            editingCard.preserveOriginal && onCropCard
+              ? (crop) => onCropCard(editingCard.id, crop)
+              : undefined
+          }
           onSave={(newLabel, newRiddle) => {
             onUpdateLabel(editingCard.id, newLabel, newRiddle);
             setEditingCard(null);

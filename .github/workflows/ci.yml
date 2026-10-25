@@ -6,6 +6,13 @@ on:
   push:
     branches: [main, master]
 
+# A new push to a pull request cancels that PR's older run. Pushes to main
+# each finish. A canceled E2E run can leave its Neon branch behind; the
+# weekly E2E Branch Cleanup workflow deletes those.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   lint:
     name: Lint

@@ -28,10 +28,10 @@ test.describe('free tier limit', () => {
     // Wait for the board to render with all 4 seeded cards.
     await expect(page.getByText('4/4').first()).toBeVisible({ timeout: 10_000 });
 
-    // `^unlock ·` matches the inline tile button only ("Unlock · $20"), not the
-    // header button ("Unlock for $20") that's always visible while locked. The
-    // mobile footer button shares the tile's label but is hidden on desktop.
-    const inlineUnlock = page.getByRole('button', { name: /^unlock ·/i });
+    // `^unlock ·` skips the header button ("Unlock for $20") and the live
+    // preview's plain "Unlock". At the free limit both the Choose photos button
+    // and the inline tile read "Unlock · $20" and open the same prompt.
+    const inlineUnlock = page.getByRole('button', { name: /^unlock ·/i }).first();
     await expect(inlineUnlock).toBeVisible({ timeout: 5_000 });
 
     // Modal dialog isn't in the DOM until clicked.

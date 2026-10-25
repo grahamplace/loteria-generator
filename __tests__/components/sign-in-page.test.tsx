@@ -1,3 +1,8 @@
+import { createElement } from 'react';
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
+    createElement('a', { href, ...props }, children),
+}));
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 

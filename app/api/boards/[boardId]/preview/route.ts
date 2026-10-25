@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db, boards, cards } from '@/db';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { fetchBlobBuffer, uploadBoardPreview, getPrivateBlob } from '@/lib/blob';
 import sharp from 'sharp';
 
@@ -32,7 +32,11 @@ export async function GET(
     const { boardId } = await params;
 
     const board = await db.query.boards.findFirst({
-      where: and(eq(boards.id, boardId), eq(boards.userId, session.user.id)),
+      where: and(
+        eq(boards.id, boardId),
+        eq(boards.userId, session.user.id),
+        isNull(boards.deletedAt)
+      ),
     });
 
     if (!board) {

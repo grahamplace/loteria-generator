@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Create themed Lotería landing page'
+  short_description: 'Build a bilingual theme page and matching builder preset'
+  default_prompt: 'Use $create-themed-landing-page to add a themed Lotería page, working preset, and verified sample assets.'

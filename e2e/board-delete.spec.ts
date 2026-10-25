@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { boards } from '@/db/schema';
 import { db } from './helpers/db';
 import { deleteBoardsForUser } from './helpers/cleanup';
@@ -23,11 +23,9 @@ test.describe('board delete', () => {
   });
 
   async function confirmDelete(page: Page, boardName: string) {
-    // Open the actions menu via the aria-label added in Task 4.
-    await page
-      .getByRole('button', { name: new RegExp(`more actions for board ${boardName}`, 'i') })
-      .click();
-    await page.getByRole('menuitem', { name: /delete/i }).click();
+    // Board actions live in the header picker.
+    await page.getByRole('button', { name: new RegExp(`switch board: ${boardName}`, 'i') }).click();
+    await page.getByRole('menuitem', { name: 'Delete this board…', exact: true }).click();
 
     // AlertDialog confirm.
     await page
@@ -36,30 +34,27 @@ test.describe('board delete', () => {
       .click();
   }
 
-  test('user can delete a board from the dashboard', async ({ page }) => {
-    await seedBoard({ userId, name: 'Keep Me', isUnlocked: false });
-    await seedBoard({ userId, name: 'Delete Me', isUnlocked: false });
-
-    await page.goto('/dashboard');
-
-    // Both boards visible.
-    await expect(page.getByText('Keep Me')).toBeVisible();
-    await expect(page.getByText('Delete Me')).toBeVisible();
+  test('deleting the current board opens the remaining board', async ({ page }) => {
+    const keep = await seedBoard({ userId, name: 'Keep Me', isUnlocked: false });
+    const remove = await seedBoard({ userId, name: 'Delete Me', isUnlocked: false });
+    await page.goto(`/boards/${remove.id}`);
+    await expect(page.getByRole('button', { name: /switch board: Delete Me/i })).toBeVisible();
 
     await confirmDelete(page, 'Delete Me');
 
-    // "Delete Me" gone; "Keep Me" remains — and we stay on the dashboard,
-    // because the user still has a board.
-    await expect(page.getByText('Delete Me')).toHaveCount(0, { timeout: 5_000 });
-    await expect(page.getByText('Keep Me')).toBeVisible();
-    await expect(page).toHaveURL(/\/(en\/)?dashboard/);
+    await expect(page).toHaveURL(new RegExp(`/boards/${keep.id}$`));
+    await expect(page.getByRole('button', { name: /switch board: Keep Me/i })).toBeVisible();
 
+    // Delete is soft: the row stays, marked deleted, so an admin can restore it.
     const rows = await db
-      .select({ name: boards.name })
+      .select({ name: boards.name, deletedAt: boards.deletedAt })
       .from(boards)
-      .where(eq(boards.userId, userId));
-    expect(rows).toHaveLength(1);
-    expect(rows[0].name).toBe('Keep Me');
+      .where(eq(boards.userId, userId))
+      .orderBy(boards.name);
+    expect(rows).toEqual([
+      { name: 'Delete Me', deletedAt: expect.any(Date) },
+      { name: 'Keep Me', deletedAt: null },
+    ]);
   });
 
   test('deleting your only board lands you in a fresh board, not the empty state', async ({
@@ -68,14 +63,13 @@ test.describe('board delete', () => {
     const only = await seedBoard({ userId, name: 'Last One', isUnlocked: false });
 
     await page.goto('/dashboard');
-    await expect(page.getByText('Last One')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Switch board: Last One' })).toBeVisible();
 
     await confirmDelete(page, 'Last One');
 
-    // The dashboard pushes '/start' when the deleted board was the last one;
-    // '/start' creates a replacement and drops the user into it. Nobody should
-    // ever be parked on the empty dashboard.
-    await expect(page).toHaveURL(/\/(en\/)?boards\/[0-9a-f-]+/, { timeout: 15_000 });
+    // /start repairs the empty account by creating a fresh starter.
+    await expect(page).not.toHaveURL(new RegExp(only.id), { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/boards\/[0-9a-f-]+/, { timeout: 15_000 });
 
     // …and it is genuinely a NEW board, not the one just deleted.
     const url = new URL(page.url());
@@ -83,8 +77,10 @@ test.describe('board delete', () => {
     expect(newBoardId).toBeTruthy();
     expect(newBoardId).not.toBe(only.id);
 
-    const rows = await db.select({ id: boards.id }).from(boards).where(eq(boards.userId, userId));
-    expect(rows).toHaveLength(1);
-    expect(rows[0].id).toBe(newBoardId);
+    const rows = await db
+      .select({ id: boards.id })
+      .from(boards)
+      .where(and(eq(boards.userId, userId), isNull(boards.deletedAt)));
+    expect(rows).toEqual([{ id: newBoardId }]);
   });
 });

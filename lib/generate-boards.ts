@@ -3,6 +3,7 @@ import {
   loadPrintFonts,
   drawThemeFrame,
   printColor,
+  strokeBorder,
   type ResolvedBoardStyle,
 } from './themes/render-style';
 import type { BoardStyleOptions } from './themes/presets';
@@ -206,23 +207,21 @@ export function drawCard(
   const hasRiddle = riddleText.length > 0;
   const riddleBandHeight = hasRiddle ? Math.round(cardHeight * 0.28) : 0;
 
-  // Draw hand-drawn card border
-  if (styleOptions.themed) {
-    ctx.fillStyle = styleOptions.backgroundColor!;
+  const cardColor = styleOptions.cardColor ?? (styleOptions.themed && styleOptions.backgroundColor);
+  const cardTextColor = styleOptions.cardTextColor ?? labelColor;
+  if (cardColor) {
+    ctx.fillStyle = cardColor;
     ctx.fillRect(x, y, cardWidth, cardHeight);
   }
+  // Draw card border
   ctx.strokeStyle = styleOptions.borderColor ?? printColor('--loteria-classic-ink');
   ctx.lineWidth = 3;
-  ctx.save();
-  if (styleOptions.borderStyle === 'dashed') ctx.setLineDash([14, 10]);
-  if (['solid', 'double', 'dashed'].includes(styleOptions.borderStyle ?? '')) {
-    ctx.strokeRect(x, y, cardWidth, cardHeight);
-    if (styleOptions.borderStyle === 'double')
-      ctx.strokeRect(x + 7, y + 7, cardWidth - 14, cardHeight - 14);
-  } else if (styleOptions.borderStyle !== 'none') {
+  const cardBorder = styleOptions.cardBorderStyle ?? 'hand-drawn';
+  if (cardBorder === 'hand-drawn') {
     drawHandDrawnRect(ctx, x, y, cardWidth, cardHeight, 1);
+  } else if (cardBorder !== 'none') {
+    strokeBorder(ctx, x, y, cardWidth, cardHeight, cardBorder, { line: 4, gap: 8 });
   }
-  ctx.restore();
 
   // Draw card illustration (portrait orientation, centered with padding)
   const imagePadding = 5;
@@ -345,7 +344,7 @@ export function drawCard(
   ctx.fillText(card.number.toString(), badgeX + badgeSize / 2 - badgeNudge, badgeY + badgeSize / 2);
 
   // Draw label text (bottom of card)
-  ctx.fillStyle = labelColor;
+  ctx.fillStyle = cardTextColor;
 
   const labelText = card.label.toUpperCase();
   const baseFontSize = 40;
@@ -403,7 +402,7 @@ export function drawCard(
       },
     });
 
-    ctx.fillStyle = labelColor;
+    ctx.fillStyle = cardTextColor;
     ctx.font = `italic ${fit.fontPx}px Arial, Helvetica, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';

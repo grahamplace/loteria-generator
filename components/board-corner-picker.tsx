@@ -6,7 +6,7 @@ import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
   cornerIconDefinitions,
-  cornerIcons,
+  cornerIconGroups,
   type CornerIcon,
   type CornerIconDefinition,
 } from '@/lib/themes/corner-icons';
@@ -42,6 +42,7 @@ function CornerSwatch({
           <path
             d={definition.path}
             fill={definition.paint === 'fill' ? color : 'none'}
+            fillRule={definition.fillRule}
             stroke={definition.paint === 'fill' ? 'none' : color}
             strokeWidth={definition.paint === 'fill' ? undefined : 5}
             strokeLinecap="round"
@@ -50,6 +51,36 @@ function CornerSwatch({
         </svg>
       ) : null}
     </span>
+  );
+}
+
+function CornerOption({
+  icon,
+  color,
+  background,
+  disabled,
+}: {
+  icon: CornerIcon;
+  color: string;
+  background: string;
+  disabled: boolean;
+}) {
+  const t = useTranslations('Themes.Builder');
+  return (
+    <Select.Item
+      value={icon}
+      textValue={t(`corners.${icon}`)}
+      disabled={disabled}
+      className="relative flex min-h-14 w-full min-w-0 cursor-pointer touch-manipulation select-none items-center gap-3 rounded-md px-2 py-1.5 pr-9 outline-none data-[state=checked]:bg-primary/5 data-[highlighted]:bg-primary/10 data-[highlighted]:ring-2 data-[highlighted]:ring-inset data-[highlighted]:ring-primary"
+    >
+      <CornerSwatch icon={icon} color={color} background={background} large />
+      <Select.ItemText>
+        <span className="block truncate text-sm">{t(`corners.${icon}`)}</span>
+      </Select.ItemText>
+      <Select.ItemIndicator className="absolute right-3 top-1/2 -translate-y-1/2 text-primary">
+        <Check aria-hidden="true" className="h-4 w-4" />
+      </Select.ItemIndicator>
+    </Select.Item>
   );
 }
 
@@ -130,22 +161,22 @@ export function BoardCornerPicker({
               <ChevronUp className="h-4 w-4" />
             </Select.ScrollUpButton>
             <Select.Viewport className="overscroll-contain p-1">
-              {cornerIcons.map((icon) => (
-                <Select.Item
-                  key={icon}
-                  value={icon}
-                  textValue={t(`corners.${icon}`)}
-                  disabled={disabled}
-                  className="relative flex min-h-14 w-full min-w-0 cursor-pointer touch-manipulation select-none items-center gap-3 rounded-md px-2 py-1.5 pr-9 outline-none data-[state=checked]:bg-primary/5 data-[highlighted]:bg-primary/10 data-[highlighted]:ring-2 data-[highlighted]:ring-inset data-[highlighted]:ring-primary"
-                >
-                  <CornerSwatch icon={icon} color={color} background={background} large />
-                  <Select.ItemText>
-                    <span className="block truncate text-sm">{t(`corners.${icon}`)}</span>
-                  </Select.ItemText>
-                  <Select.ItemIndicator className="absolute right-3 top-1/2 -translate-y-1/2 text-primary">
-                    <Check aria-hidden="true" className="h-4 w-4" />
-                  </Select.ItemIndicator>
-                </Select.Item>
+              <CornerOption icon="none" color={color} background={background} disabled={disabled} />
+              {cornerIconGroups.map((group) => (
+                <Select.Group key={group.id}>
+                  <Select.Label className="sticky top-0 z-10 -mx-1 bg-popover px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t(`cornerGroups.${group.id}`)}
+                  </Select.Label>
+                  {group.icons.map((icon) => (
+                    <CornerOption
+                      key={icon}
+                      icon={icon}
+                      color={color}
+                      background={background}
+                      disabled={disabled}
+                    />
+                  ))}
+                </Select.Group>
               ))}
             </Select.Viewport>
             <Select.ScrollDownButton

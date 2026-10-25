@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers, cookies } from 'next/headers';
 import { db, boards } from '@/db';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { createBoardUnlockCheckout } from '@/lib/stripe';
 import { getPostHogClient } from '@/lib/posthog-server';
 import { resolvePromotionCode } from '@/lib/stripe-promotions';
@@ -29,7 +29,11 @@ export async function POST(request: NextRequest) {
 
     // Verify the user owns this board
     const board = await db.query.boards.findFirst({
-      where: and(eq(boards.id, boardId), eq(boards.userId, session.user.id)),
+      where: and(
+        eq(boards.id, boardId),
+        eq(boards.userId, session.user.id),
+        isNull(boards.deletedAt)
+      ),
     });
 
     if (!board) {
@@ -45,6 +49,8 @@ export async function POST(request: NextRequest) {
 
     // Auto-apply a signup-nudge discount if the user arrived via /redeem.
     const cookieStore = await cookies();
+    const locale = cookieStore.get('LOCALE')?.value === 'es-MX' ? 'es-MX' : 'en';
+    const localePrefix = locale === 'es-MX' ? '/es' : '';
     const promoCode = cookieStore.get('loteria_promo')?.value;
     let promotionCodeId: string | undefined;
     if (promoCode) {
@@ -61,8 +67,10 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       userEmail: session.user.email,
       boardName: board.name,
-      successUrl: `${baseUrl}/boards/${boardId}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${baseUrl}/boards/${boardId}?payment=cancelled`,
+      theme: board.styleOptions?.presetId ?? 'classic',
+      locale,
+      successUrl: `${baseUrl}${localePrefix}/boards/${boardId}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}${localePrefix}/boards/${boardId}?payment=cancelled`,
       promotionCodeId,
     });
 
@@ -74,6 +82,8 @@ export async function POST(request: NextRequest) {
         properties: {
           board_id: board.id,
           board_name: board.name,
+          theme: board.styleOptions?.presetId ?? 'classic',
+          locale,
           discount_applied: Boolean(promotionCodeId),
           $set: { email: session.user.email, name: session.user.name },
         },

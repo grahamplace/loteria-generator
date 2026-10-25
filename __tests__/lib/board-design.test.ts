@@ -211,12 +211,31 @@ describe('editable print designs', () => {
       expect(ctx.strokeRect).toHaveBeenCalledTimes(2);
     }
   );
-  it('keeps corner icons only on Halloween and Classroom presets', () => {
+  it('takes corner icons and both border styles from the preset', () => {
     for (const preset of themePresets) {
-      const expected =
-        preset.id === 'halloween' ? 'cobweb' : preset.id === 'classroom' ? 'pencil' : 'none';
-      expect(resolveBoardStyle({ presetId: preset.id }).cornerIcon).toBe(expected);
+      expect(resolveBoardStyle({ presetId: preset.id })).toMatchObject({
+        cornerIcon: preset.corner,
+        borderStyle: preset.border,
+        cardBorderStyle: preset.cardBorder,
+      });
     }
+  });
+  it('keeps cards in the page colors and border for designs saved before card styles', () => {
+    const saved = {
+      presetId: 'custom' as const,
+      backgroundColor: '#123456',
+      labelColor: '#abcdef',
+      borderStyle: 'dashed' as const,
+    };
+    expect(editableBoardStyle(saved)).toMatchObject({
+      cardColor: '#123456',
+      cardTextColor: '#abcdef',
+      cardBorderStyle: 'dashed',
+    });
+    expect(
+      editableBoardStyle({ ...saved, cardColor: '#ffffff', cardBorderStyle: 'dotted' })
+    ).toMatchObject({ cardColor: '#ffffff', cardTextColor: '#abcdef', cardBorderStyle: 'dotted' });
+    expect(boardStyleSchema.safeParse({ cardBorderStyle: 'web' }).success).toBe(false);
   });
   it.each([
     ['web', 'cobweb'],
@@ -225,6 +244,28 @@ describe('editable print designs', () => {
     const saved = { presetId: 'custom' as const, borderStyle: old };
     expect(boardStyleSchema.safeParse(saved).success).toBe(true);
     expect(editableBoardStyle(saved)).toMatchObject({ borderStyle: 'double', cornerIcon: corner });
+  });
+  it('draws card borders in the board border style until they are set separately', () => {
+    expect(resolveBoardStyle({}).cardBorderStyle).toBe('hand-drawn');
+    expect(resolveBoardStyle({ presetId: 'wedding' }).cardBorderStyle).toBe('solid');
+    expect(resolveBoardStyle({ presetId: 'custom', borderStyle: 'none' }).cardBorderStyle).toBe(
+      'none'
+    );
+    expect(resolveBoardStyle({ presetId: 'custom', borderStyle: 'stars' }).cardBorderStyle).toBe(
+      'double'
+    );
+    const split = resolveBoardStyle({
+      presetId: 'custom',
+      borderStyle: 'dashed',
+      cardBorderStyle: 'hand-drawn',
+    });
+    expect(split).toMatchObject({
+      borderStyle: 'dashed',
+      cardBorderStyle: 'hand-drawn',
+      themed: true,
+    });
+    expect(boardStyleSchema.safeParse({ cardBorderStyle: 'solid' }).success).toBe(true);
+    expect(boardStyleSchema.safeParse({ cardBorderStyle: 'stars' }).success).toBe(false);
   });
   it('chooses corner icons independently of the border style', () => {
     const style = resolveBoardStyle({

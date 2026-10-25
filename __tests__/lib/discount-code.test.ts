@@ -8,6 +8,11 @@ describe('generateDiscountCode', () => {
     expect(code).toMatch(/^LOTERIA-[A-HJ-NP-Z2-9]{6}$/);
   });
 
+  it('uses a campaign prefix when given, and LOTERIA when the campaign sets none', () => {
+    expect(generateDiscountCode('THEMES')).toMatch(/^THEMES-[A-HJ-NP-Z2-9]{6}$/);
+    expect(generateDiscountCode(undefined)).toMatch(/^LOTERIA-/);
+  });
+
   it('excludes ambiguous characters I, O, 0, 1', () => {
     for (let i = 0; i < 200; i++) {
       const body = generateDiscountCode().split('-')[1];

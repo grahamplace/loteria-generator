@@ -1,10 +1,14 @@
-/** Small, comparable theme swatches made with the production board renderer. */
+/**
+ * Small, comparable theme swatches made with the production board renderer.
+ * 400×320 (5:4, top crop) so the largest tile (~150 CSS px) stays sharp on 2–3× screens.
+ */
 import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import sharp from 'sharp';
 import { installCanvasRuntime } from './canvas-runtime';
 import { renderBoardToCanvas } from '@/lib/generate-boards';
 import { themePresets } from '@/lib/themes/presets';
+import { presetBoardStyle } from '@/lib/themes/render-style';
 import type { SampleManifest } from './render-samples';
 
 async function main() {
@@ -20,11 +24,15 @@ async function main() {
   }));
   await mkdir('public/themes/picker', { recursive: true });
   for (const preset of themePresets) {
-    const canvas = await renderBoardToCanvas(cards, { presetId: preset.id }, 'Lotería');
+    const canvas = await renderBoardToCanvas(
+      cards,
+      { presetId: preset.id, ...presetBoardStyle(preset.id) },
+      'Lotería'
+    );
     const png = Buffer.from(canvas.toDataURL('image/png').split(',')[1], 'base64');
     await sharp(png)
-      .resize(96)
-      .webp({ quality: 85 })
+      .resize({ width: 400, height: 320, fit: 'cover', position: 'top' })
+      .webp({ quality: 82 })
       .toFile(`public/themes/picker/${preset.id}.webp`);
   }
   process.stdout.write(`Rendered ${themePresets.length} picker previews.\n`);
