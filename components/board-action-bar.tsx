@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, useImperativeHandle, forwardRef } from 'react';
-import { Upload, Plus, Unlock } from 'lucide-react';
+import { ImagePlus, Upload, Plus, Unlock } from 'lucide-react';
 import type { BoardStyleOptions } from '@/lib/themes/presets';
 import { toast } from 'sonner';
 import posthog from 'posthog-js';
@@ -141,52 +141,66 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
           }}
           className={`rounded-xl border-2 border-dashed p-4 ${dragActive ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
         >
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="font-semibold">{t('dropPhotos')}</h2>
-            <span className="text-sm tabular-nums">
-              {cardCount}/{maxCards}
-            </span>
+          {/* Drop target and the two ways to add cards share one row on wider screens. */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="hidden size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary sm:flex"
+              >
+                <ImagePlus className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="font-semibold">{t('dropPhotos')}</h2>
+                <p className="text-xs text-muted-foreground">
+                  {t('acceptedFormats', { maxSize: MAX_UPLOAD_DISPLAY })}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 sm:shrink-0">
+              {cardCount >= maxCards && !isUnlocked ? (
+                <Button
+                  className="min-h-11 flex-1 touch-manipulation transition-colors sm:flex-none"
+                  onClick={onUnlockRequired}
+                >
+                  <Unlock className="mr-2 h-4 w-4" aria-hidden="true" />
+                  {t('unlockMoreCards', { price: unlockPrice })}
+                </Button>
+              ) : (
+                <Button
+                  className="min-h-11 flex-1 touch-manipulation transition-colors sm:flex-none"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={photoModeSaving || cardCount >= maxCards}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {t('choosePhotos')}
+                </Button>
+              )}
+              <Button
+                className="min-h-11 flex-1 touch-manipulation transition-colors sm:flex-none"
+                variant="outline"
+                onClick={onOpenDefaults}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {t('addClassic')}
+              </Button>
+            </div>
           </div>
-          <div className="mt-1">
+          <div className="mt-3 flex items-start justify-between gap-3 border-t border-dashed border-border pt-2">
             <PhotoModeSwitch
               photoMode={photoMode}
               saving={photoModeSaving}
               onChange={(mode) => void onPhotoModeChange(mode)}
             />
+            <span className="flex min-h-11 shrink-0 items-center text-sm text-muted-foreground tabular-nums">
+              {cardCount}/{maxCards}
+            </span>
           </div>
           {processingCount > 0 && (
-            <p role="status" className="mt-2 text-sm text-muted-foreground">
+            <p role="status" className="mt-1 text-sm text-muted-foreground">
               {themes('processing', { count: processingCount })}
             </p>
           )}
-          <div className="mt-4 flex flex-wrap gap-2">
-            {cardCount >= maxCards && !isUnlocked ? (
-              <Button
-                className="min-h-11 touch-manipulation transition-colors"
-                onClick={onUnlockRequired}
-              >
-                <Unlock className="mr-2 h-4 w-4" aria-hidden="true" />
-                {t('unlockMoreCards', { price: unlockPrice })}
-              </Button>
-            ) : (
-              <Button
-                className="min-h-11 touch-manipulation transition-colors"
-                onClick={() => inputRef.current?.click()}
-                disabled={photoModeSaving || cardCount >= maxCards}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {t('choosePhotos')}
-              </Button>
-            )}
-            <Button
-              className="min-h-11 touch-manipulation transition-colors"
-              variant="outline"
-              onClick={onOpenDefaults}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {t('addClassic')}
-            </Button>
-          </div>
         </div>
       </section>
     );

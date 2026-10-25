@@ -322,6 +322,9 @@ function BoardEditor({ boardId }: { boardId: string }) {
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                       {t('yourCards')}
+                      <span className="ml-2 font-normal tracking-normal tabular-nums">
+                        {cards.length}/{cardLimit}
+                      </span>
                     </h2>
                     <span className="text-[11px] font-mono text-muted-foreground hidden md:block">
                       {t('dragToReorder')}
