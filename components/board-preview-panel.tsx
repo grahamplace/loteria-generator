@@ -73,8 +73,9 @@ export function BoardPreviewPanel({
 
   // The sheet swaps its content in place; move focus with it.
   useEffect(() => {
-    if (!sheetOpen || shownView.current === sheetView) return;
+    const previous = shownView.current;
     shownView.current = sheetView;
+    if (!sheetOpen || previous === sheetView) return;
     (sheetView === 'design' ? backButton : themeRow).current?.focus({ preventScroll: true });
   }, [sheetOpen, sheetView]);
 
