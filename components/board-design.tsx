@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, type Ref, type RefObject } from 'react';
+import { useEffect, useId, useRef, useState, type Ref, type RefObject } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight, Loader2, Maximize2, Palette, X } from 'lucide-react';
 import type { BoardThemeId } from '@/lib/themes/presets';
@@ -46,8 +46,82 @@ export function closeDesignControls() {
 type PreviewState = ReturnType<typeof useBoardPreview>;
 
 /** Escape belongs to a color field (revert, or close the OS chooser), not its dialog. */
+/** Escape inside these fields reverts the field instead of closing the dialog or sheet. */
 export function isFieldEscape(event: KeyboardEvent) {
-  return event.target instanceof Element && !!event.target.closest('[data-color-control]');
+  return (
+    event.target instanceof Element &&
+    !!event.target.closest('[data-color-control], [data-title-field]')
+  );
+}
+
+/**
+ * The board's name and whether it prints at the top. The name saves on blur
+ * or Enter, like renaming from the board menu; Escape restores it.
+ */
+function BoardTitleField({
+  design,
+  boardName,
+  layout,
+}: {
+  design: BoardDesign;
+  boardName: string;
+  layout: DesignLayout;
+}) {
+  const t = useTranslations('Themes.Builder');
+  const id = useId();
+  const [value, setValue] = useState(boardName);
+  const reverting = useRef(false);
+  useEffect(() => setValue(boardName), [boardName]);
+
+  function commit() {
+    if (reverting.current) {
+      reverting.current = false;
+      return;
+    }
+    const name = value.trim();
+    if (!name) setValue(boardName);
+    else if (name !== boardName) void design.save({ name });
+  }
+
+  return (
+    <div className="space-y-2">
+      <label htmlFor={id} className="block text-sm font-semibold">
+        {t('boardTitle')}
+      </label>
+      <input
+        id={id}
+        data-title-field
+        name="boardTitle"
+        autoComplete="off"
+        maxLength={200}
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.currentTarget.blur();
+          if (event.key === 'Escape') {
+            // Restore the saved name and leave without saving the edit.
+            reverting.current = true;
+            setValue(boardName);
+            event.currentTarget.blur();
+          }
+        }}
+        className={cn(
+          'block min-h-11 w-full rounded-lg border border-input bg-background px-3 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+          layout === 'sheet' ? 'text-base' : 'text-base md:text-sm'
+        )}
+      />
+      <label className="flex min-h-11 w-fit cursor-pointer touch-manipulation items-center gap-2.5 text-sm has-[:disabled]:cursor-wait">
+        <input
+          type="checkbox"
+          checked={design.shownStyles?.showTitle ?? false}
+          onChange={(event) => void design.setShowTitle(event.target.checked)}
+          className="size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        />
+        {t('showTitle')}
+      </label>
+    </div>
+  );
 }
 
 export function DesignSaveStatus({ design }: { design: BoardDesign }) {
@@ -112,6 +186,7 @@ export function BoardDesignEditor({
   return (
     <fieldset disabled={design.savingDesign} className="min-w-0 space-y-6">
       <legend className="sr-only">{t('title')}</legend>
+      <BoardTitleField design={design} boardName={boardName} layout={layout} />
       <BoardDesignControls
         styles={design.shownStyles}
         boardName={boardName}
@@ -121,7 +196,6 @@ export function BoardDesignEditor({
         onOpenChange={setCustomizeOpen}
         onPreview={design.previewDesign}
         onChange={design.commitDesign}
-        onShowTitleChange={(showTitle) => void design.setShowTitle(showTitle)}
       />
       <section aria-labelledby={themesHeadingId} className="space-y-3">
         <div>

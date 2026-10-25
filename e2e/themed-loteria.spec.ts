@@ -73,13 +73,13 @@ test.describe('themed Lotería', () => {
     await page.reload();
     const data = await (await page.request.get(`/api/boards/${starter.id}`)).json();
     expect(data.board.photoMode).toBe('original');
-    expect(data.board.styleOptions).toMatchObject({ presetId: 'halloween', showTitle: true });
+    expect(data.board.styleOptions).toMatchObject({ presetId: 'halloween', showTitle: false });
     // Design lives behind the Theme row beside the preview.
     await page.getByRole('button', { name: 'Cambiar tema, actual: Halloween' }).click();
     const design = page.getByRole('dialog', { name: 'Diseña tu juego' });
     await expect(
-      design.getByRole('checkbox', { name: /Imprimir el nombre del juego arriba/ })
-    ).toBeChecked();
+      design.getByRole('checkbox', { name: /Imprimir el título arriba de cada tabla/ })
+    ).not.toBeChecked();
     await design.getByRole('button', { name: 'Listo' }).click();
     await expect(
       page
@@ -167,7 +167,7 @@ test.describe('themed Lotería', () => {
     });
     await page.goto(`/boards/${board.id}?design=1`);
     const titleToggle = design.getByRole('checkbox', {
-      name: /Print the board name at the top/,
+      name: /Print the title at the top of every board/,
     });
     for (const showTitle of [false, true]) {
       const saved = page.waitForResponse(
@@ -223,7 +223,7 @@ test.describe('themed email signup', () => {
       await expect(page).toHaveURL(/\/es\/boards\/[^/]+$/, { timeout: 15000 });
       const id = page.url().split('/').pop();
       const data = await (await page.request.get(`/api/boards/${id}`)).json();
-      expect(data.board.styleOptions).toMatchObject({ presetId: 'halloween', showTitle: true });
+      expect(data.board.styleOptions).toMatchObject({ presetId: 'halloween', showTitle: false });
       expect(data.board.photoMode).toBe('illustrated');
     } finally {
       const { deleteUser } = await import('./helpers/cleanup');

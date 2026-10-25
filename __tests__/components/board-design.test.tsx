@@ -186,6 +186,22 @@ describe('desktop design dialog', () => {
     expect(screen.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeVisible();
   });
 
+  it('leaves the title off when a theme is picked on a board that never set it', async () => {
+    window.history.replaceState(null, '', '/?design=1');
+    const onSave = vi.fn(async () => true);
+    view({ styles: { presetId: 'classic' }, onSave });
+    const dialog = await screen.findByRole('dialog', { name: 'Design your set' });
+    expect(
+      within(dialog).getByRole('checkbox', { name: 'Print the title at the top of every board' })
+    ).not.toBeChecked();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Wedding' }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith({
+        styleOptions: expect.objectContaining({ presetId: 'wedding', showTitle: false }),
+      })
+    );
+  });
+
   it('shows a custom design in Customize and saves the board-name setting', async () => {
     window.history.replaceState(null, '', '/?design=1');
     const onSave = vi.fn(async () => true);
@@ -197,7 +213,7 @@ describe('desktop design dialog', () => {
     );
     expect(within(dialog).getByRole('textbox', { name: 'Background' })).toHaveValue('#123456');
     const showTitle = within(dialog).getByRole('checkbox', {
-      name: /Print the board name at the top/,
+      name: /Print the title at the top of every board/,
     });
     expect(showTitle).toBeChecked();
     fireEvent.click(showTitle);
@@ -207,6 +223,25 @@ describe('desktop design dialog', () => {
       })
     );
     await waitFor(() => expect(showTitle).not.toBeChecked());
+  });
+
+  it('renames the board from the title field, and Escape restores the saved name', async () => {
+    window.history.replaceState(null, '', '/?design=1');
+    const onSave = vi.fn(async () => true);
+    view({ onSave });
+    const dialog = await screen.findByRole('dialog', { name: 'Design your set' });
+    const title = within(dialog).getByRole('textbox', { name: 'Board title' });
+    expect(title).toHaveValue('Our party');
+    title.focus();
+    fireEvent.change(title, { target: { value: 'Draft name' } });
+    fireEvent.keyDown(title, { key: 'Escape' });
+    expect(title).toHaveValue('Our party');
+    expect(screen.getByRole('dialog', { name: 'Design your set' })).toBeInTheDocument();
+    title.focus();
+    fireEvent.change(title, { target: { value: '  Fiesta  ' } });
+    fireEvent.keyDown(title, { key: 'Enter' });
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: 'Fiesta' }));
+    expect(onSave).toHaveBeenCalledTimes(1);
   });
 
   it('shows typed colors immediately and saves them once typing settles', async () => {

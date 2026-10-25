@@ -34,7 +34,7 @@ export function ThemeEntry({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...(id && id !== starterId ? {} : { name }),
-          styleOptions: { ...presetBoardStyle(theme), presetId: theme, showTitle: true },
+          styleOptions: { ...presetBoardStyle(theme), presetId: theme, showTitle: false },
           photoMode,
         }),
       });

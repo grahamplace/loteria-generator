@@ -174,7 +174,7 @@ export function useBoardDesign({
             : editableBoardStyle(shownStyles ?? {})
           : presetBoardStyle(presetId)),
         presetId,
-        showTitle: shownStyles?.showTitle ?? presetId !== 'classic',
+        showTitle: shownStyles?.showTitle ?? false,
       },
     });
   }

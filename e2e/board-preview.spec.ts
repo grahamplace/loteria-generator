@@ -700,7 +700,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   );
   await expect(borderOption(design, 'Board border', 'Double')).toBeChecked();
   await expect(
-    design.getByRole('checkbox', { name: /Print the board name at the top/ })
+    design.getByRole('checkbox', { name: /Print the title at the top of every board/ })
   ).toBeChecked();
 });
 

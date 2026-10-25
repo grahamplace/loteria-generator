@@ -232,7 +232,6 @@ export function BoardDesignControls({
   onOpenChange,
   onPreview,
   onChange,
-  onShowTitleChange,
 }: {
   styles?: BoardStyleOptions | null;
   boardName: string;
@@ -243,7 +242,6 @@ export function BoardDesignControls({
   /** Show an in-progress edit right away; saved shortly after it settles. */
   onPreview: (patch: Partial<BoardDesignValues>) => void;
   onChange: (patch: Partial<BoardDesignValues>) => void;
-  onShowTitleChange: (showTitle: boolean) => void;
 }) {
   const t = useTranslations('Themes.Builder');
   const id = useId();
@@ -325,23 +323,6 @@ export function BoardDesignControls({
               disabled={disabled}
               onChange={(cardBorderStyle) => onChange({ cardBorderStyle })}
             />
-            <label className="flex min-h-11 cursor-pointer touch-manipulation items-center justify-between gap-3 has-[:disabled]:cursor-wait">
-              <span className="flex min-w-0 flex-col">
-                <span className={cn('font-semibold', row ? 'text-sm' : 'text-[0.8125rem]')}>
-                  {t('showTitle')}
-                </span>
-                <span className="text-xs break-words text-muted-foreground">
-                  {t('showTitleHint', { name: boardName })}
-                </span>
-              </span>
-              <input
-                type="checkbox"
-                checked={styles?.showTitle ?? false}
-                disabled={disabled}
-                onChange={(event) => onShowTitleChange(event.target.checked)}
-                className="size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              />
-            </label>
           </>
         )}
       </div>
