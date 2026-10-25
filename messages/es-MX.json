@@ -546,7 +546,7 @@
       "customizeColorsFont": "Personalizar colores y tipografía",
       "customizeHint": "Si cambias algo aquí, tu tema pasa a <strong>Personalizado</strong>.",
       "themesHeading": "O empieza con un tema",
-      "themesHint": "Al elegir uno, se establecen los colores, la tipografía y los bordes de arriba. Después puedes ajustarlos.",
+      "themesHint": "Al elegir un tema, se establecen los colores, la tipografía y los bordes de arriba. Desde ahí puedes seguir personalizando.",
       "done": "Listo",
       "saved": "Guardado",
       "backToPreview": "Volver a la vista previa",
