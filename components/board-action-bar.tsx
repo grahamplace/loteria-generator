@@ -153,10 +153,11 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
               </span>
               <h2 className="min-w-0 font-semibold">{t('dropPhotos')}</h2>
             </div>
-            <div className="flex gap-2 sm:shrink-0">
+            {/* Long labels (Spanish) put the second button on its own row on small phones. */}
+            <div className="flex flex-wrap gap-2 sm:shrink-0 sm:flex-nowrap">
               {cardCount >= maxCards && !isUnlocked ? (
                 <Button
-                  className="min-h-11 flex-1 touch-manipulation transition-colors sm:flex-none"
+                  className="min-h-11 grow touch-manipulation transition-colors sm:grow-0"
                   onClick={onUnlockRequired}
                 >
                   <Unlock className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -164,7 +165,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                 </Button>
               ) : (
                 <Button
-                  className="min-h-11 flex-1 touch-manipulation transition-colors sm:flex-none"
+                  className="min-h-11 grow touch-manipulation transition-colors sm:grow-0"
                   onClick={() => inputRef.current?.click()}
                   disabled={photoModeSaving || cardCount >= maxCards}
                 >
@@ -173,7 +174,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
                 </Button>
               )}
               <Button
-                className="min-h-11 flex-1 touch-manipulation transition-colors sm:flex-none"
+                className="min-h-11 grow touch-manipulation transition-colors sm:grow-0"
                 variant="outline"
                 onClick={onOpenDefaults}
               >

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { boards } from '@/db/schema';
 import { db } from './helpers/db';
 import { deleteBoardsForUser } from './helpers/cleanup';
@@ -45,12 +45,16 @@ test.describe('board delete', () => {
     await expect(page).toHaveURL(new RegExp(`/boards/${keep.id}$`));
     await expect(page.getByRole('button', { name: /switch board: Keep Me/i })).toBeVisible();
 
+    // Delete is soft: the row stays, marked deleted, so an admin can restore it.
     const rows = await db
-      .select({ name: boards.name })
+      .select({ name: boards.name, deletedAt: boards.deletedAt })
       .from(boards)
-      .where(eq(boards.userId, userId));
-    expect(rows).toHaveLength(1);
-    expect(rows[0].name).toBe('Keep Me');
+      .where(eq(boards.userId, userId))
+      .orderBy(boards.name);
+    expect(rows).toEqual([
+      { name: 'Delete Me', deletedAt: expect.any(Date) },
+      { name: 'Keep Me', deletedAt: null },
+    ]);
   });
 
   test('deleting your only board lands you in a fresh board, not the empty state', async ({
@@ -73,8 +77,10 @@ test.describe('board delete', () => {
     expect(newBoardId).toBeTruthy();
     expect(newBoardId).not.toBe(only.id);
 
-    const rows = await db.select({ id: boards.id }).from(boards).where(eq(boards.userId, userId));
-    expect(rows).toHaveLength(1);
-    expect(rows[0].id).toBe(newBoardId);
+    const rows = await db
+      .select({ id: boards.id })
+      .from(boards)
+      .where(and(eq(boards.userId, userId), isNull(boards.deletedAt)));
+    expect(rows).toEqual([{ id: newBoardId }]);
   });
 });

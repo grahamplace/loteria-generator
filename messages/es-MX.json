@@ -685,7 +685,6 @@
       "fitInlinePreview": "Ajustar tabla en la vista previa",
       "inlinePanPreview": "Vista previa de la tabla con zoom",
       "inlinePanHint": "Arrastra o usa las flechas para moverte. Haz clic para alejar.",
-      "boardTitle": "Título del tablero",
       "saveTitle": "Guardar",
       "titleValidation": "Escribe un título de entre 1 y 200 caracteres."
     },

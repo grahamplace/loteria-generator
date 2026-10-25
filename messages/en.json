@@ -679,7 +679,6 @@
       "fitInlinePreview": "Fit board in live preview",
       "inlinePanPreview": "Zoomable live board preview",
       "inlinePanHint": "Drag or use arrow keys to move. Click to zoom out.",
-      "boardTitle": "Board title",
       "saveTitle": "Save",
       "titleValidation": "Enter a title with 1–200 characters."
     },
