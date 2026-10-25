@@ -139,11 +139,12 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
             setDragActive(false);
             void acceptFiles(Array.from(event.dataTransfer.files), 'drop');
           }}
-          className={`rounded-xl border-2 border-dashed p-4 ${dragActive ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
+          className={`rounded-xl border border-solid p-4 sm:border-2 sm:border-dashed ${dragActive ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
         >
           {/* Drop target and the two ways to add cards share one row on wider screens. */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <div className="flex min-w-0 flex-1 items-center gap-3">
+            {/* Phones can't drag and drop, so the buttons carry the panel there. */}
+            <div className="flex min-w-0 flex-1 items-center gap-3 max-sm:sr-only">
               <span
                 aria-hidden="true"
                 className="hidden size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary sm:flex"
