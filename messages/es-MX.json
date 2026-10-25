@@ -636,6 +636,14 @@
         "crown": "Coronas",
         "cupcake": "Panquecitos"
       },
+      "cornerGroups": {
+        "classics": "Clásicos de Lotería",
+        "party": "Fiesta",
+        "family": "Amor y familia",
+        "holidays": "Días festivos",
+        "nature": "Naturaleza y viajes",
+        "sports": "Escuela y deportes"
+      },
       "borders": {
         "hand-drawn": "A mano",
         "none": "Ninguno",

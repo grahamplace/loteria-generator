@@ -630,6 +630,14 @@
         "crown": "Crowns",
         "cupcake": "Cupcakes"
       },
+      "cornerGroups": {
+        "classics": "Lotería classics",
+        "party": "Party",
+        "family": "Love & family",
+        "holidays": "Holidays",
+        "nature": "Nature & travel",
+        "sports": "School & sports"
+      },
       "borders": {
         "hand-drawn": "Hand drawn",
         "none": "None",

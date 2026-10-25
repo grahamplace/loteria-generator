@@ -1180,6 +1180,44 @@ export const cornerIcons = [
   'cupcake',
 ] as const;
 export type CornerIcon = (typeof cornerIcons)[number];
+/**
+ * Picker sections, most-used occasions first. Every icon except `none` is in
+ * exactly one.
+ */
+export const cornerIconGroups = [
+  {
+    id: 'party',
+    icons: [
+      'cake',
+      'balloon',
+      'cupcake',
+      'pinata',
+      'gift',
+      'champagne',
+      'crown',
+      'tiara',
+      'music-note',
+      'disco-ball',
+    ],
+  },
+  { id: 'family', icons: ['heart', 'rings', 'rattle', 'pacifier', 'dove', 'paw-print'] },
+  {
+    id: 'holidays',
+    icons: [
+      'holly',
+      'pumpkin',
+      'cobweb',
+      'snowflake',
+      'maple-leaf',
+      'easter-egg',
+      'menorah',
+      'shamrock',
+    ],
+  },
+  { id: 'classics', icons: ['star', 'sun', 'moon', 'rose', 'bell', 'cactus', 'guitar', 'maracas'] },
+  { id: 'sports', icons: ['grad-cap', 'pencil', 'soccer', 'basketball', 'baseball'] },
+  { id: 'nature', icons: ['flower', 'butterfly', 'palm-tree', 'anchor'] },
+] as const satisfies readonly { id: string; icons: readonly Exclude<CornerIcon, 'none'>[] }[];
 type Missing = Exclude<CornerIconId, CornerIcon>;
 const allListed: Missing extends never ? true : Missing = true;
 void allListed;
