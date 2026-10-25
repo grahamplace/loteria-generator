@@ -411,8 +411,13 @@ export function BoardCardGrid({
                       <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center">
                         <Plus className="w-4 h-4" />
                       </div>
-                      <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider">
-                        {illustrate && <Sparkles className="size-3" aria-hidden="true" />}
+                      <span className="px-2 text-center text-[10px] font-semibold text-balance uppercase tracking-wider">
+                        {illustrate && (
+                          <Sparkles
+                            className="mr-1 inline size-3 align-[-2px]"
+                            aria-hidden="true"
+                          />
+                        )}
                         {t('addMore')}
                       </span>
                     </div>
@@ -434,7 +439,7 @@ export function BoardCardGrid({
                       <div className="w-8 h-8 rounded-full bg-secondary/15 border border-secondary/40 flex items-center justify-center">
                         <Layers className="w-4 h-4 text-secondary-foreground" aria-hidden="true" />
                       </div>
-                      <span className="text-[10px] font-semibold uppercase tracking-wider">
+                      <span className="px-2 text-center text-[10px] font-semibold text-balance uppercase tracking-wider">
                         {t('addClassicTile')}
                       </span>
                     </div>
