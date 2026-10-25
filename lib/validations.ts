@@ -18,6 +18,7 @@ export const boardStyleSchema = z.object({
   borderColor: printColorSchema.optional(),
   font: z.enum(printFonts).optional(),
   borderStyle: z.enum([...borderStyles, ...legacyBorderStyles]).optional(),
+  cardBorderStyle: z.enum(borderStyles).optional(),
   cornerIcon: z.enum(cornerIcons).optional(),
   presetId: z
     .custom<BoardThemeId>((value) => value === 'custom' || isThemeId(value), 'Unknown theme')

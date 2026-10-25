@@ -1,6 +1,7 @@
 import {
   getTheme,
   boardBorderStyle,
+  boardCardBorderStyle,
   boardCornerIcon,
   type BoardStyleOptions,
   type BoardDesignValues,
@@ -36,6 +37,7 @@ export function presetBoardStyle(id: ThemeId): BoardDesignValues {
     numberColor: id === 'classic' ? printColor('--loteria-number-ink') : color('number'),
     font: preset.font,
     borderStyle: boardBorderStyle({ presetId: id }),
+    cardBorderStyle: boardCardBorderStyle({ presetId: id }),
     cornerIcon: boardCornerIcon({ presetId: id }),
   };
 }
@@ -53,6 +55,7 @@ export function resolveBoardStyle(options: BoardStyleOptions = {}) {
   // Resolve retired decorations on read so existing boards and Custom history
   // match the current picker and exports without rewriting saved designs.
   design.borderStyle = boardBorderStyle(options);
+  design.cardBorderStyle = boardCardBorderStyle(options);
   design.cornerIcon = boardCornerIcon(options);
   const themed = design.borderStyle !== 'hand-drawn' && design.borderStyle !== 'none';
   return {
@@ -76,6 +79,7 @@ export function editableBoardStyle(options: BoardStyleOptions = {}): BoardDesign
     numberColor,
     font,
     borderStyle,
+    cardBorderStyle,
     cornerIcon,
   } = resolveBoardStyle(options);
   return {
@@ -86,6 +90,7 @@ export function editableBoardStyle(options: BoardStyleOptions = {}): BoardDesign
     numberColor,
     font,
     borderStyle,
+    cardBorderStyle,
     cornerIcon,
   };
 }

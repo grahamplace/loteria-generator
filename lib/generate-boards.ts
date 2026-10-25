@@ -206,7 +206,7 @@ export function drawCard(
   const hasRiddle = riddleText.length > 0;
   const riddleBandHeight = hasRiddle ? Math.round(cardHeight * 0.28) : 0;
 
-  // Draw hand-drawn card border
+  // Draw the card border
   if (styleOptions.themed) {
     ctx.fillStyle = styleOptions.backgroundColor!;
     ctx.fillRect(x, y, cardWidth, cardHeight);
@@ -214,12 +214,12 @@ export function drawCard(
   ctx.strokeStyle = styleOptions.borderColor ?? printColor('--loteria-classic-ink');
   ctx.lineWidth = 3;
   ctx.save();
-  if (styleOptions.borderStyle === 'dashed') ctx.setLineDash([14, 10]);
-  if (['solid', 'double', 'dashed'].includes(styleOptions.borderStyle ?? '')) {
+  const cardBorder = styleOptions.cardBorderStyle;
+  if (cardBorder === 'dashed') ctx.setLineDash([14, 10]);
+  if (cardBorder === 'solid' || cardBorder === 'double' || cardBorder === 'dashed') {
     ctx.strokeRect(x, y, cardWidth, cardHeight);
-    if (styleOptions.borderStyle === 'double')
-      ctx.strokeRect(x + 7, y + 7, cardWidth - 14, cardHeight - 14);
-  } else if (styleOptions.borderStyle !== 'none') {
+    if (cardBorder === 'double') ctx.strokeRect(x + 7, y + 7, cardWidth - 14, cardHeight - 14);
+  } else if (cardBorder !== 'none') {
     drawHandDrawnRect(ctx, x, y, cardWidth, cardHeight, 1);
   }
   ctx.restore();

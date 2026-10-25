@@ -4,10 +4,12 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import {
+  boardFrameStyles,
   borderStyles,
   type BoardDesignValues,
   type BoardStyleOptions,
   type BorderStyle,
+  type CardBorderStyle,
 } from '@/lib/themes/presets';
 import { editableBoardStyle } from '@/lib/themes/render-style';
 import { cn } from '@/lib/utils';
@@ -189,6 +191,44 @@ export type DesignLayout = 'dialog' | 'sheet';
 /** The four colors shown in the Customize header, in print order. */
 const swatchKeys = ['backgroundColor', 'badgeColor', 'labelColor', 'borderColor'] as const;
 
+/**
+ * The design's four main colors as small chips. `overlap` stacks them into a
+ * compact cue for the Theme row. Resolved after mount: print colors come from CSS.
+ */
+export function DesignSwatches({
+  styles,
+  overlap = false,
+  small = false,
+}: {
+  styles?: BoardStyleOptions | null;
+  overlap?: boolean;
+  small?: boolean;
+}) {
+  const [values, setValues] = useState<BoardDesignValues | null>(null);
+  useEffect(() => {
+    setValues(editableBoardStyle(styles ?? {}));
+  }, [styles]);
+  return (
+    <span
+      className={cn('flex shrink-0', overlap ? (small ? '-space-x-1.5' : '-space-x-2') : 'gap-0.5')}
+      aria-hidden="true"
+    >
+      {values &&
+        swatchKeys.map((key) => (
+          <span
+            key={key}
+            style={{ backgroundColor: values[key] }}
+            className={cn(
+              'rounded-full border border-foreground/15',
+              small ? 'size-3' : 'size-3.5',
+              overlap && 'ring-2 ring-background'
+            )}
+          />
+        ))}
+    </span>
+  );
+}
+
 export function BoardDesignControls({
   styles,
   boardName,
@@ -232,16 +272,7 @@ export function BoardDesignControls({
       >
         <SlidersHorizontal className="size-4 shrink-0" aria-hidden="true" />
         <span className="min-w-0 flex-1 text-sm font-semibold">{t('customizeColorsFont')}</span>
-        <span className="flex shrink-0 gap-0.5" aria-hidden="true">
-          {values &&
-            swatchKeys.map((key) => (
-              <span
-                key={key}
-                style={{ backgroundColor: values[key] }}
-                className="size-3.5 rounded-full border border-foreground/15"
-              />
-            ))}
-        </span>
+        <DesignSwatches styles={styles} />
         <ChevronDown
           aria-hidden="true"
           className={cn(
@@ -287,9 +318,18 @@ export function BoardDesignControls({
               />
             </div>
             <BorderStylePicker
-              value={values.borderStyle}
+              legend={t('boardBorder')}
+              options={boardFrameStyles}
+              value={values.borderStyle === 'hand-drawn' ? 'none' : values.borderStyle}
               disabled={disabled}
               onChange={(borderStyle) => onChange({ borderStyle })}
+            />
+            <BorderStylePicker
+              legend={t('cardBorder')}
+              options={borderStyles}
+              value={values.cardBorderStyle}
+              disabled={disabled}
+              onChange={(cardBorderStyle) => onChange({ cardBorderStyle })}
             />
             <label className="flex min-h-11 cursor-pointer touch-manipulation items-center justify-between gap-3 has-[:disabled]:cursor-wait">
               <span className="flex min-w-0 flex-col">
@@ -316,22 +356,31 @@ export function BoardDesignControls({
 }
 
 /** Segmented control backed by native radios, so arrow keys move the choice. */
-function BorderStylePicker({
+function BorderStylePicker<Style extends CardBorderStyle>({
+  legend,
+  options,
   value,
   disabled,
   onChange,
 }: {
+  legend: string;
+  options: readonly Style[];
   value: BorderStyle;
   disabled: boolean;
-  onChange: (value: (typeof borderStyles)[number]) => void;
+  onChange: (value: Style) => void;
 }) {
   const t = useTranslations('Themes.Builder');
   const name = useId();
   return (
     <fieldset className="min-w-0">
-      <legend className="mb-1.5 text-sm font-medium">{t('borderStyle')}</legend>
-      <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-input bg-input min-[420px]:grid-cols-5">
-        {borderStyles.map((border) => (
+      <legend className="mb-1.5 text-sm font-medium">{legend}</legend>
+      <div
+        className={cn(
+          'grid gap-px overflow-hidden rounded-lg border border-input bg-input',
+          options.length > 4 ? 'grid-cols-3 min-[420px]:grid-cols-5' : 'grid-cols-4'
+        )}
+      >
+        {options.map((border) => (
           <label
             key={border}
             className="relative flex min-h-11 cursor-pointer touch-manipulation items-center justify-center bg-background px-1.5 text-center text-[0.8125rem] leading-tight font-medium text-foreground transition-colors hover:bg-primary/5 has-[:checked]:bg-primary has-[:checked]:font-semibold has-[:checked]:text-primary-foreground has-[:disabled]:cursor-wait has-[:disabled]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-4 has-[:focus-visible]:outline-current motion-reduce:transition-none"
@@ -345,7 +394,7 @@ function BorderStylePicker({
               onChange={() => onChange(border)}
               className="absolute inset-0 cursor-pointer appearance-none opacity-0 disabled:cursor-wait"
             />
-            {t(`borders.${border}`)}
+            {t(`borders.${border as CardBorderStyle}`)}
           </label>
         ))}
       </div>

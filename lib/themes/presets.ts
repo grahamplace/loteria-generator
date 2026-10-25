@@ -13,7 +13,14 @@ export const printFonts = [
   'Roboto Slab',
 ] as const;
 export type PrintFont = (typeof printFonts)[number];
+/** Lines drawn around each card. Saved `borderStyle` values also accept these. */
 export const borderStyles = ['hand-drawn', 'none', 'solid', 'double', 'dashed'] as const;
+/**
+ * Frames drawn around the whole board. A saved `hand-drawn` board border
+ * predates the split and never drew a frame, so it reads as `none`.
+ */
+export const boardFrameStyles = ['none', 'solid', 'double', 'dashed'] as const;
+export type CardBorderStyle = (typeof borderStyles)[number];
 /**
  * Still accepted from saved boards and older clients; rendered as a plain
  * double border. `web` and `pencils` also imply their corner icon.
@@ -38,7 +45,10 @@ export interface BoardDesignValues {
   labelColor: string;
   borderColor: string;
   font: PrintFont;
+  /** Frame around the whole board. */
   borderStyle: BorderStyle;
+  /** Lines around each card. */
+  cardBorderStyle: CardBorderStyle;
   cornerIcon: CornerIcon;
 }
 export interface BoardStyleOptions extends Partial<BoardDesignValues> {
@@ -56,6 +66,7 @@ const designKeys = [
   'borderColor',
   'font',
   'borderStyle',
+  'cardBorderStyle',
   'cornerIcon',
 ] as const satisfies readonly (keyof BoardDesignValues)[];
 
@@ -218,6 +229,11 @@ export function boardBorderStyle(options?: BoardStyleOptions | null): BorderStyl
   const preset = getTheme(options?.presetId);
   const border = options?.borderStyle ?? (preset.id === 'classic' ? 'hand-drawn' : 'double');
   return legacyBorderStyles.some((legacy) => legacy === border) ? 'double' : border;
+}
+/** Boards saved before card borders were separate draw them in the board border style. */
+export function boardCardBorderStyle(options?: BoardStyleOptions | null): CardBorderStyle {
+  const border = options?.cardBorderStyle ?? boardBorderStyle(options);
+  return borderStyles.some((style) => style === border) ? (border as CardBorderStyle) : 'double';
 }
 /** Explicit choice, then the corner implied by a legacy border, then the preset's. */
 export function boardCornerIcon(options?: BoardStyleOptions | null): CornerIcon {

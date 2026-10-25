@@ -102,6 +102,10 @@ async function openDesign(page: Page, locale: 'en' | 'es' = 'en') {
   return design;
 }
 
+function borderOption(design: Locator, group: 'Board border' | 'Card border', name: string) {
+  return design.getByRole('group', { name: group }).getByRole('radio', { name, exact: true });
+}
+
 async function openCustomize(design: Locator, locale: 'en' | 'es' = 'en') {
   const toggle = design.getByRole('button', { name: designCopy[locale].customize, exact: true });
   if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
@@ -590,7 +594,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
     'data-value',
     'Creepster'
   );
-  await expect(design.getByRole('radio', { name: 'Double', exact: true })).toBeChecked();
+  await expect(borderOption(design, 'Board border', 'Double')).toBeChecked();
   await expect(design.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveAttribute(
     'data-value',
     'cobweb'
@@ -610,6 +614,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
       borderColor: '#d9a952',
       font: 'Creepster',
       borderStyle: 'double',
+      cardBorderStyle: 'double',
       cornerIcon: 'cobweb',
     },
   });
@@ -629,7 +634,8 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   );
   await design.getByRole('combobox', { name: 'Font', exact: true }).click();
   await page.getByRole('option', { name: 'Bebas Neue', exact: true }).click();
-  await design.getByRole('radio', { name: 'Dashed', exact: true }).check();
+  await borderOption(design, 'Board border', 'Dashed').check();
+  await borderOption(design, 'Card border', 'Hand drawn').check();
   await design.getByRole('combobox', { name: 'Corner icons', exact: true }).click();
   await page.getByRole('option', { name: 'Hearts', exact: true }).click();
   // Reloading while this save is in flight would cancel it.
@@ -665,7 +671,8 @@ test('custom designs update the preview, persist, export, and reset to a preset'
     'data-value',
     'Bebas Neue'
   );
-  await expect(design.getByRole('radio', { name: 'Dashed', exact: true })).toBeChecked();
+  await expect(borderOption(design, 'Board border', 'Dashed')).toBeChecked();
+  await expect(borderOption(design, 'Card border', 'Hand drawn')).toBeChecked();
   await expect(design.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveAttribute(
     'data-value',
     'heart'
@@ -691,7 +698,7 @@ test('custom designs update the preview, persist, export, and reset to a preset'
     'data-value',
     'Jost'
   );
-  await expect(design.getByRole('radio', { name: 'Double', exact: true })).toBeChecked();
+  await expect(borderOption(design, 'Board border', 'Double')).toBeChecked();
   await expect(
     design.getByRole('checkbox', { name: /Print the board name at the top/ })
   ).toBeChecked();
@@ -757,7 +764,7 @@ for (const width of [1440, 390]) {
     await enterHex(page, background, '#345678');
     await design.getByRole('combobox', { name: 'Font', exact: true }).click();
     await page.getByRole('option', { name: 'Caveat', exact: true }).click();
-    await design.getByRole('radio', { name: 'Dashed', exact: true }).check();
+    await borderOption(design, 'Board border', 'Dashed').check();
     await expect(background).toBeEnabled();
     async function choose(name: string) {
       const choice = design.getByRole('button', { name, exact: true });
@@ -776,7 +783,7 @@ for (const width of [1440, 390]) {
       'data-value',
       'Caveat'
     );
-    await expect(design.getByRole('radio', { name: 'Dashed', exact: true })).toBeChecked();
+    await expect(borderOption(design, 'Board border', 'Dashed')).toBeChecked();
     await enterHex(page, background, '#abcdef');
     await expect(background).toBeEnabled();
     await choose('Classic');
@@ -787,7 +794,7 @@ for (const width of [1440, 390]) {
       'data-value',
       'Caveat'
     );
-    await expect(design.getByRole('radio', { name: 'Dashed', exact: true })).toBeChecked();
+    await expect(borderOption(design, 'Board border', 'Dashed')).toBeChecked();
     await page.reload();
     await expect(background).toHaveValue('#abcdef');
   });
@@ -1206,7 +1213,7 @@ for (const width of [1024, 1440, 2560]) {
       await designViewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))
     ).toEqual(savedPosition);
     before = await designImage.getAttribute('src');
-    await design.getByRole('radio', { name: 'Dashed', exact: true }).check();
+    await borderOption(design, 'Board border', 'Dashed').check();
     await expect.poll(() => designImage.getAttribute('src')).not.toBe(before);
     await expect(design.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
     expect(

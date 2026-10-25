@@ -226,6 +226,28 @@ describe('editable print designs', () => {
     expect(boardStyleSchema.safeParse(saved).success).toBe(true);
     expect(editableBoardStyle(saved)).toMatchObject({ borderStyle: 'double', cornerIcon: corner });
   });
+  it('draws card borders in the board border style until they are set separately', () => {
+    expect(resolveBoardStyle({}).cardBorderStyle).toBe('hand-drawn');
+    expect(resolveBoardStyle({ presetId: 'wedding' }).cardBorderStyle).toBe('double');
+    expect(resolveBoardStyle({ presetId: 'custom', borderStyle: 'none' }).cardBorderStyle).toBe(
+      'none'
+    );
+    expect(resolveBoardStyle({ presetId: 'custom', borderStyle: 'stars' }).cardBorderStyle).toBe(
+      'double'
+    );
+    const split = resolveBoardStyle({
+      presetId: 'custom',
+      borderStyle: 'dashed',
+      cardBorderStyle: 'hand-drawn',
+    });
+    expect(split).toMatchObject({
+      borderStyle: 'dashed',
+      cardBorderStyle: 'hand-drawn',
+      themed: true,
+    });
+    expect(boardStyleSchema.safeParse({ cardBorderStyle: 'solid' }).success).toBe(true);
+    expect(boardStyleSchema.safeParse({ cardBorderStyle: 'stars' }).success).toBe(false);
+  });
   it('chooses corner icons independently of the border style', () => {
     const style = resolveBoardStyle({
       presetId: 'custom',
