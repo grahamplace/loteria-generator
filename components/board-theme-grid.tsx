@@ -35,8 +35,8 @@ export function ThemeThumbnail({ id, className }: { id: BoardThemeId; className?
   return (
     <Image
       src={`/themes/picker/${id}.webp`}
-      width={96}
-      height={124}
+      width={400}
+      height={320}
       alt=""
       unoptimized
       className={cn(
