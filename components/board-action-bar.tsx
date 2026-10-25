@@ -11,8 +11,8 @@ import { UPLOAD_IMAGE_ACCEPT } from '@/lib/image-formats';
 import {
   CONVERTIBLE_IMAGE_ACCEPT,
   convertForUpload,
-  convertibleKind,
   isUploadCandidate,
+  needsConversion,
 } from '@/lib/convert-upload-image';
 import { Button } from '@/components/ui/button';
 import { PhotoModeSwitch } from '@/components/photo-mode-switch';
@@ -74,7 +74,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
     async function acceptFiles(files: File[], method: 'drop' | 'picker') {
       if (photoModeSaving) return;
       const candidates = files.filter(isUploadCandidate);
-      const toConvert = candidates.filter((f) => convertibleKind(f)).length;
+      const toConvert = candidates.filter(needsConversion).length;
       const convertingToast =
         toConvert > 0
           ? toast.loading(t('toasts.convertingPhotos', { count: toConvert }))
