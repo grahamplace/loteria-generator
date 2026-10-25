@@ -10,6 +10,8 @@ export const printFontFiles: Record<PrintFont, string> = {
   Caveat: '/fonts/themes/Caveat.woff2',
   'Bebas Neue': '/fonts/themes/BebasNeue-Regular.ttf',
   Creepster: '/fonts/themes/Creepster-Regular.ttf',
+  Cinzel: '/fonts/themes/Cinzel-Regular.woff2',
+  Rye: '/fonts/themes/Rye-Regular.woff2',
 };
 
 const loadedFonts = new Map<PrintFont, Promise<void>>();

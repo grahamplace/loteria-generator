@@ -9,7 +9,7 @@ import {
   type BoardDesignValues,
   type BoardStyleOptions,
   type BorderStyle,
-  type CardBorderStyle,
+  type CurrentBorderStyle,
 } from '@/lib/themes/presets';
 import { editableBoardStyle } from '@/lib/themes/render-style';
 import { cn } from '@/lib/utils';
@@ -18,10 +18,12 @@ import { BoardFontPicker } from '@/components/board-font-picker';
 
 const colorKeys = [
   'backgroundColor',
-  'badgeColor',
-  'numberColor',
   'labelColor',
   'borderColor',
+  'cardColor',
+  'cardTextColor',
+  'badgeColor',
+  'numberColor',
 ] as const;
 
 function ColorControl({
@@ -331,7 +333,7 @@ export function BoardDesignControls({
 }
 
 /** Segmented control backed by native radios, so arrow keys move the choice. */
-function BorderStylePicker<Style extends CardBorderStyle>({
+function BorderStylePicker<Style extends CurrentBorderStyle>({
   legend,
   options,
   value,
@@ -349,16 +351,12 @@ function BorderStylePicker<Style extends CardBorderStyle>({
   return (
     <fieldset className="min-w-0">
       <legend className="mb-1.5 text-sm font-medium">{legend}</legend>
-      <div
-        className={cn(
-          'grid gap-px overflow-hidden rounded-lg border border-input bg-input',
-          options.length > 4 ? 'grid-cols-3 min-[420px]:grid-cols-5' : 'grid-cols-4'
-        )}
-      >
+      {/* Wrapped rows stretch to full width, so a short last row leaves no gaps. */}
+      <div className="flex flex-wrap gap-px overflow-hidden rounded-lg border border-input bg-input">
         {options.map((border) => (
           <label
             key={border}
-            className="relative flex min-h-11 cursor-pointer touch-manipulation items-center justify-center bg-background px-1.5 text-center text-[0.8125rem] leading-tight font-medium text-foreground transition-colors hover:bg-primary/5 has-[:checked]:bg-primary has-[:checked]:font-semibold has-[:checked]:text-primary-foreground has-[:disabled]:cursor-wait has-[:disabled]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-4 has-[:focus-visible]:outline-current motion-reduce:transition-none"
+            className="relative flex min-h-11 grow basis-[30%] min-[420px]:basis-[22%] cursor-pointer touch-manipulation items-center justify-center bg-background px-1.5 text-center text-[0.8125rem] leading-tight font-medium text-foreground transition-colors hover:bg-primary/5 has-[:checked]:bg-primary has-[:checked]:font-semibold has-[:checked]:text-primary-foreground has-[:disabled]:cursor-wait has-[:disabled]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-4 has-[:focus-visible]:outline-current motion-reduce:transition-none"
           >
             <input
               type="radio"
@@ -369,7 +367,7 @@ function BorderStylePicker<Style extends CardBorderStyle>({
               onChange={() => onChange(border)}
               className="absolute inset-0 cursor-pointer appearance-none opacity-0 disabled:cursor-wait"
             />
-            {t(`borders.${border as CardBorderStyle}`)}
+            {t(`borders.${border as CurrentBorderStyle}`)}
           </label>
         ))}
       </div>

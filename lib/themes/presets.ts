@@ -11,16 +11,24 @@ export const printFonts = [
   'Playfair Display',
   'Fredoka',
   'Roboto Slab',
+  'Cinzel',
+  'Rye',
 ] as const;
 export type PrintFont = (typeof printFonts)[number];
-/** Lines drawn around each card. Saved `borderStyle` values also accept these. */
-export const borderStyles = ['hand-drawn', 'none', 'solid', 'double', 'dashed'] as const;
+export const borderStyles = [
+  'hand-drawn',
+  'none',
+  'solid',
+  'double',
+  'thick-thin',
+  'dashed',
+  'dotted',
+] as const;
 /**
  * Frames drawn around the whole board. A saved `hand-drawn` board border
- * predates the split and never drew a frame, so it reads as `none`.
+ * never drew a frame, so it reads as `none`.
  */
-export const boardFrameStyles = ['none', 'solid', 'double', 'dashed'] as const;
-export type CardBorderStyle = (typeof borderStyles)[number];
+export const boardFrameStyles = borderStyles.filter((style) => style !== 'hand-drawn');
 /**
  * Still accepted from saved boards and older clients; rendered as a plain
  * double border. `web` and `pencils` also imply their corner icon.
@@ -36,7 +44,8 @@ export const legacyBorderStyles = [
   'waves',
   'papel',
 ] as const;
-export type BorderStyle = (typeof borderStyles)[number] | (typeof legacyBorderStyles)[number];
+export type CurrentBorderStyle = (typeof borderStyles)[number];
+export type BorderStyle = CurrentBorderStyle | (typeof legacyBorderStyles)[number];
 export type BoardThemeId = ThemeId | 'custom';
 export interface BoardDesignValues {
   backgroundColor: string;
@@ -44,11 +53,14 @@ export interface BoardDesignValues {
   numberColor: string;
   labelColor: string;
   borderColor: string;
+  /** Card fill; boards saved before it existed use the background color. */
+  cardColor: string;
+  /** Card labels; boards saved before it existed use the title color. */
+  cardTextColor: string;
   font: PrintFont;
-  /** Frame around the whole board. */
+  /** Page frame. Before `cardBorderStyle` existed it also styled the cards. */
   borderStyle: BorderStyle;
-  /** Lines around each card. */
-  cardBorderStyle: CardBorderStyle;
+  cardBorderStyle: CurrentBorderStyle;
   cornerIcon: CornerIcon;
 }
 export interface BoardStyleOptions extends Partial<BoardDesignValues> {
@@ -64,6 +76,8 @@ const designKeys = [
   'numberColor',
   'labelColor',
   'borderColor',
+  'cardColor',
+  'cardTextColor',
   'font',
   'borderStyle',
   'cardBorderStyle',
@@ -109,115 +123,195 @@ export function mergeBoardStyles(
   if (latestCustom) next.customDesign = latestCustom;
   return next;
 }
+/**
+ * Each preset's look. Colors live in app/globals.css as --loteria-<id>-*.
+ * `border` frames the page and `cardBorder` outlines each card.
+ */
 export const themePresets = [
-  { id: 'classic', name: { en: 'Classic', 'es-MX': 'Clásica' }, corner: 'none', font: 'Jost' },
+  {
+    id: 'classic',
+    name: { en: 'Classic', 'es-MX': 'Clásica' },
+    corner: 'none',
+    font: 'Jost',
+    border: 'hand-drawn',
+    cardBorder: 'hand-drawn',
+  },
   {
     id: 'halloween',
     name: { en: 'Halloween', 'es-MX': 'Halloween' },
     corner: 'cobweb',
     font: 'Creepster',
+    border: 'double',
+    cardBorder: 'solid',
   },
-  { id: 'christmas', name: { en: 'Christmas', 'es-MX': 'Navidad' }, corner: 'none', font: 'Jost' },
+  {
+    id: 'christmas',
+    name: { en: 'Christmas', 'es-MX': 'Navidad' },
+    corner: 'holly',
+    font: 'Playfair Display',
+    border: 'thick-thin',
+    cardBorder: 'double',
+  },
   {
     id: 'birthday',
     name: { en: 'Birthday', 'es-MX': 'Cumpleaños' },
-    corner: 'none',
-    font: 'Bebas Neue',
+    corner: 'cake',
+    font: 'Fredoka',
+    border: 'dotted',
+    cardBorder: 'solid',
   },
   {
     id: 'family-reunion',
     name: { en: 'Family Reunion', 'es-MX': 'Reunión familiar' },
-    corner: 'none',
-    font: 'Jost',
+    corner: 'flower',
+    font: 'Roboto Slab',
+    border: 'thick-thin',
+    cardBorder: 'double',
   },
   {
     id: 'quinceanera',
     name: { en: 'Quincea\u00f1era', 'es-MX': 'Quinceañera' },
-    corner: 'none',
-    font: 'Jost',
+    corner: 'tiara',
+    font: 'Playfair Display',
+    border: 'thick-thin',
+    cardBorder: 'double',
   },
-  { id: 'wedding', name: { en: 'Wedding', 'es-MX': 'Boda' }, corner: 'none', font: 'Jost' },
+  {
+    id: 'wedding',
+    name: { en: 'Wedding', 'es-MX': 'Boda' },
+    corner: 'rings',
+    font: 'Cinzel',
+    border: 'double',
+    cardBorder: 'solid',
+  },
   {
     id: 'baby-shower-boy',
     name: { en: 'Baby Shower (Boy)', 'es-MX': 'Baby shower (niño)' },
-    corner: 'none',
-    font: 'Jost',
+    corner: 'rattle',
+    font: 'Fredoka',
+    border: 'dashed',
+    cardBorder: 'solid',
   },
   {
     id: 'baby-shower-girl',
     name: { en: 'Baby Shower (Girl)', 'es-MX': 'Baby shower (niña)' },
-    corner: 'none',
-    font: 'Jost',
+    corner: 'pacifier',
+    font: 'Fredoka',
+    border: 'dashed',
+    cardBorder: 'solid',
   },
   {
     id: 'bridal-shower',
     name: { en: 'Bridal Shower', 'es-MX': 'Despedida de soltera' },
-    corner: 'none',
-    font: 'Jost',
+    corner: 'flower',
+    font: 'Playfair Display',
+    border: 'double',
+    cardBorder: 'solid',
   },
   {
     id: 'bachelorette',
     name: { en: 'Bachelorette', 'es-MX': 'Fiesta de amigas' },
-    corner: 'none',
-    font: 'Jost',
+    corner: 'disco-ball',
+    font: 'Bebas Neue',
+    border: 'dotted',
+    cardBorder: 'solid',
   },
   {
     id: 'friendsgiving',
     name: { en: 'Friendsgiving', 'es-MX': 'Cena de amigos' },
-    corner: 'none',
-    font: 'Jost',
+    corner: 'maple-leaf',
+    font: 'Roboto Slab',
+    border: 'thick-thin',
+    cardBorder: 'double',
   },
   {
     id: 'graduation',
     name: { en: 'Graduation', 'es-MX': 'Graduación' },
-    corner: 'none',
-    font: 'Bebas Neue',
+    corner: 'grad-cap',
+    font: 'Cinzel',
+    border: 'thick-thin',
+    cardBorder: 'solid',
   },
   {
     id: 'classroom',
     name: { en: 'Classroom', 'es-MX': 'Salón de clases' },
     corner: 'pencil',
-    font: 'Bebas Neue',
+    font: 'Caveat',
+    border: 'solid',
+    cardBorder: 'dashed',
   },
   {
     id: 'anniversary',
     name: { en: 'Wedding Anniversary', 'es-MX': 'Aniversario de bodas' },
-    corner: 'none',
-    font: 'Jost',
+    corner: 'rings',
+    font: 'Playfair Display',
+    border: 'thick-thin',
+    cardBorder: 'double',
   },
   {
     id: 'soccer-team',
     name: { en: 'Soccer Team', 'es-MX': 'Equipo de fútbol' },
-    corner: 'none',
+    corner: 'soccer',
     font: 'Bebas Neue',
+    border: 'solid',
+    cardBorder: 'solid',
   },
   {
     id: 'new-years',
     name: { en: "New Year's", 'es-MX': 'Año Nuevo' },
-    corner: 'none',
+    corner: 'champagne',
     font: 'Bebas Neue',
+    border: 'dotted',
+    cardBorder: 'thick-thin',
   },
   {
     id: 'milestone-birthday',
     name: { en: '50th Birthday', 'es-MX': 'Cumpleaños especial' },
-    corner: 'none',
+    corner: 'balloon',
     font: 'Bebas Neue',
+    border: 'dotted',
+    cardBorder: 'solid',
   },
   {
     id: 'destination-wedding',
     name: { en: 'Destination Wedding', 'es-MX': 'Boda de destino' },
-    corner: 'none',
-    font: 'Jost',
+    corner: 'palm-tree',
+    font: 'Montserrat',
+    border: 'double',
+    cardBorder: 'solid',
   },
   {
     id: 'cinco-de-mayo',
     name: { en: 'Cinco de Mayo', 'es-MX': 'Cinco de Mayo' },
-    corner: 'none',
-    font: 'Jost',
+    corner: 'maracas',
+    font: 'Rye',
+    border: 'dotted',
+    cardBorder: 'double',
   },
-  { id: 'hanukkah', name: { en: 'Hanukkah', 'es-MX': 'Janucá' }, corner: 'none', font: 'Jost' },
-  { id: 'easter', name: { en: 'Easter', 'es-MX': 'Pascua' }, corner: 'none', font: 'Jost' },
-] as const;
+  {
+    id: 'hanukkah',
+    name: { en: 'Hanukkah', 'es-MX': 'Janucá' },
+    corner: 'menorah',
+    font: 'Cinzel',
+    border: 'double',
+    cardBorder: 'solid',
+  },
+  {
+    id: 'easter',
+    name: { en: 'Easter', 'es-MX': 'Pascua' },
+    corner: 'easter-egg',
+    font: 'Fredoka',
+    border: 'dotted',
+    cardBorder: 'dashed',
+  },
+] as const satisfies readonly {
+  id: string;
+  name: { en: string; 'es-MX': string };
+  corner: CornerIcon;
+  font: PrintFont;
+  border: CurrentBorderStyle;
+  cardBorder: CurrentBorderStyle;
+}[];
 export type ThemeId = (typeof themePresets)[number]['id'];
 export function isThemeId(value: unknown): value is ThemeId {
   return typeof value === 'string' && themePresets.some((preset) => preset.id === value);
@@ -225,15 +319,22 @@ export function isThemeId(value: unknown): value is ThemeId {
 export function getTheme(id?: string | null) {
   return themePresets.find((preset) => preset.id === id) ?? themePresets[0];
 }
-export function boardBorderStyle(options?: BoardStyleOptions | null): BorderStyle {
-  const preset = getTheme(options?.presetId);
-  const border = options?.borderStyle ?? (preset.id === 'classic' ? 'hand-drawn' : 'double');
-  return legacyBorderStyles.some((legacy) => legacy === border) ? 'double' : border;
+function currentBorderStyle(border: BorderStyle): CurrentBorderStyle {
+  return legacyBorderStyles.some((legacy) => legacy === border)
+    ? 'double'
+    : (border as CurrentBorderStyle);
 }
-/** Boards saved before card borders were separate draw them in the board border style. */
-export function boardCardBorderStyle(options?: BoardStyleOptions | null): CardBorderStyle {
-  const border = options?.cardBorderStyle ?? boardBorderStyle(options);
-  return borderStyles.some((style) => style === border) ? (border as CardBorderStyle) : 'double';
+export function boardBorderStyle(options?: BoardStyleOptions | null): CurrentBorderStyle {
+  return currentBorderStyle(options?.borderStyle ?? getTheme(options?.presetId).border);
+}
+/**
+ * Explicit choice, then the page border for designs saved when one style
+ * drew both, then the preset's.
+ */
+export function boardCardBorderStyle(options?: BoardStyleOptions | null): CurrentBorderStyle {
+  if (options?.cardBorderStyle) return options.cardBorderStyle;
+  if (options?.borderStyle) return currentBorderStyle(options.borderStyle);
+  return getTheme(options?.presetId).cardBorder;
 }
 /** Explicit choice, then the corner implied by a legacy border, then the preset's. */
 export function boardCornerIcon(options?: BoardStyleOptions | null): CornerIcon {

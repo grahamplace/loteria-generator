@@ -16,6 +16,8 @@ export const boardStyleSchema = z.object({
   labelColor: printColorSchema.optional(),
   numberColor: printColorSchema.optional(),
   borderColor: printColorSchema.optional(),
+  cardColor: printColorSchema.optional(),
+  cardTextColor: printColorSchema.optional(),
   font: z.enum(printFonts).optional(),
   borderStyle: z.enum([...borderStyles, ...legacyBorderStyles]).optional(),
   cardBorderStyle: z.enum(borderStyles).optional(),

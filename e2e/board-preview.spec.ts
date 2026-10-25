@@ -163,9 +163,10 @@ test('desktop design opens from the Theme row beside the preview and follows his
     styleOptions: expect.objectContaining({
       presetId: 'wedding',
       showTitle: true,
-      backgroundColor: '#f5efdf',
-      font: 'Jost',
+      backgroundColor: '#e3e9dc',
+      font: 'Cinzel',
       borderStyle: 'double',
+      cardBorderStyle: 'solid',
     }),
   });
   await expect(dialog.getByRole('button', { name: 'Wedding', exact: true })).toHaveAttribute(
@@ -612,9 +613,11 @@ test('custom designs update the preview, persist, export, and reset to a preset'
       numberColor: '#ffffff',
       labelColor: '#ffe8af',
       borderColor: '#d9a952',
+      cardColor: '#2a1b3a',
+      cardTextColor: '#ffe8af',
       font: 'Creepster',
       borderStyle: 'double',
-      cardBorderStyle: 'double',
+      cardBorderStyle: 'solid',
       cornerIcon: 'cobweb',
     },
   });
@@ -690,13 +693,13 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await (await downloaded).saveAs('.scratch/theme-work/custom-design.pdf');
   design = await openDesign(page);
   await design.getByRole('button', { name: 'Wedding', exact: true }).click();
-  await expect(background).toHaveValue('#f5efdf');
+  await expect(background).toHaveValue('#e3e9dc');
   await expect(design.getByRole('textbox', { name: 'Number background', exact: true })).toHaveValue(
-    '#b38d4d'
+    '#a8844f'
   );
   await expect(design.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
     'data-value',
-    'Jost'
+    'Cinzel'
   );
   await expect(borderOption(design, 'Board border', 'Double')).toBeChecked();
   await expect(
@@ -773,9 +776,9 @@ for (const width of [1440, 390]) {
       await expect(choice).toHaveAttribute('aria-pressed', 'true');
     }
     await choose('Wedding');
-    await expect(background).toHaveValue('#f5efdf');
+    await expect(background).toHaveValue('#e3e9dc');
     await choose('Christmas');
-    await expect(background).toHaveValue('#103b30');
+    await expect(background).toHaveValue('#123d31');
     await page.reload();
     await choose('Custom');
     await expect(background).toHaveValue('#345678');
