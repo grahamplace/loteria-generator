@@ -34,6 +34,8 @@ interface BoardActionBarProps {
 }
 export interface BoardActionBarRef {
   triggerFileSelect: () => void;
+  /** Add photos dropped elsewhere on the page, e.g. onto the card grid. */
+  dropFiles: (files: File[]) => void;
 }
 
 export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>(
@@ -63,6 +65,9 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
         if (photoModeSaving) return;
         if (cardCount < maxCards) inputRef.current?.click();
         else if (!isUnlocked) onUnlockRequired();
+      },
+      dropFiles(files) {
+        void acceptFiles(files, 'drop');
       },
     }));
 
