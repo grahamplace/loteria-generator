@@ -73,7 +73,7 @@ export const campaignEmail = inngest.createFunction(
           let promoId: string | null = null;
 
           if (template.discount) {
-            const code = generateDiscountCode();
+            const code = generateDiscountCode(template.discount.codePrefix);
             const expiresAt = new Date(Date.now() + template.discount.expiryDays * DAY_MS);
             const couponId = await template.discount.ensureCoupon();
             const promo = await createOneTimePromotionCode({ code, expiresAt, couponId });

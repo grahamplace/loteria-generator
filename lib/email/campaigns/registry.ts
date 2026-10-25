@@ -2,11 +2,13 @@
 import * as React from 'react';
 import { ReengagementEmail, reengagementSubject } from '@/emails/reengagement';
 import { NoBoardNudgeEmail, noBoardNudgeSubject } from '@/emails/no-board-nudge';
+import { ThemesLaunchEmail, themesLaunchSubject } from '@/emails/themes-launch';
 import { EmptyBoardNudgeEmail, emptyBoardNudgeSubject } from '@/emails/empty-board-nudge';
 import {
   getOrCreateReengagementCoupon,
   getOrCreateNoBoardCoupon,
   getOrCreateEmptyBoardCoupon,
+  getOrCreateThemesLaunchCoupon,
 } from '@/lib/stripe-promotions';
 import {
   REENGAGEMENT_COUPON_ID,
@@ -21,6 +23,11 @@ import {
   EMPTY_BOARD_COUPON_ID,
   EMPTY_BOARD_DISCOUNT_PERCENT,
   EMPTY_BOARD_EXPIRY_DAYS,
+  THEMES_LAUNCH_COUPON_ID,
+  THEMES_LAUNCH_DISCOUNT_PERCENT,
+  THEMES_LAUNCH_EXPIRY_DAYS,
+  THEMES_LAUNCH_CODE_PREFIX,
+  LIFECYCLE_EMAIL_TYPE_THEMES_LAUNCH,
   SUPPORT_REPLY_TO_EMAIL,
 } from '@/lib/constants';
 
@@ -39,6 +46,8 @@ export type CampaignDiscount = {
   couponId: string;
   percent: number;
   expiryDays: number;
+  /** Code prefix (e.g. `THEMES` → `THEMES-7KQ2M9`); defaults to `LOTERIA`. */
+  codePrefix?: string;
   ensureCoupon: () => Promise<string>;
 };
 
@@ -136,6 +145,28 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       ensureCoupon: getOrCreateEmptyBoardCoupon,
     },
     replyTo: SUPPORT_REPLY_TO_EMAIL,
+  },
+  {
+    key: LIFECYCLE_EMAIL_TYPE_THEMES_LAUNCH,
+    label: `Themes launch (${THEMES_LAUNCH_DISCOUNT_PERCENT}% off)`,
+    description: 'Announces themes and live preview, with a Halloween board as the example.',
+    subject: themesLaunchSubject,
+    render: (p: CampaignEmailProps): React.ReactElement =>
+      ThemesLaunchEmail({
+        name: p.name,
+        locale: p.locale,
+        discountCode: p.discountCode ?? '',
+        redeemUrl: p.redeemUrl ?? '',
+        unsubscribeUrl: p.unsubscribeUrl,
+        appUrl: p.appUrl,
+      }) as React.ReactElement,
+    discount: {
+      couponId: THEMES_LAUNCH_COUPON_ID,
+      percent: THEMES_LAUNCH_DISCOUNT_PERCENT,
+      expiryDays: THEMES_LAUNCH_EXPIRY_DAYS,
+      codePrefix: THEMES_LAUNCH_CODE_PREFIX,
+      ensureCoupon: getOrCreateThemesLaunchCoupon,
+    },
   },
 ];
 

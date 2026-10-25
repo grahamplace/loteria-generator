@@ -9,6 +9,8 @@ import {
   NO_BOARD_DISCOUNT_PERCENT,
   EMPTY_BOARD_COUPON_ID,
   EMPTY_BOARD_DISCOUNT_PERCENT,
+  THEMES_LAUNCH_COUPON_ID,
+  THEMES_LAUNCH_DISCOUNT_PERCENT,
 } from '@/lib/constants';
 
 function defaultClient(): Stripe {
@@ -85,6 +87,17 @@ export async function getOrCreateEmptyBoardCoupon(
     id: EMPTY_BOARD_COUPON_ID,
     percentOff: EMPTY_BOARD_DISCOUNT_PERCENT,
     name: `Empty Board ${EMPTY_BOARD_DISCOUNT_PERCENT}% Off`,
+  });
+}
+
+/** Idempotently ensure the reusable themes-launch coupon exists; returns its id. */
+export async function getOrCreateThemesLaunchCoupon(
+  client: Stripe = defaultClient()
+): Promise<string> {
+  return getOrCreateCoupon(client, {
+    id: THEMES_LAUNCH_COUPON_ID,
+    percentOff: THEMES_LAUNCH_DISCOUNT_PERCENT,
+    name: `Themes Launch ${THEMES_LAUNCH_DISCOUNT_PERCENT}% Off`,
   });
 }
 

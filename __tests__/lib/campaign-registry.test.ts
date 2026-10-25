@@ -13,6 +13,10 @@ import {
   EMPTY_BOARD_DISCOUNT_PERCENT,
   EMPTY_BOARD_EXPIRY_DAYS,
   SUPPORT_REPLY_TO_EMAIL,
+  LIFECYCLE_EMAIL_TYPE_THEMES_LAUNCH,
+  THEMES_LAUNCH_COUPON_ID,
+  THEMES_LAUNCH_DISCOUNT_PERCENT,
+  THEMES_LAUNCH_EXPIRY_DAYS,
 } from '@/lib/constants';
 
 describe('getCampaignTemplate', () => {
@@ -58,8 +62,10 @@ describe('getCampaignTemplate', () => {
       'reengagement',
       LIFECYCLE_EMAIL_TYPE_NO_BOARD,
       LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE,
+      LIFECYCLE_EMAIL_TYPE_THEMES_LAUNCH,
     ].map((k) => getCampaignTemplate(k)!.discount!.couponId);
     expect(couponIds).toContain(EMPTY_BOARD_COUPON_ID);
+    expect(couponIds).toContain(THEMES_LAUNCH_COUPON_ID);
     expect(new Set(couponIds).size).toBe(couponIds.length);
   });
 
@@ -89,6 +95,13 @@ describe('getCampaignTemplate', () => {
     );
   });
 
+  it('mints themes-launch codes with a THEMES prefix so redemptions are traceable to it', () => {
+    const template = getCampaignTemplate(LIFECYCLE_EMAIL_TYPE_THEMES_LAUNCH)!;
+    expect(template.discount!.percent).toBe(THEMES_LAUNCH_DISCOUNT_PERCENT);
+    expect(template.discount!.expiryDays).toBe(THEMES_LAUNCH_EXPIRY_DAYS);
+    expect(template.discount!.codePrefix).toBe('THEMES');
+  });
+
   it('returns undefined for unknown keys', () => {
     expect(getCampaignTemplate('nope')).toBeUndefined();
   });
@@ -107,6 +120,11 @@ describe('campaignTemplateOptions', () => {
       {
         key: LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE,
         label: `Board but no cards (${EMPTY_BOARD_DISCOUNT_PERCENT}% off)`,
+        hasDiscount: true,
+      },
+      {
+        key: LIFECYCLE_EMAIL_TYPE_THEMES_LAUNCH,
+        label: `Themes launch (${THEMES_LAUNCH_DISCOUNT_PERCENT}% off)`,
         hasDiscount: true,
       },
     ]);
