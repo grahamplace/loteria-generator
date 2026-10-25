@@ -2,7 +2,9 @@
 //
 // Shared chrome for lifecycle emails: the cream backdrop, centered wordmark,
 // white content card, optional "how it works" example image, and the footer
-// with the unsubscribe link. Each email supplies its own copy as children and
+// with the unsubscribe link. The wordmark, example image, and (in marketing
+// email) a "visit the site" line all link to the dashboard, so a reader who
+// skips the main button still has several ways back into the app. Each email supplies its own copy as children and
 // (optionally) the DiscountCallout.
 import * as React from 'react';
 import {
@@ -46,6 +48,16 @@ export const leadStyle = {
   marginTop: '16px',
 } as const;
 
+/** The dashboard in the reader's language; Spanish lives under `/es`. */
+export function dashboardUrl(appUrl: string, locale: 'en' | 'es'): string {
+  return `${appUrl}${locale === 'es' ? '/es' : ''}/dashboard`;
+}
+
+const VISIT_SITE_COPY = {
+  en: (host: string) => `Visit ${host} →`,
+  es: (host: string) => `Visita ${host} →`,
+};
+
 export type LoteriaEmailLayoutProps = {
   locale: 'en' | 'es';
   /** Inbox preview snippet. */
@@ -73,6 +85,8 @@ export function LoteriaEmailLayout({
 }: LoteriaEmailLayoutProps) {
   const logoSrc = `${appUrl}/email/wordmark.png`;
   const exampleSrc = `${appUrl}/email/loteria-process.png`;
+  const dashboardHref = dashboardUrl(appUrl, locale);
+  const host = new URL(appUrl).host;
   return (
     <Html lang={locale}>
       <Head />
@@ -81,19 +95,21 @@ export function LoteriaEmailLayout({
         style={{ backgroundColor: EMAIL_COLORS.cream, margin: 0, fontFamily: 'Georgia, serif' }}
       >
         <Container style={{ maxWidth: '480px', margin: '0 auto', padding: '32px 24px' }}>
-          <Img
-            src={logoSrc}
-            alt="Lotería Generator"
-            width="240"
-            height="40"
-            style={{
-              width: '240px',
-              maxWidth: '100%',
-              height: 'auto',
-              display: 'block',
-              margin: '0 auto 24px',
-            }}
-          />
+          <Link href={dashboardHref}>
+            <Img
+              src={logoSrc}
+              alt="Lotería Generator"
+              width="240"
+              height="40"
+              style={{
+                width: '240px',
+                maxWidth: '100%',
+                height: 'auto',
+                display: 'block',
+                margin: '0 auto 24px',
+              }}
+            />
+          </Link>
           <Section
             style={{
               backgroundColor: EMAIL_COLORS.card,
@@ -104,19 +120,32 @@ export function LoteriaEmailLayout({
           >
             {children}
             {showExampleImage && (
-              <Img
-                src={exampleSrc}
-                alt="How it works: your photos become custom Lotería cards"
-                width="416"
-                height="539"
-                style={{
-                  width: '100%',
-                  maxWidth: '416px',
-                  height: 'auto',
-                  display: 'block',
-                  margin: '24px auto 0',
-                }}
-              />
+              <Link href={dashboardHref}>
+                <Img
+                  src={exampleSrc}
+                  alt="How it works: your photos become custom Lotería cards"
+                  width="416"
+                  height="539"
+                  style={{
+                    width: '100%',
+                    maxWidth: '416px',
+                    height: 'auto',
+                    display: 'block',
+                    margin: '24px auto 0',
+                  }}
+                />
+              </Link>
+            )}
+            {/* Marketing only: a password reset should carry just the one link. */}
+            {unsubscribeUrl && (
+              <Text style={{ textAlign: 'center' as const, fontSize: '15px', margin: '20px 0 0' }}>
+                <Link
+                  href={dashboardHref}
+                  style={{ color: EMAIL_COLORS.primary, textDecoration: 'underline' }}
+                >
+                  {(VISIT_SITE_COPY[locale] ?? VISIT_SITE_COPY.en)(host)}
+                </Link>
+              </Text>
             )}
             <Hr style={{ borderColor: EMAIL_COLORS.gold, margin: '24px 0' }} />
             <Text style={{ color: EMAIL_COLORS.muted, fontSize: '12px', lineHeight: '18px' }}>
