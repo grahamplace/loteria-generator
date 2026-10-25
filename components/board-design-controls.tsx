@@ -209,10 +209,7 @@ export function DesignSwatches({
     setValues(editableBoardStyle(styles ?? {}));
   }, [styles]);
   return (
-    <span
-      className={cn('flex shrink-0', overlap ? (small ? '-space-x-1.5' : '-space-x-2') : 'gap-0.5')}
-      aria-hidden="true"
-    >
+    <span className={cn('flex shrink-0', overlap ? '-space-x-1' : 'gap-0.5')} aria-hidden="true">
       {values &&
         swatchKeys.map((key) => (
           <span

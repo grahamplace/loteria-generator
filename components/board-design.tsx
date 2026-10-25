@@ -163,7 +163,11 @@ export function BoardThemeRow({
     <span className="min-w-0 flex-1">
       <span className="flex items-center gap-2 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
         {t('theme')}
-        {variant === 'compact' && <DesignSwatches styles={design.shownStyles} overlap small />}
+        {variant === 'compact' && (
+          <span className="ml-auto">
+            <DesignSwatches styles={design.shownStyles} overlap small />
+          </span>
+        )}
       </span>
       <span
         className={cn(
@@ -205,7 +209,7 @@ export function BoardThemeRow({
       className="group/theme -mx-2 flex w-[calc(100%+1rem)] touch-manipulation flex-col gap-2.5 rounded-xl px-2 py-2 text-left transition-colors hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none"
     >
       <span className="flex w-full items-center gap-3">
-        <ThemeThumbnail id={design.selected} className="h-[34px] w-11" />
+        <ThemeThumbnail id={design.selected} className="h-12 w-15" />
         {text}
       </span>
       <span className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border bg-background px-3 text-[13px] font-semibold shadow-xs transition-colors group-hover/theme:border-primary/50 motion-reduce:transition-none [&_svg]:size-4">
