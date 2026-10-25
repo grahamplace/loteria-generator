@@ -545,7 +545,7 @@
       "designSubtitle": "Elige un tema para la ocasión. Si quieres, ajusta los colores abajo.",
       "customizeColorsFont": "Personalizar colores y tipografía",
       "customizeHint": "Al cambiar algo aquí, el tema pasa a <strong>Personalizado</strong>. Si eliges un tema arriba, empiezas de nuevo con ese tema.",
-      "cardsNeverChange": "Tus cartas no cambian. Solo cambia la tabla a su alrededor.",
+      "cardsNeverChange": "Tus cartas nunca cambian. Solo cambia la tabla que las rodea.",
       "cardsStaySame": "Tus cartas siguen iguales. Solo cambia la tabla.",
       "savesAutomatically": "Los cambios se guardan automáticamente.",
       "done": "Listo",
