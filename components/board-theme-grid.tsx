@@ -78,7 +78,12 @@ export function BoardThemeGrid({
 }) {
   const t = useTranslations('Themes.Builder');
   const themeName = useThemeName();
-  const choices: BoardThemeId[] = [...themePresets.map((preset) => preset.id), 'custom'];
+  // Classic (the default) and Custom lead; the occasion themes follow.
+  const choices: BoardThemeId[] = [
+    'classic',
+    'custom',
+    ...themePresets.map((preset) => preset.id).filter((id) => id !== 'classic'),
+  ];
 
   return (
     <div
