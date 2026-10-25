@@ -25,6 +25,11 @@ export const borderStyles = [
   'dotted',
 ] as const;
 /**
+ * Frames drawn around the whole board. A saved `hand-drawn` board border
+ * never drew a frame, so it reads as `none`.
+ */
+export const boardFrameStyles = borderStyles.filter((style) => style !== 'hand-drawn');
+/**
  * Still accepted from saved boards and older clients; rendered as a plain
  * double border. `web` and `pencils` also imply their corner icon.
  */

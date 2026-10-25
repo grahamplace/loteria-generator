@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AdminBreadcrumb } from '../../components/admin-breadcrumb';
 import { RetryFailedButton } from '../../components/retry-failed-button';
+import { RestoreBoardButton } from '../../components/restore-board-button';
 import { AdminBoardAppearance } from '../../components/admin-board-appearance';
 import { AdminBoardCardsGrid } from '../../components/admin-board-cards-grid';
 import { GenerationLimitForm } from '../../components/generation-limit-form';
@@ -93,6 +94,12 @@ export default async function AdminBoardDetailPage({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-sm font-medium">Board Info</CardTitle>
             <div className="flex flex-wrap items-center gap-2">
+              {board.deletedAt && (
+                <>
+                  <Badge variant="destructive">Deleted by owner</Badge>
+                  <RestoreBoardButton boardId={id} />
+                </>
+              )}
               <RetryFailedButton boardId={id} errorCount={errorCount} />
               {board.isUnlocked ? (
                 <Badge variant="default">Unlocked</Badge>

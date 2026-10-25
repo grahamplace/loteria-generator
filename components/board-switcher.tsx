@@ -59,6 +59,11 @@ export function BoardSwitcher({
   const [deleteError, setDeleteError] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const renaming = useRef(false);
+  /** Last opened by mouse or touch: focus returns to the trigger without a ring. */
+  const openedByPointer = useRef(false);
+  function markPointerFocus() {
+    if (openedByPointer.current) triggerRef.current?.setAttribute('data-pointer-focus', '');
+  }
   const { boards, isLoading, error, createBoard, deleteBoard, refreshBoards } = useBoards(open);
   // Keep the current name/design fresh even when the list was fetched before an edit.
   const ordered = [board, ...boards.filter((item) => item.id !== board.id)];
@@ -110,7 +115,15 @@ export function BoardSwitcher({
             id={`board-switcher-${board.id}`}
             type="button"
             aria-label={t('open', { name: board.name })}
-            className="flex min-h-11 min-w-0 max-w-full items-center gap-1.5 rounded-lg px-2 text-left font-semibold tracking-tight transition-colors hover:bg-primary/5 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary touch-manipulation"
+            onPointerDown={() => {
+              openedByPointer.current = true;
+            }}
+            onKeyDown={(event) => {
+              openedByPointer.current = false;
+              event.currentTarget.removeAttribute('data-pointer-focus');
+            }}
+            onBlur={(event) => event.currentTarget.removeAttribute('data-pointer-focus')}
+            className="flex min-h-11 min-w-0 max-w-full items-center gap-1.5 rounded-lg px-2 text-left font-semibold tracking-tight transition-colors hover:bg-primary/5 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary data-pointer-focus:outline-none touch-manipulation"
           >
             <span className="truncate">{board.name}</span>
             <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -125,7 +138,9 @@ export function BoardSwitcher({
               event.preventDefault();
               renaming.current = false;
               onRename();
+              return;
             }
+            markPointerFocus();
           }}
         >
           <DropdownMenuLabel className="text-xs text-muted-foreground">
@@ -262,6 +277,7 @@ export function BoardSwitcher({
         <AlertDialogContent
           onCloseAutoFocus={(event) => {
             event.preventDefault();
+            markPointerFocus();
             triggerRef.current?.focus();
           }}
         >

@@ -67,7 +67,8 @@ export default async function StartPage({
   const { boardId } = await ensureFirstBoard(session.user, store.get(RECENT_BOARD_COOKIE)?.value);
   if (entry) {
     const available = await db.query.boards.findMany({
-      where: (board, { eq }) => eq(board.userId, session.user.id),
+      where: (board, { and, eq, isNull }) =>
+        and(eq(board.userId, session.user.id), isNull(board.deletedAt)),
       with: { cards: { columns: { id: true } } },
     });
     const starter =

@@ -1,5 +1,5 @@
 import { db, boards, cards, type Card } from '@/db';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, sql, isNull } from 'drizzle-orm';
 import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 
 export interface NewCard {
@@ -34,7 +34,7 @@ export async function insertCardsWithinLimit(boardId: string, userId: string, in
     db
       .select({ id: boards.id })
       .from(boards)
-      .where(and(eq(boards.id, boardId), eq(boards.userId, userId)))
+      .where(and(eq(boards.id, boardId), eq(boards.userId, userId), isNull(boards.deletedAt)))
       .for('update'),
     db
       .insert(cards)

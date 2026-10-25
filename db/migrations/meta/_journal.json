@@ -113,6 +113,13 @@
       "when": 1792871042225,
       "tag": "0015_sticky_mockingbird",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792961592996,
+      "tag": "0016_soft_delete_boards",
+      "breakpoints": true
     }
   ]
 }

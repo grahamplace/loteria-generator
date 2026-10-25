@@ -264,6 +264,11 @@ export function useBoardPreview({ styles, boardName, cards }: BoardPreviewProps)
   };
 }
 
+// aria-disabled, not disabled: a disabled button drops focus when the last page
+// is reached, and the focus trap's scripted refocus then shows a keyboard ring.
+const pageButtonClass =
+  'size-11 touch-manipulation transition-colors aria-disabled:cursor-default aria-disabled:opacity-50 aria-disabled:hover:bg-background aria-disabled:hover:text-foreground';
+
 export function BoardPreviewPagination({ state }: { state: ReturnType<typeof useBoardPreview> }) {
   const t = useTranslations('Themes.Builder');
   const { page, pageCount, firstNumber, lastNumber, goToPage } = state;
@@ -274,10 +279,10 @@ export function BoardPreviewPagination({ state }: { state: ReturnType<typeof use
         type="button"
         variant="outline"
         size="icon"
-        className="size-11 touch-manipulation transition-colors"
+        className={pageButtonClass}
         aria-label={t('previousPreviewPage')}
-        disabled={page === 0}
-        onClick={() => goToPage(page - 1)}
+        aria-disabled={page === 0}
+        onClick={() => page > 0 && goToPage(page - 1)}
       >
         <ChevronLeft aria-hidden="true" />
       </Button>
@@ -293,10 +298,10 @@ export function BoardPreviewPagination({ state }: { state: ReturnType<typeof use
         type="button"
         variant="outline"
         size="icon"
-        className="size-11 touch-manipulation transition-colors"
+        className={pageButtonClass}
         aria-label={t('nextPreviewPage')}
-        disabled={page === pageCount - 1}
-        onClick={() => goToPage(page + 1)}
+        aria-disabled={page === pageCount - 1}
+        onClick={() => page < pageCount - 1 && goToPage(page + 1)}
       >
         <ChevronRight aria-hidden="true" />
       </Button>
@@ -361,7 +366,11 @@ export function BoardPreviewImage({
   showPagination = true,
 }: {
   state: ReturnType<typeof useBoardPreview>;
-  fitViewport?: boolean;
+  /**
+   * Shrink the board so its surroundings fit on screen. `sidebar` leaves room
+   * for the Theme row and download controls below it.
+   */
+  fitViewport?: boolean | 'sidebar';
   showPagination?: boolean;
 }) {
   const t = useTranslations('Themes.Builder');
@@ -373,10 +382,16 @@ export function BoardPreviewImage({
       <BoardPreviewInlineZoom
         state={state}
         viewportClassName={cn(
-          fitViewport &&
-            (state.pageCount > 1
-              ? 'max-w-[min(100%,max(8rem,calc((100dvh-29rem)*17/22)))]'
-              : 'max-w-[min(100%,max(8rem,calc((100dvh-25rem)*17/22)))]')
+          fitViewport === 'sidebar'
+            ? state.pageCount > 1
+              ? // The narrower sidebar below xl wraps its text onto extra lines.
+                'max-w-[min(100%,max(8rem,calc((100dvh-36.5rem)*17/22)))] xl:max-w-[min(100%,max(8rem,calc((100dvh-34.25rem)*17/22)))]'
+              : 'max-w-[min(100%,max(8rem,calc((100dvh-32.5rem)*17/22)))] xl:max-w-[min(100%,max(8rem,calc((100dvh-30.25rem)*17/22)))]'
+            : fitViewport &&
+                // The design dialog is at most 860px tall; leave room for its header and page nav.
+                (state.pageCount > 1
+                  ? 'max-w-[min(100%,max(8rem,calc((min(860px,100dvh-3rem)-14rem)*17/22)))]'
+                  : 'max-w-[min(100%,max(8rem,calc((min(860px,100dvh-3rem)-10rem)*17/22)))]')
         )}
       >
         {busy && (

@@ -8,12 +8,16 @@ import {
   convertForUpload,
   convertibleKind,
   isUploadCandidate,
+  needsConversion,
   CONVERTIBLE_IMAGE_ACCEPT,
 } from '@/lib/convert-upload-image';
+import { MAX_UPLOAD_BYTES } from '@/lib/upload-limits';
 
-function file(name: string, type: string) {
-  return new File([new Uint8Array([1, 2, 3])], name, { type, lastModified: 42 });
+function file(name: string, type: string, size = 3) {
+  return new File([new Uint8Array(size)], name, { type, lastModified: 42 });
 }
+
+const OVER_CAP = MAX_UPLOAD_BYTES + 1;
 
 describe('convertibleKind', () => {
   it.each([
@@ -39,6 +43,17 @@ describe('isUploadCandidate', () => {
   });
 });
 
+describe('needsConversion', () => {
+  it('converts HEIC/TIFF at any size and shrinks readable photos only over the cap', () => {
+    expect(needsConversion({ name: 'a.heic', type: '', size: 10 })).toBe(true);
+    expect(needsConversion({ name: 'a.jpg', type: 'image/jpeg', size: 10 })).toBe(false);
+    expect(needsConversion({ name: 'a.jpg', type: 'image/jpeg', size: OVER_CAP })).toBe(true);
+    expect(needsConversion({ name: 'a.png', type: 'image/png', size: OVER_CAP })).toBe(true);
+    // Re-encoding a GIF would drop its animation.
+    expect(needsConversion({ name: 'a.gif', type: 'image/gif', size: OVER_CAP })).toBe(false);
+  });
+});
+
 describe('CONVERTIBLE_IMAGE_ACCEPT', () => {
   it('lists extensions so pickers show type-less HEIC/TIFF files', () => {
     expect(CONVERTIBLE_IMAGE_ACCEPT.split(',')).toEqual(
@@ -49,15 +64,18 @@ describe('CONVERTIBLE_IMAGE_ACCEPT', () => {
 
 describe('convertForUpload', () => {
   const drawImage = vi.fn();
+  const fillRect = vi.fn();
   const fakeBitmap = { width: 6000, height: 4000, close: vi.fn() };
+  const toBlob = vi.fn((cb: BlobCallback) => cb(new Blob(['jpeg'], { type: 'image/jpeg' })));
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
       drawImage,
+      fillRect,
     } as unknown as CanvasRenderingContext2D);
     vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(function (cb) {
-      cb(new Blob(['jpeg'], { type: 'image/jpeg' }));
+      toBlob(cb);
     });
   });
 
@@ -66,9 +84,39 @@ describe('convertForUpload', () => {
     vi.unstubAllGlobals();
   });
 
-  it('returns non-convertible files untouched', async () => {
+  it('returns photos under the cap untouched', async () => {
     const original = file('photo.jpg', 'image/jpeg');
     expect(await convertForUpload(original)).toBe(original);
+  });
+
+  it('shrinks a photo over the cap to a 3000px JPEG on a white background', async () => {
+    vi.stubGlobal(
+      'createImageBitmap',
+      vi.fn(async () => fakeBitmap)
+    );
+
+    const out = await convertForUpload(file('IMG_4821.PNG', 'image/png', OVER_CAP));
+
+    expect(fillRect).toHaveBeenCalledWith(0, 0, 3000, 2000);
+    expect(drawImage).toHaveBeenCalledWith(fakeBitmap, 0, 0, 3000, 2000);
+    expect(out.name).toBe('IMG_4821.jpg');
+    expect(out.type).toBe('image/jpeg');
+    expect(fakeBitmap.close).toHaveBeenCalled();
+  });
+
+  it('steps down in size until the JPEG fits under the cap', async () => {
+    vi.stubGlobal(
+      'createImageBitmap',
+      vi.fn(async () => fakeBitmap)
+    );
+    toBlob
+      .mockImplementationOnce((cb) => cb(new Blob([new Uint8Array(OVER_CAP)])))
+      .mockImplementationOnce((cb) => cb(new Blob(['fits'], { type: 'image/jpeg' })));
+
+    const out = await convertForUpload(file('detailed.jpg', 'image/jpeg', OVER_CAP));
+
+    expect(drawImage).toHaveBeenLastCalledWith(fakeBitmap, 0, 0, 2400, 1600);
+    expect(out.size).toBeLessThanOrEqual(MAX_UPLOAD_BYTES);
   });
 
   it('uses the native decoder when the browser has one (Safari)', async () => {

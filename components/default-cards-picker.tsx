@@ -72,7 +72,7 @@ export function DefaultCardsPicker({
     <Dialog open={open} onOpenChange={(o) => (o ? null : handleClose())}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="font-caveat text-2xl">{t('title')}</DialogTitle>
+          <DialogTitle className="text-xl">{t('title')}</DialogTitle>
           <DialogDescription>{t('subtitle')}</DialogDescription>
         </DialogHeader>
 

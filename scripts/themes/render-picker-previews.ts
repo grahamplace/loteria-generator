@@ -1,4 +1,7 @@
-/** Small, comparable theme swatches made with the production board renderer. */
+/**
+ * Small, comparable theme swatches made with the production board renderer.
+ * 400×320 (5:4, top crop) so the largest tile (~150 CSS px) stays sharp on 2–3× screens.
+ */
 import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import sharp from 'sharp';
@@ -28,8 +31,8 @@ async function main() {
     );
     const png = Buffer.from(canvas.toDataURL('image/png').split(',')[1], 'base64');
     await sharp(png)
-      .resize(96)
-      .webp({ quality: 85 })
+      .resize({ width: 400, height: 320, fit: 'cover', position: 'top' })
+      .webp({ quality: 82 })
       .toFile(`public/themes/picker/${preset.id}.webp`);
   }
   process.stdout.write(`Rendered ${themePresets.length} picker previews.\n`);

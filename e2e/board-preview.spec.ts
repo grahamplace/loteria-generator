@@ -2,6 +2,7 @@ import { test, expect, type Page, type Locator } from '@playwright/test';
 import samples from '../scripts/themes/samples/birthday.json';
 import { updateBoardSchema } from '../lib/validations';
 import { mergeBoardStyles, type BoardStyleOptions } from '../lib/themes/presets';
+import { E2E_BASE_URL } from './helpers/base-url';
 
 // Exercise the real editor and renderer with browser-local fixtures. No API
 // request in this suite can read or mutate a user's board.
@@ -31,7 +32,7 @@ async function openEditor(page: Page, { count = 24, locale = 'en', name = 'Our H
   await page
     .context()
     .addCookies([
-      { name: 'better-auth.session_token', value: 'ui-fixture-only', url: 'http://localhost:3006' },
+      { name: 'better-auth.session_token', value: 'ui-fixture-only', url: E2E_BASE_URL },
     ]);
   await page.addInitScript(() =>
     localStorage.setItem('loteria.onboarding.v1', '{"status":"skipped"}')
@@ -74,63 +75,168 @@ async function enterHex(page: Page, field: Locator, value: string) {
   await field.press('Enter');
 }
 
+const designCopy = {
+  en: {
+    change: /^Change theme, currently /,
+    preview: 'Preview & download',
+    title: 'Design your set',
+    customize: 'Customize colors & font',
+  },
+  es: {
+    change: /^Cambiar tema, actual: /,
+    preview: 'Ver y descargar',
+    title: 'Diseña tu juego',
+    customize: 'Personalizar colores y tipografía',
+  },
+};
+
+// Open "Design your set" the way a user does at this width: the sidebar's
+// Theme row on desktop, the Theme row inside the preview sheet on phones.
+async function openDesign(page: Page, locale: 'en' | 'es' = 'en') {
+  const copy = designCopy[locale];
+  if (page.viewportSize()!.width < 1024)
+    await page.getByRole('button', { name: copy.preview, exact: true }).click();
+  await page.getByRole('button', { name: copy.change }).click();
+  const design = page.getByRole('dialog', { name: copy.title, exact: true });
+  await expect(design).toBeVisible();
+  return design;
+}
+
+function borderOption(design: Locator, group: 'Board border' | 'Card border', name: string) {
+  return design.getByRole('group', { name: group }).getByRole('radio', { name, exact: true });
+}
+
+async function openCustomize(design: Locator, locale: 'en' | 'es' = 'en') {
+  const toggle = design.getByRole('button', { name: designCopy[locale].customize, exact: true });
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+}
+
+test('desktop design opens from the Theme row beside the preview and follows history', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openEditor(page, { count: 20 });
+  // Nothing design-related sits above the cards any more.
+  await expect(page.getByRole('region', { name: 'Design your set' })).toHaveCount(0);
+  const uploads = page.getByRole('region', { name: 'Drop photos to add cards' });
+  expect((await uploads.boundingBox())!.y).toBeLessThan(200);
+  const panel = page.getByRole('complementary', { name: 'Live preview' });
+  const change = panel.getByRole('button', { name: 'Change theme, currently Halloween' });
+  await expect(change).toContainText('Customize board');
+  // Theme sits between the page navigation and the download controls.
+  const navigation = (await panel
+    .getByRole('navigation', { name: 'Preview pages' })
+    .boundingBox())!;
+  const row = (await change.boundingBox())!;
+  const download = (await panel.getByRole('button', { name: 'Download set' }).boundingBox())!;
+  expect(navigation.y).toBeLessThan(row.y);
+  expect(row.y).toBeLessThan(download.y);
+
+  await change.click();
+  await expect(page).toHaveURL(/design=1/);
+  const dialog = page.getByRole('dialog', { name: 'Design your set', exact: true });
+  await expect(dialog.getByRole('button', { name: 'Halloween', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  await expect(dialog.getByRole('button', { name: 'Customize colors & font' })).toHaveAttribute(
+    'aria-expanded',
+    'true'
+  );
+  await page.goBack();
+  await expect(dialog).toHaveCount(0);
+  await page.goForward();
+  await expect(dialog).toBeVisible();
+  await page.reload();
+  await expect(dialog).toBeVisible();
+  const image = dialog.getByRole('img');
+  await expect(dialog.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/design-dialog-desktop.png',
+  });
+  const before = await image.getAttribute('src');
+  const saved = page.waitForRequest((request) => request.method() === 'PATCH');
+  await dialog.getByRole('button', { name: 'Wedding', exact: true }).click();
+  expect((await saved).postDataJSON()).toEqual({
+    styleOptions: expect.objectContaining({
+      presetId: 'wedding',
+      showTitle: true,
+      backgroundColor: '#e3e9dc',
+      font: 'Cinzel',
+      borderStyle: 'double',
+      cardBorderStyle: 'solid',
+    }),
+  });
+  await expect(dialog.getByRole('button', { name: 'Wedding', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  await expect.poll(() => image.getAttribute('src')).not.toBe(before);
+  await expect(dialog.getByRole('status').filter({ hasText: /^Sav/ })).toHaveText('Saved');
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page).not.toHaveURL(/design=1/);
+  await expect(
+    panel.getByRole('button', { name: 'Change theme, currently Wedding' })
+  ).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('Spanish phone sheet swaps to the design view, saves a theme, and deep-links', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openEditor(page, { count: 20, locale: 'es' });
+  await expect(page.getByRole('region', { name: 'Diseña tu juego' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Ver y descargar', exact: true }).click();
+  const sheet = page.getByRole('dialog', { name: 'Vista previa en vivo', exact: true });
+  const row = sheet.getByRole('button', { name: 'Cambiar tema, actual: Halloween' });
+  await expect(row).toBeInViewport();
+  expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(56);
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/design-row-mobile-es.png',
+  });
+  await row.click();
+  const design = page.getByRole('dialog', { name: 'Diseña tu juego', exact: true });
+  await expect(design.getByRole('button', { name: 'Volver a la vista previa' })).toBeFocused();
+  await expect(page).toHaveURL(/design=1/);
+  const wedding = design.getByRole('button', { name: 'Boda', exact: true });
+  expect((await wedding.boundingBox())!.height).toBeGreaterThanOrEqual(56);
+  await expect(design.getByRole('button', { name: 'Listo', exact: true })).toBeInViewport({
+    ratio: 1,
+  });
+  await page.screenshot({
+    animations: 'disabled',
+    path: '.scratch/theme-work/design-view-mobile-es.png',
+  });
+  const saved = page.waitForRequest((request) => request.method() === 'PATCH');
+  await wedding.click();
+  expect((await saved).postDataJSON()).toEqual({
+    styleOptions: expect.objectContaining({ presetId: 'wedding' }),
+  });
+  await expect(wedding).toHaveAttribute('aria-pressed', 'true');
+  await expect(design.getByRole('status')).toHaveText('Guardado');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // One link opens the design view at every width.
+  await page.reload();
+  await expect(design).toBeVisible();
+  await expect(wedding).toHaveAttribute('aria-pressed', 'true');
+  await design.getByRole('button', { name: 'Listo', exact: true }).click();
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByRole('button', { name: 'Cambiar tema, actual: Boda' })).toBeFocused();
+  await expect(page).not.toHaveURL(/design=1/);
+  await expect(sheet.getByRole('button', { name: 'Descargar juego' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(sheet).toHaveCount(0);
+});
+
 for (const [locale, width] of [
   ['en', 1440],
   ['es', 390],
 ] as const) {
-  test(`design panel collapses without losing edits and restores through history (${locale})`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 900 });
-    await openEditor(page, { count: 20, locale });
-    const name = locale === 'en' ? 'Design your set' : 'Diseña tu juego';
-    const panel = page.getByRole('region', { name });
-    const toggle = panel.getByRole('button', { name, exact: true });
-    const title = panel.getByRole('textbox', {
-      name: locale === 'en' ? 'Board title' : 'Título del tablero',
-      exact: true,
-    });
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    const expandedHeight = (await panel.boundingBox())!.height;
-    await title.fill('Nuestra fiesta');
-    await toggle.click();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    await expect(title).toBeHidden();
-    await expect(page.getByRole('button', { name: /Nuestra fiesta/ })).toBeVisible();
-    await expect(toggle).toContainText('Halloween');
-    await expect(panel.getByRole('status')).toHaveCount(0);
-    const collapsedHeight = (await panel.boundingBox())!.height;
-    expect(collapsedHeight).toBeLessThan(90);
-    expect(expandedHeight - collapsedHeight).toBeGreaterThan(200);
-    await expect(page).toHaveURL(/designPanel=closed/);
-    await page.reload();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    await toggle.focus();
-    await page.keyboard.press('Enter');
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    await expect(title).toHaveValue('Nuestra fiesta');
-    await expect(toggle).toBeFocused();
-    await page.goBack();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    await page.goForward();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    await toggle.focus();
-    await page.keyboard.press('Space');
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    await page.screenshot({
-      path: `.scratch/theme-work/collapsed-design-${locale}.png`,
-      animations: 'disabled',
-    });
-    await toggle.click();
-    await title.fill('');
-    await toggle.click();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    await expect(panel.getByRole('alert')).toBeVisible();
-    await toggle.click();
-    await expect(title).toHaveValue('');
-    await expect(title).toHaveAttribute('aria-invalid', 'true');
-  });
-
   test(`upload-area photo mode stays in sync, waits for saving, and recovers (${locale})`, async ({
     page,
   }) => {
@@ -142,13 +248,12 @@ for (const [locale, width] of [
     const illustrated = uploads.getByRole('switch', {
       name: locale === 'en' ? 'Illustrate my photos' : 'Ilustrar mis fotos',
     });
-    const setting = page
-      .getByRole('region', {
-        name: locale === 'en' ? 'Design your set' : 'Diseña tu juego',
-      })
-      .getByRole('switch', {
+    // Photo mode has one home now: the upload area.
+    await expect(
+      page.getByRole('switch', {
         name: locale === 'en' ? 'Illustrate my photos' : 'Ilustrar mis fotos',
-      });
+      })
+    ).toHaveCount(1);
     const choosePhotos = uploads.getByRole('button', {
       name: locale === 'en' ? 'Choose photos' : 'Seleccionar fotos',
     });
@@ -165,7 +270,6 @@ for (const [locale, width] of [
     }
     await expect(illustrated).not.toBeChecked();
     await expectKnobAtEdge(illustrated, false);
-    await expectKnobAtEdge(setting, false);
     let release!: () => void;
     let fail = false;
     let delayed = true;
@@ -185,8 +289,6 @@ for (const [locale, width] of [
         .click();
       await expect(illustrated).toBeChecked();
       await expect(choosePhotos).toBeDisabled();
-      await expect(setting).toBeDisabled();
-      await expect(setting).toBeChecked();
     } finally {
       delayed = false;
       release();
@@ -194,23 +296,19 @@ for (const [locale, width] of [
     await expect(choosePhotos).toBeEnabled();
     await page.reload();
     await expect(illustrated).toBeChecked();
-    await expect(setting).toBeChecked();
-    await setting.click();
+    await illustrated.click();
     await expect(illustrated).not.toBeChecked();
     await expect(illustrated).toBeEnabled();
     fail = true;
     await illustrated.click();
     await expect(illustrated).toBeEnabled();
     await expect(illustrated).not.toBeChecked();
-    await expect(setting).not.toBeChecked();
     fail = false;
     await illustrated.focus();
     await page.keyboard.press('Space');
     await expect(illustrated).toBeChecked();
     await expect(illustrated).toBeEnabled();
-    await expect(setting).toBeChecked();
     await expectKnobAtEdge(illustrated, true);
-    await expectKnobAtEdge(setting, true);
     await uploads.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     expect(await uploads.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     await uploads.screenshot({ path: `.scratch/theme-work/upload-photo-mode-${locale}.png` });
@@ -410,128 +508,75 @@ test('Spanish mobile pagination stays accessible and clamps an out-of-range link
   });
 });
 
-test('mobile theme picker keeps the editor compact and saves a choice before closing', async ({
-  page,
-}) => {
+test('design view keeps failed theme saves on screen and lets the user retry', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await openEditor(page);
-  const trigger = page.getByRole('button', { name: 'Change theme, currently Halloween' });
-  await expect(trigger).toBeInViewport();
-  expect((await trigger.boundingBox())!.height).toBeLessThanOrEqual(80);
-  await expect(
-    page
-      .getByRole('region', { name: 'Design your set' })
-      .getByRole('switch', { name: 'Illustrate my photos' })
-  ).toBeInViewport();
-  await expect(page.getByRole('radiogroup', { name: 'Choose a theme' })).toHaveCount(0);
-  await page.screenshot({
-    animations: 'disabled',
-    path: '.scratch/theme-work/theme-picker-mobile.png',
-  });
-
-  await trigger.focus();
-  await trigger.press('Enter');
-  const sheet = page.getByRole('dialog', { name: 'Choose a theme' });
-  await expect(sheet.getByRole('button', { name: 'Halloween', exact: true })).toBeFocused();
-  await expect(sheet.getByRole('button', { name: 'Halloween', exact: true })).toHaveAttribute(
-    'aria-pressed',
-    'true'
-  );
-  await page.screenshot({
-    animations: 'disabled',
-    path: '.scratch/theme-work/theme-picker-open.png',
-  });
-  const saved = page.waitForRequest((request) => request.method() === 'PATCH');
-  await sheet.getByRole('button', { name: 'Wedding', exact: true }).click();
-  expect((await saved).postDataJSON()).toEqual({
-    styleOptions: expect.objectContaining({
-      presetId: 'wedding',
-      showTitle: true,
-      backgroundColor: '#e3e9dc',
-      font: 'Cinzel',
-      borderStyle: 'double',
-      cardBorderStyle: 'solid',
-    }),
-  });
-  await expect(sheet).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeFocused();
-  await expect(page).not.toHaveURL(/themePicker/);
-  await expect(
-    page
-      .getByRole('region', { name: 'Design your set' })
-      .getByRole('switch', { name: 'Illustrate my photos' })
-  ).not.toBeChecked();
-  await page.reload();
-  await expect(page.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeVisible();
-});
-
-test('theme picker keeps failed saves open and lets the user retry', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await openEditor(page);
-  await expect(
-    page.getByRole('button', { name: 'Change theme, currently Halloween' })
-  ).toBeVisible();
   let finishSave!: () => void;
   const delayed = new Promise<void>((resolve) => {
     finishSave = resolve;
   });
-  await page.route(
-    '**/api/boards/preview-layout-fixture',
-    async (route) => {
-      await delayed;
-      await route.fulfill({ status: 500, json: { error: 'Could not save' } });
-    },
-    { times: 1 }
-  );
-  await page.getByRole('button', { name: 'Change theme, currently Halloween' }).click();
-  const sheet = page.getByRole('dialog', { name: 'Choose a theme' });
-  await sheet.getByRole('button', { name: 'Wedding', exact: true }).click();
-  await expect(sheet.getByRole('status')).toHaveText('Saving…');
-  await expect(sheet.getByRole('button', { name: 'Wedding', exact: true })).toBeDisabled();
+  let failures = 1;
+  await page.route('**/api/boards/preview-layout-fixture', async (route) => {
+    if (route.request().method() !== 'PATCH' || failures === 0) return route.fallback();
+    failures -= 1;
+    await delayed;
+    await route.fulfill({ status: 500, json: { error: 'Could not save' } });
+  });
+  const design = await openDesign(page);
+  await design.getByRole('button', { name: 'Wedding', exact: true }).click();
+  await expect(design.getByRole('status')).toHaveText('Saving…');
+  await expect(design.getByRole('button', { name: 'Wedding', exact: true })).toBeDisabled();
   finishSave();
-  await expect(sheet.getByRole('alert')).toHaveText('Could not save. Please try again.');
-  await expect(sheet.getByRole('button', { name: 'Halloween', exact: true })).toHaveAttribute(
+  await expect(design.getByRole('alert')).toHaveText('Could not save. Please try again.');
+  await expect(design.getByRole('button', { name: 'Halloween', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true'
   );
-  await sheet.getByRole('button', { name: 'Wedding', exact: true }).click();
-  await expect(sheet).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Change theme, currently Wedding' })).toBeFocused();
+  await design.getByRole('button', { name: 'Wedding', exact: true }).click();
+  await expect(design.getByRole('button', { name: 'Wedding', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  await expect(design.getByRole('status')).toHaveText('Saved');
 });
 
-test('Spanish theme picker fits a small phone and supports Back, refresh, and desktop resizing', async ({
+test('Spanish design view fits a small phone and follows Back, refresh, and desktop resizing', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await openEditor(page, { locale: 'es' });
   await page.goto(`${page.url()}?previewPage=2&source=theme-check`);
-  const trigger = page.getByRole('button', { name: 'Cambiar tema, actual: Halloween' });
-  await trigger.click();
-  const sheet = page.getByRole('dialog', { name: 'Elige un tema' });
-  await expect(sheet).toBeVisible();
+  const design = await openDesign(page, 'es');
+  const sheet = page.getByRole('dialog', { name: 'Vista previa en vivo', exact: true });
   await page.goBack();
-  await expect(sheet).toHaveCount(0);
-  await expect(trigger).toBeFocused();
-  await page.goForward();
+  await expect(design).toHaveCount(0);
   await expect(sheet).toBeVisible();
+  await page.goForward();
+  await expect(design).toBeVisible();
   await page.reload();
-  await expect(sheet.getByRole('button', { name: 'Halloween', exact: true })).toBeFocused();
-  const lastTheme = sheet.getByRole('button', { name: 'Pascua', exact: true });
+  await expect(design).toBeVisible();
+  const lastTheme = design.getByRole('button', { name: 'Pascua', exact: true });
   await lastTheme.focus();
   await expect(lastTheme).toBeInViewport();
-  await expect(sheet.getByRole('button', { name: 'Cerrar selector de temas' })).toBeInViewport();
+  await expect(design.getByRole('button', { name: 'Listo', exact: true })).toBeInViewport({
+    ratio: 1,
+  });
+  await expect(design.getByRole('button', { name: 'Volver a la vista previa' })).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({
     animations: 'disabled',
-    path: '.scratch/theme-work/theme-picker-small-es.png',
+    path: '.scratch/theme-work/design-view-small-es.png',
   });
-  await page.keyboard.press('Escape');
-  await expect(trigger).toBeFocused();
-  await expect(page).toHaveURL(/previewPage=2&source=theme-check$/);
-  await trigger.click();
+  // The same link becomes the desktop dialog when the screen grows.
   await page.setViewportSize({ width: 1440, height: 900 });
-  await expect(sheet).toHaveCount(0);
-  await expect(page.getByRole('radio', { name: 'Halloween', exact: true })).toBeChecked();
+  await expect(page.getByRole('dialog')).toHaveCount(1);
+  await expect(design.getByRole('button', { name: 'Halloween', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  await expect(page).toHaveURL(/previewPage=2&source=theme-check&design=1$/);
+  await page.keyboard.press('Escape');
+  await expect(design).toHaveCount(0);
   await expect(page).toHaveURL(/previewPage=2&source=theme-check$/);
 });
 
@@ -542,21 +587,21 @@ test('custom designs update the preview, persist, export, and reset to a preset'
   await openEditor(page, { count: 4 });
   const panel = page.getByRole('complementary', { name: 'Live preview' });
   await expect(panel.getByRole('img')).toBeVisible();
-  await page.getByRole('button', { name: 'Customize', exact: true }).click();
-  const background = page.getByRole('textbox', { name: 'Background', exact: true });
+  let design = await openDesign(page);
+  await openCustomize(design);
+  const background = design.getByRole('textbox', { name: 'Background', exact: true });
   await expect(background).toHaveValue('#21152e');
-  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
+  await expect(design.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
     'data-value',
     'Creepster'
   );
-  await expect(page.getByRole('combobox', { name: 'Page border', exact: true })).toHaveValue(
-    'double'
-  );
-  await expect(page.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveAttribute(
+  await expect(borderOption(design, 'Board border', 'Double')).toBeChecked();
+  await expect(design.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveAttribute(
     'data-value',
     'cobweb'
   );
-  const before = await panel.getByRole('img').getAttribute('src');
+  const image = design.getByRole('img');
+  const before = await image.getAttribute('src');
   const saved = page.waitForRequest((request) => request.method() === 'PATCH');
   await enterHex(page, background, '#123456');
   expect((await saved).postDataJSON()).toEqual({
@@ -576,15 +621,25 @@ test('custom designs update the preview, persist, export, and reset to a preset'
       cornerIcon: 'cobweb',
     },
   });
-  await expect(page.getByRole('radio', { name: 'Custom', exact: true })).toBeChecked();
-  await expect.poll(() => panel.getByRole('img').getAttribute('src')).not.toBe(before);
+  await expect(design.getByRole('button', { name: 'Custom', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  await expect.poll(() => image.getAttribute('src')).not.toBe(before);
   await page.getByLabel('Choose Number background color', { exact: true }).fill('#554433');
-  await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toBeEnabled();
-  await enterHex(page, page.getByRole('textbox', { name: 'Number text', exact: true }), '#ffffaa');
-  await page.getByRole('combobox', { name: 'Font', exact: true }).click();
+  await expect(
+    design.getByRole('textbox', { name: 'Number background', exact: true })
+  ).toBeEnabled();
+  await enterHex(
+    page,
+    design.getByRole('textbox', { name: 'Number text', exact: true }),
+    '#ffffaa'
+  );
+  await design.getByRole('combobox', { name: 'Font', exact: true }).click();
   await page.getByRole('option', { name: 'Bebas Neue', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Page border', exact: true }).selectOption('dashed');
-  await page.getByRole('combobox', { name: 'Corner icons', exact: true }).click();
+  await borderOption(design, 'Board border', 'Dashed').check();
+  await borderOption(design, 'Card border', 'Hand drawn').check();
+  await design.getByRole('combobox', { name: 'Corner icons', exact: true }).click();
   await page.getByRole('option', { name: 'Hearts', exact: true }).click();
   // Reloading while this save is in flight would cancel it.
   const borderColorSaved = page.waitForResponse(
@@ -592,54 +647,64 @@ test('custom designs update the preview, persist, export, and reset to a preset'
       response.request().method() === 'PATCH' &&
       response.request().postData()?.includes('#c0ffee') === true
   );
-  await enterHex(page, page.getByRole('textbox', { name: 'Border color', exact: true }), '#c0ffee');
-  expect((await borderColorSaved).ok()).toBe(true);
-  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toBeEnabled();
-  await page.reload();
-  await expect(page.getByRole('radio', { name: 'Custom', exact: true })).toBeChecked();
-  await expect(background).toHaveValue('#123456');
-  await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toHaveValue(
-    '#554433'
-  );
-  await expect(page.getByRole('textbox', { name: 'Number text', exact: true })).toHaveValue(
-    '#ffffaa'
-  );
-  await expect(page.getByRole('textbox', { name: 'Border color', exact: true })).toHaveValue(
+  await enterHex(
+    page,
+    design.getByRole('textbox', { name: 'Border color', exact: true }),
     '#c0ffee'
   );
-  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
+  expect((await borderColorSaved).ok()).toBe(true);
+  await expect(design.getByRole('combobox', { name: 'Font', exact: true })).toBeEnabled();
+  // ?design=1 survives the reload with the custom design in Customize.
+  await page.reload();
+  await expect(design.getByRole('button', { name: 'Custom', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  await expect(background).toHaveValue('#123456');
+  await expect(design.getByRole('textbox', { name: 'Number background', exact: true })).toHaveValue(
+    '#554433'
+  );
+  await expect(design.getByRole('textbox', { name: 'Number text', exact: true })).toHaveValue(
+    '#ffffaa'
+  );
+  await expect(design.getByRole('textbox', { name: 'Border color', exact: true })).toHaveValue(
+    '#c0ffee'
+  );
+  await expect(design.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
     'data-value',
     'Bebas Neue'
   );
-  await expect(page.getByRole('combobox', { name: 'Page border', exact: true })).toHaveValue(
-    'dashed'
-  );
-  await expect(page.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveAttribute(
+  await expect(borderOption(design, 'Board border', 'Dashed')).toBeChecked();
+  await expect(borderOption(design, 'Card border', 'Hand drawn')).toBeChecked();
+  await expect(design.getByRole('combobox', { name: 'Corner icons', exact: true })).toHaveAttribute(
     'data-value',
     'heart'
   );
-  await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+  await expect(design.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
   await page.screenshot({
     animations: 'disabled',
     path: '.scratch/theme-work/custom-design-desktop.png',
   });
+  await design.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(design).toHaveCount(0);
+  await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
   const downloaded = page.waitForEvent('download');
   await panel.getByRole('button', { name: 'Download preview' }).click();
   await (await downloaded).saveAs('.scratch/theme-work/custom-design.pdf');
-  await page.getByRole('radio', { name: 'Wedding', exact: true }).focus();
-  await page.getByRole('radio', { name: 'Wedding', exact: true }).press('Space');
+  design = await openDesign(page);
+  await design.getByRole('button', { name: 'Wedding', exact: true }).click();
   await expect(background).toHaveValue('#e3e9dc');
-  await expect(page.getByRole('textbox', { name: 'Number background', exact: true })).toHaveValue(
+  await expect(design.getByRole('textbox', { name: 'Number background', exact: true })).toHaveValue(
     '#a8844f'
   );
-  await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
+  await expect(design.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
     'data-value',
     'Cinzel'
   );
-  await expect(page.getByRole('combobox', { name: 'Page border', exact: true })).toHaveValue(
-    'double'
-  );
-  await expect(page.getByRole('checkbox', { name: 'Show title on boards' })).toBeChecked();
+  await expect(borderOption(design, 'Board border', 'Double')).toBeChecked();
+  await expect(
+    design.getByRole('checkbox', { name: /Print the title at the top of every board/ })
+  ).toBeChecked();
 });
 
 test('mobile custom controls are compact, validate colors, and preserve the saved design on failure', async ({
@@ -647,13 +712,20 @@ test('mobile custom controls are compact, validate colors, and preserve the save
 }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await openEditor(page, { locale: 'es' });
-  const customize = page.getByRole('button', { name: 'Personalizar', exact: true });
-  await expect(customize).toHaveAttribute('aria-expanded', 'false');
-  await customize.click();
-  const background = page.getByRole('textbox', { name: 'Fondo', exact: true });
+  const design = await openDesign(page, 'es');
+  const customize = design.getByRole('button', {
+    name: 'Personalizar colores y tipografía',
+    exact: true,
+  });
+  await expect(customize).toHaveAttribute('aria-expanded', 'true');
+  const background = design.getByRole('textbox', { name: 'Fondo', exact: true });
+  // Rows are phone-sized and the hex field is large enough that iOS will not zoom.
+  const swatch = design.getByLabel('Elegir color: Fondo', { exact: true });
+  expect((await swatch.locator('..').boundingBox())!.height).toBeGreaterThanOrEqual(48);
+  await expect(background).toHaveCSS('font-size', '16px');
   await enterHex(page, background, 'oops');
   await expect(background).toHaveAttribute('aria-invalid', 'true');
-  await expect(page.getByText('Ingresa un color hexadecimal de 6 dígitos.')).toBeVisible();
+  await expect(design.getByText('Ingresa un color hexadecimal de 6 dígitos.')).toBeVisible();
   await page.route(
     '**/api/boards/preview-layout-fixture',
     (route) => route.fulfill({ status: 500, json: { error: 'failed' } }),
@@ -661,14 +733,16 @@ test('mobile custom controls are compact, validate colors, and preserve the save
   );
   await enterHex(page, background, '123456');
   // The same message also appears as a toast; check the inline alert.
-  await expect(page.getByRole('region', { name: 'Diseña tu juego' }).getByRole('alert')).toHaveText(
-    'No se pudo guardar. Inténtalo de nuevo.'
+  await expect(design.getByRole('alert')).toHaveText('No se pudo guardar. Inténtalo de nuevo.');
+  await expect(design.getByRole('button', { name: 'Halloween', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
   );
-  await expect(page.getByRole('button', { name: 'Cambiar tema, actual: Halloween' })).toBeVisible();
   await enterHex(page, background, '123456');
-  await expect(
-    page.getByRole('button', { name: 'Cambiar tema, actual: Personalizado' })
-  ).toBeVisible();
+  await expect(design.getByRole('button', { name: 'Personalizado', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await expect(page.getByText('Failed to update board', { exact: true })).toBeHidden({
     timeout: 10000,
@@ -681,37 +755,25 @@ test('mobile custom controls are compact, validate colors, and preserve the save
   await expect(background).toHaveValue('#123456');
   await customize.click();
   await expect(background).toBeHidden();
-  await page.goBack();
-  await expect(background).toBeVisible();
 });
 
 for (const width of [1440, 390]) {
   test(`last custom design survives preset changes and refresh at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await openEditor(page, { count: 4 });
-    await page.getByRole('button', { name: 'Customize', exact: true }).click();
-    const background = page.getByRole('textbox', { name: 'Background', exact: true });
+    const design = await openDesign(page);
+    await openCustomize(design);
+    const background = design.getByRole('textbox', { name: 'Background', exact: true });
     await enterHex(page, background, '#345678');
-    await page.getByRole('combobox', { name: 'Font', exact: true }).click();
+    await design.getByRole('combobox', { name: 'Font', exact: true }).click();
     await page.getByRole('option', { name: 'Caveat', exact: true }).click();
-    await page.getByRole('combobox', { name: 'Page border', exact: true }).selectOption('dashed');
+    await borderOption(design, 'Board border', 'Dashed').check();
     await expect(background).toBeEnabled();
     async function choose(name: string) {
-      if (width >= 1024) {
-        const choice = page.getByRole('radio', { name, exact: true });
-        await expect(choice).toBeEnabled();
-        await choice.focus();
-        await choice.press('Space');
-        await expect(choice).toBeChecked();
-      } else {
-        await page.getByRole('button', { name: /^Change theme, currently / }).click();
-        const sheet = page.getByRole('dialog', { name: 'Choose a theme' });
-        await sheet.getByRole('button', { name, exact: true }).click();
-        await expect(sheet).toHaveCount(0);
-        await expect(
-          page.getByRole('button', { name: `Change theme, currently ${name}` })
-        ).toBeVisible();
-      }
+      const choice = design.getByRole('button', { name, exact: true });
+      await expect(choice).toBeEnabled();
+      await choice.click();
+      await expect(choice).toHaveAttribute('aria-pressed', 'true');
     }
     await choose('Wedding');
     await expect(background).toHaveValue('#e3e9dc');
@@ -720,26 +782,22 @@ for (const width of [1440, 390]) {
     await page.reload();
     await choose('Custom');
     await expect(background).toHaveValue('#345678');
-    await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
+    await expect(design.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
       'data-value',
       'Caveat'
     );
-    await expect(page.getByRole('combobox', { name: 'Page border', exact: true })).toHaveValue(
-      'dashed'
-    );
+    await expect(borderOption(design, 'Board border', 'Dashed')).toBeChecked();
     await enterHex(page, background, '#abcdef');
     await expect(background).toBeEnabled();
     await choose('Classic');
     await page.reload();
     await choose('Custom');
     await expect(background).toHaveValue('#abcdef');
-    await expect(page.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
+    await expect(design.getByRole('combobox', { name: 'Font', exact: true })).toHaveAttribute(
       'data-value',
       'Caveat'
     );
-    await expect(page.getByRole('combobox', { name: 'Page border', exact: true })).toHaveValue(
-      'dashed'
-    );
+    await expect(borderOption(design, 'Board border', 'Dashed')).toBeChecked();
     await page.reload();
     await expect(background).toHaveValue('#abcdef');
   });
@@ -752,7 +810,7 @@ for (const width of [1024, 1440, 2560]) {
     await page.setViewportSize({ width, height: 900 });
     await openEditor(page, { count: 54 });
     const panel = page.getByRole('complementary', { name: 'Live preview' });
-    const expand = panel.getByRole('button', { name: 'Full Screen preview' });
+    const expand = panel.getByRole('button', { name: 'Full screen preview' });
     await expect(expand).toBeVisible();
     const smallWidth = (await panel.getByRole('img').boundingBox())!.width;
     await expand.focus();
@@ -869,7 +927,7 @@ test('expanded preview stays usable on a slower device and connection', async ({
   await page.getByRole('button', { name: 'Preview & download', exact: true }).click();
   const expand = page
     .getByRole('dialog', { name: 'Live preview', exact: true })
-    .getByRole('button', { name: 'Full Screen preview' });
+    .getByRole('button', { name: 'Full screen preview' });
   await expect(expand).toBeVisible();
   const session = await context.newCDPSession(page);
   await session.send('Emulation.setCPUThrottlingRate', { rate: 4 });
@@ -928,7 +986,8 @@ test('font picker previews the actual title, loads on demand, and exports every 
   await openEditor(page, { count: 4, name: 'Lucía y José · 50 años' });
   const panel = page.getByRole('complementary', { name: 'Live preview' });
   await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
-  await page.getByRole('button', { name: 'Customize', exact: true }).click();
+  let design = await openDesign(page);
+  await openCustomize(design);
   const trigger = page.getByRole('combobox', { name: 'Font', exact: true });
   await expect(trigger).toContainText('LUCÍA Y JOSÉ · 50 AÑOS');
   expect(requestedFonts).toEqual([]);
@@ -963,14 +1022,23 @@ test('font picker previews the actual title, loads on demand, and exports every 
       await page.getByRole('option', { name: font, exact: true }).click();
     }
     await expect(trigger).toHaveAttribute('data-value', font);
+    await expect(design.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+    rendered.add(await design.getByRole('img').getAttribute('src'));
+    // Export from the sidebar, then come back to the (now custom) design.
+    await design.getByRole('button', { name: 'Done', exact: true }).click();
+    await expect(design).toHaveCount(0);
     await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
-    rendered.add(await panel.getByRole('img').getAttribute('src'));
     const download = page.waitForEvent('download');
     await panel.getByRole('button', { name: 'Download preview' }).click();
     await (await download).saveAs(`.scratch/theme-work/font-${font.replaceAll(' ', '-')}.pdf`);
+    design = await openDesign(page);
+    await expect(trigger).toBeVisible();
   }
   expect(rendered.size).toBe(4);
-  await expect(page.getByRole('radio', { name: 'Custom', exact: true })).toBeChecked();
+  await expect(design.getByRole('button', { name: 'Custom', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
   await page.reload();
   await expect(trigger).toHaveAttribute('data-value', 'Roboto Slab');
   await expect(trigger).toContainText('LUCÍA Y JOSÉ · 50 AÑOS');
@@ -984,7 +1052,7 @@ test('font picker fits a narrow Spanish screen and keeps long titles contained',
     locale: 'es',
     name: 'La fiesta de cumpleaños de Lucía, José y toda nuestra familia',
   });
-  await page.getByRole('button', { name: 'Personalizar', exact: true }).click();
+  await openCustomize(await openDesign(page, 'es'), 'es');
   const trigger = page.getByRole('combobox', { name: 'Tipografía', exact: true });
   await trigger.click();
   const menu = page.getByRole('listbox');
@@ -1012,7 +1080,8 @@ test('font loading failures can retry without saving a broken font', async ({ pa
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.route('**/fonts/themes/Fredoka-Regular.woff2', (route) => route.abort(), { times: 1 });
   await openEditor(page);
-  await page.getByRole('button', { name: 'Customize', exact: true }).click();
+  const design = await openDesign(page);
+  await openCustomize(design);
   const trigger = page.getByRole('combobox', { name: 'Font', exact: true });
   await trigger.click();
   const option = page.getByRole('option', { name: 'Fredoka', exact: true });
@@ -1020,7 +1089,7 @@ test('font loading failures can retry without saving a broken font', async ({ pa
   await expect(option).toBeDisabled();
   await page.keyboard.press('Escape');
   await expect(trigger).toHaveAttribute('data-value', 'Creepster');
-  await page.getByRole('button', { name: 'Try again', exact: true }).click();
+  await design.getByRole('button', { name: 'Try again', exact: true }).click();
   await expect(option).toBeEnabled();
   await option.click();
   await expect(trigger).toHaveAttribute('data-value', 'Fredoka');
@@ -1040,26 +1109,31 @@ for (const width of [1440, 390]) {
       };
     });
     await openEditor(page);
-    await page.getByRole('button', { name: 'Customize', exact: true }).click();
-    const field = page.getByRole('textbox', { name: 'Number text', exact: true });
-    const swatch = page.getByLabel('Choose Number text color', { exact: true });
+    const design = await openDesign(page);
+    await openCustomize(design);
+    const field = design.getByRole('textbox', { name: 'Number text', exact: true });
+    const swatch = design.getByLabel('Choose Number text color', { exact: true });
+    // Clicking outside closes the OS chooser. (Inside a modal, headless Chromium
+    // routes Escape to the chooser instead, so this test does not rely on it.)
+    const elsewhere = design.getByRole('heading', { name: 'Design your set' });
     await field.click();
     // Calls the real browser API, including its user-activation requirement.
     await expect(swatch).toHaveAttribute('data-opened', '1');
     await expect(field).toHaveCSS('outline-style', 'none');
     await expect(field.locator('..')).toHaveCSS('box-shadow', 'none');
-    await page.keyboard.press('Escape');
+    await elsewhere.click();
     await field.click();
     await expect(swatch).toHaveAttribute('data-opened', '2');
-    await page.keyboard.press('Escape');
+    await elsewhere.click();
     await swatch.click();
     await expect(swatch).toHaveAttribute('data-opened', '3');
-    await page.keyboard.press('Escape');
-    await swatch.press('Tab');
-    await expect(field).toBeFocused();
-    await expect(swatch).toHaveAttribute('data-opened', '4');
-    await page.keyboard.press('Escape');
+    await elsewhere.click();
+    // Leaving the field untouched keeps the preset; it does not become Custom.
     await expect(field).toHaveValue('#ffffff');
+    await expect(design.getByRole('button', { name: 'Halloween', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
     await page.screenshot({
       animations: 'disabled',
       path: `.scratch/theme-work/color-focus-${width}.png`,
@@ -1068,7 +1142,7 @@ for (const width of [1440, 390]) {
 }
 
 for (const width of [1024, 1440, 2560]) {
-  test(`inline zoom stays beside design controls and updates without losing the inspected spot at ${width}px`, async ({
+  test(`inline zoom carries into the design dialog and updates without losing the inspected spot at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -1078,7 +1152,7 @@ for (const width of [1024, 1440, 2560]) {
     const image = panel.getByRole('img');
     await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
     const fittedBounds = (await viewport.boundingBox())!;
-    const expand = panel.getByRole('button', { name: 'Full Screen preview' });
+    const expand = panel.getByRole('button', { name: 'Full screen preview' });
     const fittedExpand = (await expand.boundingBox())!;
     const fittedZoom = (await panel
       .getByRole('button', { name: 'Zoom in', exact: true })
@@ -1113,37 +1187,50 @@ for (const width of [1024, 1440, 2560]) {
     const afterPan = await viewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }));
     expect(afterPan.left).toBeGreaterThan(beforePan.left);
     expect(afterPan.top).toBeGreaterThan(beforePan.top);
-    await page.getByRole('button', { name: 'Customize', exact: true }).click();
-    const savedPosition = await viewport.evaluate((el) => ({
+    // The dialog's preview shares the zoom; design edits keep the inspected spot.
+    const design = await openDesign(page);
+    await openCustomize(design);
+    const designViewport = design.getByRole('region', { name: 'Zoomable live board preview' });
+    const designImage = design.getByRole('img');
+    await expect(design.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+    await expect
+      .poll(() => designImage.evaluate((el) => (el as HTMLImageElement).naturalWidth))
+      .toBe(2550);
+    await designViewport.evaluate((el) => {
+      el.scrollLeft = 120;
+      el.scrollTop = 160;
+    });
+    const savedPosition = await designViewport.evaluate((el) => ({
       left: el.scrollLeft,
       top: el.scrollTop,
     }));
-    let before = await image.getAttribute('src');
-    await page.getByRole('combobox', { name: 'Font', exact: true }).click();
+    let before = await designImage.getAttribute('src');
+    await design.getByRole('combobox', { name: 'Font', exact: true }).click();
     await page.getByRole('option', { name: 'Playfair Display', exact: true }).click();
-    await expect.poll(() => image.getAttribute('src')).not.toBe(before);
-    await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+    await expect.poll(() => designImage.getAttribute('src')).not.toBe(before);
+    await expect(design.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
     await expect
-      .poll(() => image.evaluate((el) => (el as HTMLImageElement).naturalWidth))
+      .poll(() => designImage.evaluate((el) => (el as HTMLImageElement).naturalWidth))
       .toBe(2550);
-    await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
-    expect(await viewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))).toEqual(
-      savedPosition
-    );
-    before = await image.getAttribute('src');
-    await page.getByRole('combobox', { name: 'Page border', exact: true }).selectOption('dashed');
-    await expect.poll(() => image.getAttribute('src')).not.toBe(before);
-    await expect(panel.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
-    expect(await viewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))).toEqual(
-      savedPosition
-    );
+    expect(
+      await designViewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))
+    ).toEqual(savedPosition);
+    before = await designImage.getAttribute('src');
+    await borderOption(design, 'Board border', 'Dashed').check();
+    await expect.poll(() => designImage.getAttribute('src')).not.toBe(before);
+    await expect(design.locator('[aria-busy]')).toHaveAttribute('aria-busy', 'false');
+    expect(
+      await designViewport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))
+    ).toEqual(savedPosition);
+    await design.getByRole('button', { name: 'Done', exact: true }).click();
+    await expect(design).toHaveCount(0);
     await expect(page).toHaveURL(/previewScale=200/);
     await expect(panel.getByRole('button', { name: 'Zoom out', exact: true })).toBeVisible();
     await page.screenshot({
       animations: 'disabled',
       path: `.scratch/theme-work/preview-inline-${width}.png`,
     });
-    await panel.getByRole('button', { name: 'Full Screen preview' }).click();
+    await panel.getByRole('button', { name: 'Full screen preview' }).click();
     const expanded = page.getByRole('dialog', { name: 'Board preview', exact: true });
     await expect(expanded).toBeVisible();
     await page.keyboard.press('Escape');

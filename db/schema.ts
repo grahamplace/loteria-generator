@@ -131,6 +131,9 @@ export const boards = pgTable('boards', {
   photoMode: text('photo_mode').$type<PhotoMode>().notNull().default('illustrated'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  // Set when the owner deletes the board. The row, its cards and images are
+  // kept so an admin can restore it; users never see a deleted board.
+  deletedAt: timestamp('deleted_at'),
 });
 
 // Card status enum values

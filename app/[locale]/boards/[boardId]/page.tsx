@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import type { BoardStyleOptions } from '@/lib/themes/presets';
 import { useSearchParams, useParams } from 'next/navigation';
 import { Link, useRouter } from '@/i18n/navigation';
-import { Lock, Sparkles, Unlock, Upload } from 'lucide-react';
+import { Layers, Lock, Unlock, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,10 +12,10 @@ import { useBoardCards } from '@/hooks/use-board-cards';
 import { BoardSwitcher } from '@/components/board-switcher';
 import { AccountMenu } from '@/components/account-menu';
 import { rememberBoard } from '@/lib/boards/recent-board';
-import { BoardAppearance } from '@/components/board-appearance';
 import { BoardPreviewPanel } from '@/components/board-preview-panel';
 import { BoardActionBar, BoardActionBarRef } from '@/components/board-action-bar';
 import { BoardCardGrid } from '@/components/board-card-grid';
+import { PhotoDropZone } from '@/components/photo-drop-zone';
 import { UnlockPrompt, type UnlockTrigger } from '@/components/unlock-prompt';
 import { DefaultCardsPicker } from '@/components/default-cards-picker';
 import { toast } from 'sonner';
@@ -71,8 +70,6 @@ function BoardEditor({ boardId }: { boardId: string }) {
   const wasEditingName = useRef(false);
   const [unlockPromptOpen, setUnlockPromptOpen] = useState(false);
   const [defaultsPickerOpen, setDefaultsPickerOpen] = useState(false);
-  // In-progress design edits, shown in the preview before they finish saving.
-  const [designDraft, setDesignDraft] = useState<BoardStyleOptions | null>(null);
   const [unlockTrigger, setUnlockTrigger] = useState<UnlockTrigger>('card_limit');
 
   // Completes the Google-OAuth signup conversion started on the sign-up page:
@@ -272,14 +269,6 @@ function BoardEditor({ boardId }: { boardId: string }) {
                   </span>
                 )}
               </div>
-              {/* Mobile subtitle */}
-              {!isEditingName && (
-                <div className="md:hidden text-[11px] text-muted-foreground truncate">
-                  {cards.length > 0
-                    ? t('mobileSubtitleCards', { count: cards.length })
-                    : t('mobileSubtitleEmpty')}
-                </div>
-              )}
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -304,15 +293,6 @@ function BoardEditor({ boardId }: { boardId: string }) {
         <OnboardingCompleteWatcher done={cards.length > 0} />
         <div className="mx-auto grid w-full max-w-[1400px] flex-1 gap-5 px-3 pt-3 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-6 md:pt-5 lg:grid-cols-[minmax(0,1fr)_19rem] lg:pb-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
           <div className="min-w-0 space-y-4">
-            <BoardAppearance
-              styles={board.styleOptions}
-              photoMode={pendingPhotoMode ?? board.photoMode}
-              photoModeSaving={pendingPhotoMode !== null}
-              boardName={board.name}
-              showPreview={false}
-              onDraftStylesChange={setDesignDraft}
-              onSave={updateBoard}
-            />
             <BoardActionBar
               ref={actionBarRef}
               onFilesSelected={handleFilesSelected}
@@ -327,80 +307,86 @@ function BoardEditor({ boardId }: { boardId: string }) {
               onUnlockRequired={handleCardLimitReached}
               onOpenDefaults={() => setDefaultsPickerOpen(true)}
             />
-            {/* Cards */}
-            {cards.length > 0 ? (
-              <div className="min-w-0">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    {t('yourCards')}
-                  </h2>
-                  <span className="text-[11px] font-mono text-muted-foreground hidden md:block">
-                    {t('dragToReorder')}
-                  </span>
-                </div>
-                <BoardCardGrid
-                  cards={displayCards}
-                  onCropCard={async (cardId, cropData) => {
-                    const response = await fetch(`/api/boards/${boardId}/cards`, {
-                      method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ cardId, cropData }),
-                    });
-                    if (!response.ok) throw new Error('Crop failed');
-                    await refreshCards();
-                  }}
-                  onChangePhotoMode={changePhotoMode}
-                  onDeleteCard={deleteCard}
-                  onUpdateLabel={updateCardLabel}
-                  onReorderCards={reorderCards}
-                  onAddMore={() => actionBarRef.current?.triggerFileSelect()}
-                  onAddClassic={() => setDefaultsPickerOpen(true)}
-                  isLocked={!board.isUnlocked}
-                  atCardLimit={atCardLimit}
-                  onUnlockRequired={handleCardLimitReached}
-                />
-              </div>
-            ) : (
-              /* Empty state for boards with no cards */
-              <div className="flex-1 flex items-center justify-center px-6 py-10">
-                <div className="text-center max-w-sm">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Upload className="w-8 h-8 text-primary" />
+            {/* Cards; photos dropped anywhere here are added like the drop area above. */}
+            <PhotoDropZone onDropFiles={(files) => actionBarRef.current?.dropFiles(files)}>
+              {cards.length > 0 ? (
+                <div className="min-w-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      {t('yourCards')}
+                      <span className="ml-2 font-normal tracking-normal tabular-nums">
+                        {cards.length}/{cardLimit}
+                      </span>
+                    </h2>
+                    <span className="text-[11px] font-mono text-muted-foreground hidden md:block">
+                      {t('dragToReorder')}
+                    </span>
                   </div>
-                  <h2 className="text-xl font-bold mb-2">{t('emptyStateTitle')}</h2>
-                  <p className="text-sm text-muted-foreground mb-6">{t('emptyStateDesc')}</p>
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    <button
-                      id={ANCHOR_UPLOAD}
-                      onClick={() => actionBarRef.current?.triggerFileSelect()}
-                      className="attention-bounce px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    >
-                      <Upload className="w-4 h-4" />
-                      <span className="lg:hidden">{t('emptyStateCtaShort')}</span>
-                      <span className="hidden lg:inline">{t('emptyStateCta')}</span>
-                    </button>
-                    <button
-                      onClick={() => setDefaultsPickerOpen(true)}
-                      className="px-5 py-3 rounded-lg bg-secondary/15 border border-secondary/40 text-foreground text-sm font-semibold flex items-center gap-2 hover:bg-secondary/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    >
-                      <Sparkles className="w-4 h-4" aria-hidden="true" />
-                      {t('emptyStateAddClassic')}
-                    </button>
-                  </div>
-                  <p className="mt-5 font-mono text-[11px] tracking-wider text-muted-foreground">
-                    {t('emptyStateFreePaidNote', {
-                      free: FREE_CARD_LIMIT,
-                      price: unlockPrice,
-                      total: TOTAL_CARD_COUNT,
-                    })}
-                  </p>
+                  <BoardCardGrid
+                    cards={displayCards}
+                    onCropCard={async (cardId, cropData) => {
+                      const response = await fetch(`/api/boards/${boardId}/cards`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ cardId, cropData }),
+                      });
+                      if (!response.ok) throw new Error('Crop failed');
+                      await refreshCards();
+                    }}
+                    onChangePhotoMode={changePhotoMode}
+                    onDeleteCard={deleteCard}
+                    onUpdateLabel={updateCardLabel}
+                    onReorderCards={reorderCards}
+                    onAddMore={() => actionBarRef.current?.triggerFileSelect()}
+                    onAddClassic={() => setDefaultsPickerOpen(true)}
+                    illustrate={(pendingPhotoMode ?? board.photoMode) !== 'original'}
+                    isLocked={!board.isUnlocked}
+                    atCardLimit={atCardLimit}
+                    onUnlockRequired={handleCardLimitReached}
+                  />
                 </div>
-              </div>
-            )}
+              ) : (
+                /* Empty state for boards with no cards */
+                <div className="flex-1 flex items-center justify-center px-6 py-10">
+                  <div className="text-center max-w-sm">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                      <Upload className="w-8 h-8 text-primary" />
+                    </div>
+                    <h2 className="text-xl font-bold mb-2">{t('emptyStateTitle')}</h2>
+                    <p className="text-sm text-muted-foreground mb-6">{t('emptyStateDesc')}</p>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <button
+                        id={ANCHOR_UPLOAD}
+                        onClick={() => actionBarRef.current?.triggerFileSelect()}
+                        className="attention-bounce px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      >
+                        <Upload className="w-4 h-4" />
+                        <span className="lg:hidden">{t('emptyStateCtaShort')}</span>
+                        <span className="hidden lg:inline">{t('emptyStateCta')}</span>
+                      </button>
+                      <button
+                        onClick={() => setDefaultsPickerOpen(true)}
+                        className="px-5 py-3 rounded-lg bg-secondary/15 border border-secondary/40 text-foreground text-sm font-semibold flex items-center gap-2 hover:bg-secondary/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      >
+                        <Layers className="w-4 h-4" aria-hidden="true" />
+                        {t('emptyStateAddClassic')}
+                      </button>
+                    </div>
+                    <p className="mt-5 font-mono text-[11px] tracking-wider text-muted-foreground">
+                      {t('emptyStateFreePaidNote', {
+                        free: FREE_CARD_LIMIT,
+                        price: unlockPrice,
+                        total: TOTAL_CARD_COUNT,
+                      })}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </PhotoDropZone>
           </div>
           <BoardPreviewPanel
             boardId={boardId}
-            styles={designDraft ?? board.styleOptions}
+            styles={board.styleOptions}
             photoMode={board.photoMode}
             boardName={board.name}
             cards={displayCards}
@@ -410,6 +396,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
             }
             onAddPhotos={() => actionBarRef.current?.triggerFileSelect()}
             onUnlock={() => openUnlockPrompt('preview')}
+            onSaveDesign={updateBoard}
           />
         </div>
       </main>
