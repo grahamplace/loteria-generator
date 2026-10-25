@@ -213,7 +213,7 @@ function drawCornerIcons(
       ctx.translate(x < width / 2 ? x : x - artPx, y < height / 2 ? y : y - artPx);
     }
     ctx.scale(scale, scale);
-    if (icon.paint === 'fill') ctx.fill(path);
+    if (icon.paint === 'fill') ctx.fill(path, icon.fillRule);
     else ctx.stroke(path);
     ctx.restore();
   }

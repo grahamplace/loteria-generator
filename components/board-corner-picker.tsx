@@ -42,6 +42,7 @@ function CornerSwatch({
           <path
             d={definition.path}
             fill={definition.paint === 'fill' ? color : 'none'}
+            fillRule={definition.fillRule}
             stroke={definition.paint === 'fill' ? 'none' : color}
             strokeWidth={definition.paint === 'fill' ? undefined : 5}
             strokeLinecap="round"

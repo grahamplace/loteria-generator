@@ -594,7 +594,21 @@
         "heart": "Hearts",
         "flower": "Flowers",
         "soccer": "Soccer balls",
-        "cake": "Birthday cakes"
+        "cake": "Birthday cakes",
+        "rings": "Wedding rings",
+        "tiara": "Tiaras",
+        "balloon": "Balloons",
+        "champagne": "Champagne glasses",
+        "disco-ball": "Disco balls",
+        "grad-cap": "Graduation caps",
+        "rattle": "Baby rattles",
+        "pacifier": "Pacifiers",
+        "holly": "Holly",
+        "menorah": "Menorahs",
+        "maple-leaf": "Maple leaves",
+        "palm-tree": "Palm trees",
+        "easter-egg": "Easter eggs",
+        "maracas": "Maracas"
       },
       "borders": {
         "hand-drawn": "Hand drawn",

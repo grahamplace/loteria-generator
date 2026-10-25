@@ -142,7 +142,7 @@ export const themePresets = [
   {
     id: 'christmas',
     name: { en: 'Christmas', 'es-MX': 'Navidad' },
-    corner: 'star',
+    corner: 'holly',
     font: 'Playfair Display',
     border: 'thick-thin',
     cardBorder: 'double',
@@ -166,7 +166,7 @@ export const themePresets = [
   {
     id: 'quinceanera',
     name: { en: 'Quincea\u00f1era', 'es-MX': 'Quinceañera' },
-    corner: 'star',
+    corner: 'tiara',
     font: 'Playfair Display',
     border: 'thick-thin',
     cardBorder: 'double',
@@ -174,7 +174,7 @@ export const themePresets = [
   {
     id: 'wedding',
     name: { en: 'Wedding', 'es-MX': 'Boda' },
-    corner: 'flower',
+    corner: 'rings',
     font: 'Cinzel',
     border: 'double',
     cardBorder: 'solid',
@@ -182,7 +182,7 @@ export const themePresets = [
   {
     id: 'baby-shower-boy',
     name: { en: 'Baby Shower (Boy)', 'es-MX': 'Baby shower (niño)' },
-    corner: 'star',
+    corner: 'rattle',
     font: 'Fredoka',
     border: 'dashed',
     cardBorder: 'solid',
@@ -190,7 +190,7 @@ export const themePresets = [
   {
     id: 'baby-shower-girl',
     name: { en: 'Baby Shower (Girl)', 'es-MX': 'Baby shower (niña)' },
-    corner: 'heart',
+    corner: 'pacifier',
     font: 'Fredoka',
     border: 'dashed',
     cardBorder: 'solid',
@@ -206,7 +206,7 @@ export const themePresets = [
   {
     id: 'bachelorette',
     name: { en: 'Bachelorette', 'es-MX': 'Fiesta de amigas' },
-    corner: 'heart',
+    corner: 'disco-ball',
     font: 'Bebas Neue',
     border: 'dotted',
     cardBorder: 'solid',
@@ -214,7 +214,7 @@ export const themePresets = [
   {
     id: 'friendsgiving',
     name: { en: 'Friendsgiving', 'es-MX': 'Cena de amigos' },
-    corner: 'none',
+    corner: 'maple-leaf',
     font: 'Roboto Slab',
     border: 'thick-thin',
     cardBorder: 'double',
@@ -222,7 +222,7 @@ export const themePresets = [
   {
     id: 'graduation',
     name: { en: 'Graduation', 'es-MX': 'Graduación' },
-    corner: 'star',
+    corner: 'grad-cap',
     font: 'Cinzel',
     border: 'thick-thin',
     cardBorder: 'solid',
@@ -238,7 +238,7 @@ export const themePresets = [
   {
     id: 'anniversary',
     name: { en: 'Wedding Anniversary', 'es-MX': 'Aniversario de bodas' },
-    corner: 'heart',
+    corner: 'rings',
     font: 'Playfair Display',
     border: 'thick-thin',
     cardBorder: 'double',
@@ -254,7 +254,7 @@ export const themePresets = [
   {
     id: 'new-years',
     name: { en: "New Year's", 'es-MX': 'Año Nuevo' },
-    corner: 'star',
+    corner: 'champagne',
     font: 'Bebas Neue',
     border: 'dotted',
     cardBorder: 'thick-thin',
@@ -262,7 +262,7 @@ export const themePresets = [
   {
     id: 'milestone-birthday',
     name: { en: '50th Birthday', 'es-MX': 'Cumpleaños especial' },
-    corner: 'star',
+    corner: 'balloon',
     font: 'Bebas Neue',
     border: 'dotted',
     cardBorder: 'solid',
@@ -270,7 +270,7 @@ export const themePresets = [
   {
     id: 'destination-wedding',
     name: { en: 'Destination Wedding', 'es-MX': 'Boda de destino' },
-    corner: 'flower',
+    corner: 'palm-tree',
     font: 'Montserrat',
     border: 'double',
     cardBorder: 'solid',
@@ -278,7 +278,7 @@ export const themePresets = [
   {
     id: 'cinco-de-mayo',
     name: { en: 'Cinco de Mayo', 'es-MX': 'Cinco de Mayo' },
-    corner: 'flower',
+    corner: 'maracas',
     font: 'Rye',
     border: 'dotted',
     cardBorder: 'double',
@@ -286,7 +286,7 @@ export const themePresets = [
   {
     id: 'hanukkah',
     name: { en: 'Hanukkah', 'es-MX': 'Janucá' },
-    corner: 'none',
+    corner: 'menorah',
     font: 'Cinzel',
     border: 'double',
     cardBorder: 'solid',
@@ -294,7 +294,7 @@ export const themePresets = [
   {
     id: 'easter',
     name: { en: 'Easter', 'es-MX': 'Pascua' },
-    corner: 'flower',
+    corner: 'easter-egg',
     font: 'Fredoka',
     border: 'dotted',
     cardBorder: 'dashed',

@@ -600,7 +600,21 @@
         "heart": "Corazones",
         "flower": "Flores",
         "soccer": "Balones de fútbol",
-        "cake": "Pasteles de cumpleaños"
+        "cake": "Pasteles de cumpleaños",
+        "rings": "Anillos de boda",
+        "tiara": "Tiaras",
+        "balloon": "Globos",
+        "champagne": "Copas de champaña",
+        "disco-ball": "Bolas disco",
+        "grad-cap": "Birretes",
+        "rattle": "Sonajas",
+        "pacifier": "Chupones",
+        "holly": "Acebo",
+        "menorah": "Menorás",
+        "maple-leaf": "Hojas de maple",
+        "palm-tree": "Palmeras",
+        "easter-egg": "Huevos de Pascua",
+        "maracas": "Maracas"
       },
       "borders": {
         "hand-drawn": "A mano",
