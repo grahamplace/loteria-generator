@@ -438,7 +438,7 @@
       "closeAriaLabel": "Cerrar",
       "originalLabel": "Original",
       "illustrationLabel": "Ilustración",
-      "labelField": "Nombre (en español)",
+      "labelField": "Nombre",
       "labelPlaceholder": "Ingresa el nombre",
       "labelHint": "1-3 palabras en español",
       "labelInputAriaLabel": "Etiqueta de la carta",

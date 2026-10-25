@@ -36,7 +36,7 @@ vi.mock('next-intl', () => ({
         closeAriaLabel: 'Close',
         originalLabel: 'Original',
         illustrationLabel: 'Illustration',
-        labelField: 'Label (in Spanish)',
+        labelField: 'Label',
         labelPlaceholder: 'Enter the label',
         labelHint: '1-3 Spanish words',
         riddleField: 'Riddle (optional)',
