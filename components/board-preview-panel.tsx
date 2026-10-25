@@ -95,7 +95,7 @@ export function BoardPreviewPanel({
           <h2 className="min-w-0 font-display text-lg font-semibold">{t('livePreview')}</h2>
           <BoardPreviewActions state={preview} />
         </div>
-        <BoardPreviewImage state={preview} fitViewport />
+        <BoardPreviewImage state={preview} fitViewport="sidebar" />
         <div className="mt-4 border-t border-border pt-4">
           <BoardThemeRow
             ref={changeButton}

@@ -366,7 +366,11 @@ export function BoardPreviewImage({
   showPagination = true,
 }: {
   state: ReturnType<typeof useBoardPreview>;
-  fitViewport?: boolean;
+  /**
+   * Shrink the board so its surroundings fit on screen. `sidebar` leaves room
+   * for the Theme row and download controls below it.
+   */
+  fitViewport?: boolean | 'sidebar';
   showPagination?: boolean;
 }) {
   const t = useTranslations('Themes.Builder');
@@ -378,10 +382,15 @@ export function BoardPreviewImage({
       <BoardPreviewInlineZoom
         state={state}
         viewportClassName={cn(
-          fitViewport &&
-            (state.pageCount > 1
-              ? 'max-w-[min(100%,max(8rem,calc((100dvh-29rem)*17/22)))]'
-              : 'max-w-[min(100%,max(8rem,calc((100dvh-25rem)*17/22)))]')
+          fitViewport === 'sidebar'
+            ? state.pageCount > 1
+              ? // The narrower sidebar below xl wraps its text onto extra lines.
+                'max-w-[min(100%,max(8rem,calc((100dvh-32.5rem)*17/22)))] xl:max-w-[min(100%,max(8rem,calc((100dvh-30.5rem)*17/22)))]'
+              : 'max-w-[min(100%,max(8rem,calc((100dvh-28.5rem)*17/22)))] xl:max-w-[min(100%,max(8rem,calc((100dvh-26.5rem)*17/22)))]'
+            : fitViewport &&
+                (state.pageCount > 1
+                  ? 'max-w-[min(100%,max(8rem,calc((100dvh-29rem)*17/22)))]'
+                  : 'max-w-[min(100%,max(8rem,calc((100dvh-25rem)*17/22)))]')
         )}
       >
         {busy && (
