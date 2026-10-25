@@ -228,7 +228,7 @@ test('mobile rename retries a failed save and the design view prints the new nam
   const design = page.getByRole('dialog', { name: 'Diseña tu juego', exact: true });
   const printTitle = design.getByRole('checkbox', { name: /Imprimir el nombre del juego arriba/ });
   await expect(printTitle).toBeChecked();
-  await expect(design.getByText('“Fiesta familiar” en cada tabla')).toBeVisible();
+  await expect(design.getByText('“Fiesta familiar” como título en cada tabla')).toBeVisible();
   const saved = page.waitForRequest((request) => request.method() === 'PATCH');
   await printTitle.click();
   expect((await saved).postDataJSON()).toEqual({

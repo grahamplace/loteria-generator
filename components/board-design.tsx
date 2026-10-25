@@ -6,7 +6,11 @@ import { ChevronLeft, ChevronRight, Loader2, Maximize2, Palette, X } from 'lucid
 import type { BoardThemeId } from '@/lib/themes/presets';
 import type { BoardDesign } from '@/hooks/use-board-design';
 import { BoardThemeGrid, ThemeThumbnail, useThemeName } from '@/components/board-theme-grid';
-import { BoardDesignControls, type DesignLayout } from '@/components/board-design-controls';
+import {
+  BoardDesignControls,
+  DesignSwatches,
+  type DesignLayout,
+} from '@/components/board-design-controls';
 import {
   BoardPreviewActions,
   BoardPreviewImage,
@@ -157,8 +161,9 @@ export function BoardThemeRow({
   const name = themeName(design.selected);
   const text = (
     <span className="min-w-0 flex-1">
-      <span className="block text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+      <span className="flex items-center gap-2 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
         {t('theme')}
+        {variant === 'compact' && <DesignSwatches styles={design.shownStyles} overlap small />}
       </span>
       <span
         className={cn(
@@ -181,6 +186,7 @@ export function BoardThemeRow({
       >
         <ThemeThumbnail id={design.selected} className="h-[34px] w-11" />
         {text}
+        <DesignSwatches styles={design.shownStyles} overlap />
         <span className="flex shrink-0 items-center gap-0.5 text-[13px] font-semibold text-primary">
           {t('change')}
           <ChevronRight className="size-4" aria-hidden="true" />
