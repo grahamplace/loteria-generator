@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import type { BoardStyleOptions } from '@/lib/themes/presets';
 import { useSearchParams, useParams } from 'next/navigation';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Lock, Sparkles, Unlock, Upload } from 'lucide-react';
@@ -13,7 +12,6 @@ import { useBoardCards } from '@/hooks/use-board-cards';
 import { BoardSwitcher } from '@/components/board-switcher';
 import { AccountMenu } from '@/components/account-menu';
 import { rememberBoard } from '@/lib/boards/recent-board';
-import { BoardAppearance } from '@/components/board-appearance';
 import { BoardPreviewPanel } from '@/components/board-preview-panel';
 import { BoardActionBar, BoardActionBarRef } from '@/components/board-action-bar';
 import { BoardCardGrid } from '@/components/board-card-grid';
@@ -71,8 +69,6 @@ function BoardEditor({ boardId }: { boardId: string }) {
   const wasEditingName = useRef(false);
   const [unlockPromptOpen, setUnlockPromptOpen] = useState(false);
   const [defaultsPickerOpen, setDefaultsPickerOpen] = useState(false);
-  // In-progress design edits, shown in the preview before they finish saving.
-  const [designDraft, setDesignDraft] = useState<BoardStyleOptions | null>(null);
   const [unlockTrigger, setUnlockTrigger] = useState<UnlockTrigger>('card_limit');
 
   // Completes the Google-OAuth signup conversion started on the sign-up page:
@@ -304,15 +300,6 @@ function BoardEditor({ boardId }: { boardId: string }) {
         <OnboardingCompleteWatcher done={cards.length > 0} />
         <div className="mx-auto grid w-full max-w-[1400px] flex-1 gap-5 px-3 pt-3 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-6 md:pt-5 lg:grid-cols-[minmax(0,1fr)_19rem] lg:pb-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
           <div className="min-w-0 space-y-4">
-            <BoardAppearance
-              styles={board.styleOptions}
-              photoMode={pendingPhotoMode ?? board.photoMode}
-              photoModeSaving={pendingPhotoMode !== null}
-              boardName={board.name}
-              showPreview={false}
-              onDraftStylesChange={setDesignDraft}
-              onSave={updateBoard}
-            />
             <BoardActionBar
               ref={actionBarRef}
               onFilesSelected={handleFilesSelected}
@@ -400,7 +387,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
           </div>
           <BoardPreviewPanel
             boardId={boardId}
-            styles={designDraft ?? board.styleOptions}
+            styles={board.styleOptions}
             photoMode={board.photoMode}
             boardName={board.name}
             cards={displayCards}
@@ -410,6 +397,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
             }
             onAddPhotos={() => actionBarRef.current?.triggerFileSelect()}
             onUnlock={() => openUnlockPrompt('preview')}
+            onSaveDesign={updateBoard}
           />
         </div>
       </main>

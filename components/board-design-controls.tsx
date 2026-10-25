@@ -2,22 +2,18 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
-import { borderStyles, type BoardDesignValues, type BoardStyleOptions } from '@/lib/themes/presets';
+import {
+  borderStyles,
+  type BoardDesignValues,
+  type BoardStyleOptions,
+  type BorderStyle,
+} from '@/lib/themes/presets';
 import { editableBoardStyle } from '@/lib/themes/render-style';
 import { cn } from '@/lib/utils';
 import { BoardCornerPicker } from '@/components/board-corner-picker';
 import { BoardFontPicker } from '@/components/board-font-picker';
 
-export function openDesignControls() {
-  const url = new URL(window.location.href);
-  url.searchParams.set('design', '1');
-  window.history.pushState(null, '', url);
-}
-
-const selectClassName =
-  'min-h-11 w-full min-w-0 appearance-none touch-manipulation rounded-md border border-input bg-background pl-3 pr-10 text-base text-foreground hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60';
 const colorKeys = [
   'backgroundColor',
   'badgeColor',
@@ -29,11 +25,13 @@ const colorKeys = [
 function ColorControl({
   label,
   value,
+  layout,
   onLive,
   onChange,
 }: {
   label: string;
   value: string;
+  layout: DesignLayout;
   /** Every valid in-progress color, for an immediate preview. */
   onLive: (value: string) => void;
   /** A finished choice: picker closed, Enter, or blur. */
@@ -99,17 +97,14 @@ function ColorControl({
     // The live preview may already show this color; committing still saves it now.
     onChange(normalized.toLowerCase());
   }
+  const row = layout === 'sheet';
   return (
-    <div className="group/color grid min-w-0 grid-cols-[minmax(0,1fr)_8.5rem] items-center gap-x-2 min-[380px]:block">
-      <label
-        htmlFor={id}
-        className="mb-0 block text-sm font-medium decoration-primary underline-offset-4 group-has-[:focus-visible]/color:underline min-[380px]:mb-1.5"
-      >
-        {label}
-      </label>
+    // Escape in these fields reverts the color (or closes the OS chooser), not the dialog.
+    <div data-color-control className="group/color min-w-0">
       <div
         className={cn(
-          'flex min-h-11 items-center rounded-md border bg-background',
+          'flex items-center rounded-lg border bg-background',
+          row ? 'min-h-12 gap-3 pr-3 pl-2' : 'min-h-11 gap-2.5 pr-2.5 pl-1.5',
           invalid ? 'border-destructive' : 'border-input'
         )}
       >
@@ -131,42 +126,57 @@ function ColorControl({
             onLive(event.currentTarget.value);
           }}
           onChange={() => {}}
-          className="h-11 w-11 shrink-0 cursor-pointer touch-manipulation rounded-l-md border-0 bg-transparent p-1.5 outline-none disabled:cursor-wait"
+          className="size-10 shrink-0 cursor-pointer touch-manipulation rounded-md border-0 bg-transparent p-1 outline-none focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-wait"
         />
-        <input
-          id={id}
-          name={id}
-          type="text"
-          value={draft}
-          spellCheck={false}
-          autoComplete="off"
-          aria-invalid={invalid}
-          aria-describedby={invalid ? `${id}-error` : undefined}
-          onFocus={openPicker}
-          onClick={openPicker}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            setInvalid(false);
-            const typed = event.target.value.trim();
-            const normalized = `${typed.startsWith('#') ? '' : '#'}${typed}`;
-            if (/^#[0-9a-f]{6}$/i.test(normalized)) onLive(normalized.toLowerCase());
-          }}
-          onBlur={commitText}
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') {
-              setDraft(value);
+        <span className={cn('flex min-w-0 flex-1', row ? 'items-center gap-2' : 'flex-col')}>
+          <label
+            htmlFor={id}
+            className={cn(
+              'min-w-0 font-semibold decoration-primary underline-offset-4 group-has-[:focus-visible]/color:underline',
+              row ? 'flex-1 text-sm' : 'truncate text-xs'
+            )}
+          >
+            {label}
+          </label>
+          <input
+            id={id}
+            name={id}
+            type="text"
+            value={draft}
+            spellCheck={false}
+            autoComplete="off"
+            aria-invalid={invalid}
+            aria-describedby={invalid ? `${id}-error` : undefined}
+            onFocus={openPicker}
+            onClick={openPicker}
+            onChange={(event) => {
+              setDraft(event.target.value);
               setInvalid(false);
-            }
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              commitText();
-            }
-          }}
-          className="min-h-11 w-full min-w-0 touch-manipulation rounded-r-md bg-transparent pr-2 text-base uppercase text-foreground outline-none"
-        />
+              const typed = event.target.value.trim();
+              const normalized = `${typed.startsWith('#') ? '' : '#'}${typed}`;
+              if (/^#[0-9a-f]{6}$/i.test(normalized)) onLive(normalized.toLowerCase());
+            }}
+            onBlur={commitText}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                setDraft(value);
+                setInvalid(false);
+              }
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                commitText();
+              }
+            }}
+            className={cn(
+              'min-w-0 touch-manipulation bg-transparent font-mono text-muted-foreground uppercase outline-none',
+              // 16px on phones so iOS does not zoom into the field.
+              row ? 'h-11 w-[5.5rem] text-right text-base' : 'h-5 w-full text-xs'
+            )}
+          />
+        </span>
       </div>
       {invalid && (
-        <p id={`${id}-error`} role="alert" className="col-span-2 mt-1 text-xs text-destructive">
+        <p id={`${id}-error`} role="alert" className="mt-1 text-xs text-destructive">
           {t('invalidColor')}
         </p>
       )}
@@ -174,75 +184,93 @@ function ColorControl({
   );
 }
 
+export type DesignLayout = 'dialog' | 'sheet';
+
+/** The four colors shown in the Customize header, in print order. */
+const swatchKeys = ['backgroundColor', 'badgeColor', 'labelColor', 'borderColor'] as const;
+
 export function BoardDesignControls({
   styles,
   boardName,
   disabled,
+  open,
+  layout,
+  onOpenChange,
   onPreview,
   onChange,
+  onShowTitleChange,
 }: {
   styles?: BoardStyleOptions | null;
   boardName: string;
   disabled: boolean;
+  open: boolean;
+  layout: DesignLayout;
+  onOpenChange: (open: boolean) => void;
   /** Show an in-progress edit right away; saved shortly after it settles. */
   onPreview: (patch: Partial<BoardDesignValues>) => void;
   onChange: (patch: Partial<BoardDesignValues>) => void;
+  onShowTitleChange: (showTitle: boolean) => void;
 }) {
   const t = useTranslations('Themes.Builder');
   const id = useId();
-  const search = useSearchParams();
-  const open = search.get('design') === '1';
   const [values, setValues] = useState<BoardDesignValues | null>(null);
   useEffect(() => {
     setValues(editableBoardStyle(styles ?? {}));
   }, [styles]);
-  function toggle() {
-    if (!open) {
-      openDesignControls();
-      return;
-    }
-    const url = new URL(window.location.href);
-    url.searchParams.delete('design');
-    window.history.pushState(null, '', url);
-  }
+  const row = layout === 'sheet';
   return (
-    <div className="rounded-lg border border-border">
+    <div className="rounded-xl border border-border bg-card">
       <button
         type="button"
         aria-expanded={open}
         aria-controls={id}
-        onClick={toggle}
-        className="flex min-h-12 w-full touch-manipulation items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        onClick={() => onOpenChange(!open)}
+        className={cn(
+          'flex w-full touch-manipulation items-center gap-2.5 rounded-xl px-3.5 text-left hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+          row ? 'min-h-13' : 'min-h-12'
+        )}
       >
-        <SlidersHorizontal className="h-4 w-4 text-primary" aria-hidden="true" />
-        <span className="flex-1">{t('customize')}</span>
-        <span className="flex -space-x-1" aria-hidden="true">
+        <SlidersHorizontal className="size-4 shrink-0" aria-hidden="true" />
+        <span className="min-w-0 flex-1 text-sm font-semibold">{t('customizeColorsFont')}</span>
+        <span className="flex shrink-0 gap-0.5" aria-hidden="true">
           {values &&
-            colorKeys.map((key) => (
+            swatchKeys.map((key) => (
               <span
                 key={key}
                 style={{ backgroundColor: values[key] }}
-                className="h-4 w-4 rounded-full border border-border ring-1 ring-background"
+                className="size-3.5 rounded-full border border-foreground/15"
               />
             ))}
         </span>
-        <ChevronDown aria-hidden="true" className={cn('ml-1 h-4 w-4', open && 'rotate-180')} />
+        <ChevronDown
+          aria-hidden="true"
+          className={cn(
+            'size-4 shrink-0 transition-transform motion-reduce:transition-none',
+            open && 'rotate-180'
+          )}
+        />
       </button>
-      <div id={id} hidden={!open} className="border-t border-border p-3">
+      <div id={id} hidden={!open} className="space-y-4 border-t border-border px-3.5 pt-3 pb-4">
         {values && (
           <>
-            <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:grid-cols-3">
+            <div
+              className={cn(
+                'grid gap-2.5',
+                row ? 'grid-cols-1' : 'grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))]'
+              )}
+            >
               {colorKeys.map((key) => (
                 <ColorControl
                   key={key}
                   label={t(key)}
                   value={values[key]}
+                  layout={layout}
                   onLive={(value) => onPreview({ [key]: value })}
                   onChange={(value) => onChange({ [key]: value })}
                 />
               ))}
             </div>
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className={cn('grid gap-3', row ? 'grid-cols-1' : 'grid-cols-2')}>
               <BoardFontPicker
                 value={values.font}
                 boardName={boardName}
@@ -250,31 +278,6 @@ export function BoardDesignControls({
                 disabled={disabled}
                 onChange={(font) => onChange({ font })}
               />
-              <label className="min-w-0 text-sm font-medium">
-                <span className="mb-1.5 block">{t('borderStyle')}</span>
-                <span className="relative block">
-                  <select
-                    name="borderStyle"
-                    value={values.borderStyle}
-                    onChange={(event) =>
-                      onChange({
-                        borderStyle: event.target.value as BoardDesignValues['borderStyle'],
-                      })
-                    }
-                    className={selectClassName}
-                  >
-                    {borderStyles.map((border) => (
-                      <option key={border} value={border}>
-                        {t(`borders.${border}`)}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    aria-hidden="true"
-                    className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  />
-                </span>
-              </label>
               <BoardCornerPicker
                 value={values.cornerIcon}
                 color={values.borderColor}
@@ -283,9 +286,72 @@ export function BoardDesignControls({
                 onChange={(cornerIcon) => onChange({ cornerIcon })}
               />
             </div>
+            <BorderStylePicker
+              value={values.borderStyle}
+              disabled={disabled}
+              onChange={(borderStyle) => onChange({ borderStyle })}
+            />
+            <label className="flex min-h-11 cursor-pointer touch-manipulation items-center justify-between gap-3 has-[:disabled]:cursor-wait">
+              <span className="flex min-w-0 flex-col">
+                <span className={cn('font-semibold', row ? 'text-sm' : 'text-[0.8125rem]')}>
+                  {t('showTitle')}
+                </span>
+                <span className="text-xs break-words text-muted-foreground">
+                  {t('showTitleHint', { name: boardName })}
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={styles?.showTitle ?? false}
+                disabled={disabled}
+                onChange={(event) => onShowTitleChange(event.target.checked)}
+                className="size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              />
+            </label>
+            <p className="text-xs text-muted-foreground">
+              {t.rich('customizeHint', { strong: (chunks) => <strong>{chunks}</strong> })}
+            </p>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+/** Segmented control backed by native radios, so arrow keys move the choice. */
+function BorderStylePicker({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: BorderStyle;
+  disabled: boolean;
+  onChange: (value: (typeof borderStyles)[number]) => void;
+}) {
+  const t = useTranslations('Themes.Builder');
+  const name = useId();
+  return (
+    <fieldset className="min-w-0">
+      <legend className="mb-1.5 text-sm font-medium">{t('borderStyle')}</legend>
+      <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-input bg-input min-[420px]:grid-cols-5">
+        {borderStyles.map((border) => (
+          <label
+            key={border}
+            className="relative flex min-h-11 cursor-pointer touch-manipulation items-center justify-center bg-background px-1.5 text-center text-[0.8125rem] leading-tight font-medium text-foreground transition-colors hover:bg-primary/5 has-[:checked]:bg-primary has-[:checked]:font-semibold has-[:checked]:text-primary-foreground has-[:disabled]:cursor-wait has-[:disabled]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-4 has-[:focus-visible]:outline-current motion-reduce:transition-none"
+          >
+            <input
+              type="radio"
+              name={name}
+              value={border}
+              checked={value === border}
+              disabled={disabled}
+              onChange={() => onChange(border)}
+              className="absolute inset-0 cursor-pointer appearance-none opacity-0 disabled:cursor-wait"
+            />
+            {t(`borders.${border}`)}
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }

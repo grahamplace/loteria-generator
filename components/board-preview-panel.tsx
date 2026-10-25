@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Eye, Upload } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
@@ -15,24 +16,51 @@ import {
   type BoardDownloadProps,
 } from '@/components/board-download-controls';
 import { BoardPreviewZoom } from '@/components/board-preview-zoom';
+import {
+  BoardDesignDialog,
+  BoardDesignSheetView,
+  BoardThemeRow,
+  DESIGN_PARAM,
+  closeDesignControls,
+  isFieldEscape,
+  openDesignControls,
+} from '@/components/board-design';
+import { useBoardDesign, type BoardSettings } from '@/hooks/use-board-design';
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 export function BoardPreviewPanel({
   onAddPhotos,
   canAddPhotos,
   onUnlock,
+  onSaveDesign,
   ...props
 }: BoardDownloadProps & {
   onAddPhotos: () => void;
   canAddPhotos: boolean;
   onUnlock: () => void;
+  onSaveDesign: (settings: BoardSettings) => Promise<boolean>;
 }) {
   const t = useTranslations('Themes.Builder');
+  const searchParams = useSearchParams();
+  const designOpen = searchParams.get(DESIGN_PARAM) === '1';
+  const isDesktop = useIsDesktop();
   const [open, setOpen] = useState(false);
+  // One design session for the sidebar, the dialog, and the phone sheet, so
+  // every preview shows unsaved edits and downloads use what you see.
+  const design = useBoardDesign({ styles: props.styles, onSave: onSaveDesign });
+  const shown = { ...props, styles: design.shownStyles };
   // Both surfaces share the renderer, image cache, board count, and in-flight download.
-  const preview = useBoardPreview(props);
-  const download = useBoardDownload(props);
+  const preview = useBoardPreview(shown);
+  const download = useBoardDownload(shown);
+  const sheetOpen = open || (designOpen && !isDesktop);
+  const sheetView = designOpen ? 'design' : 'preview';
+  const themeRow = useRef<HTMLButtonElement>(null);
+  const backButton = useRef<HTMLButtonElement>(null);
+  const changeButton = useRef<HTMLButtonElement>(null);
+  const shownView = useRef(sheetView);
 
   useEffect(() => {
     const desktop = window.matchMedia('(min-width: 1024px)');
@@ -42,6 +70,18 @@ export function BoardPreviewPanel({
     desktop.addEventListener('change', closeOnDesktop);
     return () => desktop.removeEventListener('change', closeOnDesktop);
   }, []);
+
+  // The sheet swaps its content in place; move focus with it.
+  useEffect(() => {
+    if (!sheetOpen || shownView.current === sheetView) return;
+    shownView.current = sheetView;
+    (sheetView === 'design' ? backButton : themeRow).current?.focus({ preventScroll: true });
+  }, [sheetOpen, sheetView]);
+
+  function setSheetOpen(next: boolean) {
+    setOpen(next);
+    if (!next) closeDesignControls();
+  }
 
   return (
     <>
@@ -55,6 +95,14 @@ export function BoardPreviewPanel({
           <BoardPreviewActions state={preview} />
         </div>
         <BoardPreviewImage state={preview} fitViewport />
+        <div className="mt-4 border-t border-border pt-4">
+          <BoardThemeRow
+            ref={changeButton}
+            design={design}
+            variant="compact"
+            onChange={openDesignControls}
+          />
+        </div>
         <div className="mt-4">
           <BoardDownloadControls
             state={download}
@@ -63,7 +111,18 @@ export function BoardPreviewPanel({
         </div>
       </aside>
 
-      <Sheet open={open} onOpenChange={setOpen}>
+      <BoardDesignDialog
+        open={designOpen && isDesktop}
+        onOpenChange={(next) => {
+          if (!next) closeDesignControls();
+        }}
+        design={design}
+        preview={preview}
+        boardName={props.boardName}
+        returnFocusRef={changeButton}
+      />
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-md backdrop-blur-sm lg:hidden">
           <div className="mx-auto flex max-w-lg gap-2">
             <Button
@@ -91,35 +150,66 @@ export function BoardPreviewPanel({
           side="bottom"
           aria-describedby={undefined}
           closeLabel={t('closePreview')}
-          className="max-h-[92dvh] gap-0 rounded-t-2xl pb-[env(safe-area-inset-bottom)] motion-reduce:animate-none"
+          className={cn(
+            'max-h-[92dvh] gap-0 rounded-t-2xl pb-[env(safe-area-inset-bottom)] motion-reduce:animate-none',
+            sheetView === 'design' && 'h-[92dvh]'
+          )}
+          onOpenAutoFocus={(event) => {
+            if (sheetView !== 'design') return;
+            event.preventDefault();
+            backButton.current?.focus();
+          }}
           onEscapeKeyDown={(event) => {
-            // Let inline zoom handle Escape before dismissing its containing sheet.
+            // Let inline zoom and color fields handle Escape before dismissing the sheet.
             if (
-              preview.inlineZoom > 100 &&
-              event.target instanceof Element &&
-              event.target.closest('[data-board-inline-zoom]')
+              isFieldEscape(event) ||
+              (preview.inlineZoom > 100 &&
+                event.target instanceof Element &&
+                event.target.closest('[data-board-inline-zoom]'))
             )
               event.preventDefault();
           }}
         >
-          <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 pr-16">
-            <SheetTitle className="min-w-0">{t('livePreview')}</SheetTitle>
-            <BoardPreviewActions state={preview} />
-          </SheetHeader>
-          <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-4">
-            <div className="mx-auto max-w-sm">
-              <BoardPreviewImage state={preview} showPagination={false} />
-            </div>
-          </div>
-          <div className="shrink-0 bg-background px-4 pb-4">
-            <div className="mx-auto max-w-sm space-y-3">
-              <BoardPreviewPagination state={preview} />
-              <BoardDownloadControls
-                state={download}
-                onUnlock={props.isUnlocked ? undefined : onUnlock}
-              />
-            </div>
-          </div>
+          {sheetView === 'design' ? (
+            <BoardDesignSheetView
+              design={design}
+              preview={preview}
+              boardName={props.boardName}
+              onBack={() => {
+                // A deep link opens the sheet straight into this view; keep it open.
+                setOpen(true);
+                closeDesignControls();
+              }}
+              backRef={backButton}
+            />
+          ) : (
+            <>
+              <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 pr-16">
+                <SheetTitle className="min-w-0">{t('livePreview')}</SheetTitle>
+                <BoardPreviewActions state={preview} />
+              </SheetHeader>
+              <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-4">
+                <div className="mx-auto max-w-sm">
+                  <BoardPreviewImage state={preview} showPagination={false} />
+                </div>
+              </div>
+              <div className="shrink-0 bg-background px-4 pb-4">
+                <div className="mx-auto max-w-sm space-y-3">
+                  <BoardPreviewPagination state={preview} />
+                  <BoardThemeRow
+                    ref={themeRow}
+                    design={design}
+                    variant="row"
+                    onChange={openDesignControls}
+                  />
+                  <BoardDownloadControls
+                    state={download}
+                    onUnlock={props.isUnlocked ? undefined : onUnlock}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </SheetContent>
       </Sheet>
       <BoardPreviewZoom state={preview} pagination={<BoardPreviewPagination state={preview} />} />
