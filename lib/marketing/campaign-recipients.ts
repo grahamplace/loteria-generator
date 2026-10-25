@@ -23,7 +23,7 @@ export async function getCampaignRecipients(userIds: string[]): Promise<Campaign
       // board to point at. Mirrors the subquery the cron recipient query uses.
       boardId: sql<
         string | null
-      >`(select id::text from boards where boards.user_id = "user"."id" order by created_at desc limit 1)`.as(
+      >`(select id::text from boards where boards.user_id = "user"."id" and boards.deleted_at is null order by created_at desc limit 1)`.as(
         'board_id'
       ),
     })

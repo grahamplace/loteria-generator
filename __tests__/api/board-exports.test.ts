@@ -56,6 +56,30 @@ describe('POST /api/boards/[boardId]/exports', () => {
     });
   });
 
+  it("refuses the owner's export of a board they deleted", async () => {
+    boardsFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'user-1',
+      isUnlocked: true,
+      deletedAt: new Date(),
+    });
+    const res = await POST(req(), { params: params() });
+    expect(res.status).toBe(404);
+    expect(insertValuesSpy).not.toHaveBeenCalled();
+  });
+
+  it('lets an admin export a deleted board', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN as never);
+    boardsFindFirst.mockResolvedValue({
+      id: 'board-1',
+      userId: 'user-1',
+      isUnlocked: true,
+      deletedAt: new Date(),
+    });
+    const res = await POST(req(), { params: params() });
+    expect(res.status).toBe(201);
+  });
+
   it("records the admin exporting someone's board as an admin export, owned by the board owner", async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(ADMIN as never);
     const res = await POST(req(), { params: params() });
