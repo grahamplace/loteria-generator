@@ -1,11 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
+import { E2E_BASE_URL } from './helpers/base-url';
 
 // Browser-local fixtures: no request here can read or mutate a real board.
 async function editor(
   page: Page,
   { locale = 'en', count = 2, failCreate = false, failList = false, failRename = false } = {}
 ) {
-  const base = 'http://localhost:3006';
+  const base = E2E_BASE_URL;
   const boards = Array.from({ length: count }, (_, i) => ({
     id: `navigation-fixture-${i}`,
     name: i === 0 ? 'Our Halloween Lotería' : `Family celebration ${i}`,

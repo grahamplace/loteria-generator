@@ -14,6 +14,7 @@
 import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { config as loadDotenv } from 'dotenv';
 import { existsSync } from 'node:fs';
+import { E2E_PORT } from '../e2e/helpers/base-url';
 
 /** Kill any process listening on a port so Playwright can start a fresh server. */
 function freePort(port: number): void {
@@ -112,6 +113,8 @@ async function main(): Promise<number> {
       DATABASE_URL: branch.databaseUrl,
       BETTER_AUTH_SECRET:
         process.env.E2E_BETTER_AUTH_SECRET ?? process.env.BETTER_AUTH_SECRET ?? '',
+      // Auth only trusts its own origin, so a custom E2E_PORT moves the app URL too.
+      ...(process.env.E2E_PORT ? { NEXT_PUBLIC_APP_URL: `http://localhost:${E2E_PORT}` } : {}),
     };
 
     process.stderr.write('running migrations…\n');
@@ -124,7 +127,7 @@ async function main(): Promise<number> {
 
     // Ensure Playwright can start a fresh server with the correct DATABASE_URL.
     // A dev server may already be running on this port pointing at the wrong DB.
-    freePort(3006);
+    freePort(E2E_PORT);
 
     process.stderr.write('running Playwright…\n');
     exitCode = runInherit(

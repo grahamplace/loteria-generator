@@ -1,6 +1,7 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { E2E_BASE_URL } from './helpers/base-url';
 
 // The editor/renderer are real; all card data and processing results stay in
 // browser-local fixtures. No customer data, database writes, or image API calls.
@@ -37,7 +38,7 @@ async function editor(page: Page, locale = 'en', hasIllustration = false) {
   await page
     .context()
     .addCookies([
-      { name: 'better-auth.session_token', value: 'ui-fixture-only', url: 'http://localhost:3006' },
+      { name: 'better-auth.session_token', value: 'ui-fixture-only', url: E2E_BASE_URL },
     ]);
   await page.addInitScript(() =>
     localStorage.setItem('loteria.onboarding.v1', '{"status":"skipped"}')
@@ -137,9 +138,7 @@ for (const [locale, width] of [
       ? ['Use illustration', 'Use original photo']
       : ['Usar ilustración', 'Usar foto original']) {
       const previousSource = await preview.getAttribute('src');
-      const previousVersion = new URL(previousSource!, 'http://localhost:3006').searchParams.get(
-        'v'
-      );
+      const previousVersion = new URL(previousSource!, E2E_BASE_URL).searchParams.get('v');
       let releaseImage!: () => void;
       const imageGate = new Promise<void>((resolve) => {
         releaseImage = resolve;
