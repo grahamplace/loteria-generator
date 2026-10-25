@@ -157,6 +157,51 @@ describe('automatic board preview', () => {
     expect(renderBoard).toHaveBeenCalledTimes(2);
   });
 
+  it('pages the full-screen preview with arrow keys using pre-rendered detail', async () => {
+    const cards = Array.from({ length: 20 }, (_, i) => ({
+      id: String(i + 1),
+      number: i + 1,
+      label: `Card ${i + 1}`,
+      illustration: `/card-${i + 1}.webp`,
+    }));
+    renderBoard.mockImplementation(async (pageCards, _style, _title, options) =>
+      canvas(`${options?.scale === 1 ? 'detail' : 'thumbnail'}-${pageCards[0]?.number}`)
+    );
+    render(view({ cards }));
+    await screen.findByRole('img', { name: previewName });
+    fireEvent.click(screen.getByRole('button', { name: 'Full Screen preview' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Board preview' });
+    await waitFor(() =>
+      expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('detail-1').toDataURL())
+    );
+    // The second page is warmed in the background after the first.
+    await waitFor(() =>
+      expect(renderBoard).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.objectContaining({ number: 17 })]),
+        expect.anything(),
+        undefined,
+        expect.objectContaining({ scale: 1 })
+      )
+    );
+    await act(async () => {});
+    const detailCalls = () => renderBoard.mock.calls.filter(([, , , o]) => o?.scale === 1).length;
+    const before = detailCalls();
+
+    fireEvent.keyDown(within(dialog).getByRole('button', { name: 'Close expanded preview' }), {
+      key: 'ArrowRight',
+    });
+    expect(window.location.search).toBe('?previewZoom=100&previewPage=2');
+    expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('detail-17').toDataURL());
+    expect(within(dialog).getByText('Cards 17–20')).toBeVisible();
+
+    fireEvent.keyDown(within(dialog).getByRole('region'), { key: 'ArrowRight' });
+    expect(window.location.search).toBe('?previewZoom=100&previewPage=2');
+    fireEvent.keyDown(within(dialog).getByRole('region'), { key: 'ArrowLeft' });
+    expect(within(dialog).getByRole('img')).toHaveAttribute('src', canvas('detail-1').toDataURL());
+    expect(detailCalls()).toBe(before);
+    await act(async () => {});
+  });
+
   it('keeps the thumbnail available when a detailed render fails and supports retry', async () => {
     render(view());
     await screen.findByRole('img', { name: previewName });

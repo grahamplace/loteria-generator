@@ -70,6 +70,16 @@ export function BoardPreviewZoom({
           event.preventDefault();
           state.restoreExpandFocus();
         }}
+        onKeyDown={(event) => {
+          const step = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+          if (!step || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+          // Zoomed in, arrows on the focused board pan it like any scroll area.
+          if (state.zoom > 100 && event.target === viewport.current) return;
+          const next = state.page + step;
+          if (next < 0 || next >= state.pageCount) return;
+          event.preventDefault();
+          state.goToPage(next);
+        }}
       >
         <header className="flex min-w-0 items-center gap-2 border-b border-border bg-background pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <DialogTitle className="sr-only min-w-0 truncate font-display sm:not-sr-only sm:mr-auto">
