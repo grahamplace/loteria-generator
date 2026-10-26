@@ -78,6 +78,9 @@ export async function generateMetadata({
     verification: {
       google: process.env.GOOGLE_SITE_VERIFICATION,
       yandex: process.env.YANDEX_VERIFICATION,
+      ...(process.env.PINTEREST_DOMAIN_VERIFY && {
+        other: { 'p:domain_verify': process.env.PINTEREST_DOMAIN_VERIFY },
+      }),
     },
     category: 'technology',
   };
