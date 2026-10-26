@@ -144,7 +144,11 @@ export function BoardPreviewInlineZoom({
           data-board-inline-zoom
           role="region"
           aria-label={t('inlinePanPreview')}
-          className="absolute inset-0 overflow-auto overscroll-contain"
+          // Fit view never scrolls; a stray scrollbar there would squeeze the board.
+          className={cn(
+            'absolute inset-0 overscroll-contain',
+            zoomed ? 'overflow-auto' : 'overflow-hidden'
+          )}
         >
           {source && (
             <button
