@@ -12,6 +12,7 @@ import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 import { DEFAULT_CARDS_BY_ID } from '@/lib/default-cards';
 import { needsFullReload } from '@/lib/cards/needs-full-reload';
 import type { SheetMessage } from '@/lib/inngest/channels';
+import { sheetSplitToast } from '@/lib/cards/sheet-split-toast';
 
 function preloadImage(src: string): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
@@ -679,15 +680,17 @@ export function useBoardCards(
         setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, isSplitting: false } : c)));
         return;
       }
-      if (msg.createdCount === 0) {
+      // Locked boards too: the unlock banner can miss cards the limit dropped.
+      const toastKey = sheetSplitToast(msg);
+      if (toastKey === 'allAlreadyOnBoard') {
         toast(tSheet('allAlreadyOnBoard'));
-      } else if (isUnlocked && msg.createdCount < msg.foundCount - msg.skippedCount) {
+      } else if (toastKey === 'boardFull') {
         toast(tSheet('boardFull', { created: msg.createdCount, found: msg.foundCount }));
       }
       void fetchCards();
       onSheetSplit?.();
     },
-    [tSheet, isUnlocked, fetchCards, onSheetSplit]
+    [tSheet, fetchCards, onSheetSplit]
   );
 
   // Only subscribe to cards that have a real server ID (not temp) and are still processing.

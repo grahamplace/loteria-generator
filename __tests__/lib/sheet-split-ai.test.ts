@@ -9,7 +9,12 @@ vi.mock('@/lib/ai-tracing', () => ({
   withAITrace: (_name: string, _meta: unknown, fn: () => unknown) => fn(),
 }));
 
-import { detectSheet, extractSheet, toSheetDataUrl } from '@/lib/sheet-split-ai';
+import {
+  SHEET_DETECT_TIMEOUT_MS,
+  detectSheet,
+  extractSheet,
+  toSheetDataUrl,
+} from '@/lib/sheet-split-ai';
 import sharp from 'sharp';
 
 const meta = { userId: 'u1', boardId: 'b1', cardId: 'c1' };
@@ -64,10 +69,23 @@ describe('detectSheet', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('returns false after 3 failed attempts', async () => {
+  it('returns false after 2 failed attempts', async () => {
     fetchMock.mockResolvedValue(failResponse());
     expect(await detectSheet('data:x', meta)).toBe(false);
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses an 8s detection timeout', () => {
+    expect(SHEET_DETECT_TIMEOUT_MS).toBe(8000);
+  });
+
+  it('warns on each failed attempt', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    fetchMock.mockResolvedValueOnce(failResponse()).mockRejectedValueOnce(new Error('network'));
+    expect(await detectSheet('data:x', meta)).toBe(false);
+    expect(warn).toHaveBeenCalledWith('detect-sheet: attempt failed', { status: 500 });
+    expect(warn).toHaveBeenCalledWith('detect-sheet: attempt failed', { error: 'network' });
+    warn.mockRestore();
   });
 
   it('aborts a hung detection attempt and retries', async () => {
@@ -83,7 +101,7 @@ describe('detectSheet', () => {
   it('returns false when fetch throws every time', async () => {
     fetchMock.mockRejectedValue(new Error('network'));
     expect(await detectSheet('data:x', meta)).toBe(false);
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -113,7 +131,13 @@ describe('extractSheet', () => {
   it('passes a timeout to responses.create', async () => {
     responsesCreate.mockResolvedValueOnce({ output_text: '{}' });
     await extractSheet('data:x', meta);
-    expect(responsesCreate.mock.calls[0][1]).toEqual({ timeout: 90000 });
+    expect(responsesCreate.mock.calls[0][1]).toEqual({ timeout: 90000, maxRetries: 0 });
+  });
+
+  it('responses.create receives maxRetries 0', async () => {
+    responsesCreate.mockResolvedValueOnce({ output_text: '{}' });
+    await extractSheet('data:x', meta);
+    expect(responsesCreate.mock.calls[0][1].maxRetries).toBe(0);
   });
 
   it('returns null when the call throws', async () => {

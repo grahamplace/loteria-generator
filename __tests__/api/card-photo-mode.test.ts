@@ -103,10 +103,21 @@ describe('card photo mode', () => {
           originalImageUrl: original,
           skipLabeling: true,
           cropData: crop,
+          fromSheet: false,
+          skipSheetDetection: true,
         }),
       })
     );
     expect(mocks.write.mock.calls[0][0]).not.toHaveProperty('label');
+  });
+  it('re-dispatches a sheet card with fromSheet so it keeps the overlay and skips detection', async () => {
+    card = { ...card, fromSheet: true, cropData: null };
+    await change('illustrated');
+    expect(mocks.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ fromSheet: true, skipSheetDetection: true }),
+      })
+    );
   });
   it('keeps and restores the most recent illustration over repeated mode changes', async () => {
     card.preserveOriginal = false;

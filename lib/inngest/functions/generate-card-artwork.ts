@@ -74,7 +74,7 @@ export const generateCardArtwork = inngest.createFunction(
     },
   },
   async ({ event, step }) => {
-    const { cardId, boardId, userId, skipIllustration, cropData } = event.data;
+    const { cardId, boardId, userId, skipIllustration, skipSheetDetection, cropData } = event.data;
     let { originalImageUrl, skipLabeling } = event.data;
     const ch = cardChannel({ cardId });
     let fromSheet = Boolean(event.data.fromSheet);
@@ -82,31 +82,46 @@ export const generateCardArtwork = inngest.createFunction(
     // Sheet split: an upload showing many lotería cards becomes one card per
     // picture. Any failure here falls through to the normal single-card path.
     // cropData is in full-image coordinates; it would be wrong against crop #1.
-    if (!skipIllustration && !fromSheet && !cropData) {
+    if (!skipIllustration && !skipSheetDetection && !fromSheet && !cropData) {
       const sheetUrl = originalImageUrl;
       const meta = { userId, boardId, cardId };
-      const isSheet = await step.run('detect-sheet', async () => {
-        let dataUrl: string;
-        try {
-          const { buffer } = await fetchBlob(sheetUrl);
-          dataUrl = await toSheetDataUrl(buffer);
-        } catch {
-          return false;
-        }
-        return detectSheet(dataUrl, meta);
-      });
+      let isSheet = false;
+      try {
+        isSheet = await step.run('detect-sheet', async () => {
+          let dataUrl: string;
+          try {
+            const { buffer } = await fetchBlob(sheetUrl);
+            dataUrl = await toSheetDataUrl(buffer);
+          } catch {
+            return false;
+          }
+          return detectSheet(dataUrl, meta);
+        });
+      } catch (error) {
+        // A killed or failed step must not fail the card: treat as not a sheet.
+        console.error('detect-sheet step failed; continuing as a single card', { cardId, error });
+      }
 
       if (isSheet) {
         await step.realtime.publish('publish-sheet-detected', ch.sheet, { phase: 'detected' });
         // Refetch inside the step: image bytes must never be a step output.
-        const extraction = await step.run('extract-sheet', async () => {
-          try {
-            const { buffer } = await fetchBlob(sheetUrl);
-            return await extractSheet(await toSheetDataUrl(buffer), meta);
-          } catch {
-            return null;
-          }
-        });
+        let extraction: Awaited<ReturnType<typeof extractSheet>> = null;
+        try {
+          extraction = await step.run('extract-sheet', async () => {
+            try {
+              const { buffer } = await fetchBlob(sheetUrl);
+              return await extractSheet(await toSheetDataUrl(buffer), meta);
+            } catch {
+              return null;
+            }
+          });
+        } catch (error) {
+          // Publishes `failed` below and continues as a single card.
+          console.error('extract-sheet step failed; continuing as a single card', {
+            cardId,
+            error,
+          });
+        }
 
         let split: SplitResult | null = null;
         if (extraction && extraction.cards.length >= 2) {
@@ -186,11 +201,11 @@ export const generateCardArtwork = inngest.createFunction(
           await step.run('track-sheet', async () => {
             const posthog = getPostHogClient();
             if (!posthog) return;
-            const board = await db.query.boards.findFirst({
-              where: eq(boards.id, boardId),
-              columns: { isUnlocked: true },
-            });
             try {
+              const board = await db.query.boards.findFirst({
+                where: eq(boards.id, boardId),
+                columns: { isUnlocked: true },
+              });
               posthog.capture({
                 distinctId: userId,
                 event: 'sheet_detected',
@@ -205,7 +220,7 @@ export const generateCardArtwork = inngest.createFunction(
               await posthog.shutdown();
             } catch (error) {
               // Analytics must never fail the card.
-              console.error('track-sheet: PostHog capture failed', { cardId, error });
+              console.error('track-sheet: analytics failed', { cardId, error });
             }
           });
         }

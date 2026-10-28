@@ -14,8 +14,8 @@ import {
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const DETECT_ATTEMPTS = 3;
-export const SHEET_DETECT_TIMEOUT_MS = 15_000;
+const DETECT_ATTEMPTS = 2;
+export const SHEET_DETECT_TIMEOUT_MS = 8_000;
 export const SHEET_EXTRACT_TIMEOUT_MS = 90_000;
 
 type SheetMeta = { userId: string; boardId: string; cardId: string };
@@ -50,11 +50,17 @@ async function decideOnce(imageDataUrl: string): Promise<number | null> {
         ],
       }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn('detect-sheet: attempt failed', { status: res.status });
+      return null;
+    }
     const json = (await res.json()) as { answers?: { probability?: unknown }[] };
     const p = json.answers?.[0]?.probability;
     return typeof p === 'number' ? p : null;
-  } catch {
+  } catch (error) {
+    console.warn('detect-sheet: attempt failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
@@ -100,7 +106,8 @@ export async function extractSheet(
             },
           },
         },
-        { timeout: SHEET_EXTRACT_TIMEOUT_MS }
+        // No SDK retries: 3 × 90s could outlast the platform's request limit.
+        { timeout: SHEET_EXTRACT_TIMEOUT_MS, maxRetries: 0 }
       );
       return parseSheetExtraction(res.output_text);
     });

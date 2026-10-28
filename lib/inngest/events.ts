@@ -10,6 +10,8 @@ export const cardGenerateRequested = eventType('card/generate.requested', {
     skipLabeling: z.boolean().optional(),
     skipIllustration: z.boolean().optional(),
     fromSheet: z.boolean().optional(),
+    /** Re-dispatches (e.g. photo-mode toggle) never re-run sheet detection. */
+    skipSheetDetection: z.boolean().optional(),
     cropData: z
       .object({ x: z.number(), y: z.number(), width: z.number(), height: z.number() })
       .optional(),

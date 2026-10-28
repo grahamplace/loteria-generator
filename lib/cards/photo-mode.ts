@@ -57,6 +57,9 @@ export async function changeCardPhotoMode(card: Card, mode: PhotoMode): Promise<
           originalImageUrl: card.originalImageUrl,
           skipLabeling: true,
           cropData: card.cropData ?? undefined,
+          // Keep the sheet overlay; never split an image the user already placed.
+          fromSheet: card.fromSheet,
+          skipSheetDetection: true,
         })
       );
     } catch (error) {

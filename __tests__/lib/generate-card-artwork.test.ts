@@ -93,13 +93,14 @@ import { SHEET_CARD_OVERLAY } from '@/lib/sheet-split';
 const CARD = '00000000-0000-0000-0000-000000000001';
 const BOARD = '00000000-0000-0000-0000-000000000002';
 
-function makeStep() {
+function makeStep(failSteps: string[] = []) {
   const runNames: string[] = [];
   return {
     runNames,
     step: {
       run: vi.fn(async (name: string, fn: () => unknown) => {
         runNames.push(name);
+        if (failSteps.includes(name)) throw new Error(`step ${name} killed`);
         return fn();
       }),
       realtime: { publish: vi.fn(async () => {}) },
@@ -563,10 +564,51 @@ describe('generate-card-artwork sheet split', () => {
     phCapture.mockImplementation(() => {
       throw new Error('posthog down');
     });
+    boardsFindFirst.mockRejectedValue(new Error('db down'));
     const { step } = makeStep();
     await captured.handler!({ event: { data: baseData }, step });
     expect(step.sendEvent).not.toHaveBeenCalled();
     expect(imagesEdit).toHaveBeenCalledOnce();
     expect(persistCall()!.illustrationUrl).toBe('https://blob/illustration.png');
+  });
+
+  it('detect step failure falls back to normal path', async () => {
+    const { runNames, step } = makeStep(['detect-sheet']);
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(runNames).not.toContain('extract-sheet');
+    expect(sheetPublishes(step.realtime.publish)).toEqual([]);
+    expect(imagesEdit).toHaveBeenCalledOnce();
+    expect(persistCall()!.illustrationUrl).toBe('https://blob/illustration.png');
+  });
+
+  it('extract step failure publishes failed and continues', async () => {
+    detectSheet.mockResolvedValue(true);
+    const { runNames, step } = makeStep(['extract-sheet']);
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(runNames).not.toContain('split-sheet');
+    expect(sheetPublishes(step.realtime.publish)).toEqual([
+      { phase: 'detected' },
+      { phase: 'failed' },
+    ]);
+    expect(imagesEdit).toHaveBeenCalledOnce();
+    expect(persistCall()!.illustrationUrl).toBe('https://blob/illustration.png');
+  });
+
+  it('skips detection when skipSheetDetection', async () => {
+    const { runNames, step } = makeStep();
+    await captured.handler!({ event: { data: { ...baseData, skipSheetDetection: true } }, step });
+    expect(runNames).not.toContain('detect-sheet');
+    expect(detectSheet).not.toHaveBeenCalled();
+    expect(imagesEdit).toHaveBeenCalledOnce();
+  });
+
+  it('skipSheetDetection keeps the overlay for a fromSheet re-dispatch', async () => {
+    const { runNames, step } = makeStep();
+    await captured.handler!({
+      event: { data: { ...baseData, fromSheet: true, skipSheetDetection: true } },
+      step,
+    });
+    expect(runNames).not.toContain('detect-sheet');
+    expect(promptSent()).toContain(SHEET_CARD_OVERLAY);
   });
 });
