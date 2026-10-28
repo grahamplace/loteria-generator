@@ -1,0 +1,56 @@
+name: Preview Branch Cleanup
+
+# The Vercel–Neon integration creates a `preview/<git branch>` Neon branch for
+# each preview deploy and never deletes it. Delete it when the PR closes, and
+# sweep weekly for any a closed PR missed.
+
+on:
+  pull_request:
+    types: [closed]
+  schedule:
+    - cron: '0 6 * * 0' # Sundays 06:00 UTC
+  workflow_dispatch:
+
+env:
+  # The main loteria-generator Neon project (prod + previews), not the e2e
+  # project that secrets.NEON_PROJECT_ID points at.
+  NEON_PROJECT_ID: noisy-water-35162584
+
+jobs:
+  cleanup:
+    name: Delete preview Neon branches
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Delete this PR's preview branch
+        if: github.event_name == 'pull_request'
+        run: pnpm exec tsx scripts/preview-branch-cleanup.ts "$HEAD_REF"
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+
+      - name: Sweep preview branches without an open PR
+        if: github.event_name != 'pull_request'
+        run: |
+          OPEN_PR_BRANCHES="$(gh pr list --state open --limit 200 --json headRefName --jq '.[].headRefName')" \
+            pnpm exec tsx scripts/preview-branch-cleanup.ts --sweep
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
