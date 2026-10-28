@@ -8,6 +8,32 @@ const { captured, updateSetSpy, cardsFindFirst, chatCreate, imagesEdit } = vi.ho
   imagesEdit: vi.fn(),
 }));
 
+const {
+  toSheetDataUrl,
+  detectSheet,
+  extractSheet,
+  splitSheetCard,
+  userFindFirst,
+  boardsFindFirst,
+  phCapture,
+} = vi.hoisted(() => ({
+  toSheetDataUrl: vi.fn(),
+  detectSheet: vi.fn(),
+  extractSheet: vi.fn(),
+  splitSheetCard: vi.fn(),
+  userFindFirst: vi.fn(),
+  boardsFindFirst: vi.fn(),
+  phCapture: vi.fn(),
+}));
+vi.mock('@/lib/sheet-split-ai', () => ({ toSheetDataUrl, detectSheet, extractSheet }));
+vi.mock('@/lib/sheet-split-run', () => ({ splitSheetCard }));
+vi.mock('@/lib/admin', () => ({
+  isAdminEmail: (e: string | null | undefined) => e === 'admin@example.com',
+}));
+vi.mock('@/lib/posthog-server', () => ({
+  getPostHogClient: () => ({ capture: phCapture, shutdown: vi.fn(async () => {}) }),
+}));
+
 const { extractCrop } = vi.hoisted(() => ({ extractCrop: vi.fn(async (b: Buffer) => b) }));
 vi.mock('@/lib/crop-region', () => ({ extractCrop }));
 
@@ -30,7 +56,11 @@ vi.mock('openai', () => ({
 
 vi.mock('@/db', () => ({
   db: {
-    query: { cards: { findFirst: cardsFindFirst } },
+    query: {
+      cards: { findFirst: cardsFindFirst },
+      user: { findFirst: userFindFirst },
+      boards: { findFirst: boardsFindFirst },
+    },
     update: () => ({
       set: (v: unknown) => {
         updateSetSpy(v);
@@ -40,6 +70,7 @@ vi.mock('@/db', () => ({
   },
   boards: { id: 'boards.id', imageGenerationsUsed: 'boards.imageGenerationsUsed' },
   cards: { id: 'cards.id', label: 'cards.label' },
+  user: { id: 'user.id', email: 'user.email' },
 }));
 
 vi.mock('@/lib/blob', () => ({
@@ -57,6 +88,7 @@ vi.mock('@/lib/ai-tracing', () => ({
 
 import '@/lib/inngest/functions/generate-card-artwork';
 import { fetchBlob } from '@/lib/blob';
+import { SHEET_CARD_OVERLAY } from '@/lib/sheet-split';
 
 const CARD = '00000000-0000-0000-0000-000000000001';
 const BOARD = '00000000-0000-0000-0000-000000000002';
@@ -71,6 +103,7 @@ function makeStep() {
         return fn();
       }),
       realtime: { publish: vi.fn(async () => {}) },
+      sendEvent: vi.fn(async () => ({ ids: [] })),
     },
   };
 }
@@ -84,6 +117,11 @@ function persistCall() {
 beforeEach(() => {
   vi.clearAllMocks();
   imagesEdit.mockResolvedValue({ data: [{ b64_json: Buffer.from('img').toString('base64') }] });
+  toSheetDataUrl.mockResolvedValue('data:image/jpeg;base64,c2hlZXQ=');
+  detectSheet.mockResolvedValue(false);
+  extractSheet.mockResolvedValue(null);
+  userFindFirst.mockResolvedValue({ email: 'someone@example.com' });
+  boardsFindFirst.mockResolvedValue({ isUnlocked: true });
 });
 
 describe('generate-card-artwork skipLabeling', () => {
@@ -300,5 +338,185 @@ describe('generate-card-artwork AVIF uploads', () => {
     await expect(
       captured.handler!({ event: { data: { ...event.data, skipLabeling: true } }, step })
     ).rejects.toThrow('Unsupported image format "image/heic"');
+  });
+});
+
+describe('generate-card-artwork sheet split', () => {
+  const OTHER = '00000000-0000-0000-0000-000000000003';
+  const OTHER2 = '00000000-0000-0000-0000-000000000004';
+  const baseData = {
+    cardId: CARD,
+    boardId: BOARD,
+    userId: 'u1',
+    originalImageUrl: 'https://blob/o.png',
+  };
+  const extraction = {
+    rows: 1,
+    cols: 3,
+    cards: [1, 2, 3].map((col) => ({
+      row: 1,
+      col,
+      title: `T${col}`,
+      complete: true,
+      box: { x0: 0, y0: 0, x1: 0.3, y1: 1 },
+    })),
+  };
+  const sheetPublishes = (publish: ReturnType<typeof vi.fn>) =>
+    publish.mock.calls
+      .filter((c) => c[0] === 'publish-sheet-detected' || String(c[0]).startsWith('publish-sheet'))
+      .map((c) => c[2]);
+  const promptSent = () => (imagesEdit.mock.calls[0][0] as { prompt: string }).prompt;
+
+  beforeEach(() => {
+    chatCreate.mockResolvedValue({ choices: [{ message: { content: '{"label":"La Luna"}' } }] });
+    cardsFindFirst.mockResolvedValue({ label: 'T1' });
+  });
+
+  it('skips detection when skipIllustration', async () => {
+    const { runNames, step } = makeStep();
+    await captured.handler!({ event: { data: { ...baseData, skipIllustration: true } }, step });
+    expect(runNames).not.toContain('detect-sheet');
+    expect(detectSheet).not.toHaveBeenCalled();
+  });
+
+  it('skips detection for fromSheet events and adds the sheet overlay to the prompt', async () => {
+    const { runNames, step } = makeStep();
+    await captured.handler!({ event: { data: { ...baseData, fromSheet: true } }, step });
+    expect(runNames).not.toContain('detect-sheet');
+    expect(detectSheet).not.toHaveBeenCalled();
+    expect(promptSent()).toContain(SHEET_CARD_OVERLAY);
+  });
+
+  it('normal photo path unchanged', async () => {
+    const { runNames, step } = makeStep();
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(runNames).toContain('detect-sheet');
+    expect(runNames).not.toContain('extract-sheet');
+    expect(sheetPublishes(step.realtime.publish)).toEqual([]);
+    expect(step.sendEvent).not.toHaveBeenCalled();
+    expect(promptSent()).not.toContain(SHEET_CARD_OVERLAY);
+    expect(imagesEdit).toHaveBeenCalledOnce();
+  });
+
+  it('treats a corrupt image as not a sheet', async () => {
+    toSheetDataUrl.mockRejectedValue(new Error('bad image'));
+    const { runNames, step } = makeStep();
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(runNames).not.toContain('extract-sheet');
+    expect(imagesEdit).toHaveBeenCalledOnce();
+  });
+
+  it('publishes failed when extraction fails', async () => {
+    detectSheet.mockResolvedValue(true);
+    extractSheet.mockResolvedValue(null);
+    const { runNames, step } = makeStep();
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(runNames).toContain('extract-sheet');
+    expect(runNames).not.toContain('split-sheet');
+    expect(sheetPublishes(step.realtime.publish)).toEqual([
+      { phase: 'detected' },
+      { phase: 'failed' },
+    ]);
+    expect(imagesEdit).toHaveBeenCalledOnce();
+    expect(promptSent()).not.toContain(SHEET_CARD_OVERLAY);
+  });
+
+  it('publishes failed when fewer than 2 cards are extracted', async () => {
+    detectSheet.mockResolvedValue(true);
+    extractSheet.mockResolvedValue({ ...extraction, cards: extraction.cards.slice(0, 1) });
+    const { runNames, step } = makeStep();
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(runNames).not.toContain('split-sheet');
+    expect(sheetPublishes(step.realtime.publish)).toContainEqual({ phase: 'failed' });
+    expect(imagesEdit).toHaveBeenCalledOnce();
+  });
+
+  it('publishes failed and continues normally when there are no slots', async () => {
+    detectSheet.mockResolvedValue(true);
+    extractSheet.mockResolvedValue(extraction);
+    splitSheetCard.mockResolvedValue({ status: 'no-slots' });
+    const { step } = makeStep();
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(sheetPublishes(step.realtime.publish)).toContainEqual({ phase: 'failed' });
+    expect(step.sendEvent).not.toHaveBeenCalled();
+    expect(imagesEdit).toHaveBeenCalledOnce();
+  });
+
+  it('split fans out and continues with card 1 crop', async () => {
+    detectSheet.mockResolvedValue(true);
+    extractSheet.mockResolvedValue(extraction);
+    userFindFirst.mockResolvedValue({ email: 'admin@example.com' });
+    splitSheetCard.mockResolvedValue({
+      status: 'split',
+      foundCount: 3,
+      createdCount: 3,
+      skippedCount: 0,
+      first: { originalImageUrl: 'https://blob/first.png', titled: true },
+      others: [
+        { cardId: OTHER, originalImageUrl: 'https://blob/2.png', titled: true },
+        { cardId: OTHER2, originalImageUrl: 'https://blob/3.png', titled: false },
+      ],
+    });
+    const { runNames, step } = makeStep();
+    await captured.handler!({ event: { data: baseData }, step });
+
+    expect(splitSheetCard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cardId: CARD,
+        boardId: BOARD,
+        userId: 'u1',
+        isAdmin: true,
+        extraction,
+      })
+    );
+    expect(step.sendEvent).toHaveBeenCalledOnce();
+    const [sendName, events] = step.sendEvent.mock.calls[0] as unknown as [
+      string,
+      { data: Record<string, unknown> }[],
+    ];
+    expect(sendName).toBe('fan-out-sheet-cards');
+    expect(events).toHaveLength(2);
+    expect(events.every((e) => e.data.fromSheet === true)).toBe(true);
+    expect(events.map((e) => e.data.cardId)).toEqual([OTHER, OTHER2]);
+    expect(events.map((e) => e.data.skipLabeling)).toEqual([true, false]);
+    expect(events[0].data.originalImageUrl).toBe('https://blob/2.png');
+
+    expect(sheetPublishes(step.realtime.publish)).toEqual([
+      { phase: 'detected' },
+      { phase: 'split', foundCount: 3, createdCount: 3, skippedCount: 0 },
+    ]);
+    expect(vi.mocked(fetchBlob)).toHaveBeenLastCalledWith('https://blob/first.png');
+    // Card 1 was titled, so labeling is skipped and the extracted title kept.
+    expect(runNames).not.toContain('generate-label');
+    expect(promptSent()).toContain(SHEET_CARD_OVERLAY);
+    expect(phCapture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'sheet_detected',
+        properties: {
+          board_id: BOARD,
+          found_count: 3,
+          created_count: 3,
+          skipped_count: 0,
+          board_is_unlocked: true,
+        },
+      })
+    );
+  });
+
+  it('all duplicates returns early', async () => {
+    detectSheet.mockResolvedValue(true);
+    extractSheet.mockResolvedValue(extraction);
+    splitSheetCard.mockResolvedValue({ status: 'all-duplicates', foundCount: 3, skippedCount: 3 });
+    const { runNames, step } = makeStep();
+    const result = await captured.handler!({ event: { data: baseData }, step });
+    expect(result).toEqual({ cardId: CARD, split: 'all-duplicates' });
+    expect(imagesEdit).not.toHaveBeenCalled();
+    expect(runNames).not.toContain('increment-generation-counter');
+    expect(sheetPublishes(step.realtime.publish)).toContainEqual({
+      phase: 'split',
+      foundCount: 3,
+      createdCount: 0,
+      skippedCount: 3,
+    });
   });
 });

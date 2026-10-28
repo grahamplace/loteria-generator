@@ -1,6 +1,19 @@
 import { realtime } from 'inngest';
 import { z } from 'zod';
 
+const sheetSchema = z.discriminatedUnion('phase', [
+  z.object({ phase: z.literal('detected') }),
+  z.object({
+    phase: z.literal('split'),
+    foundCount: z.number(),
+    createdCount: z.number(),
+    skippedCount: z.number(),
+  }),
+  z.object({ phase: z.literal('failed') }),
+]);
+
+export type SheetMessage = z.infer<typeof sheetSchema>;
+
 export const cardChannel = realtime.channel({
   name: ({ cardId }: { cardId: string }) => `card:${cardId}`,
   topics: {
@@ -19,10 +32,13 @@ export const cardChannel = realtime.channel({
     error: {
       schema: z.object({ message: z.string() }),
     },
+    sheet: {
+      schema: sheetSchema,
+    },
   },
 });
 
-export const cardChannelTopics = ['label', 'illustration', 'completed', 'error'] as const;
+export const cardChannelTopics = ['label', 'illustration', 'completed', 'error', 'sheet'] as const;
 
 const cardUpdatedSchema = z.object({
   cardId: z.string().uuid(),

@@ -1,11 +1,16 @@
 import OpenAI, { toFile } from 'openai';
 import { eq, sql } from 'drizzle-orm';
-import { db, boards, cards } from '@/db';
+import { db, boards, cards, user } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
 import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
 import { normalizeImageForOpenAI, convertForOpenAIVision } from '@/lib/image-normalize';
 import { isSupportedUploadMime } from '@/lib/image-formats';
 import { extractCrop } from '@/lib/crop-region';
+import { isAdminEmail } from '@/lib/admin';
+import { getPostHogClient } from '@/lib/posthog-server';
+import { withSheetOverlay } from '@/lib/sheet-split';
+import { toSheetDataUrl, detectSheet, extractSheet } from '@/lib/sheet-split-ai';
+import { splitSheetCard, type SplitResult } from '@/lib/sheet-split-run';
 
 /** Formats OpenAI's vision input reads directly; others are converted first. */
 export const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
@@ -69,9 +74,123 @@ export const generateCardArtwork = inngest.createFunction(
     },
   },
   async ({ event, step }) => {
-    const { cardId, boardId, userId, originalImageUrl, skipLabeling, skipIllustration, cropData } =
-      event.data;
+    const { cardId, boardId, userId, skipIllustration, cropData } = event.data;
+    let { originalImageUrl, skipLabeling } = event.data;
     const ch = cardChannel({ cardId });
+    let fromSheet = Boolean(event.data.fromSheet);
+
+    // Sheet split: an upload showing many lotería cards becomes one card per
+    // picture. Any failure here falls through to the normal single-card path.
+    if (!skipIllustration && !fromSheet) {
+      const sheetUrl = originalImageUrl;
+      const meta = { userId, boardId, cardId };
+      const isSheet = await step.run('detect-sheet', async () => {
+        let dataUrl: string;
+        try {
+          const { buffer } = await fetchBlob(sheetUrl);
+          dataUrl = await toSheetDataUrl(buffer);
+        } catch {
+          return false;
+        }
+        return detectSheet(dataUrl, meta);
+      });
+
+      if (isSheet) {
+        await step.realtime.publish('publish-sheet-detected', ch.sheet, { phase: 'detected' });
+        // Refetch inside the step: image bytes must never be a step output.
+        const extraction = await step.run('extract-sheet', async () => {
+          try {
+            const { buffer } = await fetchBlob(sheetUrl);
+            return await extractSheet(await toSheetDataUrl(buffer), meta);
+          } catch {
+            return null;
+          }
+        });
+
+        let split: SplitResult | null = null;
+        if (extraction && extraction.cards.length >= 2) {
+          try {
+            split = await step.run('split-sheet', async () => {
+              const owner = await db.query.user.findFirst({
+                where: eq(user.id, userId),
+                columns: { email: true },
+              });
+              return splitSheetCard({
+                cardId,
+                boardId,
+                userId,
+                isAdmin: isAdminEmail(owner?.email),
+                originalImageUrl: sheetUrl,
+                extraction,
+              });
+            });
+          } catch (error) {
+            // Retries exhausted; splitSheetCard already removed any cards it added.
+            console.error('split-sheet failed; continuing as a single card', { cardId, error });
+            split = null;
+          }
+        }
+
+        if (!split || split.status === 'no-slots') {
+          await step.realtime.publish('publish-sheet-failed', ch.sheet, { phase: 'failed' });
+        } else if (split.status === 'all-duplicates') {
+          // splitSheetCard deleted the uploaded card: nothing left to illustrate.
+          await step.realtime.publish('publish-sheet-split', ch.sheet, {
+            phase: 'split',
+            foundCount: split.foundCount,
+            createdCount: 0,
+            skippedCount: split.skippedCount,
+          });
+          return { cardId, split: 'all-duplicates' as const };
+        } else {
+          const { others, first, foundCount, createdCount, skippedCount } = split;
+          if (others.length > 0) {
+            await step.sendEvent(
+              'fan-out-sheet-cards',
+              others.map((o) =>
+                cardGenerateRequested.create({
+                  cardId: o.cardId,
+                  boardId,
+                  userId,
+                  originalImageUrl: o.originalImageUrl,
+                  skipLabeling: o.titled,
+                  fromSheet: true,
+                })
+              )
+            );
+          }
+          originalImageUrl = first.originalImageUrl;
+          skipLabeling = first.titled;
+          fromSheet = true;
+          await step.realtime.publish('publish-sheet-split', ch.sheet, {
+            phase: 'split',
+            foundCount,
+            createdCount,
+            skippedCount,
+          });
+          await step.run('track-sheet', async () => {
+            const posthog = getPostHogClient();
+            if (!posthog) return;
+            const board = await db.query.boards.findFirst({
+              where: eq(boards.id, boardId),
+              columns: { isUnlocked: true },
+            });
+            posthog.capture({
+              distinctId: userId,
+              event: 'sheet_detected',
+              properties: {
+                board_id: boardId,
+                found_count: foundCount,
+                created_count: createdCount,
+                skipped_count: skippedCount,
+                board_is_unlocked: board?.isUnlocked ?? false,
+              },
+            });
+            await posthog.shutdown();
+          });
+        }
+      }
+    }
 
     // Each branch refetches the original image inside its own step so the raw
     // bytes never cross a step boundary. Inngest caps step output at ~4MB, and
@@ -167,7 +286,7 @@ export const generateCardArtwork = inngest.createFunction(
             openai.images.edit({
               model: illustrationModel,
               image: imageFile,
-              prompt: buildIllustrationPrompt(),
+              prompt: buildIllustrationPrompt(withSheetOverlay(fromSheet)),
               size: '1024x1536',
             })
         );
