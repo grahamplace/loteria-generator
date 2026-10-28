@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   fetchBlob: vi.fn(),
   uploadOriginalImage: vi.fn(),
   uploadSheetImage: vi.fn(),
+  sheetUrlFor: (u: string) => u.replace(/\/original\.png$/, '/sheet.png'),
   insertCardsWithinLimit: vi.fn(),
   deleteCardAndRenumber: vi.fn(),
 }));
@@ -37,6 +38,7 @@ vi.mock('@/lib/blob', () => ({
   fetchBlob: mocks.fetchBlob,
   uploadOriginalImage: mocks.uploadOriginalImage,
   uploadSheetImage: mocks.uploadSheetImage,
+  sheetUrlFor: mocks.sheetUrlFor,
 }));
 vi.mock('@/lib/boards/add-cards', () => ({ insertCardsWithinLimit: mocks.insertCardsWithinLimit }));
 vi.mock('@/lib/boards/delete-card', () => ({ deleteCardAndRenumber: mocks.deleteCardAndRenumber }));
@@ -62,7 +64,7 @@ const base = {
   boardId: 'b1',
   userId: 'u1',
   isAdmin: false,
-  originalImageUrl: 'blob://sheet',
+  originalImageUrl: 'blob://c1/original.png',
 };
 const boardRow = (over = {}) => ({ id: 'b1', isUnlocked: false, imageGenerationsUsed: 0, ...over });
 const existing = (n: number, labels: string[] = []) =>
@@ -116,7 +118,10 @@ describe('splitSheetCard', () => {
       extraction: extraction([sheetCard(0, 'LOS NIÑOS'), sheetCard(1, null)]),
     });
     if (r.status !== 'split') throw new Error('expected split');
-    expect(mocks.updates[0].values).toMatchObject({ label: 'LOS NIÑOS', fromSheet: true });
+    expect(mocks.updates.find((u) => u.values.originalImageUrl)!.values).toMatchObject({
+      label: 'LOS NIÑOS',
+      fromSheet: true,
+    });
     expect(r.first.titled).toBe(true);
     expect(mocks.insertCardsWithinLimit.mock.calls[0][2][0].label).toBe('');
     expect(r.others[0].titled).toBe(false);
@@ -127,7 +132,9 @@ describe('splitSheetCard', () => {
       ...base,
       extraction: extraction([sheetCard(0, null), sheetCard(1, 'X')]),
     });
-    expect(mocks.updates[0].values).not.toHaveProperty('label');
+    expect(mocks.updates.find((u) => u.values.originalImageUrl)!.values).not.toHaveProperty(
+      'label'
+    );
   });
 
   it('skips cards already on board', async () => {
@@ -143,7 +150,7 @@ describe('splitSheetCard', () => {
     if (r.status !== 'split') throw new Error('expected split');
     expect(r.skippedCount).toBe(1);
     expect(r.first.titled).toBe(true);
-    expect(mocks.updates[0].values.label).toBe('EL SOL');
+    expect(mocks.updates.find((u) => u.values.originalImageUrl)!.values.label).toBe('EL SOL');
   });
 
   it('all duplicates deletes the uploaded card', async () => {
@@ -180,5 +187,106 @@ describe('splitSheetCard', () => {
     expect(mocks.insertCardsWithinLimit.mock.calls[1][2]).toHaveLength(2);
     if (r.status !== 'split') throw new Error('expected split');
     expect(r.createdCount).toBe(3);
+  });
+
+  it('retry reads the sheet copy when card is already fromSheet', async () => {
+    mocks.cardsFind.mockResolvedValue([{ id: 'c1', label: '', fromSheet: true }]);
+    await splitSheetCard({
+      ...base,
+      extraction: extraction([sheetCard(0, 'A'), sheetCard(1, 'B')]),
+    });
+    expect(mocks.fetchBlob).toHaveBeenCalledWith('blob://c1/sheet.png');
+    expect(mocks.uploadSheetImage).not.toHaveBeenCalled();
+  });
+
+  it('marks card fromSheet before overwriting original', async () => {
+    const order: string[] = [];
+    mocks.uploadOriginalImage.mockImplementation(async (_u, _b, id) => {
+      order.push(`upload:${id}`);
+      return `blob://${id}/original.png`;
+    });
+    const orig = mocks.updates.push.bind(mocks.updates);
+    mocks.updates.push = (...items) => {
+      if (items[0].values.fromSheet === true && !('originalImageUrl' in items[0].values))
+        order.push('mark');
+      return orig(...items);
+    };
+    await splitSheetCard({
+      ...base,
+      extraction: extraction([sheetCard(0, 'A'), sheetCard(1, 'B')]),
+    });
+    expect(order.indexOf('mark')).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf('mark')).toBeLessThan(order.indexOf('upload:c1'));
+  });
+
+  it('deletes inserted cards when a crop upload fails', async () => {
+    mocks.uploadOriginalImage.mockImplementation(async (_u, _b, id) => {
+      if (id === 'n1') throw new Error('boom');
+      return `blob://${id}/original.png`;
+    });
+    mocks.insertCardsWithinLimit.mockResolvedValue([
+      { id: 'n0', number: 2 },
+      { id: 'n1', number: 3 },
+    ]);
+    await expect(
+      splitSheetCard({
+        ...base,
+        extraction: extraction([sheetCard(0, 'A'), sheetCard(1, 'B'), sheetCard(2, 'C')]),
+      })
+    ).rejects.toThrow('boom');
+    expect(mocks.deleteCardAndRenumber).toHaveBeenCalledWith('b1', 'n0', 'u1');
+    expect(mocks.deleteCardAndRenumber).toHaveBeenCalledWith('b1', 'n1', 'u1');
+  });
+
+  it('pairs crops with inserted rows by number', async () => {
+    mocks.insertCardsWithinLimit.mockResolvedValue([
+      { id: 'late', number: 3 },
+      { id: 'early', number: 2 },
+    ]);
+    const r = await splitSheetCard({
+      ...base,
+      extraction: extraction([sheetCard(0, 'A'), sheetCard(1, 'B'), sheetCard(2, 'C')]),
+    });
+    if (r.status !== 'split') throw new Error('expected split');
+    expect(r.others.map((o) => o.cardId)).toEqual(['early', 'late']);
+  });
+
+  const degenerate = (i: number, title: string): SheetCard => ({
+    ...sheetCard(i, title),
+    box: { x0: 0.5, y0: 0.5, x1: 0.501, y1: 0.501 },
+  });
+
+  it('uses the next valid card as card 1 when the first region is null', async () => {
+    const r = await splitSheetCard({
+      ...base,
+      extraction: extraction([degenerate(0, 'BAD'), sheetCard(1, 'GOOD')]),
+    });
+    if (r.status !== 'split') throw new Error('expected split');
+    expect(mocks.updates.find((u) => u.values.label)?.values.label).toBe('GOOD');
+    expect(r.createdCount).toBe(1);
+  });
+
+  it('returns no-slots when no region is valid', async () => {
+    const r = await splitSheetCard({
+      ...base,
+      extraction: extraction([degenerate(0, 'A'), degenerate(1, 'B')]),
+    });
+    expect(r).toEqual({ status: 'no-slots' });
+    expect(mocks.uploadSheetImage).not.toHaveBeenCalled();
+  });
+
+  it('skips a later null region and backfills', async () => {
+    await splitSheetCard({
+      ...base,
+      extraction: extraction([
+        sheetCard(0, 'A'),
+        degenerate(1, 'BAD'),
+        sheetCard(2, 'C'),
+        sheetCard(3, 'D'),
+        sheetCard(4, 'E'),
+      ]),
+    });
+    const rows = mocks.insertCardsWithinLimit.mock.calls[0][2];
+    expect(rows.map((x: { label: string }) => x.label)).toEqual(['C', 'D', 'E']);
   });
 });

@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 import { db, boards, cards, getGenerationLimit } from '@/db';
 import { eq } from 'drizzle-orm';
-import { fetchBlob, uploadOriginalImage, uploadSheetImage } from '@/lib/blob';
+import { fetchBlob, sheetUrlFor, uploadOriginalImage, uploadSheetImage } from '@/lib/blob';
 import { insertCardsWithinLimit } from '@/lib/boards/add-cards';
 import { deleteCardAndRenumber } from '@/lib/boards/delete-card';
 import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
@@ -38,11 +38,16 @@ export async function splitSheetCard(a: {
   const { cardId, boardId, userId, isAdmin, extraction } = a;
   const foundCount = extraction.cards.length;
 
-  const { buffer: sheetBuffer, contentType } = await fetchBlob(a.originalImageUrl);
-
   const board = await db.query.boards.findFirst({ where: eq(boards.id, boardId) });
   if (!board) return { status: 'no-slots' };
   const boardCards = await db.query.cards.findMany({ where: eq(cards.boardId, boardId) });
+
+  // A retried step finds original.png already overwritten by crop #1; the
+  // untouched sheet lives in the sheet copy once fromSheet has been set.
+  const alreadySplit = boardCards.find((c) => c.id === cardId)?.fromSheet === true;
+  const { buffer: sheetBuffer, contentType } = await fetchBlob(
+    alreadySplit ? sheetUrlFor(a.originalImageUrl) : a.originalImageUrl
+  );
   const existingLabels = boardCards.filter((c) => c.id !== cardId).map((c) => c.label ?? '');
 
   const cardLimit = board.isUnlocked ? TOTAL_CARD_COUNT : FREE_CARD_LIMIT;
@@ -65,24 +70,29 @@ export async function splitSheetCard(a: {
 
   const slots = slotsFor(boardCards.length);
   if (slots < 1) return { status: 'no-slots' };
-  const selected = all.selected.slice(0, slots);
 
-  // Decode once (honoring EXIF orientation) and crop every selected card.
+  // Decode once (honoring EXIF orientation); walk the candidates until `slots`
+  // valid crops exist, skipping cards whose region is degenerate.
   const rotated = await sharp(sheetBuffer).rotate().toBuffer({ resolveWithObject: true });
   const { width, height } = rotated.info;
   const crops: Crop[] = [];
-  for (const card of selected) {
+  for (const card of all.selected) {
+    if (crops.length >= slots) break;
     const region = boxToRegion(card.box, width, height);
-    if (!region) {
-      if (crops.length === 0) return { status: 'no-slots' };
-      continue;
-    }
+    if (!region) continue;
     const buffer = await sharp(rotated.data).extract(region).png().toBuffer();
     crops.push({ card, buffer });
   }
   if (crops.length === 0) return { status: 'no-slots' };
 
-  await uploadSheetImage(userId, boardId, cardId, sheetBuffer, contentType);
+  if (!alreadySplit) {
+    await uploadSheetImage(userId, boardId, cardId, sheetBuffer, contentType);
+    // Mark before original.png is overwritten so a retry reads the sheet copy.
+    await db
+      .update(cards)
+      .set({ fromSheet: true, updatedAt: new Date() })
+      .where(eq(cards.id, cardId));
+  }
 
   const [firstCrop, ...otherCrops] = crops;
   const firstUrl = await uploadOriginalImage(
@@ -124,15 +134,27 @@ export async function splitSheetCard(a: {
   }
 
   const others: { cardId: string; originalImageUrl: string; titled: boolean }[] = [];
-  for (let i = 0; i < inserted.length; i++) {
-    const row = inserted[i];
-    const crop = toCreate[i];
-    const url = await uploadOriginalImage(userId, boardId, row.id, crop.buffer, 'image/png');
-    await db.update(cards).set({ originalImageUrl: url }).where(eq(cards.id, row.id));
-    others.push({ cardId: row.id, originalImageUrl: url, titled: crop.card.title !== null });
+  const ordered = [...inserted].sort((x, y) => (x.number ?? 0) - (y.number ?? 0));
+  try {
+    for (let i = 0; i < ordered.length; i++) {
+      const row = ordered[i];
+      const crop = toCreate[i];
+      const url = await uploadOriginalImage(userId, boardId, row.id, crop.buffer, 'image/png');
+      await db.update(cards).set({ originalImageUrl: url }).where(eq(cards.id, row.id));
+      others.push({ cardId: row.id, originalImageUrl: url, titled: crop.card.title !== null });
+    }
+    await db.update(boards).set({ sheetCardsFound: foundCount }).where(eq(boards.id, boardId));
+  } catch (err) {
+    // Leave nothing behind so the step's retry starts clean.
+    for (const row of ordered) {
+      try {
+        await deleteCardAndRenumber(boardId, row.id, userId);
+      } catch (cleanupError) {
+        console.error('Error cleaning up split card:', cleanupError);
+      }
+    }
+    throw err;
   }
-
-  await db.update(boards).set({ sheetCardsFound: foundCount }).where(eq(boards.id, boardId));
 
   return {
     status: 'split',
