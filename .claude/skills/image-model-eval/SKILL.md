@@ -94,5 +94,5 @@ Production model is `ILLUSTRATION_MODEL` in `lib/illustration-prompt.ts` (used b
 ## Sheet split eval
 
 Checks whether a photo of a whole lotería sheet is detected and split into cards (`lib/sheet-split-ai.ts`).
-Run: `pnpm exec tsx --env-file=.env.local scripts/sheet-eval/run.ts <image...>` (about $0.03 per image).
-Prints `{ file, isSheet, ms, count, titles }` per image; overlays (blue = card) land in `scripts/sheet-eval/runs/<timestamp>/`.
+Run: `pnpm exec tsx --env-file=.env.local scripts/sheet-eval/run.ts <image...>`.
+Prints `{ file, isSheet, ms, count, titles }` per image; overlays (blue = complete card, red = incomplete) land in `scripts/sheet-eval/runs/<timestamp>/`.

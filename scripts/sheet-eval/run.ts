@@ -36,42 +36,47 @@ async function main() {
   await mkdir(outDir, { recursive: true });
 
   for (const file of files) {
-    const name = basename(file, extname(file));
-    const t = Date.now();
-    const buffer = await readFile(file);
-    const dataUrl = await toSheetDataUrl(buffer);
-    const isSheet = await detectSheet(dataUrl, meta);
-    const extraction = isSheet ? await extractSheet(dataUrl, meta) : null;
-    const ms = Date.now() - t;
+    try {
+      const name = basename(file, extname(file));
+      const t = Date.now();
+      const buffer = await readFile(file);
+      const dataUrl = await toSheetDataUrl(buffer);
+      const isSheet = await detectSheet(dataUrl, meta);
+      const extraction = isSheet ? await extractSheet(dataUrl, meta) : null;
+      const ms = Date.now() - t;
 
-    if (extraction) {
-      const img = sharp(buffer).rotate();
-      const { width: W, height: H } = await img.metadata();
-      const rects = extraction.cards
-        .map((c) => {
-          const { x0, y0, x1, y1 } = c.box;
-          const color = c.complete ? '#0000ee' : '#ee0000';
-          return `<rect x="${x0 * W!}" y="${y0 * H!}" width="${(x1 - x0) * W!}" height="${(y1 - y0) * H!}" fill="none" stroke="${color}" stroke-width="4"/>`;
+      if (extraction) {
+        // Rotate first so W/H match the EXIF-corrected pixels the boxes refer to.
+        const { data, info } = await sharp(buffer).rotate().toBuffer({ resolveWithObject: true });
+        const { width: W, height: H } = info;
+        const rects = extraction.cards
+          .map((c) => {
+            const { x0, y0, x1, y1 } = c.box;
+            const color = c.complete ? '#0000ee' : '#ee0000';
+            return `<rect x="${x0 * W}" y="${y0 * H}" width="${(x1 - x0) * W}" height="${(y1 - y0) * H}" fill="none" stroke="${color}" stroke-width="4"/>`;
+          })
+          .join('');
+        await sharp(data)
+          .composite([{ input: Buffer.from(`<svg width="${W}" height="${H}">${rects}</svg>`) }])
+          .jpeg()
+          .toFile(join(outDir, `${name}-overlay.jpg`));
+      }
+      await writeFile(
+        join(outDir, `${name}.json`),
+        JSON.stringify({ file: basename(file), isSheet, ms, extraction }, null, 2)
+      );
+      console.log(
+        JSON.stringify({
+          file: basename(file),
+          isSheet,
+          ms,
+          count: extraction?.cards.length ?? 0,
+          titles: extraction?.cards.map((c) => c.title) ?? [],
         })
-        .join('');
-      await img
-        .composite([{ input: Buffer.from(`<svg width="${W}" height="${H}">${rects}</svg>`) }])
-        .jpeg()
-        .toFile(join(outDir, `${name}-overlay.jpg`));
+      );
+    } catch (err) {
+      console.log(JSON.stringify({ file: basename(file), error: String(err) }));
     }
-    await writeFile(
-      join(outDir, `${name}.json`),
-      JSON.stringify({ file: basename(file), isSheet, ms, extraction }, null, 2)
-    );
-    console.log(
-      JSON.stringify({
-        file: basename(file),
-        isSheet,
-        ms,
-        count: extraction?.cards.length ?? 0,
-        titles: extraction?.cards.map((c) => c.title) ?? [],
-      })
-    );
   }
   console.error(`Wrote ${outDir}`);
 }
