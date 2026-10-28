@@ -11,6 +11,7 @@ import { isSupportedUploadMime } from '@/lib/image-formats';
 import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
+import { withSheetOverlay } from '@/lib/sheet-split';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -71,6 +72,13 @@ export const regenerateIllustration = inngest.createFunction(
     });
 
     const illustrationUrl = await step.run('generate-and-upload-illustration', async () => {
+      const card = await db.query.cards.findFirst({
+        where: eq(cards.id, cardId),
+        columns: { fromSheet: true },
+      });
+      const prompt = buildIllustrationPrompt(
+        withSheetOverlay(card?.fromSheet === true, promptOverlay)
+      );
       const { buffer, contentType } = await fetchBlob(originalImageUrl);
       if (!isSupportedUploadMime(contentType)) {
         throw new Error(
@@ -90,7 +98,7 @@ export const regenerateIllustration = inngest.createFunction(
           openai.images.edit({
             model: illustrationModel,
             image: imageFile,
-            prompt: buildIllustrationPrompt(promptOverlay),
+            prompt,
             size: '1024x1536',
           })
       );

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { useRealtime } from 'inngest/react';
-import { cardChannel, cardChannelTopics } from '@/lib/inngest/channels';
+import { cardChannel, cardChannelTopics, type SheetMessage } from '@/lib/inngest/channels';
 import { getCardRealtimeToken } from '@/app/actions/card-realtime';
 
 interface CardStreamCallbacks {
@@ -10,6 +10,7 @@ interface CardStreamCallbacks {
   onIllustration?: (illustrationUrl: string) => void;
   onCompleted?: (data: { label: string; illustrationUrl: string }) => void;
   onError?: (message: string) => void;
+  onSheet?: (msg: SheetMessage) => void;
 }
 
 /**
@@ -35,6 +36,7 @@ export function useCardStream(
   });
 
   const seen = useRef({ label: false, illustration: false, completed: false, error: false });
+  const seenSheetPhases = useRef(new Set<SheetMessage['phase']>());
 
   useEffect(() => {
     if (!enabled) return;
@@ -57,6 +59,15 @@ export function useCardStream(
     if (error && !seen.current.error) {
       seen.current.error = true;
       callbacks.onError?.(error.data.message);
+    }
+    // `detected` and `split` can land in the same buffered batch, so read
+    // every sheet message (not just the latest) and fire once per phase.
+    for (const message of messages.all) {
+      if (message.topic !== 'sheet') continue;
+      const sheet = message.data as SheetMessage;
+      if (seenSheetPhases.current.has(sheet.phase)) continue;
+      seenSheetPhases.current.add(sheet.phase);
+      callbacks.onSheet?.(sheet);
     }
   }, [messages, enabled, callbacks]);
 }

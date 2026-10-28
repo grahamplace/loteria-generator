@@ -315,6 +315,13 @@
     }
   },
   "BoardEditor": {
+    "SheetSplit": {
+      "detected": "Existing lotería set detected, processing…",
+      "splitting": "Splitting set…",
+      "boardFull": "Added {created} of {found} cards — board is full",
+      "allAlreadyOnBoard": "All cards from this set are already on your board",
+      "banner": "We found {count} cards in your photo. Unlock this board, then upload it again to import the full set."
+    },
     "Page": {
       "backToDashboardAriaLabel": "Back to dashboard",
       "editBoardNameAriaLabel": "Edit board name: {name}",

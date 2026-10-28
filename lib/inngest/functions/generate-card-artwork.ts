@@ -1,11 +1,16 @@
 import OpenAI, { toFile } from 'openai';
 import { eq, sql } from 'drizzle-orm';
-import { db, boards, cards } from '@/db';
+import { db, boards, cards, user } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
 import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
 import { normalizeImageForOpenAI, convertForOpenAIVision } from '@/lib/image-normalize';
 import { isSupportedUploadMime } from '@/lib/image-formats';
 import { extractCrop } from '@/lib/crop-region';
+import { isAdminEmail } from '@/lib/admin';
+import { getPostHogClient } from '@/lib/posthog-server';
+import { withSheetOverlay } from '@/lib/sheet-split';
+import { toSheetDataUrl, detectSheet, extractSheet } from '@/lib/sheet-split-ai';
+import { splitSheetCard, type SplitResult } from '@/lib/sheet-split-run';
 
 /** Formats OpenAI's vision input reads directly; others are converted first. */
 export const OPENAI_IMAGE_MIME_TO_EXT: Record<string, string> = {
@@ -69,9 +74,158 @@ export const generateCardArtwork = inngest.createFunction(
     },
   },
   async ({ event, step }) => {
-    const { cardId, boardId, userId, originalImageUrl, skipLabeling, skipIllustration, cropData } =
-      event.data;
+    const { cardId, boardId, userId, skipIllustration, skipSheetDetection, cropData } = event.data;
+    let { originalImageUrl, skipLabeling } = event.data;
     const ch = cardChannel({ cardId });
+    let fromSheet = Boolean(event.data.fromSheet);
+
+    // Sheet split: an upload showing many lotería cards becomes one card per
+    // picture. Any failure here falls through to the normal single-card path.
+    // cropData is in full-image coordinates; it would be wrong against crop #1.
+    if (!skipIllustration && !skipSheetDetection && !fromSheet && !cropData) {
+      const sheetUrl = originalImageUrl;
+      const meta = { userId, boardId, cardId };
+      let isSheet = false;
+      try {
+        isSheet = await step.run('detect-sheet', async () => {
+          let dataUrl: string;
+          try {
+            const { buffer } = await fetchBlob(sheetUrl);
+            dataUrl = await toSheetDataUrl(buffer);
+          } catch {
+            return false;
+          }
+          return detectSheet(dataUrl, meta);
+        });
+      } catch (error) {
+        // A killed or failed step must not fail the card: treat as not a sheet.
+        console.error('detect-sheet step failed; continuing as a single card', { cardId, error });
+      }
+
+      if (isSheet) {
+        await step.realtime.publish('publish-sheet-detected', ch.sheet, { phase: 'detected' });
+        // Refetch inside the step: image bytes must never be a step output.
+        let extraction: Awaited<ReturnType<typeof extractSheet>> = null;
+        try {
+          extraction = await step.run('extract-sheet', async () => {
+            try {
+              const { buffer } = await fetchBlob(sheetUrl);
+              return await extractSheet(await toSheetDataUrl(buffer), meta);
+            } catch {
+              return null;
+            }
+          });
+        } catch (error) {
+          // Publishes `failed` below and continues as a single card.
+          console.error('extract-sheet step failed; continuing as a single card', {
+            cardId,
+            error,
+          });
+        }
+
+        let split: SplitResult | null = null;
+        if (extraction && extraction.cards.length >= 2) {
+          try {
+            split = await step.run('split-sheet', async () => {
+              const owner = await db.query.user.findFirst({
+                where: eq(user.id, userId),
+                columns: { email: true },
+              });
+              return splitSheetCard({
+                cardId,
+                boardId,
+                userId,
+                isAdmin: isAdminEmail(owner?.email),
+                originalImageUrl: sheetUrl,
+                extraction,
+              });
+            });
+          } catch (error) {
+            // Retries exhausted; splitSheetCard already removed any cards it added.
+            console.error('split-sheet failed; continuing as a single card', { cardId, error });
+            split = null;
+            // The split may have got far enough to mark the card fromSheet and
+            // replace original.png with crop #1 and its title: follow the row.
+            const row = await step.run('reload-after-failed-split', async () => {
+              const card = await db.query.cards.findFirst({
+                where: eq(cards.id, cardId),
+                columns: { fromSheet: true, label: true, originalImageUrl: true },
+              });
+              return card ?? null;
+            });
+            if (row?.fromSheet) {
+              fromSheet = true;
+              if (row.originalImageUrl) originalImageUrl = row.originalImageUrl;
+              if (row.label?.trim()) skipLabeling = true;
+            }
+          }
+        }
+
+        if (!split || split.status === 'no-slots') {
+          await step.realtime.publish('publish-sheet-failed', ch.sheet, { phase: 'failed' });
+        } else if (split.status === 'all-duplicates') {
+          // splitSheetCard deleted the uploaded card: nothing left to illustrate.
+          await step.realtime.publish('publish-sheet-split', ch.sheet, {
+            phase: 'split',
+            foundCount: split.foundCount,
+            createdCount: 0,
+            skippedCount: split.skippedCount,
+          });
+          return { cardId, split: 'all-duplicates' as const };
+        } else {
+          const { others, first, foundCount, createdCount, skippedCount } = split;
+          if (others.length > 0) {
+            await step.sendEvent(
+              'fan-out-sheet-cards',
+              others.map((o) =>
+                cardGenerateRequested.create({
+                  cardId: o.cardId,
+                  boardId,
+                  userId,
+                  originalImageUrl: o.originalImageUrl,
+                  skipLabeling: o.titled,
+                  fromSheet: true,
+                })
+              )
+            );
+          }
+          originalImageUrl = first.originalImageUrl;
+          skipLabeling = first.titled;
+          fromSheet = true;
+          await step.realtime.publish('publish-sheet-split', ch.sheet, {
+            phase: 'split',
+            foundCount,
+            createdCount,
+            skippedCount,
+          });
+          await step.run('track-sheet', async () => {
+            const posthog = getPostHogClient();
+            if (!posthog) return;
+            try {
+              const board = await db.query.boards.findFirst({
+                where: eq(boards.id, boardId),
+                columns: { isUnlocked: true },
+              });
+              posthog.capture({
+                distinctId: userId,
+                event: 'sheet_detected',
+                properties: {
+                  board_id: boardId,
+                  found_count: foundCount,
+                  created_count: createdCount,
+                  skipped_count: skippedCount,
+                  board_is_unlocked: board?.isUnlocked ?? false,
+                },
+              });
+              await posthog.shutdown();
+            } catch (error) {
+              // Analytics must never fail the card.
+              console.error('track-sheet: analytics failed', { cardId, error });
+            }
+          });
+        }
+      }
+    }
 
     // Each branch refetches the original image inside its own step so the raw
     // bytes never cross a step boundary. Inngest caps step output at ~4MB, and
@@ -167,7 +321,7 @@ export const generateCardArtwork = inngest.createFunction(
             openai.images.edit({
               model: illustrationModel,
               image: imageFile,
-              prompt: buildIllustrationPrompt(),
+              prompt: buildIllustrationPrompt(withSheetOverlay(fromSheet)),
               size: '1024x1536',
             })
         );

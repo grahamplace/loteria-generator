@@ -57,6 +57,7 @@ vi.mock('@/lib/ai-tracing', () => ({
 // Imports generate-card-artwork too; regenerate's createFunction runs last,
 // so captured.handler is the regenerate handler.
 import '@/lib/inngest/functions/regenerate-illustration';
+import { SHEET_CARD_OVERLAY } from '@/lib/sheet-split';
 
 const CARD = '00000000-0000-0000-0000-000000000001';
 const BOARD = '00000000-0000-0000-0000-000000000002';
@@ -111,5 +112,19 @@ describe('regenerate-illustration', () => {
     expect(persisted!.preserveOriginal).toBe(false);
     // Kept so "Use original photo" can restore the same crop later.
     expect(persisted).not.toHaveProperty('cropData');
+  });
+
+  it('fromSheet card gets overlay', async () => {
+    cardsFindFirst.mockResolvedValue({ cropData: null, preserveOriginal: false, fromSheet: true });
+    await runRegenerate();
+    const prompt = (imagesEdit.mock.calls[0][0] as { prompt: string }).prompt;
+    expect(prompt).toContain(SHEET_CARD_OVERLAY);
+  });
+
+  it('normal card has no sheet overlay', async () => {
+    cardsFindFirst.mockResolvedValue({ cropData: null, preserveOriginal: false, fromSheet: false });
+    await runRegenerate();
+    const prompt = (imagesEdit.mock.calls[0][0] as { prompt: string }).prompt;
+    expect(prompt).not.toContain(SHEET_CARD_OVERLAY);
   });
 });

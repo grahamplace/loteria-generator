@@ -90,3 +90,9 @@ Add or replace photos in `scripts/image-eval/photos/` with a `NN-name.jpg` filen
 ## After choosing a model
 
 Production model is `ILLUSTRATION_MODEL` in `lib/illustration-prompt.ts` (used by both Inngest illustration jobs and the example-image scripts). It is `gpt-image-2`. The `gpt-image-2.5-*` models are eval-only: don't switch prod or dev to them unless the user decides to.
+
+## Sheet split eval
+
+Checks whether a photo of a whole lotería sheet is detected and split into cards (`lib/sheet-split-ai.ts`).
+Run: `pnpm exec tsx --env-file=.env.local scripts/sheet-eval/run.ts <image...>`.
+Prints `{ file, isSheet, ms, count, titles }` per image; overlays (blue = complete card, red = incomplete) land in `scripts/sheet-eval/runs/<timestamp>/`.

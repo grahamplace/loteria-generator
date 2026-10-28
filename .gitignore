@@ -68,3 +68,7 @@ test-results/
 
 # react-email preview server
 .react-email/
+
+# Sheet split eval (`scripts/sheet-eval`): local photos and run outputs, never commit
+/scripts/sheet-eval/photos/
+/scripts/sheet-eval/runs/

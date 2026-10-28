@@ -5,10 +5,14 @@ import type { PhotoMode } from '@/lib/themes/presets';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { Card, CardStatus } from '@/db/schema';
 import { useCardStream } from '@/hooks/use-card-stream';
 import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 import { DEFAULT_CARDS_BY_ID } from '@/lib/default-cards';
+import { needsFullReload } from '@/lib/cards/needs-full-reload';
+import type { SheetMessage } from '@/lib/inngest/channels';
+import { sheetSplitToast } from '@/lib/cards/sheet-split-toast';
 
 function preloadImage(src: string): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
@@ -62,6 +66,8 @@ export interface BoardCard {
   localOriginalImage?: string; // base64 for immediate display
   localIllustration?: string; // base64 for immediate display
   isProcessing?: boolean;
+  /** The upload was detected as a sheet of cards and is being split. */
+  isSplitting?: boolean;
 }
 
 interface UseBoardCardsReturn {
@@ -92,14 +98,22 @@ interface UseBoardCardsReturn {
 export function useBoardCards(
   boardId: string,
   isUnlocked: boolean = false,
-  photoMode: PhotoMode = 'illustrated'
+  photoMode: PhotoMode = 'illustrated',
+  onSheetSplit?: () => void
 ): UseBoardCardsReturn {
+  const tSheet = useTranslations('BoardEditor.SheetSplit');
   const [cards, setCards] = useState<BoardCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const cardLimit = isUnlocked ? TOTAL_CARD_COUNT : FREE_CARD_LIMIT;
+
+  // Latest cards for async callbacks (the poll) without re-creating them.
+  const cardsRef = useRef(cards);
+  useEffect(() => {
+    cardsRef.current = cards;
+  }, [cards]);
 
   const fetchCards = useCallback(async () => {
     if (!boardId) return;
@@ -151,7 +165,24 @@ export function useBoardCards(
       const response = await fetch(`/api/boards/${boardId}/cards`);
       if (!response.ok) return;
       const data = await response.json();
-      const serverById = new Map<string, Card>((data.cards || []).map((c: Card) => [c.id, c]));
+      const serverCards: Card[] = data.cards || [];
+      const serverById = new Map<string, Card>(serverCards.map((c) => [c.id, c]));
+
+      // Cards appeared or vanished server-side (e.g. a missed sheet `split`
+      // message). Merging only updates known cards, so reload the full list.
+      // Skip while an upload is in flight: its server row can exist before the
+      // POST resolves, and a reload would drop the optimistic preview.
+      const local = cardsRef.current;
+      if (
+        !local.some((c) => c.id.startsWith('temp-')) &&
+        needsFullReload(
+          local.map((c) => c.id),
+          serverCards.map((c) => c.id)
+        )
+      ) {
+        await fetchCards();
+        return;
+      }
 
       // For any card the poll discovers as newly completed, preload the
       // illustration first so the UI doesn't flash the original photo + new
@@ -196,7 +227,7 @@ export function useBoardCards(
     } catch {
       // Ignore transient poll errors — next tick will retry.
     }
-  }, [boardId]);
+  }, [boardId, fetchCards]);
 
   const hasProcessing = cards.some((c) => c.isProcessing);
   useEffect(() => {
@@ -637,6 +668,31 @@ export function useBoardCards(
     toast.error('Failed to process card', { description: message });
   }, []);
 
+  const applyStreamSheet = useCallback(
+    (cardId: string, msg: SheetMessage) => {
+      if (msg.phase === 'detected') {
+        toast(tSheet('detected'));
+        setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, isSplitting: true } : c)));
+        return;
+      }
+      if (msg.phase === 'failed') {
+        // The job falls back to illustrating the upload as a single card.
+        setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, isSplitting: false } : c)));
+        return;
+      }
+      // Locked boards too: the unlock banner can miss cards the limit dropped.
+      const toastKey = sheetSplitToast(msg);
+      if (toastKey === 'allAlreadyOnBoard') {
+        toast(tSheet('allAlreadyOnBoard'));
+      } else if (toastKey === 'boardFull') {
+        toast(tSheet('boardFull', { created: msg.createdCount, found: msg.foundCount }));
+      }
+      void fetchCards();
+      onSheetSplit?.();
+    },
+    [tSheet, fetchCards, onSheetSplit]
+  );
+
   // Only subscribe to cards that have a real server ID (not temp) and are still processing.
   const processingIds = useMemo(
     () => cards.filter((c) => c.isProcessing && !c.id.startsWith('temp-')).map((c) => c.id),
@@ -651,6 +707,7 @@ export function useBoardCards(
           cardId={id}
           onCompleted={applyStreamCompletion}
           onError={applyStreamError}
+          onSheet={applyStreamSheet}
         />
       ))}
     </>
@@ -682,14 +739,17 @@ function CardStreamSubscription({
   cardId,
   onCompleted,
   onError,
+  onSheet,
 }: {
   cardId: string;
   onCompleted: (cardId: string, data: { label: string; illustrationUrl: string }) => void;
   onError: (cardId: string, message: string) => void;
+  onSheet: (cardId: string, msg: SheetMessage) => void;
 }) {
   useCardStream(cardId, true, {
     onCompleted: (data) => onCompleted(cardId, data),
     onError: (message) => onError(cardId, message),
+    onSheet: (msg) => onSheet(cardId, msg),
   });
   return null;
 }

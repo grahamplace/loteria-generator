@@ -166,7 +166,8 @@ export function useBoard(boardId: string): UseBoardReturn {
     if (!boardId) return;
 
     try {
-      setIsLoading(true);
+      // isLoading starts true for the first load only; refreshes (e.g. after a
+      // sheet split) stay silent so the editor doesn't swap to its skeleton.
       setError(null);
 
       const response = await fetch(`/api/boards/${boardId}`);

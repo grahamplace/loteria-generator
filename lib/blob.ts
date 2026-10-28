@@ -74,6 +74,26 @@ export async function uploadOriginalImage(
 }
 
 /**
+ * Upload the full uploaded sheet to a deterministic path (kept next to the
+ * card for admin debugging and so a retried split can re-read it).
+ */
+export async function uploadSheetImage(
+  userId: string,
+  boardId: string,
+  cardId: string,
+  file: Buffer,
+  contentType: string = 'image/png'
+): Promise<string> {
+  const path = `users/${userId}/boards/${boardId}/cards/${cardId}/sheet.png`;
+  return uploadImage(file, path, contentType);
+}
+
+/** URL of the sheet copy that sits next to a card's original.png. */
+export function sheetUrlFor(originalImageUrl: string): string {
+  return originalImageUrl.replace(/\/original\.png$/, '/sheet.png');
+}
+
+/**
  * Upload AI-generated illustration
  */
 export async function uploadIllustration(
