@@ -15,6 +15,8 @@ import {
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const DETECT_ATTEMPTS = 3;
+export const SHEET_DETECT_TIMEOUT_MS = 15_000;
+export const SHEET_EXTRACT_TIMEOUT_MS = 90_000;
 
 type SheetMeta = { userId: string; boardId: string; cardId: string };
 
@@ -31,6 +33,7 @@ async function decideOnce(imageDataUrl: string): Promise<number | null> {
   try {
     const res = await fetch('https://api.openai.com/v1/decisions', {
       method: 'POST',
+      signal: AbortSignal.timeout(SHEET_DETECT_TIMEOUT_MS),
       headers: {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
@@ -76,26 +79,29 @@ export async function extractSheet(
 ): Promise<SheetExtraction | null> {
   try {
     return await withAITrace('extract-sheet', { ...meta, model: SHEET_EXTRACT_MODEL }, async () => {
-      const res = await openai.responses.create({
-        model: SHEET_EXTRACT_MODEL,
-        input: [
-          {
-            role: 'user',
-            content: [
-              { type: 'input_image', image_url: imageDataUrl, detail: 'high' },
-              { type: 'input_text', text: SHEET_EXTRACT_PROMPT },
-            ],
-          },
-        ],
-        text: {
-          format: {
-            type: 'json_schema',
-            name: 'sheet_cards',
-            schema: SHEET_EXTRACT_SCHEMA as unknown as Record<string, unknown>,
-            strict: true,
+      const res = await openai.responses.create(
+        {
+          model: SHEET_EXTRACT_MODEL,
+          input: [
+            {
+              role: 'user',
+              content: [
+                { type: 'input_image', image_url: imageDataUrl, detail: 'high' },
+                { type: 'input_text', text: SHEET_EXTRACT_PROMPT },
+              ],
+            },
+          ],
+          text: {
+            format: {
+              type: 'json_schema',
+              name: 'sheet_cards',
+              schema: SHEET_EXTRACT_SCHEMA as unknown as Record<string, unknown>,
+              strict: true,
+            },
           },
         },
-      });
+        { timeout: SHEET_EXTRACT_TIMEOUT_MS }
+      );
       return parseSheetExtraction(res.output_text);
     });
   } catch {

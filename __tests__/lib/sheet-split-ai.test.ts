@@ -70,6 +70,16 @@ describe('detectSheet', () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
+  it('aborts a hung detection attempt and retries', async () => {
+    const abortErr = Object.assign(new Error('The operation was aborted'), {
+      name: 'TimeoutError',
+    });
+    fetchMock.mockRejectedValueOnce(abortErr).mockResolvedValueOnce(okResponse(1));
+    expect(await detectSheet('data:x', meta)).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
+  });
+
   it('returns false when fetch throws every time', async () => {
     fetchMock.mockRejectedValue(new Error('network'));
     expect(await detectSheet('data:x', meta)).toBe(false);
@@ -98,6 +108,12 @@ describe('extractSheet', () => {
     expect(res?.cards).toHaveLength(1);
     expect(res?.cards[0].title).toBe('El Gallo');
     expect(responsesCreate.mock.calls[0][0].model).toBe('gpt-6.1-sol');
+  });
+
+  it('passes a timeout to responses.create', async () => {
+    responsesCreate.mockResolvedValueOnce({ output_text: '{}' });
+    await extractSheet('data:x', meta);
+    expect(responsesCreate.mock.calls[0][1]).toEqual({ timeout: 90000 });
   });
 
   it('returns null when the call throws', async () => {
