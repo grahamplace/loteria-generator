@@ -7,6 +7,7 @@ import { createOneTimePromotionCode } from '@/lib/stripe-promotions';
 import { sendSignupNudgeEmail } from '@/lib/email/send-signup-nudge';
 import { isMarketingUnsubscribed, getOrCreateUnsubscribeToken } from '@/lib/email/unsubscribe';
 import { getPostHogClient } from '@/lib/posthog-server';
+import { isProductionEmailEnv } from '@/lib/email/resend';
 import { LIFECYCLE_EMAIL_TYPE_SIGNUP_NUDGE, SIGNUP_NUDGE_EXPIRY_DAYS } from '@/lib/constants';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -14,7 +15,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const signupNudgeEmail = inngest.createFunction(
   {
     id: 'signup-nudge-email',
-    triggers: [{ cron: '0 * * * *' }],
+    // Preview and local deploys skip the schedule: each run wakes that deploy's
+    // Neon branch, and per-preview Inngest environments ran it every hour.
+    triggers: isProductionEmailEnv() ? [{ cron: '0 * * * *' }] : [],
     retries: 1,
   },
   async ({ step }) => {

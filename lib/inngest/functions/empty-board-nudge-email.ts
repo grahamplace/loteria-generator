@@ -5,6 +5,7 @@ import { findEmptyBoardNudgeRecipients } from '@/lib/marketing/empty-board-nudge
 import { sendEmptyBoardNudgeEmail } from '@/lib/email/send-empty-board-nudge';
 import { isMarketingUnsubscribed, getOrCreateUnsubscribeToken } from '@/lib/email/unsubscribe';
 import { getPostHogClient } from '@/lib/posthog-server';
+import { isProductionEmailEnv } from '@/lib/email/resend';
 import { LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE } from '@/lib/constants';
 
 /**
@@ -16,7 +17,9 @@ import { LIFECYCLE_EMAIL_TYPE_EMPTY_BOARD_NUDGE } from '@/lib/constants';
 export const emptyBoardNudgeEmail = inngest.createFunction(
   {
     id: 'empty-board-nudge-email',
-    triggers: [{ cron: '30 * * * *' }],
+    // Preview and local deploys skip the schedule: each run wakes that deploy's
+    // Neon branch, and per-preview Inngest environments ran it every hour.
+    triggers: isProductionEmailEnv() ? [{ cron: '30 * * * *' }] : [],
     retries: 1,
   },
   async ({ step }) => {
