@@ -68,6 +68,7 @@ beforeEach(() => {
     savedIllustrationUrl: null,
     preserveOriginal: true,
     cropData: crop,
+    fromSheet: false,
     status: 'completed',
     errorMessage: null,
     errorDismissedAt: null,

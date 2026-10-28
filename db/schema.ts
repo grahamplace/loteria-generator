@@ -129,6 +129,7 @@ export const boards = pgTable('boards', {
   previewUrl: text('preview_url'),
   styleOptions: json('style_options').$type<BoardStyleOptions>(),
   photoMode: text('photo_mode').$type<PhotoMode>().notNull().default('illustrated'),
+  sheetCardsFound: integer('sheet_cards_found'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   // Set when the owner deletes the board. The row, its cards and images are
@@ -165,6 +166,7 @@ export const cards = pgTable('cards', {
   defaultCardId: text('default_card_id'),
   preserveOriginal: boolean('preserve_original').notNull().default(false),
   cropData: json('crop_data').$type<CropData>(),
+  fromSheet: boolean('from_sheet').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

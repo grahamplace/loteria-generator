@@ -7,6 +7,7 @@ export interface NewCard {
   status: Card['status'];
   preserveOriginal?: boolean;
   cropData?: Card['cropData'];
+  fromSheet?: boolean;
   illustrationUrl?: string | null;
   isDefault?: boolean;
   defaultCardId?: string | null;
@@ -25,6 +26,7 @@ export async function insertCardsWithinLimit(boardId: string, userId: string, in
       status: card.status,
       preserve_original: card.preserveOriginal ?? false,
       crop_data: card.cropData ?? null,
+      from_sheet: card.fromSheet ?? false,
       illustration_url: card.illustrationUrl ?? null,
       is_default: card.isDefault ?? false,
       default_card_id: card.defaultCardId ?? null,
@@ -45,11 +47,11 @@ export async function insertCardsWithinLimit(boardId: string, userId: string, in
       SELECT gen_random_uuid(), b.id, b.user_id,
         COALESCE((SELECT MAX(number) FROM cards WHERE board_id = b.id), 0) + entries.ordinality::integer,
         i.label, NULL, NULL, i.illustration_url, NULL, i.status, NULL, NULL, NULL,
-        i.is_default, i.default_card_id, i.preserve_original, i.crop_data, NOW(), NOW()
+        i.is_default, i.default_card_id, i.preserve_original, i.crop_data, i.from_sheet, NOW(), NOW()
       FROM boards b
       CROSS JOIN jsonb_array_elements(${payload}::jsonb) WITH ORDINALITY AS entries(value, ordinality)
       CROSS JOIN LATERAL jsonb_to_record(entries.value) AS i(
-        label text, status text, preserve_original boolean, crop_data json,
+        label text, status text, preserve_original boolean, crop_data json, from_sheet boolean,
         illustration_url text, is_default boolean, default_card_id text
       )
       WHERE b.id = ${boardId} AND b.user_id = ${userId}
