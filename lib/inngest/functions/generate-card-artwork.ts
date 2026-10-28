@@ -25,6 +25,7 @@ import { cardGenerateRequested } from '../events';
 import { cardChannel, boardChannel } from '../channels';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
+import { stopIfContentBlocked } from '@/lib/inngest/content-blocked';
 import {
   LABEL_MODEL,
   LABEL_REASONING_EFFORT,
@@ -324,7 +325,7 @@ export const generateCardArtwork = inngest.createFunction(
               prompt: buildIllustrationPrompt(withSheetOverlay(fromSheet)),
               size: '1024x1536',
             })
-        );
+        ).catch(stopIfContentBlocked);
         const b64 = result.data?.[0]?.b64_json;
         if (!b64) throw new Error('Failed to generate illustration');
         const illustrationBuffer = Buffer.from(b64, 'base64');

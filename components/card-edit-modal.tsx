@@ -4,12 +4,13 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { PhotoCropDialog } from '@/components/photo-crop-dialog';
 import type { PixelRect } from '@/lib/crop-image';
-import { X, Trash2, ImageIcon, Sparkles, Loader2, Check } from 'lucide-react';
+import { X, Trash2, ImageIcon, Sparkles, Loader2, Check, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { PhotoMode } from '@/lib/themes/presets';
 import { LotteriaCard } from '@/lib/generate-boards';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
+import { generationErrorKind } from '@/lib/generation-error';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
 
@@ -116,6 +117,8 @@ export function CardEditModal({
   const [modeError, setModeError] = useState('');
   const mode: PhotoMode = preserveOriginal ? 'original' : 'illustrated';
   const previewSrc = card.illustration || '/placeholder.svg';
+  // Retrying a safety refusal fails the same way, so offer the original instead.
+  const blocked = generationErrorKind(processingError) === 'content_blocked';
   async function changeMode(next: PhotoMode) {
     if (!onChangePhotoMode || switching || isProcessing) return;
     setSwitching(true);
@@ -215,12 +218,12 @@ export function CardEditModal({
           {processingError && onChangePhotoMode && (
             <div className="space-y-2">
               <p role="alert" className="text-sm text-destructive">
-                {t('illustrationFailed')}
+                {t(blocked ? 'illustrationBlocked' : 'illustrationFailed')}
               </p>
               <Button
-                variant="outline"
+                variant={blocked ? 'default' : 'outline'}
                 disabled={switching || isProcessing}
-                onClick={() => void changeMode('illustrated')}
+                onClick={() => void changeMode(blocked ? 'original' : 'illustrated')}
               >
                 {switching && (
                   <Loader2
@@ -228,7 +231,7 @@ export function CardEditModal({
                     aria-hidden="true"
                   />
                 )}
-                {t('retryIllustration')}
+                {t(blocked ? 'useOriginalPhoto' : 'retryIllustration')}
               </Button>
             </div>
           )}
@@ -254,13 +257,21 @@ export function CardEditModal({
                   {preserveOriginal ? t('originalPhotoLabel') : t('illustrationLabel')}
                 </p>
               )}
-              <CardFacePreview
-                key={previewSrc}
-                src={previewSrc}
-                alt={card.label}
-                switching={switching}
-                isProcessing={isProcessing}
-              />
+              {processingError && !preserveOriginal ? (
+                // card.illustration falls back to the original photo, which
+                // would read as a finished illustration.
+                <div className="flex w-full aspect-[2/3] items-center justify-center rounded-lg bg-destructive/10">
+                  <AlertTriangle className="size-8 text-destructive/60" aria-hidden="true" />
+                </div>
+              ) : (
+                <CardFacePreview
+                  key={previewSrc}
+                  src={previewSrc}
+                  alt={card.label}
+                  switching={switching}
+                  isProcessing={isProcessing}
+                />
+              )}
             </div>
           </div>
 

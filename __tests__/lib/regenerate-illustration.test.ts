@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { NonRetriableError } from 'inngest';
+import { CONTENT_BLOCKED_PREFIX } from '@/lib/generation-error';
 
 const { captured, updateSetSpy, cardsFindFirst, chatCreate, imagesEdit } = vi.hoisted(() => ({
   captured: {} as { handler?: (arg: unknown) => Promise<unknown> },
@@ -126,5 +128,21 @@ describe('regenerate-illustration', () => {
     await runRegenerate();
     const prompt = (imagesEdit.mock.calls[0][0] as { prompt: string }).prompt;
     expect(prompt).not.toContain(SHEET_CARD_OVERLAY);
+  });
+});
+
+describe('regenerate-illustration safety refusals', () => {
+  it('stops without retrying and tags the error when OpenAI blocks the image', async () => {
+    imagesEdit.mockRejectedValue(
+      Object.assign(new Error('400 Your request was rejected by the safety system.'), {
+        status: 400,
+        code: 'moderation_blocked',
+      })
+    );
+
+    const run = runRegenerate();
+
+    await expect(run).rejects.toBeInstanceOf(NonRetriableError);
+    await expect(run).rejects.toThrow(CONTENT_BLOCKED_PREFIX);
   });
 });

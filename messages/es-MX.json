@@ -350,7 +350,11 @@
         "boardUnlockedTitle": "¡Tabla desbloqueada!",
         "boardUnlockedDesc": "Ya tienes acceso completo a esta tabla.",
         "paymentCancelled": "Pago cancelado",
-        "errorProcessingCard": "Error al procesar la carta"
+        "errorProcessingCard": "Error al procesar la carta",
+        "cardFailed": "No pudimos ilustrar esta carta",
+        "cardFailedDesc": "Abre la carta para reintentar o usar la foto original.",
+        "imageBlocked": "Esta imagen no se puede ilustrar",
+        "imageBlockedDesc": "Los personajes de películas, series o marcas suelen estar bloqueados. Abre la carta para usar la foto original."
       }
     },
     "ActionBar": {
@@ -393,6 +397,8 @@
       "processing": "Procesando…",
       "generationFailed": "Falló la generación",
       "deleteAndRetry": "Eliminar carta y reintentar",
+      "imageBlocked": "Imagen bloqueada",
+      "openToUseOriginal": "Ábrela para usar la foto original",
       "noImage": "Sin imagen",
       "noLabel": "Sin nombre",
       "freeLimitReached": "Llegaste al límite gratis",
@@ -439,6 +445,7 @@
       "photoModeError": "No se pudo cambiar la imagen. Inténtalo de nuevo.",
       "illustrationFailed": "No pudimos crear la ilustración. Inténtalo de nuevo o usa la foto original.",
       "retryIllustration": "Reintentar ilustración",
+      "illustrationBlocked": "Esta imagen no se puede ilustrar. Los personajes de películas, series o marcas suelen estar bloqueados. Usa la foto original o prueba con otra.",
       "titleWithNumber": "Editar carta #{number}",
       "closeAriaLabel": "Cerrar",
       "originalLabel": "Original",

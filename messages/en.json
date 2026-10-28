@@ -344,7 +344,11 @@
         "boardUnlockedTitle": "Board unlocked!",
         "boardUnlockedDesc": "You now have full access to this board.",
         "paymentCancelled": "Payment cancelled",
-        "errorProcessingCard": "Error processing card"
+        "errorProcessingCard": "Error processing card",
+        "cardFailed": "Couldn’t illustrate this card",
+        "cardFailedDesc": "Open the card to try again or use the original photo.",
+        "imageBlocked": "This image can’t be illustrated",
+        "imageBlockedDesc": "Characters from movies, TV, or brands are often blocked. Open the card to use the original photo."
       }
     },
     "ActionBar": {
@@ -387,6 +391,8 @@
       "processing": "Processing…",
       "generationFailed": "Generation failed",
       "deleteAndRetry": "Delete card & retry",
+      "imageBlocked": "Image blocked",
+      "openToUseOriginal": "Open to use the original photo",
       "noImage": "No image",
       "noLabel": "No label",
       "freeLimitReached": "You’ve reached the free limit",
@@ -433,6 +439,7 @@
       "photoModeError": "Couldn’t switch the image. Please try again.",
       "illustrationFailed": "We couldn’t create the illustration. Try again or use the original photo.",
       "retryIllustration": "Try illustration again",
+      "illustrationBlocked": "This image can’t be illustrated. Characters from movies, TV, or brands are often blocked. Use the original photo or try a different one.",
       "titleWithNumber": "Edit card #{number}",
       "closeAriaLabel": "Close",
       "originalLabel": "Original",
