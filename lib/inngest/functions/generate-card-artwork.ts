@@ -81,7 +81,8 @@ export const generateCardArtwork = inngest.createFunction(
 
     // Sheet split: an upload showing many lotería cards becomes one card per
     // picture. Any failure here falls through to the normal single-card path.
-    if (!skipIllustration && !fromSheet) {
+    // cropData is in full-image coordinates; it would be wrong against crop #1.
+    if (!skipIllustration && !fromSheet && !cropData) {
       const sheetUrl = originalImageUrl;
       const meta = { userId, boardId, cardId };
       const isSheet = await step.run('detect-sheet', async () => {
@@ -128,6 +129,20 @@ export const generateCardArtwork = inngest.createFunction(
             // Retries exhausted; splitSheetCard already removed any cards it added.
             console.error('split-sheet failed; continuing as a single card', { cardId, error });
             split = null;
+            // The split may have got far enough to mark the card fromSheet and
+            // replace original.png with crop #1 and its title: follow the row.
+            const row = await step.run('reload-after-failed-split', async () => {
+              const card = await db.query.cards.findFirst({
+                where: eq(cards.id, cardId),
+                columns: { fromSheet: true, label: true, originalImageUrl: true },
+              });
+              return card ?? null;
+            });
+            if (row?.fromSheet) {
+              fromSheet = true;
+              if (row.originalImageUrl) originalImageUrl = row.originalImageUrl;
+              if (row.label?.trim()) skipLabeling = true;
+            }
           }
         }
 
@@ -175,18 +190,23 @@ export const generateCardArtwork = inngest.createFunction(
               where: eq(boards.id, boardId),
               columns: { isUnlocked: true },
             });
-            posthog.capture({
-              distinctId: userId,
-              event: 'sheet_detected',
-              properties: {
-                board_id: boardId,
-                found_count: foundCount,
-                created_count: createdCount,
-                skipped_count: skippedCount,
-                board_is_unlocked: board?.isUnlocked ?? false,
-              },
-            });
-            await posthog.shutdown();
+            try {
+              posthog.capture({
+                distinctId: userId,
+                event: 'sheet_detected',
+                properties: {
+                  board_id: boardId,
+                  found_count: foundCount,
+                  created_count: createdCount,
+                  skipped_count: skippedCount,
+                  board_is_unlocked: board?.isUnlocked ?? false,
+                },
+              });
+              await posthog.shutdown();
+            } catch (error) {
+              // Analytics must never fail the card.
+              console.error('track-sheet: PostHog capture failed', { cardId, error });
+            }
           });
         }
       }

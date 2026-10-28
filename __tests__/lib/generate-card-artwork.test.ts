@@ -122,6 +122,7 @@ beforeEach(() => {
   extractSheet.mockResolvedValue(null);
   userFindFirst.mockResolvedValue({ email: 'someone@example.com' });
   boardsFindFirst.mockResolvedValue({ isUnlocked: true });
+  phCapture.mockReset();
 });
 
 describe('generate-card-artwork skipLabeling', () => {
@@ -362,9 +363,7 @@ describe('generate-card-artwork sheet split', () => {
     })),
   };
   const sheetPublishes = (publish: ReturnType<typeof vi.fn>) =>
-    publish.mock.calls
-      .filter((c) => c[0] === 'publish-sheet-detected' || String(c[0]).startsWith('publish-sheet'))
-      .map((c) => c[2]);
+    publish.mock.calls.filter((c) => String(c[0]).startsWith('publish-sheet')).map((c) => c[2]);
   const promptSent = () => (imagesEdit.mock.calls[0][0] as { prompt: string }).prompt;
 
   beforeEach(() => {
@@ -518,5 +517,56 @@ describe('generate-card-artwork sheet split', () => {
       createdCount: 0,
       skippedCount: 3,
     });
+  });
+
+  it('skips detection when cropData is set', async () => {
+    const { runNames, step } = makeStep();
+    await captured.handler!({
+      event: { data: { ...baseData, cropData: { x: 1, y: 2, width: 3, height: 4 } } },
+      step,
+    });
+    expect(runNames).not.toContain('detect-sheet');
+    expect(detectSheet).not.toHaveBeenCalled();
+    expect(imagesEdit).toHaveBeenCalledOnce();
+  });
+
+  it('failed split keeps overlay when card already marked fromSheet', async () => {
+    detectSheet.mockResolvedValue(true);
+    extractSheet.mockResolvedValue(extraction);
+    splitSheetCard.mockRejectedValue(new Error('blob upload failed'));
+    cardsFindFirst.mockResolvedValue({
+      fromSheet: true,
+      label: 'LOS NIÑOS',
+      originalImageUrl: 'https://blob/o.png',
+    });
+    const { runNames, step } = makeStep();
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(runNames).toContain('reload-after-failed-split');
+    expect(runNames).not.toContain('generate-label');
+    expect(chatCreate).not.toHaveBeenCalled();
+    expect(promptSent()).toContain(SHEET_CARD_OVERLAY);
+    expect(sheetPublishes(step.realtime.publish)).toContainEqual({ phase: 'failed' });
+    expect(persistCall()).not.toHaveProperty('label');
+  });
+
+  it('analytics failure does not fail the card', async () => {
+    detectSheet.mockResolvedValue(true);
+    extractSheet.mockResolvedValue(extraction);
+    splitSheetCard.mockResolvedValue({
+      status: 'split',
+      foundCount: 2,
+      createdCount: 1,
+      skippedCount: 1,
+      first: { originalImageUrl: 'https://blob/first.png', titled: true },
+      others: [],
+    });
+    phCapture.mockImplementation(() => {
+      throw new Error('posthog down');
+    });
+    const { step } = makeStep();
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(step.sendEvent).not.toHaveBeenCalled();
+    expect(imagesEdit).toHaveBeenCalledOnce();
+    expect(persistCall()!.illustrationUrl).toBe('https://blob/illustration.png');
   });
 });
