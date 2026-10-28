@@ -1,14 +1,14 @@
 import { insertCardsWithinLimit } from '@/lib/boards/add-cards';
+import { deleteCardAndRenumber } from '@/lib/boards/delete-card';
 import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db, boards, cards, IMAGE_GENERATION_LIMIT_PAID, getGenerationLimit } from '@/db';
-import { eq, and, gt, sql, isNull } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import {
   uploadOriginalImage,
   uploadIllustration,
-  deleteCardImages,
   base64ToBuffer,
   getContentTypeFromDataUrl,
 } from '@/lib/blob';
@@ -418,29 +418,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Card not found' }, { status: 404 });
     }
 
-    // Skip blob cleanup for default cards — the asset is shared/public, not
-    // a per-user blob upload.
-    if (!card.isDefault) {
-      try {
-        await deleteCardImages(session.user.id, boardId, cardId);
-      } catch (blobError) {
-        console.error('Error deleting card images:', blobError);
-      }
-    }
-
-    const deletedCardNumber = card.number;
-
-    // Delete the card
-    await db.delete(cards).where(eq(cards.id, cardId));
-
-    // Renumber remaining cards: decrement all cards with number > deleted card's number
-    await db
-      .update(cards)
-      .set({
-        number: sql`${cards.number} - 1`,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(cards.boardId, boardId), gt(cards.number, deletedCardNumber)));
+    await deleteCardAndRenumber(boardId, cardId, session.user.id, { isDefault: card.isDefault });
 
     await invalidateBoardPreview(boardId, session.user.id);
 

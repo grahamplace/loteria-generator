@@ -74,6 +74,21 @@ export async function uploadOriginalImage(
 }
 
 /**
+ * Upload the full uploaded sheet (kept next to the card for admin debugging)
+ */
+export async function uploadSheetImage(
+  userId: string,
+  boardId: string,
+  cardId: string,
+  file: Buffer,
+  contentType: string = 'image/png'
+): Promise<string> {
+  const ext = contentType.split('/')[1]?.split('+')[0] || 'png';
+  const path = `users/${userId}/boards/${boardId}/cards/${cardId}/sheet.${ext}`;
+  return uploadImage(file, path, contentType);
+}
+
+/**
  * Upload AI-generated illustration
  */
 export async function uploadIllustration(
