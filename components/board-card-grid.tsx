@@ -55,6 +55,7 @@ interface DisplayCard {
   illustration: string;
   originalImage?: string;
   isProcessing?: boolean;
+  isSplitting?: boolean;
   error?: string;
   isDefault?: boolean;
   preserveOriginal?: boolean;
@@ -124,6 +125,7 @@ function SortableCard({ card, onCardClick, isDragging }: SortableCardProps) {
 
 function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay?: boolean }) {
   const t = useTranslations('BoardEditor.CardGrid');
+  const tSheet = useTranslations('BoardEditor.SheetSplit');
 
   return (
     <>
@@ -153,7 +155,9 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
             <div className="text-center">
               <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">{t('processing')}</p>
+              <p className="text-xs text-muted-foreground">
+                {card.isSplitting ? tSheet('splitting') : t('processing')}
+              </p>
             </div>
           </div>
         ) : card.error ? (

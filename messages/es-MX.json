@@ -321,6 +321,13 @@
     }
   },
   "BoardEditor": {
+    "SheetSplit": {
+      "detected": "Detectamos un juego de lotería completo. Procesando…",
+      "splitting": "Separando cartas…",
+      "boardFull": "Se agregaron {created} de {found} cartas: el tablero está lleno",
+      "allAlreadyOnBoard": "Todas las cartas de este juego ya están en tu tablero",
+      "banner": "Encontramos {count} cartas en tu foto. Desbloquea este tablero y vuelve a subirla para importar el juego completo."
+    },
     "Page": {
       "backToDashboardAriaLabel": "Volver al panel",
       "editBoardNameAriaLabel": "Editar el nombre de la tabla: {name}",

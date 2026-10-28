@@ -15,6 +15,7 @@ import { rememberBoard } from '@/lib/boards/recent-board';
 import { BoardPreviewPanel } from '@/components/board-preview-panel';
 import { BoardActionBar, BoardActionBarRef } from '@/components/board-action-bar';
 import { BoardCardGrid } from '@/components/board-card-grid';
+import { SheetUnlockBanner } from '@/components/sheet-unlock-banner';
 import { PhotoDropZone } from '@/components/photo-drop-zone';
 import { UnlockPrompt, type UnlockTrigger } from '@/components/unlock-prompt';
 import { DefaultCardsPicker } from '@/components/default-cards-picker';
@@ -63,7 +64,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
     reorderCards,
     cardLimit,
     CardStreamSubscriptions,
-  } = useBoardCards(boardId, board?.isUnlocked, board?.photoMode);
+  } = useBoardCards(boardId, board?.isUnlocked, board?.photoMode, refreshBoard);
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -180,6 +181,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
       card.localOriginalImage ||
       (card.originalImageUrl ? `/api/images/${boardId}/${card.id}/original` : undefined),
     isProcessing: card.isProcessing || card.status === 'processing',
+    isSplitting: card.isSplitting,
     error:
       card.status === 'error' ? card.errorMessage || t('toasts.errorProcessingCard') : undefined,
     isDefault: card.isDefault,
@@ -293,6 +295,12 @@ function BoardEditor({ boardId }: { boardId: string }) {
         <OnboardingCompleteWatcher done={cards.length > 0} />
         <div className="mx-auto grid w-full max-w-[1400px] flex-1 gap-5 px-3 pt-3 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-6 md:pt-5 lg:grid-cols-[minmax(0,1fr)_19rem] lg:pb-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
           <div className="min-w-0 space-y-4">
+            {!board.isUnlocked && (board.sheetCardsFound ?? 0) > cards.length && (
+              <SheetUnlockBanner
+                foundCount={board.sheetCardsFound ?? 0}
+                onUnlock={() => openUnlockPrompt('card_limit')}
+              />
+            )}
             <BoardActionBar
               ref={actionBarRef}
               onFilesSelected={handleFilesSelected}
