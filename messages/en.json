@@ -452,6 +452,13 @@
       "riddlePlaceholder": "Write a verse or clue the caller reads aloud…",
       "riddleHint": "Appears on the caller sheet when you export. Leave blank to skip.",
       "riddleInputAriaLabel": "Card riddle",
+      "notesField": "Notes",
+      "notesPlaceholder": "Keep the glasses, make the dog brown…",
+      "reillustrateButton": "Re-illustrate",
+      "reillustrateLimitLocked": "You’ve used this board’s free illustrations.",
+      "reillustrateLimit": "You’ve used all the illustrations for this board.",
+      "reillustrateUnlock": "Unlock board",
+      "reillustrateError": "Couldn’t start the illustration. Try again.",
       "deleteButton": "Delete",
       "cancelButton": "Cancel",
       "saveButton": "Save"

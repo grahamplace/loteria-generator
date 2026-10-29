@@ -458,6 +458,13 @@
       "riddlePlaceholder": "Escribe un verso o pista que el cantor leerá en voz alta…",
       "riddleHint": "Aparece en la hoja del cantor al exportar. Déjalo en blanco para omitir.",
       "riddleInputAriaLabel": "Adivinanza de la carta",
+      "notesField": "Notas",
+      "notesPlaceholder": "Deja los lentes, haz al perro café…",
+      "reillustrateButton": "Volver a ilustrar",
+      "reillustrateLimitLocked": "Ya usaste las ilustraciones gratis de este tablero.",
+      "reillustrateLimit": "Ya usaste todas las ilustraciones de este tablero.",
+      "reillustrateUnlock": "Desbloquear tablero",
+      "reillustrateError": "No se pudo iniciar la ilustración. Inténtalo de nuevo.",
       "deleteButton": "Eliminar",
       "cancelButton": "Cancelar",
       "saveButton": "Guardar"

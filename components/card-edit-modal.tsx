@@ -11,6 +11,7 @@ import type { PhotoMode } from '@/lib/themes/presets';
 import { LotteriaCard } from '@/lib/generate-boards';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import { generationErrorKind } from '@/lib/generation-error';
+import { ReillustrateError } from '@/lib/reillustrate-error';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
 
@@ -110,6 +111,9 @@ export function CardEditModal({
   isProcessing = false,
   processingError,
   onChangePhotoMode,
+  onReillustrate,
+  isLocked = false,
+  onUnlockRequired,
 }: CardEditModalProps) {
   const t = useTranslations('BoardEditor.CardEditModal');
   const themeText = useTranslations('Themes.Builder');
@@ -118,6 +122,9 @@ export function CardEditModal({
   const [riddle, setRiddle] = useState(card.riddle ?? '');
   const [switching, setSwitching] = useState(false);
   const [modeError, setModeError] = useState('');
+  const [notes, setNotes] = useState(card.promptOverlay ?? '');
+  const [reillustrating, setReillustrating] = useState(false);
+  const [reillustrateError, setReillustrateError] = useState<'' | 'limit' | 'other'>('');
   const mode: PhotoMode = preserveOriginal ? 'original' : 'illustrated';
   const previewSrc = card.illustration || '/placeholder.svg';
   // Retrying a safety refusal fails the same way, so offer the original instead.
@@ -132,6 +139,29 @@ export function CardEditModal({
       setModeError(t('photoModeError'));
     } finally {
       setSwitching(false);
+    }
+  }
+
+  async function reillustrate() {
+    if (!onReillustrate || reillustrating || switching || isProcessing) return;
+    setReillustrating(true);
+    setReillustrateError('');
+    try {
+      await onReillustrate(notes);
+      const trimmed = notes.trim();
+      posthog.capture('card_reillustrated', {
+        card_number: card.number,
+        has_notes: trimmed.length > 0,
+        notes_length: trimmed.length,
+      });
+    } catch (err) {
+      setReillustrateError(
+        err instanceof ReillustrateError && err.code === 'GENERATION_LIMIT_REACHED'
+          ? 'limit'
+          : 'other'
+      );
+    } finally {
+      setReillustrating(false);
     }
   }
 
@@ -225,10 +255,16 @@ export function CardEditModal({
               </p>
               <Button
                 variant={blocked ? 'default' : 'outline'}
-                disabled={switching || isProcessing}
-                onClick={() => void changeMode(blocked ? 'original' : 'illustrated')}
+                disabled={switching || reillustrating || isProcessing}
+                onClick={() =>
+                  void (blocked
+                    ? changeMode('original')
+                    : onReillustrate
+                      ? reillustrate()
+                      : changeMode('illustrated'))
+                }
               >
-                {switching && (
+                {(switching || reillustrating) && (
                   <Loader2
                     className="size-4 animate-spin motion-reduce:animate-none"
                     aria-hidden="true"
@@ -286,6 +322,69 @@ export function CardEditModal({
             >
               {themeText('crop')}
             </Button>
+          )}
+
+          {/* Notes + re-illustrate */}
+          {originalImage && onReillustrate && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium" htmlFor="card-notes">
+                {t('notesField')}
+              </label>
+              <textarea
+                id="card-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    void reillustrate();
+                  }
+                }}
+                rows={2}
+                maxLength={500}
+                className="w-full px-3 py-2 border rounded-md text-[16px] md:text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+                placeholder={t('notesPlaceholder')}
+              />
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                disabled={reillustrating || switching || isProcessing}
+                onClick={() => void reillustrate()}
+              >
+                {reillustrating ? (
+                  <Loader2
+                    className="size-4 animate-spin motion-reduce:animate-none"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Sparkles className="size-4" aria-hidden="true" />
+                )}
+                {t('reillustrateButton')}
+              </Button>
+              {reillustrateError && (
+                <div className="space-y-2">
+                  <p role="alert" className="text-sm text-destructive">
+                    {t(
+                      reillustrateError === 'other'
+                        ? 'reillustrateError'
+                        : isLocked
+                          ? 'reillustrateLimitLocked'
+                          : 'reillustrateLimit'
+                    )}
+                  </p>
+                  {reillustrateError === 'limit' && isLocked && onUnlockRequired && (
+                    <Button
+                      onClick={() => {
+                        onUnlockRequired();
+                        onClose();
+                      }}
+                    >
+                      {t('reillustrateUnlock')}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           {/* Label input */}
