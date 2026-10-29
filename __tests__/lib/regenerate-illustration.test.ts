@@ -100,6 +100,12 @@ describe('regenerate-illustration', () => {
     expect(imagesEdit).toHaveBeenCalled();
   });
 
+  it('tags the image call with the user so OpenAI scopes enforcement to them', async () => {
+    cardsFindFirst.mockResolvedValue({ cropData: null, preserveOriginal: false });
+    await runRegenerate();
+    expect(imagesEdit.mock.calls[0][0]).toMatchObject({ safety_identifier: 'u1' });
+  });
+
   it('does not crop when the card has no cropData', async () => {
     cardsFindFirst.mockResolvedValue({ cropData: null, preserveOriginal: false });
     await runRegenerate();

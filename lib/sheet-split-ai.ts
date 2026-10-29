@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { safetyIdentifier } from '@/lib/openai-safety';
 import sharp from 'sharp';
 import { withAITrace } from '@/lib/ai-tracing';
 import {
@@ -29,7 +30,7 @@ export async function toSheetDataUrl(buffer: Buffer): Promise<string> {
   return `data:image/jpeg;base64,${jpeg.toString('base64')}`;
 }
 
-async function decideOnce(imageDataUrl: string): Promise<number | null> {
+async function decideOnce(imageDataUrl: string, userId: string): Promise<number | null> {
   try {
     const res = await fetch('https://api.openai.com/v1/decisions', {
       method: 'POST',
@@ -40,6 +41,7 @@ async function decideOnce(imageDataUrl: string): Promise<number | null> {
       },
       body: JSON.stringify({
         model: SHEET_DETECT_MODEL,
+        ...safetyIdentifier(userId),
         input: [{ role: 'user', content: [{ type: 'input_image', image_url: imageDataUrl }] }],
         questions: [
           {
@@ -69,7 +71,7 @@ export async function detectSheet(imageDataUrl: string, meta: SheetMeta): Promis
   try {
     return await withAITrace('detect-sheet', { ...meta, model: SHEET_DETECT_MODEL }, async () => {
       for (let attempt = 0; attempt < DETECT_ATTEMPTS; attempt++) {
-        const p = await decideOnce(imageDataUrl);
+        const p = await decideOnce(imageDataUrl, meta.userId);
         if (p !== null) return p >= SHEET_DETECT_THRESHOLD;
       }
       return false;
@@ -88,6 +90,7 @@ export async function extractSheet(
       const res = await openai.responses.create(
         {
           model: SHEET_EXTRACT_MODEL,
+          ...safetyIdentifier(meta.userId),
           input: [
             {
               role: 'user',

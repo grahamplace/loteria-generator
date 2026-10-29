@@ -25,6 +25,7 @@ import { cardGenerateRequested } from '../events';
 import { cardChannel, boardChannel } from '../channels';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
+import { safetyIdentifier } from '@/lib/openai-safety';
 import { stopIfContentBlocked } from '@/lib/inngest/content-blocked';
 import {
   LABEL_MODEL,
@@ -260,6 +261,7 @@ export const generateCardArtwork = inngest.createFunction(
             () =>
               openai.chat.completions.create({
                 model: labelModel,
+                ...safetyIdentifier(userId),
                 messages: [
                   { role: 'system', content: LABEL_SYSTEM_PROMPT },
                   {
@@ -324,6 +326,7 @@ export const generateCardArtwork = inngest.createFunction(
               image: imageFile,
               prompt: buildIllustrationPrompt(withSheetOverlay(fromSheet)),
               size: '1024x1536',
+              ...safetyIdentifier(userId),
             })
         ).catch(stopIfContentBlocked);
         const b64 = result.data?.[0]?.b64_json;

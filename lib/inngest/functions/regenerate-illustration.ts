@@ -11,6 +11,7 @@ import { isSupportedUploadMime } from '@/lib/image-formats';
 import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
+import { safetyIdentifier } from '@/lib/openai-safety';
 import { stopIfContentBlocked } from '@/lib/inngest/content-blocked';
 import { withSheetOverlay } from '@/lib/sheet-split';
 
@@ -101,6 +102,7 @@ export const regenerateIllustration = inngest.createFunction(
             image: imageFile,
             prompt,
             size: '1024x1536',
+            ...safetyIdentifier(userId),
           })
       ).catch(stopIfContentBlocked);
       const b64 = result.data?.[0]?.b64_json;
