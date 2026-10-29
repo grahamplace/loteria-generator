@@ -15,7 +15,7 @@ import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
 
 interface CardEditModalProps {
-  card: LotteriaCard;
+  card: LotteriaCard & { promptOverlay?: string | null };
   originalImage?: string;
   onSave: (newLabel: string, newRiddle: string) => void;
   onDelete?: () => void;
@@ -26,6 +26,9 @@ interface CardEditModalProps {
   isProcessing?: boolean;
   processingError?: string;
   onChangePhotoMode?: (mode: PhotoMode) => Promise<void>;
+  onReillustrate?: (notes: string) => Promise<void>;
+  isLocked?: boolean;
+  onUnlockRequired?: () => void;
 }
 
 // Keyed by source so a previous image's load event cannot dismiss the overlay.

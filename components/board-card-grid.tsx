@@ -59,6 +59,7 @@ interface DisplayCard {
   isSplitting?: boolean;
   error?: string;
   isDefault?: boolean;
+  promptOverlay?: string | null;
   preserveOriginal?: boolean;
   cropData?: import('@/lib/crop-image').PixelRect | null;
 }
@@ -71,6 +72,7 @@ interface BoardCardGridProps {
     id: string,
     photoMode: import('@/lib/themes/presets').PhotoMode
   ) => Promise<void>;
+  onReillustrate?: (id: string, notes: string) => Promise<void>;
   onUpdateLabel: (id: string, label: string, riddle: string) => void;
   onReorderCards: (startIndex: number, endIndex: number) => void;
   onAddMore?: () => void;
@@ -221,6 +223,7 @@ export function BoardCardGrid({
   onDeleteCard,
   onCropCard,
   onChangePhotoMode,
+  onReillustrate,
   onUpdateLabel,
   onReorderCards,
   onAddMore,
@@ -477,8 +480,16 @@ export function BoardCardGrid({
               ? (mode) => onChangePhotoMode(editingCard.id, mode)
               : undefined
           }
+          onReillustrate={
+            !editingCard.isDefault && editingCard.originalImage && onReillustrate
+              ? (notes) => onReillustrate(editingCard.id, notes)
+              : undefined
+          }
+          isLocked={isLocked}
+          onUnlockRequired={onUnlockRequired}
           card={{
             id: editingCard.id,
+            promptOverlay: editingCard.promptOverlay,
             label: editingCard.label,
             illustration: editingCard.illustration,
             number: editingCard.number,

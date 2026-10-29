@@ -1,6 +1,7 @@
 'use client';
 import { filenameToLabel } from '@/lib/filename-label';
 import type { PhotoMode } from '@/lib/themes/presets';
+import { ReillustrateError } from '@/lib/reillustrate-error';
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -56,6 +57,7 @@ export interface BoardCard {
   originalImageUrl: string | null;
   illustrationUrl: string | null;
   savedIllustrationUrl?: string | null;
+  promptOverlay?: string | null;
   status: CardStatus;
   errorMessage: string | null;
   isDefault: boolean;
@@ -80,6 +82,7 @@ interface UseBoardCardsReturn {
   addDefaultCards: (defaultCardIds: string[]) => Promise<void>;
   updateCardLabel: (cardId: string, newLabel: string, newRiddle?: string) => Promise<void>;
   changePhotoMode: (cardId: string, photoMode: PhotoMode) => Promise<void>;
+  reillustrateCard: (cardId: string, notes: string) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   reorderCards: (startIndex: number, endIndex: number) => void;
   refreshCards: () => Promise<void>;
@@ -212,6 +215,7 @@ export function useBoardCards(
             originalImageUrl: server.originalImageUrl,
             illustrationUrl: server.illustrationUrl,
             savedIllustrationUrl: server.savedIllustrationUrl,
+            promptOverlay: server.promptOverlay,
             preserveOriginal: server.preserveOriginal,
             cropData: server.cropData,
             imageVersion: new Date(server.updatedAt).getTime(),
@@ -256,6 +260,7 @@ export function useBoardCards(
               originalImageUrl: serverCard.originalImageUrl,
               illustrationUrl: serverCard.illustrationUrl,
               savedIllustrationUrl: serverCard.savedIllustrationUrl,
+              promptOverlay: serverCard.promptOverlay,
               imageVersion: new Date(serverCard.updatedAt).getTime(),
               label: serverCard.label || c.label,
               status: serverCard.status,
@@ -553,6 +558,23 @@ export function useBoardCards(
     [boardId, mergeServerCard]
   );
 
+  const reillustrateCard = useCallback(
+    async (cardId: string, notes: string) => {
+      const response = await fetch(`/api/boards/${boardId}/cards/${cardId}/reillustrate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes }),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new ReillustrateError(body.code ?? 'UNKNOWN');
+      }
+      const { card } = await response.json();
+      mergeServerCard(cardId, card);
+    },
+    [boardId, mergeServerCard]
+  );
+
   const deleteCard = useCallback(
     async (cardId: string) => {
       // Optimistic update: remove card and renumber remaining cards
@@ -731,6 +753,7 @@ export function useBoardCards(
     addDefaultCards,
     updateCardLabel,
     changePhotoMode,
+    reillustrateCard,
     deleteCard,
     reorderCards,
     refreshCards: fetchCards,
