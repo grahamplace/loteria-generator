@@ -10,6 +10,9 @@ const { captured, updateSetSpy, cardsFindFirst, chatCreate, imagesEdit } = vi.ho
   imagesEdit: vi.fn(),
 }));
 
+const { isOpenAIBlocked } = vi.hoisted(() => ({ isOpenAIBlocked: vi.fn() }));
+vi.mock('@/lib/openai-blocked', () => ({ isOpenAIBlocked, markOpenAIBlocked: vi.fn() }));
+
 const { extractCrop } = vi.hoisted(() => ({ extractCrop: vi.fn(async (b: Buffer) => b) }));
 vi.mock('@/lib/crop-region', () => ({ extractCrop }));
 
@@ -90,6 +93,7 @@ function runRegenerate() {
 beforeEach(() => {
   vi.clearAllMocks();
   imagesEdit.mockResolvedValue({ data: [{ b64_json: Buffer.from('img').toString('base64') }] });
+  isOpenAIBlocked.mockResolvedValue(false);
 });
 
 describe('regenerate-illustration', () => {
@@ -98,6 +102,18 @@ describe('regenerate-illustration', () => {
     await runRegenerate();
     expect(extractCrop).toHaveBeenCalledWith(expect.any(Buffer), CROP);
     expect(imagesEdit).toHaveBeenCalled();
+  });
+
+  it('tags the image call with the user so OpenAI scopes enforcement to them', async () => {
+    cardsFindFirst.mockResolvedValue({ cropData: null, preserveOriginal: false });
+    await runRegenerate();
+    expect(imagesEdit.mock.calls[0][0]).toMatchObject({ safety_identifier: 'u1' });
+  });
+
+  it('makes no AI call for an OpenAI-blocked user', async () => {
+    isOpenAIBlocked.mockResolvedValue(true);
+    await expect(runRegenerate()).rejects.toBeInstanceOf(NonRetriableError);
+    expect(imagesEdit).not.toHaveBeenCalled();
   });
 
   it('does not crop when the card has no cropData', async () => {

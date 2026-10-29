@@ -1,4 +1,5 @@
 import OpenAI, { toFile } from 'openai';
+import { NonRetriableError } from 'inngest';
 import { eq } from 'drizzle-orm';
 import { db, cards } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
@@ -11,7 +12,10 @@ import { isSupportedUploadMime } from '@/lib/image-formats';
 import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
+import { safetyIdentifier } from '@/lib/openai-safety';
 import { stopIfContentBlocked } from '@/lib/inngest/content-blocked';
+import { IDENTIFIER_BLOCKED_PREFIX } from '@/lib/generation-error';
+import { isOpenAIBlocked, markOpenAIBlocked } from '@/lib/openai-blocked';
 import { withSheetOverlay } from '@/lib/sheet-split';
 
 const openai = new OpenAI({
@@ -25,8 +29,19 @@ export const regenerateIllustration = inngest.createFunction(
     concurrency: { key: 'event.data.userId', limit: 1 },
     retries: 2,
     onFailure: async ({ event, error, step }) => {
-      const { cardId, boardId } = event.data.event.data as { cardId: string; boardId: string };
+      const { cardId, boardId, userId } = event.data.event.data as {
+        cardId: string;
+        boardId: string;
+        userId: string;
+      };
       const message = error.message || 'Failed to regenerate illustration';
+
+      if (message.startsWith(IDENTIFIER_BLOCKED_PREFIX)) {
+        await step.run('mark-openai-blocked', async () => {
+          console.error('OpenAI blocked a user safety_identifier', { userId, cardId });
+          await markOpenAIBlocked(userId);
+        });
+      }
 
       await step.run('persist-error', async () => {
         await db
@@ -52,6 +67,10 @@ export const regenerateIllustration = inngest.createFunction(
   async ({ event, step }) => {
     const { cardId, boardId, userId, originalImageUrl, promptOverlay } = event.data;
     const ch = cardChannel({ cardId });
+
+    if (await step.run('check-openai-blocked', () => isOpenAIBlocked(userId))) {
+      throw new NonRetriableError(`${IDENTIFIER_BLOCKED_PREFIX}user is blocked by OpenAI`);
+    }
 
     await step.run('set-processing', async () => {
       await db
@@ -101,6 +120,7 @@ export const regenerateIllustration = inngest.createFunction(
             image: imageFile,
             prompt,
             size: '1024x1536',
+            ...safetyIdentifier(userId),
           })
       ).catch(stopIfContentBlocked);
       const b64 = result.data?.[0]?.b64_json;

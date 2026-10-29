@@ -127,6 +127,13 @@
       "when": 1793217957484,
       "tag": "0017_giant_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793312595893,
+      "tag": "0018_gigantic_wonder_man",
+      "breakpoints": true
     }
   ]
 }

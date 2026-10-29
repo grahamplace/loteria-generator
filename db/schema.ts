@@ -76,6 +76,9 @@ export const userProfiles = pgTable('user_profiles', {
   marketingUnsubscribedAt: timestamp('marketing_unsubscribed_at', { withTimezone: true }),
   // Opaque per-user token used in unsubscribe links (no auth needed to act on it).
   unsubscribeToken: text('unsubscribe_token').unique(),
+  // When OpenAI blocked this user's safety_identifier. The block is permanent
+  // on OpenAI's side, so no AI call is made for them once this is set.
+  openaiBlockedAt: timestamp('openai_blocked_at', { withTimezone: true }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

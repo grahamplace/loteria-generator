@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { NonRetriableError } from 'inngest';
 import {
   CONTENT_BLOCKED_PREFIX,
+  IDENTIFIER_BLOCKED_PREFIX,
   generationErrorKind,
   isContentBlocked,
+  isIdentifierBlocked,
 } from '@/lib/generation-error';
 import { stopIfContentBlocked } from '@/lib/inngest/content-blocked';
 
@@ -26,7 +28,25 @@ describe('isContentBlocked', () => {
   });
 });
 
+describe('isIdentifierBlocked', () => {
+  it('matches the code or the documented message', () => {
+    expect(isIdentifierBlocked(openAIError('identifier_blocked', 'blocked'))).toBe(true);
+    expect(isIdentifierBlocked(openAIError('unknown', '403 Identifier blocked.'))).toBe(true);
+  });
+
+  it('is false for other errors', () => {
+    expect(isIdentifierBlocked(openAIError('moderation_blocked'))).toBe(false);
+    expect(isIdentifierBlocked(null)).toBe(false);
+  });
+});
+
 describe('generationErrorKind', () => {
+  it('shows blocked-user failures as a content block', () => {
+    expect(generationErrorKind(`${IDENTIFIER_BLOCKED_PREFIX}identifier blocked`)).toBe(
+      'content_blocked'
+    );
+  });
+
   it('recognizes tagged messages', () => {
     expect(generationErrorKind(`${CONTENT_BLOCKED_PREFIX}${SAFETY_MESSAGE}`)).toBe(
       'content_blocked'
@@ -45,6 +65,14 @@ describe('generationErrorKind', () => {
 });
 
 describe('stopIfContentBlocked', () => {
+  it('turns a blocked identifier into a tagged non-retriable error', () => {
+    const cause = openAIError('identifier_blocked', 'identifier blocked');
+    expect(() => stopIfContentBlocked(cause)).toThrow(NonRetriableError);
+    expect(() => stopIfContentBlocked(cause)).toThrow(
+      `${IDENTIFIER_BLOCKED_PREFIX}identifier blocked`
+    );
+  });
+
   it('turns a moderation refusal into a tagged non-retriable error', () => {
     const cause = openAIError('moderation_blocked');
     let thrown: unknown;

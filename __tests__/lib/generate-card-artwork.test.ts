@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 const { captured, updateSetSpy, cardsFindFirst, chatCreate, imagesEdit } = vi.hoisted(() => ({
-  captured: {} as { handler?: (arg: unknown) => Promise<unknown> },
+  captured: {} as {
+    handler?: (arg: unknown) => Promise<unknown>;
+    config?: { onFailure: (arg: unknown) => Promise<unknown> };
+  },
   updateSetSpy: vi.fn(),
   cardsFindFirst: vi.fn(),
   chatCreate: vi.fn(),
@@ -25,6 +28,11 @@ const {
   boardsFindFirst: vi.fn(),
   phCapture: vi.fn(),
 }));
+const { isOpenAIBlocked, markOpenAIBlocked } = vi.hoisted(() => ({
+  isOpenAIBlocked: vi.fn(),
+  markOpenAIBlocked: vi.fn(),
+}));
+vi.mock('@/lib/openai-blocked', () => ({ isOpenAIBlocked, markOpenAIBlocked }));
 vi.mock('@/lib/sheet-split-ai', () => ({ toSheetDataUrl, detectSheet, extractSheet }));
 vi.mock('@/lib/sheet-split-run', () => ({ splitSheetCard }));
 vi.mock('@/lib/admin', () => ({
@@ -39,7 +47,11 @@ vi.mock('@/lib/crop-region', () => ({ extractCrop }));
 
 vi.mock('@/lib/inngest/client', () => ({
   inngest: {
-    createFunction: (_config: unknown, handler: (arg: unknown) => Promise<unknown>) => {
+    createFunction: (
+      config: { onFailure: (arg: unknown) => Promise<unknown> },
+      handler: (arg: unknown) => Promise<unknown>
+    ) => {
+      captured.config = config;
       captured.handler = handler;
       return {};
     },
@@ -88,7 +100,7 @@ vi.mock('@/lib/ai-tracing', () => ({
 
 import '@/lib/inngest/functions/generate-card-artwork';
 import { NonRetriableError } from 'inngest';
-import { CONTENT_BLOCKED_PREFIX } from '@/lib/generation-error';
+import { CONTENT_BLOCKED_PREFIX, IDENTIFIER_BLOCKED_PREFIX } from '@/lib/generation-error';
 import { fetchBlob } from '@/lib/blob';
 import { SHEET_CARD_OVERLAY } from '@/lib/sheet-split';
 
@@ -126,6 +138,7 @@ beforeEach(() => {
   userFindFirst.mockResolvedValue({ email: 'someone@example.com' });
   boardsFindFirst.mockResolvedValue({ isUnlocked: true });
   phCapture.mockReset();
+  isOpenAIBlocked.mockResolvedValue(false);
 });
 
 describe('generate-card-artwork skipLabeling', () => {
@@ -251,6 +264,14 @@ describe('generate-card-artwork label validation', () => {
   };
   const reply = (content: string | null, finish_reason = 'stop') => ({
     choices: [{ message: { content }, finish_reason }],
+  });
+
+  it('tags both OpenAI calls with the user so enforcement is scoped to them', async () => {
+    chatCreate.mockResolvedValue(reply('{"label":"La Luna"}'));
+    const { step } = makeStep();
+    await captured.handler!({ event, step });
+    expect(chatCreate.mock.calls[0][0]).toMatchObject({ safety_identifier: 'u1' });
+    expect(imagesEdit.mock.calls[0][0]).toMatchObject({ safety_identifier: 'u1' });
   });
 
   it('requests JSON-schema structured output', async () => {
@@ -654,5 +675,71 @@ describe('generate-card-artwork safety refusals', () => {
 
     await expect(run).rejects.toBeInstanceOf(NonRetriableError);
     await expect(run).rejects.toThrow(CONTENT_BLOCKED_PREFIX);
+  });
+});
+
+describe('generate-card-artwork OpenAI-blocked user', () => {
+  const data = {
+    cardId: CARD,
+    boardId: BOARD,
+    userId: 'u1',
+    originalImageUrl: 'https://blob/o.png',
+  };
+
+  it('makes no AI calls and fails without retrying', async () => {
+    isOpenAIBlocked.mockResolvedValue(true);
+    const { step } = makeStep();
+    const run = captured.handler!({ event: { data }, step });
+    await expect(run).rejects.toBeInstanceOf(NonRetriableError);
+    await expect(run).rejects.toThrow(IDENTIFIER_BLOCKED_PREFIX);
+    expect(detectSheet).not.toHaveBeenCalled();
+    expect(chatCreate).not.toHaveBeenCalled();
+    expect(imagesEdit).not.toHaveBeenCalled();
+  });
+
+  it('still completes an original-photo card, keeping its label', async () => {
+    isOpenAIBlocked.mockResolvedValue(true);
+    cardsFindFirst.mockResolvedValue({ label: 'El Sol' });
+    const { step } = makeStep();
+    await captured.handler!({ event: { data: { ...data, skipIllustration: true } }, step });
+    expect(chatCreate).not.toHaveBeenCalled();
+    expect(imagesEdit).not.toHaveBeenCalled();
+    const persisted = persistCall();
+    expect(persisted!.illustrationUrl).toBe('https://blob/o.png');
+    expect(persisted).not.toHaveProperty('label');
+  });
+
+  it('stops retrying when OpenAI reports the identifier blocked mid-job', async () => {
+    chatCreate.mockResolvedValue({ choices: [{ message: { content: '{"label":"La Luna"}' } }] });
+    imagesEdit.mockRejectedValue(
+      Object.assign(new Error('400 identifier blocked'), {
+        status: 400,
+        code: 'identifier_blocked',
+      })
+    );
+    const { step } = makeStep();
+    const run = captured.handler!({ event: { data }, step });
+    await expect(run).rejects.toBeInstanceOf(NonRetriableError);
+    await expect(run).rejects.toThrow(IDENTIFIER_BLOCKED_PREFIX);
+  });
+
+  it('records the block when the job fails for it', async () => {
+    const { step } = makeStep();
+    await captured.config!.onFailure({
+      event: { data: { event: { data } } },
+      error: new Error(`${IDENTIFIER_BLOCKED_PREFIX}identifier blocked`),
+      step,
+    });
+    expect(markOpenAIBlocked).toHaveBeenCalledWith('u1');
+  });
+
+  it('does not record a block for other failures', async () => {
+    const { step } = makeStep();
+    await captured.config!.onFailure({
+      event: { data: { event: { data } } },
+      error: new Error(`${CONTENT_BLOCKED_PREFIX}rejected by the safety system`),
+      step,
+    });
+    expect(markOpenAIBlocked).not.toHaveBeenCalled();
   });
 });

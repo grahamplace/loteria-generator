@@ -56,6 +56,7 @@ describe('detectSheet', () => {
     expect(body.model).toBe('gpt-6-luna');
     expect(body.questions).toHaveLength(1);
     expect(body.questions[0].type).toBe('predicate');
+    expect(body.safety_identifier).toBe('u1');
   });
 
   it('returns false below threshold', async () => {
@@ -126,6 +127,7 @@ describe('extractSheet', () => {
     expect(res?.cards).toHaveLength(1);
     expect(res?.cards[0].title).toBe('El Gallo');
     expect(responsesCreate.mock.calls[0][0].model).toBe('gpt-6.1-sol');
+    expect(responsesCreate.mock.calls[0][0].safety_identifier).toBe('u1');
   });
 
   it('passes a timeout to responses.create', async () => {

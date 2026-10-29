@@ -1,4 +1,5 @@
 import OpenAI, { toFile } from 'openai';
+import { NonRetriableError } from 'inngest';
 import { eq, sql } from 'drizzle-orm';
 import { db, boards, cards, user } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
@@ -25,7 +26,10 @@ import { cardGenerateRequested } from '../events';
 import { cardChannel, boardChannel } from '../channels';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
+import { safetyIdentifier } from '@/lib/openai-safety';
 import { stopIfContentBlocked } from '@/lib/inngest/content-blocked';
+import { IDENTIFIER_BLOCKED_PREFIX } from '@/lib/generation-error';
+import { isOpenAIBlocked, markOpenAIBlocked } from '@/lib/openai-blocked';
 import {
   LABEL_MODEL,
   LABEL_REASONING_EFFORT,
@@ -50,8 +54,19 @@ export const generateCardArtwork = inngest.createFunction(
     retries: 2,
     optimizeParallelism: true,
     onFailure: async ({ event, error, step }) => {
-      const { cardId, boardId } = event.data.event.data as { cardId: string; boardId: string };
+      const { cardId, boardId, userId } = event.data.event.data as {
+        cardId: string;
+        boardId: string;
+        userId: string;
+      };
       const message = error.message || 'Failed to generate card artwork';
+
+      if (message.startsWith(IDENTIFIER_BLOCKED_PREFIX)) {
+        await step.run('mark-openai-blocked', async () => {
+          console.error('OpenAI blocked a user safety_identifier', { userId, cardId });
+          await markOpenAIBlocked(userId);
+        });
+      }
 
       await step.run('persist-error', async () => {
         await db
@@ -79,6 +94,16 @@ export const generateCardArtwork = inngest.createFunction(
     let { originalImageUrl, skipLabeling } = event.data;
     const ch = cardChannel({ cardId });
     let fromSheet = Boolean(event.data.fromSheet);
+
+    // A blocked user gets no AI calls: each one would fail and count against
+    // the org. The original photo still works, so photo-only jobs go ahead.
+    const blocked = await step.run('check-openai-blocked', () => isOpenAIBlocked(userId));
+    if (blocked) {
+      if (!skipIllustration) {
+        throw new NonRetriableError(`${IDENTIFIER_BLOCKED_PREFIX}user is blocked by OpenAI`);
+      }
+      skipLabeling = true;
+    }
 
     // Sheet split: an upload showing many lotería cards becomes one card per
     // picture. Any failure here falls through to the normal single-card path.
@@ -260,6 +285,7 @@ export const generateCardArtwork = inngest.createFunction(
             () =>
               openai.chat.completions.create({
                 model: labelModel,
+                ...safetyIdentifier(userId),
                 messages: [
                   { role: 'system', content: LABEL_SYSTEM_PROMPT },
                   {
@@ -277,7 +303,7 @@ export const generateCardArtwork = inngest.createFunction(
                 max_completion_tokens: 500,
                 reasoning_effort: LABEL_REASONING_EFFORT,
               })
-          );
+          ).catch(stopIfContentBlocked);
           const choice = result.choices[0];
           const content = choice?.message.content ?? null;
           // A truncated response can still parse if it happens to cut at a
@@ -328,6 +354,7 @@ export const generateCardArtwork = inngest.createFunction(
               image: imageFile,
               prompt: buildIllustrationPrompt(withSheetOverlay(fromSheet, cardRow?.promptOverlay)),
               size: '1024x1536',
+              ...safetyIdentifier(userId),
             })
         ).catch(stopIfContentBlocked);
         const b64 = result.data?.[0]?.b64_json;
