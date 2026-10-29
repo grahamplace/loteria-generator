@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { db, user, boards, account } from '@/db';
+import { db, user, boards, account, userProfiles } from '@/db';
 import { eq, desc, sql } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,14 @@ async function getUser(id: string) {
     where: eq(user.id, id),
   });
   return result ?? null;
+}
+
+async function getOpenAIBlockedAt(userId: string) {
+  const row = await db.query.userProfiles.findFirst({
+    where: eq(userProfiles.id, userId),
+    columns: { openaiBlockedAt: true },
+  });
+  return row?.openaiBlockedAt ?? null;
 }
 
 async function getUserAccounts(userId: string) {
@@ -67,10 +75,11 @@ async function getUserBoards(userId: string) {
 
 export default async function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [userData, accounts, userBoards] = await Promise.all([
+  const [userData, accounts, userBoards, openaiBlockedAt] = await Promise.all([
     getUser(id),
     getUserAccounts(id),
     getUserBoards(id),
+    getOpenAIBlockedAt(id),
   ]);
 
   if (!userData) {
@@ -108,6 +117,11 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
               <p className="font-medium">{userData.name}</p>
               <p className="text-muted-foreground">{userData.email}</p>
             </div>
+            {openaiBlockedAt && (
+              <Badge variant="destructive">
+                Blocked by OpenAI {openaiBlockedAt.toLocaleDateString()}
+              </Badge>
+            )}
           </div>
           <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-3">
             <div>
