@@ -10,6 +10,8 @@ vi.mock('next-intl', () => ({
       'BoardEditor.CardGrid': {
         processing: 'Processing…',
         generationFailed: 'Generation failed',
+        imageBlocked: 'Image blocked',
+        openToUseOriginal: 'Open to use the original photo',
         deleteAndRetry: 'Delete card & retry',
         noImage: 'No image',
         noLabel: 'No label',
@@ -141,6 +143,20 @@ describe('BoardCardGrid', () => {
     render(<BoardCardGrid {...defaultProps} cards={errorCards} />);
 
     expect(screen.getByText('Generation failed')).toBeInTheDocument();
+  });
+
+  it('explains a safety refusal instead of suggesting a retry', () => {
+    const blockedCards = [
+      {
+        ...mockCards[0],
+        error: '[content_blocked] 400 Your request was rejected by the safety system.',
+      },
+    ];
+
+    render(<BoardCardGrid {...defaultProps} cards={blockedCards} />);
+
+    expect(screen.getByText('Image blocked')).toBeInTheDocument();
+    expect(screen.queryByText('Delete card & retry')).not.toBeInTheDocument();
   });
 
   it('should open the edit modal when a card is clicked', () => {

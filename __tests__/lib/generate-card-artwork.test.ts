@@ -87,6 +87,8 @@ vi.mock('@/lib/ai-tracing', () => ({
 }));
 
 import '@/lib/inngest/functions/generate-card-artwork';
+import { NonRetriableError } from 'inngest';
+import { CONTENT_BLOCKED_PREFIX } from '@/lib/generation-error';
 import { fetchBlob } from '@/lib/blob';
 import { SHEET_CARD_OVERLAY } from '@/lib/sheet-split';
 
@@ -610,5 +612,33 @@ describe('generate-card-artwork sheet split', () => {
     });
     expect(runNames).not.toContain('detect-sheet');
     expect(promptSent()).toContain(SHEET_CARD_OVERLAY);
+  });
+});
+
+describe('generate-card-artwork safety refusals', () => {
+  it('stops without retrying and tags the error when OpenAI blocks the image', async () => {
+    imagesEdit.mockRejectedValue(
+      Object.assign(new Error('400 Your request was rejected by the safety system.'), {
+        status: 400,
+        code: 'moderation_blocked',
+      })
+    );
+    const { step } = makeStep();
+
+    const run = captured.handler!({
+      event: {
+        data: {
+          cardId: CARD,
+          boardId: BOARD,
+          userId: 'u1',
+          originalImageUrl: 'https://blob/o.png',
+          skipLabeling: true,
+        },
+      },
+      step,
+    });
+
+    await expect(run).rejects.toBeInstanceOf(NonRetriableError);
+    await expect(run).rejects.toThrow(CONTENT_BLOCKED_PREFIX);
   });
 });

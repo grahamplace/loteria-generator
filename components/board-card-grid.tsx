@@ -37,6 +37,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { generationErrorKind } from '@/lib/generation-error';
 import { TOTAL_CARD_COUNT } from '@/lib/constants';
 import { useUnlockPriceDisplay } from '@/hooks/use-unlock-price';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
@@ -126,6 +127,7 @@ function SortableCard({ card, onCardClick, isDragging }: SortableCardProps) {
 function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay?: boolean }) {
   const t = useTranslations('BoardEditor.CardGrid');
   const tSheet = useTranslations('BoardEditor.SheetSplit');
+  const blocked = generationErrorKind(card.error) === 'content_blocked';
 
   return (
     <>
@@ -163,9 +165,11 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
         ) : card.error ? (
           <div className="w-full h-full flex flex-col items-center justify-center bg-destructive/10 gap-2 px-4">
             <AlertTriangle className="w-8 h-8 text-destructive/60" />
-            <p className="text-xs font-medium text-destructive">{t('generationFailed')}</p>
+            <p className="text-xs font-medium text-destructive">
+              {t(blocked ? 'imageBlocked' : 'generationFailed')}
+            </p>
             <p className="text-[10px] text-destructive/60 text-center line-clamp-2">
-              {t('deleteAndRetry')}
+              {t(blocked ? 'openToUseOriginal' : 'deleteAndRetry')}
             </p>
           </div>
         ) : card.illustration ? (

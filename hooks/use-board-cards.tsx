@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import { generationErrorKind } from '@/lib/generation-error';
 import type { Card, CardStatus } from '@/db/schema';
 import { useCardStream } from '@/hooks/use-card-stream';
 import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
@@ -102,6 +103,7 @@ export function useBoardCards(
   onSheetSplit?: () => void
 ): UseBoardCardsReturn {
   const tSheet = useTranslations('BoardEditor.SheetSplit');
+  const tToasts = useTranslations('BoardEditor.Page.toasts');
   const [cards, setCards] = useState<BoardCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -652,21 +654,28 @@ export function useBoardCards(
     [boardId]
   );
 
-  const applyStreamError = useCallback((cardId: string, message: string) => {
-    setCards((prev) =>
-      prev.map((c) =>
-        c.id === cardId
-          ? {
-              ...c,
-              status: 'error' as CardStatus,
-              errorMessage: message,
-              isProcessing: false,
-            }
-          : c
-      )
-    );
-    toast.error('Failed to process card', { description: message });
-  }, []);
+  const applyStreamError = useCallback(
+    (cardId: string, message: string) => {
+      setCards((prev) =>
+        prev.map((c) =>
+          c.id === cardId
+            ? {
+                ...c,
+                status: 'error' as CardStatus,
+                errorMessage: message,
+                isProcessing: false,
+              }
+            : c
+        )
+      );
+      // The raw message is OpenAI's text (English, with a request ID); keep it out of the UI.
+      const blocked = generationErrorKind(message) === 'content_blocked';
+      toast.error(tToasts(blocked ? 'imageBlocked' : 'cardFailed'), {
+        description: tToasts(blocked ? 'imageBlockedDesc' : 'cardFailedDesc'),
+      });
+    },
+    [tToasts]
+  );
 
   const applyStreamSheet = useCallback(
     (cardId: string, msg: SheetMessage) => {
