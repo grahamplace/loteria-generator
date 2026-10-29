@@ -5,11 +5,8 @@ import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { db, boards, cards } from '@/db';
 import { isAdminEmail } from '@/lib/admin';
-import {
-  CardReillustrateError,
-  REILLUSTRATE_NOTES_MAX,
-  reillustrateCard,
-} from '@/lib/cards/reillustrate';
+import { CardReillustrateError, reillustrateCard } from '@/lib/cards/reillustrate';
+import { REILLUSTRATE_NOTES_MAX } from '@/lib/constants';
 
 const body = z.object({ notes: z.string().max(REILLUSTRATE_NOTES_MAX) });
 

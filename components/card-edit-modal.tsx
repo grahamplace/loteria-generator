@@ -11,6 +11,7 @@ import type { PhotoMode } from '@/lib/themes/presets';
 import { LotteriaCard } from '@/lib/generate-boards';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import { generationErrorKind } from '@/lib/generation-error';
+import { REILLUSTRATE_NOTES_MAX } from '@/lib/constants';
 import { ReillustrateError } from '@/lib/reillustrate-error';
 import posthog from 'posthog-js';
 import { useTranslations } from 'next-intl';
@@ -370,7 +371,7 @@ export function CardEditModal({
                   }
                 }}
                 rows={2}
-                maxLength={500}
+                maxLength={REILLUSTRATE_NOTES_MAX}
                 className="w-full px-3 py-2 border rounded-md text-[16px] md:text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
                 placeholder={t('notesPlaceholder')}
               />

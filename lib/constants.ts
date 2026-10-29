@@ -83,3 +83,6 @@ export const PRINT_SAFE_MARGIN_IN = 0.125;
 
 /** Same margin in canvas pixels. Pages render at 300 DPI (2550×3300 = 8.5"×11"). */
 export const PRINT_SAFE_MARGIN_PX = PRINT_SAFE_MARGIN_IN * 300;
+
+/** Max characters for a card's illustration notes (client input + server validation). */
+export const REILLUSTRATE_NOTES_MAX = 500;

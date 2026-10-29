@@ -1,5 +1,6 @@
 'use client';
 import { filenameToLabel } from '@/lib/filename-label';
+import { completedLabel } from '@/lib/cards/completed-label';
 import type { PhotoMode } from '@/lib/themes/presets';
 import { ReillustrateError } from '@/lib/reillustrate-error';
 
@@ -657,7 +658,7 @@ export function useBoardCards(
           c.id === cardId
             ? {
                 ...c,
-                label: data.label,
+                label: completedLabel(c.label, data.label),
                 illustrationUrl: data.illustrationUrl,
                 savedIllustrationUrl: c.preserveOriginal
                   ? c.savedIllustrationUrl
