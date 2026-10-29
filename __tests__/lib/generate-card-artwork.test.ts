@@ -389,6 +389,20 @@ describe('generate-card-artwork sheet split', () => {
     expect(promptSent()).toContain(SHEET_CARD_OVERLAY);
   });
 
+  it('appends the card row promptOverlay to the illustration prompt', async () => {
+    cardsFindFirst.mockResolvedValue({ label: 'T1', promptOverlay: 'Keep the glasses' });
+    const { step } = makeStep();
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(promptSent()).toContain('Keep the glasses');
+  });
+
+  it('uses no additional instructions when promptOverlay is null', async () => {
+    cardsFindFirst.mockResolvedValue({ label: 'T1', promptOverlay: null });
+    const { step } = makeStep();
+    await captured.handler!({ event: { data: baseData }, step });
+    expect(promptSent()).not.toContain('## Additional Instructions');
+  });
+
   it('normal photo path unchanged', async () => {
     const { runNames, step } = makeStep();
     await captured.handler!({ event: { data: baseData }, step });
