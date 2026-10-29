@@ -3,7 +3,6 @@ import { db, cards, getGenerationLimit, type Board, type Card } from '@/db';
 import { inngest } from '@/lib/inngest/client';
 import { cardGenerateRequested } from '@/lib/inngest/events';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
-import { REILLUSTRATE_NOTES_MAX } from '@/lib/constants';
 
 export class CardReillustrateError extends Error {
   constructor(
