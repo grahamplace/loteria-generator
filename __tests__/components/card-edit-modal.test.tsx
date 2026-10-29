@@ -72,6 +72,7 @@ function renderModal(props: Partial<React.ComponentProps<typeof CardEditModal>> 
 describe('CardEditModal notes + re-illustrate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
   });
 
   it('pre-fills notes from card.promptOverlay', () => {
@@ -89,7 +90,26 @@ describe('CardEditModal notes + re-illustrate', () => {
         card_number: 7,
         has_notes: true,
         notes_length: 'Make the dog brown'.length,
+        notes_changed: true,
+        is_repeat: false,
+        seconds_since_last: null,
       })
+    );
+  });
+
+  it('flags a quick second re-illustrate with unchanged notes as a repeat', async () => {
+    const { onReillustrate } = renderModal();
+    const button = screen.getByRole('button', { name: 'Re-illustrate' });
+    fireEvent.click(button);
+    await waitFor(() => expect(posthog.capture).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(button).not.toBeDisabled());
+    fireEvent.click(button);
+    await waitFor(() => expect(onReillustrate).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(posthog.capture).toHaveBeenLastCalledWith(
+        'card_reillustrated',
+        expect.objectContaining({ notes_changed: false, is_repeat: true, seconds_since_last: 0 })
+      )
     );
   });
 

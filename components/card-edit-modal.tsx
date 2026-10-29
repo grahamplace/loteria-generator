@@ -14,6 +14,7 @@ import { generationErrorKind } from '@/lib/generation-error';
 import { REILLUSTRATE_NOTES_MAX } from '@/lib/constants';
 import { ReillustrateError } from '@/lib/reillustrate-error';
 import posthog from 'posthog-js';
+import { recordReillustrate, REPEAT_WINDOW_MS } from '@/lib/reillustrate-repeat';
 import { useTranslations } from 'next-intl';
 
 interface CardEditModalProps {
@@ -154,10 +155,14 @@ export function CardEditModal({
     try {
       await onReillustrate(notes);
       const trimmed = notes.trim();
+      const secondsSinceLast = recordReillustrate(card.id);
       posthog.capture('card_reillustrated', {
         card_number: card.number,
         has_notes: trimmed.length > 0,
         notes_length: trimmed.length,
+        notes_changed: trimmed !== (card.promptOverlay ?? '').trim(),
+        is_repeat: secondsSinceLast !== null && secondsSinceLast * 1000 <= REPEAT_WINDOW_MS,
+        seconds_since_last: secondsSinceLast,
       });
     } catch (err) {
       setReillustrateError(
