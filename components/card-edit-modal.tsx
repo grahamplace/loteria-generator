@@ -125,6 +125,9 @@ export function CardEditModal({
   const [notes, setNotes] = useState(card.promptOverlay ?? '');
   const [reillustrating, setReillustrating] = useState(false);
   const [reillustrateError, setReillustrateError] = useState<'' | 'limit' | 'other'>('');
+  // Which button started the request, so its error renders next to that button.
+  const [reillustrateSource, setReillustrateSource] = useState<'notes' | 'retry'>('notes');
+  const canReillustrate = Boolean(originalImage && onReillustrate);
   const mode: PhotoMode = preserveOriginal ? 'original' : 'illustrated';
   const previewSrc = card.illustration || '/placeholder.svg';
   // Retrying a safety refusal fails the same way, so offer the original instead.
@@ -142,10 +145,11 @@ export function CardEditModal({
     }
   }
 
-  async function reillustrate() {
+  async function reillustrate(source: 'notes' | 'retry' = 'notes') {
     if (!onReillustrate || reillustrating || switching || isProcessing) return;
     setReillustrating(true);
     setReillustrateError('');
+    setReillustrateSource(source);
     try {
       await onReillustrate(notes);
       const trimmed = notes.trim();
@@ -164,6 +168,30 @@ export function CardEditModal({
       setReillustrating(false);
     }
   }
+
+  const reillustrateErrorBlock = reillustrateError ? (
+    <div className="space-y-2">
+      <p role="alert" className="text-sm text-destructive">
+        {t(
+          reillustrateError === 'other'
+            ? 'reillustrateError'
+            : isLocked
+              ? 'reillustrateLimitLocked'
+              : 'reillustrateLimit'
+        )}
+      </p>
+      {reillustrateError === 'limit' && isLocked && onUnlockRequired && (
+        <Button
+          onClick={() => {
+            onUnlockRequired();
+            onClose();
+          }}
+        >
+          {t('reillustrateUnlock')}
+        </Button>
+      )}
+    </div>
+  ) : null;
 
   const handleSave = () => {
     if (label.trim()) {
@@ -259,8 +287,8 @@ export function CardEditModal({
                 onClick={() =>
                   void (blocked
                     ? changeMode('original')
-                    : onReillustrate
-                      ? reillustrate()
+                    : canReillustrate
+                      ? reillustrate('retry')
                       : changeMode('illustrated'))
                 }
               >
@@ -272,6 +300,7 @@ export function CardEditModal({
                 )}
                 {t(blocked ? 'useOriginalPhoto' : 'retryIllustration')}
               </Button>
+              {reillustrateSource === 'retry' && reillustrateErrorBlock}
             </div>
           )}
           {/* Image preview */}
@@ -325,7 +354,7 @@ export function CardEditModal({
           )}
 
           {/* Notes + re-illustrate */}
-          {originalImage && onReillustrate && (
+          {canReillustrate && (
             <div className="space-y-2">
               <label className="block text-sm font-medium" htmlFor="card-notes">
                 {t('notesField')}
@@ -361,29 +390,7 @@ export function CardEditModal({
                 )}
                 {t('reillustrateButton')}
               </Button>
-              {reillustrateError && (
-                <div className="space-y-2">
-                  <p role="alert" className="text-sm text-destructive">
-                    {t(
-                      reillustrateError === 'other'
-                        ? 'reillustrateError'
-                        : isLocked
-                          ? 'reillustrateLimitLocked'
-                          : 'reillustrateLimit'
-                    )}
-                  </p>
-                  {reillustrateError === 'limit' && isLocked && onUnlockRequired && (
-                    <Button
-                      onClick={() => {
-                        onUnlockRequired();
-                        onClose();
-                      }}
-                    >
-                      {t('reillustrateUnlock')}
-                    </Button>
-                  )}
-                </div>
-              )}
+              {reillustrateSource === 'notes' && reillustrateErrorBlock}
             </div>
           )}
 

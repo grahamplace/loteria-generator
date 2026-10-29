@@ -99,6 +99,20 @@ describe('CardEditModal notes + re-illustrate', () => {
     await waitFor(() => expect(onReillustrate).toHaveBeenCalledWith('Keep the glasses'));
   });
 
+  it('Ctrl+Enter in notes triggers re-illustrate', async () => {
+    const { onReillustrate } = renderModal();
+    fireEvent.keyDown(screen.getByLabelText('Notes'), { key: 'Enter', ctrlKey: true });
+    await waitFor(() => expect(onReillustrate).toHaveBeenCalledWith('Keep the glasses'));
+  });
+
+  it('button disabled while the re-illustrate request is in flight', async () => {
+    renderModal({ onReillustrate: vi.fn(() => new Promise<void>(() => {})) });
+    const button = screen.getByRole('button', { name: 'Re-illustrate' });
+    expect(button).toBeEnabled();
+    fireEvent.click(button);
+    await waitFor(() => expect(button).toBeDisabled());
+  });
+
   it('button disabled while isProcessing', () => {
     renderModal({ isProcessing: true });
     expect(screen.getByRole('button', { name: 'Re-illustrate' })).toBeDisabled();
@@ -154,5 +168,33 @@ describe('CardEditModal notes + re-illustrate', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Try illustration again' }));
     await waitFor(() => expect(onReillustrate).toHaveBeenCalledWith('Keep the glasses'));
     expect(onChangePhotoMode).not.toHaveBeenCalled();
+  });
+
+  it('retry failure renders the error next to the retry button', async () => {
+    renderModal({
+      processingError: 'boom',
+      onChangePhotoMode: vi.fn().mockResolvedValue(undefined),
+      onReillustrate: vi.fn().mockRejectedValue(new Error('network')),
+    });
+    const retry = screen.getByRole('button', { name: 'Try illustration again' });
+    fireEvent.click(retry);
+    await waitFor(() =>
+      expect(retry.parentElement).toHaveTextContent('Couldn’t start the illustration. Try again.')
+    );
+    expect(screen.getAllByText('Couldn’t start the illustration. Try again.')).toHaveLength(1);
+  });
+
+  it('Try again without an original photo falls back to switching mode', async () => {
+    const onChangePhotoMode = vi.fn().mockResolvedValue(undefined);
+    const { onReillustrate } = renderModal({
+      originalImage: undefined,
+      processingError: 'boom',
+      onChangePhotoMode,
+    });
+    expect(screen.queryByLabelText('Notes')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try illustration again' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Try illustration again' }));
+    await waitFor(() => expect(onChangePhotoMode).toHaveBeenCalledWith('illustrated'));
+    expect(onReillustrate).not.toHaveBeenCalled();
   });
 });
