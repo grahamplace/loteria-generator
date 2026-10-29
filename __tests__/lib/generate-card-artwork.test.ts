@@ -253,6 +253,14 @@ describe('generate-card-artwork label validation', () => {
     choices: [{ message: { content }, finish_reason }],
   });
 
+  it('tags both OpenAI calls with the user so enforcement is scoped to them', async () => {
+    chatCreate.mockResolvedValue(reply('{"label":"La Luna"}'));
+    const { step } = makeStep();
+    await captured.handler!({ event, step });
+    expect(chatCreate.mock.calls[0][0]).toMatchObject({ safety_identifier: 'u1' });
+    expect(imagesEdit.mock.calls[0][0]).toMatchObject({ safety_identifier: 'u1' });
+  });
+
   it('requests JSON-schema structured output', async () => {
     chatCreate.mockResolvedValue(reply('{"label":"La Luna"}'));
     const { step } = makeStep();
