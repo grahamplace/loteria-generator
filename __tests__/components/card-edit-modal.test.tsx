@@ -22,7 +22,7 @@ vi.mock('next-intl', () => ({
         labelField: 'Label',
         riddleField: 'Riddle (optional)',
         notesField: 'Notes',
-        notesPlaceholder: 'Keep the glasses, make the dog brown…',
+        notesPlaceholder: 'Make the background yellow, include my hat…',
         reillustrateButton: 'Re-illustrate',
         reillustrateLimitLocked: 'You’ve used this board’s free illustrations.',
         reillustrateLimit: 'You’ve used all the illustrations for this board.',
