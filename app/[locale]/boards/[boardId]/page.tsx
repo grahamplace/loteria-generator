@@ -59,6 +59,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
     addDefaultCards,
     updateCardLabel,
     changePhotoMode,
+    reillustrateCard,
     refreshCards,
     deleteCard,
     reorderCards,
@@ -185,6 +186,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
     error:
       card.status === 'error' ? card.errorMessage || t('toasts.errorProcessingCard') : undefined,
     isDefault: card.isDefault,
+    promptOverlay: card.promptOverlay,
   }));
 
   const alreadyAddedDefaultIds = new Set(
@@ -342,6 +344,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
                       await refreshCards();
                     }}
                     onChangePhotoMode={changePhotoMode}
+                    onReillustrate={reillustrateCard}
                     onDeleteCard={deleteCard}
                     onUpdateLabel={updateCardLabel}
                     onReorderCards={reorderCards}

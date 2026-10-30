@@ -155,7 +155,10 @@ describe('buildIllustrationPrompt', () => {
   it('appends a trimmed overlay under an Additional Instructions heading', () => {
     const result = buildIllustrationPrompt('  Make the background flat blue.  ', YELLOW);
     expect(result).toContain(renderIllustrationPrompt(YELLOW));
-    expect(result).toContain('## Additional Instructions');
+    expect(result).toContain(
+      '## Additional Instructions for this card (follow these even where they conflict with the above)'
+    );
+    expect(result).not.toContain('admin overrides');
     expect(result).toContain('Make the background flat blue.');
     expect(result).not.toContain('  Make the background flat blue.  ');
   });

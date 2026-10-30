@@ -11,11 +11,14 @@ import type { PhotoMode } from '@/lib/themes/presets';
 import { LotteriaCard } from '@/lib/generate-boards';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
 import { generationErrorKind } from '@/lib/generation-error';
+import { REILLUSTRATE_NOTES_MAX } from '@/lib/constants';
+import { ReillustrateError } from '@/lib/reillustrate-error';
 import posthog from 'posthog-js';
+import { recordReillustrate, REPEAT_WINDOW_MS } from '@/lib/reillustrate-repeat';
 import { useTranslations } from 'next-intl';
 
 interface CardEditModalProps {
-  card: LotteriaCard;
+  card: LotteriaCard & { promptOverlay?: string | null };
   originalImage?: string;
   onSave: (newLabel: string, newRiddle: string) => void;
   onDelete?: () => void;
@@ -26,6 +29,9 @@ interface CardEditModalProps {
   isProcessing?: boolean;
   processingError?: string;
   onChangePhotoMode?: (mode: PhotoMode) => Promise<void>;
+  onReillustrate?: (notes: string) => Promise<void>;
+  isLocked?: boolean;
+  onUnlockRequired?: () => void;
 }
 
 // Keyed by source so a previous image's load event cannot dismiss the overlay.
@@ -107,6 +113,9 @@ export function CardEditModal({
   isProcessing = false,
   processingError,
   onChangePhotoMode,
+  onReillustrate,
+  isLocked = false,
+  onUnlockRequired,
 }: CardEditModalProps) {
   const t = useTranslations('BoardEditor.CardEditModal');
   const themeText = useTranslations('Themes.Builder');
@@ -115,6 +124,12 @@ export function CardEditModal({
   const [riddle, setRiddle] = useState(card.riddle ?? '');
   const [switching, setSwitching] = useState(false);
   const [modeError, setModeError] = useState('');
+  const [notes, setNotes] = useState(card.promptOverlay ?? '');
+  const [reillustrating, setReillustrating] = useState(false);
+  const [reillustrateError, setReillustrateError] = useState<'' | 'limit' | 'other'>('');
+  // Which button started the request, so its error renders next to that button.
+  const [reillustrateSource, setReillustrateSource] = useState<'notes' | 'retry'>('notes');
+  const canReillustrate = Boolean(originalImage && onReillustrate);
   const mode: PhotoMode = preserveOriginal ? 'original' : 'illustrated';
   const previewSrc = card.illustration || '/placeholder.svg';
   // Retrying a safety refusal fails the same way, so offer the original instead.
@@ -131,6 +146,58 @@ export function CardEditModal({
       setSwitching(false);
     }
   }
+
+  async function reillustrate(source: 'notes' | 'retry' = 'notes') {
+    if (!onReillustrate || reillustrating || switching || isProcessing) return;
+    setReillustrating(true);
+    setReillustrateError('');
+    setReillustrateSource(source);
+    try {
+      await onReillustrate(notes);
+      const trimmed = notes.trim();
+      const secondsSinceLast = recordReillustrate(card.id);
+      posthog.capture('card_reillustrated', {
+        card_number: card.number,
+        has_notes: trimmed.length > 0,
+        notes_length: trimmed.length,
+        notes_changed: trimmed !== (card.promptOverlay ?? '').trim(),
+        is_repeat: secondsSinceLast !== null && secondsSinceLast * 1000 <= REPEAT_WINDOW_MS,
+        seconds_since_last: secondsSinceLast,
+      });
+    } catch (err) {
+      setReillustrateError(
+        err instanceof ReillustrateError && err.code === 'GENERATION_LIMIT_REACHED'
+          ? 'limit'
+          : 'other'
+      );
+    } finally {
+      setReillustrating(false);
+    }
+  }
+
+  const reillustrateErrorBlock = reillustrateError ? (
+    <div className="space-y-2">
+      <p role="alert" className="text-sm text-destructive">
+        {t(
+          reillustrateError === 'other'
+            ? 'reillustrateError'
+            : isLocked
+              ? 'reillustrateLimitLocked'
+              : 'reillustrateLimit'
+        )}
+      </p>
+      {reillustrateError === 'limit' && isLocked && onUnlockRequired && (
+        <Button
+          onClick={() => {
+            onUnlockRequired();
+            onClose();
+          }}
+        >
+          {t('reillustrateUnlock')}
+        </Button>
+      )}
+    </div>
+  ) : null;
 
   const handleSave = () => {
     if (label.trim()) {
@@ -222,10 +289,16 @@ export function CardEditModal({
               </p>
               <Button
                 variant={blocked ? 'default' : 'outline'}
-                disabled={switching || isProcessing}
-                onClick={() => void changeMode(blocked ? 'original' : 'illustrated')}
+                disabled={switching || reillustrating || isProcessing}
+                onClick={() =>
+                  void (blocked
+                    ? changeMode('original')
+                    : canReillustrate
+                      ? reillustrate('retry')
+                      : changeMode('illustrated'))
+                }
               >
-                {switching && (
+                {(switching || reillustrating) && (
                   <Loader2
                     className="size-4 animate-spin motion-reduce:animate-none"
                     aria-hidden="true"
@@ -233,6 +306,7 @@ export function CardEditModal({
                 )}
                 {t(blocked ? 'useOriginalPhoto' : 'retryIllustration')}
               </Button>
+              {reillustrateSource === 'retry' && reillustrateErrorBlock}
             </div>
           )}
           {/* Image preview */}
@@ -296,8 +370,48 @@ export function CardEditModal({
               placeholder={t('labelPlaceholder')}
               aria-label={t('labelInputAriaLabel')}
             />
-            <p className="text-xs text-muted-foreground mt-1">{t('labelHint')}</p>
           </div>
+
+          {/* Notes + re-illustrate */}
+          {canReillustrate && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium" htmlFor="card-notes">
+                {t('notesField')}
+              </label>
+              <textarea
+                id="card-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    void reillustrate();
+                  }
+                }}
+                rows={2}
+                maxLength={REILLUSTRATE_NOTES_MAX}
+                className="w-full px-3 py-2 border rounded-md text-[16px] md:text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+                placeholder={t('notesPlaceholder')}
+              />
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                disabled={reillustrating || switching || isProcessing}
+                onClick={() => void reillustrate()}
+              >
+                {reillustrating ? (
+                  <Loader2
+                    className="size-4 animate-spin motion-reduce:animate-none"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Sparkles className="size-4" aria-hidden="true" />
+                )}
+                {t('reillustrateButton')}
+              </Button>
+              {reillustrateSource === 'notes' && reillustrateErrorBlock}
+            </div>
+          )}
 
           {/* Riddle input */}
           <div>

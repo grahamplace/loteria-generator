@@ -341,6 +341,10 @@ export const generateCardArtwork = inngest.createFunction(
         const normalized = await normalizeImageForOpenAI(sourceBuffer);
         const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
         const illustrationModel = ILLUSTRATION_MODEL;
+        const cardRow = await db.query.cards.findFirst({
+          where: eq(cards.id, cardId),
+          columns: { promptOverlay: true },
+        });
         const result = await withAITrace(
           'generate-illustration',
           { userId, boardId, cardId, model: illustrationModel },
@@ -348,7 +352,7 @@ export const generateCardArtwork = inngest.createFunction(
             openai.images.edit({
               model: illustrationModel,
               image: imageFile,
-              prompt: buildIllustrationPrompt(withSheetOverlay(fromSheet)),
+              prompt: buildIllustrationPrompt(withSheetOverlay(fromSheet, cardRow?.promptOverlay)),
               size: '1024x1536',
               ...safetyIdentifier(userId),
             })

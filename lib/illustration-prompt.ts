@@ -113,7 +113,7 @@ export function buildIllustrationPrompt(
   if (!trimmed) return base;
   return `${base}
 
-    ## Additional Instructions (admin overrides — follow these even where they conflict with the above)
+    ## Additional Instructions for this card (follow these even where they conflict with the above)
     ${trimmed}
     `;
 }
