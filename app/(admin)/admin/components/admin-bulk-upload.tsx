@@ -9,7 +9,6 @@ import { downscaleToDataUrl } from '@/lib/downscale-image';
 import {
   CONVERTIBLE_IMAGE_ACCEPT,
   convertForUpload,
-  convertibleKind,
   isUploadCandidate,
 } from '@/lib/convert-upload-image';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
@@ -56,14 +55,11 @@ export function AdminBulkUpload() {
   async function onFilesSelected(fileList: FileList | null) {
     if (!fileList) return;
     const selected = Array.from(fileList).filter(isUploadCandidate);
-    let files = selected;
-    let unreadable: File[] = [];
-    // Await only when converting, so ordinary files update state synchronously.
-    if (selected.some((f) => convertibleKind(f))) {
-      const results = await Promise.allSettled(selected.map(convertForUpload));
-      files = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
-      unreadable = selected.filter((_, i) => results[i].status === 'rejected');
-    }
+    // Every file goes through conversion: it returns ordinary photos untouched,
+    // and catches HEIC saved as .jpg plus photos too big to upload.
+    const results = await Promise.allSettled(selected.map(convertForUpload));
+    const files = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
+    const unreadable = selected.filter((_, i) => results[i].status === 'rejected');
     setItems((prev) => {
       prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
       return files.map((file) => ({

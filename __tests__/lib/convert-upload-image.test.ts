@@ -9,6 +9,7 @@ import {
   convertibleKind,
   isUploadCandidate,
   needsConversion,
+  sniffConvertibleKind,
   CONVERTIBLE_IMAGE_ACCEPT,
 } from '@/lib/convert-upload-image';
 import { MAX_UPLOAD_BYTES } from '@/lib/upload-limits';
@@ -31,6 +32,36 @@ describe('convertibleKind', () => {
     ['photo.avif', 'image/avif', null],
   ])('%s (%s) → %s', (name, type, kind) => {
     expect(convertibleKind({ name, type })).toBe(kind);
+  });
+});
+
+/** A File whose bytes start with `header`, padded with zeros. */
+function fileWithHeader(name: string, type: string, header: number[] | string) {
+  const head = typeof header === 'string' ? Array.from(header, (c) => c.charCodeAt(0)) : header;
+  const bytes = new Uint8Array(64);
+  bytes.set(head);
+  return new File([bytes], name, { type, lastModified: 42 });
+}
+
+const HEIC_HEADER = '\0\0\0\x18ftypheic';
+
+describe('sniffConvertibleKind', () => {
+  it.each([
+    ['iPhone HEIC', HEIC_HEADER, 'heic'],
+    ['HEIF image', '\0\0\0\x1cftypmif1', 'heic'],
+    ['little-endian TIFF', 'II*\0', 'tiff'],
+    ['big-endian TIFF', 'MM\0*', 'tiff'],
+    ['AVIF', '\0\0\0\x1cftypavif', null],
+    ['JPEG', [0xff, 0xd8, 0xff, 0xe0], null],
+    ['PNG', [0x89, 0x50, 0x4e, 0x47], null],
+  ])('%s → %s', async (_, header, kind) => {
+    expect(await sniffConvertibleKind(fileWithHeader('photo.jpg', 'image/jpeg', header))).toBe(
+      kind
+    );
+  });
+
+  it('returns null for a file shorter than a header', async () => {
+    expect(await sniffConvertibleKind(new File([new Uint8Array(2)], 'a.jpg'))).toBeNull();
   });
 });
 
@@ -189,6 +220,25 @@ describe('convertForUpload', () => {
     // First pixel survives the decode as RGBA.
     expect(Array.from(decoded[0].data.slice(0, 4))).toEqual([200, 100, 50, 255]);
     expect(out.name).toBe('scan.jpg');
+  });
+
+  it('converts a HEIC photo renamed to .jpg, even under the cap', async () => {
+    vi.stubGlobal(
+      'createImageBitmap',
+      vi.fn(async () => {
+        throw new DOMException('unsupported', 'InvalidStateError');
+      })
+    );
+    heicTo.mockResolvedValue(fakeBitmap);
+
+    const out = await convertForUpload(
+      fileWithHeader('La Bisabuela.jpg', 'image/jpeg', HEIC_HEADER)
+    );
+
+    expect(heicTo).toHaveBeenCalled();
+    expect(out.name).toBe('La Bisabuela.jpg');
+    expect(out.type).toBe('image/jpeg');
+    expect(out.size).toBe(4); // the re-encoded JPEG, not the original bytes
   });
 
   it('throws when the file cannot be decoded at all', async () => {

@@ -33,10 +33,12 @@ beforeEach(() => {
   vi.mocked(downscaleToDataUrl).mockResolvedValue({ dataUrl: SMALL_DATA_URL, scale: 1 });
 });
 
-function selectFiles(...names: string[]) {
+/** Selection reads each file's header before listing it, so wait for the list. */
+async function selectFiles(...names: string[]) {
   const input = document.querySelector('input[type="file"]') as HTMLInputElement;
   const files = names.map((n) => new File(['x'], n, { type: 'image/jpeg' }));
   fireEvent.change(input, { target: { files } });
+  await waitFor(() => expect(screen.getByRole('button', { name: /create board/i })).toBeEnabled());
 }
 
 /** Board creation succeeds; each card POST answers with the next response. */
@@ -95,7 +97,7 @@ describe('AdminBulkUpload', () => {
       { status: 201, json: { card: {} } },
     ]);
     render(<AdminBulkUpload />);
-    selectFiles('a.jpg', 'b.jpg');
+    await selectFiles('a.jpg', 'b.jpg');
     clickCreate();
     await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/boards/b1'));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
@@ -104,7 +106,7 @@ describe('AdminBulkUpload', () => {
   it('stays on the page and names the file when the platform rejects it with a 413', async () => {
     mockFetch([{ status: 201, json: { card: {} } }, { status: 413 }]);
     render(<AdminBulkUpload />);
-    selectFiles('ok.jpg', 'La Nieve.jpg');
+    await selectFiles('ok.jpg', 'La Nieve.jpg');
     clickCreate();
 
     const alert = await screen.findByRole('alert');
@@ -124,7 +126,7 @@ describe('AdminBulkUpload', () => {
     });
     const fetchMock = mockFetch([]);
     render(<AdminBulkUpload />);
-    selectFiles('huge.jpg');
+    await selectFiles('huge.jpg');
     clickCreate();
 
     const alert = await screen.findByRole('alert');
@@ -144,9 +146,9 @@ describe('AdminBulkUpload', () => {
         .map((call) => JSON.parse((call[1] as RequestInit).body as string).skipIllustration);
     }
 
-    it('starts every image on the batch default (photo when re-illustrate is off)', () => {
+    it('starts every image on the batch default (photo when re-illustrate is off)', async () => {
       render(<AdminBulkUpload />);
-      selectFiles('a.jpg', 'b.jpg');
+      await selectFiles('a.jpg', 'b.jpg');
       const toggles = screen.getAllByRole('button', { name: /keep as photo/i });
       expect(toggles).toHaveLength(2);
       toggles.forEach((t) => expect(t).toHaveAttribute('aria-pressed', 'true'));
@@ -160,7 +162,7 @@ describe('AdminBulkUpload', () => {
       ]);
       render(<AdminBulkUpload />);
       fireEvent.click(screen.getByRole('checkbox', { name: /re-illustrate with ai/i }));
-      selectFiles('a.jpg', 'b.jpg', 'c.jpg');
+      await selectFiles('a.jpg', 'b.jpg', 'c.jpg');
       fireEvent.click(screen.getAllByRole('button', { name: /keep as photo/i })[1]);
       clickCreate();
 
@@ -168,9 +170,9 @@ describe('AdminBulkUpload', () => {
       expect(sentSkipIllustration(fetchMock)).toEqual([false, true, false]);
     });
 
-    it('resets every image when the batch checkbox changes', () => {
+    it('resets every image when the batch checkbox changes', async () => {
       render(<AdminBulkUpload />);
-      selectFiles('a.jpg', 'b.jpg');
+      await selectFiles('a.jpg', 'b.jpg');
       fireEvent.click(screen.getAllByRole('button', { name: /keep as photo/i })[0]);
       fireEvent.click(screen.getByRole('checkbox', { name: /re-illustrate with ai/i }));
       screen
@@ -186,7 +188,7 @@ describe('AdminBulkUpload', () => {
       .mockRejectedValueOnce(new TypeError('Failed to fetch'))
       .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ card: {} }) });
     render(<AdminBulkUpload />);
-    selectFiles('The Groom.jpg');
+    await selectFiles('The Groom.jpg');
     clickCreate();
 
     await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/boards/b1'));
@@ -198,7 +200,7 @@ describe('AdminBulkUpload', () => {
     const fetchMock = mockFetch([]);
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
     render(<AdminBulkUpload />);
-    selectFiles('The Groom.jpg');
+    await selectFiles('The Groom.jpg');
     clickCreate();
 
     const alert = await screen.findByRole('alert');
@@ -218,7 +220,7 @@ describe('AdminBulkUpload', () => {
       },
     ]);
     render(<AdminBulkUpload />);
-    selectFiles('photo.jpg');
+    await selectFiles('photo.jpg');
     clickCreate();
 
     const alert = await screen.findByRole('alert');
