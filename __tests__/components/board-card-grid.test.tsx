@@ -40,7 +40,6 @@ vi.mock('next-intl', () => ({
         illustrationLabel: 'Illustration',
         labelField: 'Label',
         labelPlaceholder: 'Enter the label',
-        labelHint: '1-3 Spanish words',
         riddleField: 'Riddle (optional)',
         riddlePlaceholder: 'Write a verse…',
         riddleHint: 'Appears on the caller sheet.',
