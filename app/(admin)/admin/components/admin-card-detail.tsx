@@ -14,6 +14,7 @@ import { ReplaceIllustrationButton } from './replace-illustration-button';
 import { UseOriginalButton } from './use-original-button';
 import { InlineLabelEdit } from './inline-label-edit';
 import { EditRiddleForm } from './edit-riddle-form';
+import { DeleteCardButton } from './delete-card-button';
 
 export type CardOwner = { id: string; name: string | null; email: string };
 
@@ -37,6 +38,7 @@ export function AdminCardDetail({
   owner,
   headerExtra,
   onLabelSaved,
+  onDeleted,
 }: {
   card: Card;
   /** The user who created the card (the board's owner). */
@@ -46,6 +48,8 @@ export function AdminCardDetail({
   /** Rendered under the heading (e.g. a "View Board" link). */
   headerExtra?: React.ReactNode;
   onLabelSaved?: (label: string) => void;
+  /** Called after the card is deleted; without it, deleting navigates to the board. */
+  onDeleted?: () => void;
 }) {
   const [showWholeOriginal, setShowWholeOriginal] = useState(false);
   const originalSrc = adminCardProxySrc(card.id, 'original', card.updatedAt);
@@ -186,6 +190,15 @@ export function AdminCardDetail({
             <dd>{new Date(card.updatedAt).toLocaleDateString()}</dd>
           </div>
         </dl>
+
+        <div className="border-t border-border pt-4">
+          <DeleteCardButton
+            cardId={card.id}
+            boardId={card.boardId}
+            cardNumber={card.number}
+            onDeleted={onDeleted}
+          />
+        </div>
       </aside>
 
       {showWholeOriginal && (

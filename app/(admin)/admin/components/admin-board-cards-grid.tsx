@@ -92,6 +92,22 @@ export function AdminBoardCardsGrid({
     setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, label } : c)));
   }, []);
 
+  // Drop the card and close the gap in numbering, as the server just did. The
+  // modal moves on to the card that took its place, or closes if none is left.
+  const handleDeleted = useCallback(
+    (cardId: string) => {
+      const index = cards.findIndex((c) => c.id === cardId);
+      const remaining = cards
+        .filter((c) => c.id !== cardId)
+        .map((c, i) => ({ ...c, number: i + 1 }));
+      setCards(remaining);
+      const nextCard = remaining[Math.min(index, remaining.length - 1)];
+      if (index !== -1 && nextCard) pageToCard(nextCard.id);
+      else closeCard();
+    },
+    [cards, pageToCard, closeCard]
+  );
+
   // Re-seed local state when the server hands us a new initialCards array
   // (e.g. after router.refresh() following the bulk retry POST).
   useEffect(() => {
@@ -224,6 +240,7 @@ export function AdminBoardCardsGrid({
         onSelect={pageToCard}
         onClose={closeCard}
         onLabelSaved={handleLabelSaved}
+        onDeleted={handleDeleted}
       />
     </div>
   );

@@ -44,6 +44,7 @@ export function AdminCardModal({
   onSelect,
   onClose,
   onLabelSaved,
+  onDeleted,
 }: {
   cards: Card[];
   cardId: string | null;
@@ -51,6 +52,7 @@ export function AdminCardModal({
   onSelect: (cardId: string) => void;
   onClose: () => void;
   onLabelSaved: (cardId: string, label: string) => void;
+  onDeleted: (cardId: string) => void;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
   const index = cardId ? cards.findIndex((c) => c.id === cardId) : -1;
@@ -182,6 +184,7 @@ export function AdminCardModal({
                   card={card}
                   owner={owner}
                   onLabelSaved={(label) => onLabelSaved(card.id, label)}
+                  onDeleted={() => onDeleted(card.id)}
                 />
               </div>
             </>
