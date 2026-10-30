@@ -9,6 +9,10 @@ import { MAX_UPLOAD_BYTES } from '@/lib/upload-limits';
  *   and sharp can decode.
  * - Readable photos over the upload cap are shrunk to a JPEG that fits. iOS
  *   hands Safari full-size JPEGs from the photo library, often 4–12MB.
+ * - The name and MIME type can lie: an iPhone photo renamed to `.jpg` is still
+ *   HEIC inside, and the browser reports `image/jpeg` from the extension. The
+ *   first bytes are checked too, so those get converted instead of failing on
+ *   the server.
  */
 
 export type ConvertibleKind = 'heic' | 'tiff';
@@ -56,6 +60,38 @@ export function needsConversion(file: Pick<File, 'name' | 'type' | 'size'>): boo
   );
 }
 
+/** ISO-BMFF brands (bytes 8–11) of HEIC/HEIF stills and sequences. AVIF uses
+ * `avif`/`avis`, which browsers decode natively, so it is left out. */
+const HEIC_BRANDS = new Set(['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'mif1', 'msf1']);
+
+/**
+ * Detects HEIC/HEIF and TIFF from the file's first bytes, for files whose name
+ * and MIME type claim something else. Returns null if the header matches
+ * neither or can't be read.
+ */
+export async function sniffConvertibleKind(file: Blob): Promise<ConvertibleKind | null> {
+  let bytes: Uint8Array;
+  try {
+    bytes = await readBytes(file.slice(0, 12));
+  } catch {
+    return null;
+  }
+  const ascii = (start: number, end: number) => String.fromCharCode(...bytes.subarray(start, end));
+  if (bytes.length >= 12 && ascii(4, 8) === 'ftyp' && HEIC_BRANDS.has(ascii(8, 12))) return 'heic';
+  const head = ascii(0, 4);
+  if (head === 'II*\0' || head === 'MM\0*') return 'tiff';
+  return null;
+}
+
+function readBytes(blob: Blob): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(blob);
+  });
+}
+
 /**
  * Returns `file` unchanged if it needs no conversion, otherwise a JPEG `File`
  * with the same base name (filename-derived labels stay the same). Throws if
@@ -63,8 +99,8 @@ export function needsConversion(file: Pick<File, 'name' | 'type' | 'size'>): boo
  * the smallest step doesn't fit; the size check after this rejects it.
  */
 export async function convertForUpload(file: File): Promise<File> {
-  if (!needsConversion(file)) return file;
-  const kind = convertibleKind(file);
+  const kind = convertibleKind(file) ?? (await sniffConvertibleKind(file));
+  if (!kind && !needsConversion(file)) return file;
 
   const bitmap = kind ? await decode(file, kind) : await createImageBitmap(file);
   try {

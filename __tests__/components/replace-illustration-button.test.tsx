@@ -11,10 +11,12 @@ beforeEach(() => {
   globalThis.URL.revokeObjectURL = vi.fn();
 });
 
-function selectFile() {
+/** Selection reads the file's header first, so wait for the confirm modal. */
+async function selectFile() {
   const input = screen.getByLabelText(/override illustration/i);
   const file = new File(['x'], 'photo.png', { type: 'image/png' });
   fireEvent.change(input, { target: { files: [file] } });
+  await screen.findByRole('dialog');
 }
 
 describe('ReplaceIllustrationButton', () => {
@@ -23,9 +25,9 @@ describe('ReplaceIllustrationButton', () => {
     expect(screen.getByText(/override illustration/i)).toBeInTheDocument();
   });
 
-  it('opens a confirm modal with a preview when a file is selected', () => {
+  it('opens a confirm modal with a preview when a file is selected', async () => {
     render(<ReplaceIllustrationButton cardId="c1" />);
-    selectFile();
+    await selectFile();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^override$/i })).toBeInTheDocument();
   });
@@ -34,7 +36,7 @@ describe('ReplaceIllustrationButton', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', fetchMock);
     render(<ReplaceIllustrationButton cardId="c1" />);
-    selectFile();
+    await selectFile();
     fireEvent.click(screen.getByRole('button', { name: /^override$/i }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(fetchMock).toHaveBeenCalledWith(
@@ -46,22 +48,22 @@ describe('ReplaceIllustrationButton', () => {
     await waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 
-  it('cancel closes the modal without a request', () => {
+  it('cancel closes the modal without a request', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     render(<ReplaceIllustrationButton cardId="c1" />);
-    selectFile();
+    await selectFile();
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('shows a size error and does not open the modal for an oversized file', () => {
+  it('shows a size error and does not open the modal for an oversized file', async () => {
     render(<ReplaceIllustrationButton cardId="c1" />);
     const big = new File(['x'], 'big.png', { type: 'image/png' });
     Object.defineProperty(big, 'size', { value: 11 * 1024 * 1024 });
     fireEvent.change(screen.getByLabelText(/override illustration/i), { target: { files: [big] } });
+    expect(await screen.findByRole('alert')).toHaveTextContent(/exceeds maximum size/i);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent(/exceeds maximum size/i);
   });
 });

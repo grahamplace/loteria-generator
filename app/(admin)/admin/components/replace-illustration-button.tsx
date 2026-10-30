@@ -9,6 +9,7 @@ import {
   CONVERTIBLE_IMAGE_ACCEPT,
   convertForUpload,
   convertibleKind,
+  sniffConvertibleKind,
 } from '@/lib/convert-upload-image';
 
 // Match the server-side base64 cap (~10MB decoded).
@@ -31,8 +32,9 @@ export function ReplaceIllustrationButton({ cardId, className }: ReplaceIllustra
     e.target.value = ''; // allow re-selecting the same file later
     if (!selected) return;
     let f = selected;
-    // Await only when converting, so ordinary files update state synchronously.
-    if (convertibleKind(selected)) {
+    // Only HEIC/TIFF (even renamed to .jpg) are converted: this upload allows
+    // 10MB, so big PNG/JPEG illustrations go through untouched.
+    if (convertibleKind(selected) ?? (await sniffConvertibleKind(selected))) {
       try {
         f = await convertForUpload(selected);
       } catch {
