@@ -3,6 +3,7 @@ import { getAdminSession } from '@/lib/admin';
 import { db, cards, boards } from '@/db';
 import { eq } from 'drizzle-orm';
 import { inngest } from '@/lib/inngest/client';
+import { isImageCategory, type ImageCategory } from '@/lib/image-category';
 
 export async function POST(
   request: NextRequest,
@@ -15,9 +16,14 @@ export async function POST(
   const { cardId } = await params;
 
   let overlay: string | null = null;
+  // undefined: keep the stored category. null ('auto'): clear it so the job
+  // classifies the image again.
+  let imageCategory: ImageCategory | null | undefined;
   try {
-    const body = (await request.json()) as { promptOverlay?: string };
+    const body = (await request.json()) as { promptOverlay?: string; imageCategory?: unknown };
     overlay = body.promptOverlay?.trim() || null;
+    if (body.imageCategory === 'auto') imageCategory = null;
+    else if (isImageCategory(body.imageCategory)) imageCategory = body.imageCategory;
   } catch {
     // No/invalid body — treat as no overlay.
   }
@@ -40,7 +46,11 @@ export async function POST(
 
   await db
     .update(cards)
-    .set({ promptOverlay: overlay, updatedAt: new Date() })
+    .set({
+      promptOverlay: overlay,
+      ...(imageCategory !== undefined && { imageCategory }),
+      updatedAt: new Date(),
+    })
     .where(eq(cards.id, card.id));
 
   await inngest.send({

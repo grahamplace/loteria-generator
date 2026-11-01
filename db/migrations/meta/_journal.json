@@ -134,6 +134,13 @@
       "when": 1793312595893,
       "tag": "0018_gigantic_wonder_man",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793566298065,
+      "tag": "0019_magenta_venom",
+      "breakpoints": true
     }
   ]
 }

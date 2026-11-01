@@ -16,6 +16,14 @@ vi.mock('@/lib/openai-blocked', () => ({ isOpenAIBlocked, markOpenAIBlocked: vi.
 const { extractCrop } = vi.hoisted(() => ({ extractCrop: vi.fn(async (b: Buffer) => b) }));
 vi.mock('@/lib/crop-region', () => ({ extractCrop }));
 
+const { resolveImageCategory } = vi.hoisted(() => ({
+  resolveImageCategory: vi.fn(async (stored: string | null | undefined) => ({
+    category: stored ?? null,
+    classified: false,
+  })),
+}));
+vi.mock('@/lib/image-category-ai', () => ({ resolveImageCategory }));
+
 vi.mock('@/lib/inngest/client', () => ({
   inngest: {
     createFunction: (_config: unknown, handler: (arg: unknown) => Promise<unknown>) => {
@@ -144,6 +152,24 @@ describe('regenerate-illustration', () => {
     await runRegenerate();
     const prompt = (imagesEdit.mock.calls[0][0] as { prompt: string }).prompt;
     expect(prompt).not.toContain(SHEET_CARD_OVERLAY);
+  });
+
+  it("uses the card's stored image category for the prompt", async () => {
+    cardsFindFirst.mockResolvedValue({ cropData: null, fromSheet: false, imageCategory: 'scene' });
+    await runRegenerate();
+    expect(resolveImageCategory.mock.calls[0][0]).toBe('scene');
+    const prompt = (imagesEdit.mock.calls[0][0] as { prompt: string }).prompt;
+    expect(prompt).toContain('This card keeps its setting.');
+    expect(updateSetSpy).not.toHaveBeenCalledWith({ imageCategory: 'scene' });
+  });
+
+  it('saves a freshly classified category on the card', async () => {
+    cardsFindFirst.mockResolvedValue({ cropData: null, fromSheet: false, imageCategory: null });
+    resolveImageCategory.mockResolvedValueOnce({ category: 'object', classified: true });
+    await runRegenerate();
+    expect(updateSetSpy).toHaveBeenCalledWith({ imageCategory: 'object' });
+    const prompt = (imagesEdit.mock.calls[0][0] as { prompt: string }).prompt;
+    expect(prompt).toContain('This card is an object card.');
   });
 });
 

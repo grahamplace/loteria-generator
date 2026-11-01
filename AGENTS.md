@@ -61,7 +61,8 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
     --prompt-refs old=main,new=<prompt-branch> --concurrency 4 --judge
   ```
 
-- Photo sets (`--set`): `default` (committed stock photos), `tricky` (prod cards the admin had to fix with a prompt override; customer photos, gitignored, **never commit**), `objects` (objects vs scenes, gitignored). `--photos a,b` narrows by filename substring.
+- Photo sets (`--set`): `default` (committed stock photos), `tricky` (prod cards the admin had to fix with a prompt override; customer photos, gitignored, **never commit**), `objects` (objects vs scenes, gitignored), `scenes` (uploads that are already composed illustrations, whose setting must be kept; customer images, gitignored). `--photos a,b` narrows by filename substring.
+- Each photo's `cases.json` entry has a `category` (`text` / `object` / `subject` / `scene`, see `lib/image-category.ts`). The eval passes it to the prompt, so prompt quality is judged apart from the classifier. Check the classifier itself with `pnpm eval:classify` (no image calls, ~1 min).
 - `tricky` must exist locally first. If `scripts/image-eval/photos-tricky/` is missing, build it: `PROD_DATABASE_URL=$(grep '^DATABASE_URL' .env.personal | cut -d= -f2-) pnpm eval:pull-tricky` (read-only prod query). Re-pulling undoes the user's manual audit of that folder, so don't re-pull if it exists unless asked.
 - Judge: `--judge` (after generating) or `--judge-only scripts/image-eval/runs/<run>` (no image calls). `--report <run>` rebuilds `report.pdf` with no API calls. Case notes per photo: `<set folder>/cases.json`.
 - Cost and time: image calls are the expensive part, ~15–80s each; the judge is ~$0.08 per case. Run up to ~40 image calls without asking. Above that, or the full tricky set with `--judge`, state the call count and cost and ask first. If the user says not to judge, leave off `--judge`.

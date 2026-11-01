@@ -1,5 +1,6 @@
 import { safetyIdentifier } from '@/lib/openai-safety';
 import { withAITrace } from '@/lib/ai-tracing';
+import { toSheetDataUrl } from '@/lib/sheet-split-ai';
 import {
   IMAGE_CATEGORY_CHOICES,
   IMAGE_CATEGORY_INSTRUCTIONS,
@@ -71,5 +72,29 @@ export async function classifyImage(
     );
   } catch {
     return null;
+  }
+}
+
+/**
+ * The category a card's illustration uses: the stored one (classifier result
+ * or admin choice), otherwise a fresh classification. `classified` says the
+ * caller should save it. Null only when classification failed, which falls
+ * back to the uncategorized prompt.
+ */
+export async function resolveImageCategory(
+  stored: ImageCategory | null | undefined,
+  sourceBuffer: Buffer,
+  meta: ClassifyMeta
+): Promise<{ category: ImageCategory | null; classified: boolean }> {
+  if (stored) return { category: stored, classified: false };
+  try {
+    const category = await classifyImage(await toSheetDataUrl(sourceBuffer), meta);
+    return { category, classified: category !== null };
+  } catch (error) {
+    // Never block the illustration on the classifier.
+    console.warn('classify-image: could not classify', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { category: null, classified: false };
   }
 }

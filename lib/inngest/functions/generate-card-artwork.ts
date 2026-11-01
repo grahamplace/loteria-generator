@@ -4,6 +4,7 @@ import { eq, sql } from 'drizzle-orm';
 import { db, boards, cards, user } from '@/db';
 import { uploadIllustration, fetchBlob } from '@/lib/blob';
 import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
+import { resolveImageCategory } from '@/lib/image-category-ai';
 import { normalizeImageForOpenAI, convertForOpenAIVision } from '@/lib/image-normalize';
 import { isSupportedUploadMime } from '@/lib/image-formats';
 import { extractCrop } from '@/lib/crop-region';
@@ -343,8 +344,16 @@ export const generateCardArtwork = inngest.createFunction(
         const illustrationModel = ILLUSTRATION_MODEL;
         const cardRow = await db.query.cards.findFirst({
           where: eq(cards.id, cardId),
-          columns: { promptOverlay: true },
+          columns: { promptOverlay: true, imageCategory: true },
         });
+        const { category, classified } = await resolveImageCategory(
+          cardRow?.imageCategory,
+          sourceBuffer,
+          { userId, boardId, cardId }
+        );
+        if (classified) {
+          await db.update(cards).set({ imageCategory: category }).where(eq(cards.id, cardId));
+        }
         const result = await withAITrace(
           'generate-illustration',
           { userId, boardId, cardId, model: illustrationModel },
@@ -352,7 +361,11 @@ export const generateCardArtwork = inngest.createFunction(
             openai.images.edit({
               model: illustrationModel,
               image: imageFile,
-              prompt: buildIllustrationPrompt(withSheetOverlay(fromSheet, cardRow?.promptOverlay)),
+              prompt: buildIllustrationPrompt(
+                withSheetOverlay(fromSheet, cardRow?.promptOverlay),
+                undefined,
+                category
+              ),
               size: '1024x1536',
               ...safetyIdentifier(userId),
             })

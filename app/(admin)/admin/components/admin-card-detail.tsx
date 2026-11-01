@@ -150,6 +150,7 @@ export function AdminCardDetail({
             cardId={card.id}
             boardId={card.boardId}
             initialOverlay={card.promptOverlay}
+            initialCategory={card.imageCategory}
           />
         )}
 
