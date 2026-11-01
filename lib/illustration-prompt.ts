@@ -96,6 +96,7 @@ function categoryBackgroundRules(category: ImageCategory, background: Background
     case 'object':
       return `
     - **This card is an object card.** Illustrate the object or objects in the image (food, a dish, a product, a tool, clothing, a group of things, or a logo) as the subject. Add no people or animals.
+      - **Keep every main item.** A spread of dishes stays a spread of dishes and a table of games stays a group of games; drop only the surface under them, not the items on it.
       - **A brand logo stays recognizable:** keep its exact shape, colors, and lettering, drawn in the Lotería ink style. Its lettering is part of the object, not "typography" for the negative prompt.
     - **Background:** ${solidColorRule(background)} **Drop the table, counter, floor, or room they were photographed on.** Think of how El Barril (the barrel) or La Bota (the boot) sit over a solid color on traditional cards. Never use a sky or gradient.`;
     case 'subject':
@@ -106,7 +107,7 @@ function categoryBackgroundRules(category: ImageCategory, background: Background
       return `
     - **This card keeps its setting.** The place in the image tells the story, so the background is part of the subject: landmarks, scenery, buildings, rooms, storefronts, stages, signs, and props drawn into the setting all stay. ${KEPT_SCENE_STYLE}
       - **The kept scene fills the whole card edge to edge**, including walls, floor, ground, and sky. Do not lift the people or objects out onto a blank field, and do not keep a few pieces of the setting (a window, a calendar, a TV, a sign) floating over a gradient or a solid color.
-      - Readable signs, banners, and text that are part of the setting stay, spelled as in the image.
+      - Keep signs and text that carry the story (a storefront or club name, a street sign, a banner or headline the scene is about), spelled as in the image. Drop incidental text: advertising boards, sponsor logos, brand names on clothing or equipment, and watermarks.
     - **Colors of the setting:** ${keptSceneColors(background)}`;
   }
 }
