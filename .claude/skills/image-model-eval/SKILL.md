@@ -12,6 +12,8 @@ Runs real photos through the production illustration pipeline on several image m
 - Extra photo sets, local only (gitignored), picked with `--set`:
   - `tricky` → `photos-tricky/`: every prod card where an admin had to add a prompt override. Built by `pnpm eval:pull-tricky` (needs `PROD_DATABASE_URL` from `.env.personal`; read-only). These are **customer photos: never commit them**. The sheet adds the corrected prod card and the override text to each row.
   - `objects` → `photos-objects/`: objects that should land on a solid color (boots, ramen) next to scenes that shouldn't (Golden Gate). Licenses unknown, so not committed.
+  - `scenes` → `photos-scenes/`: uploads that are already composed illustrations (rooms, storefronts, signs). The whole scene must be kept in its own colors. Customer images, not committed.
+- Each `cases.json` entry carries a `category` (`text` / `object` / `subject` / `scene`). `run.ts` passes it to `renderIllustrationPrompt`, so prompts are compared with the right category regardless of the classifier. Classifier accuracy: `pnpm eval:classify [--set tricky,scenes]` (Decisions API only, ~1s per photo).
 - Output (gitignored): `scripts/image-eval/runs/<UTC timestamp>/`
 
 ## Prerequisites

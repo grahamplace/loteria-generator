@@ -84,6 +84,7 @@ export const userProfiles = pgTable('user_profiles', {
 });
 
 import type { BoardStyleOptions, PhotoMode } from '@/lib/themes/presets';
+import type { ImageCategory } from '@/lib/image-category';
 export type { BoardStyleOptions } from '@/lib/themes/presets';
 
 // Crop rectangle in pixels of the stored (downscaled) original image.
@@ -170,6 +171,9 @@ export const cards = pgTable('cards', {
   preserveOriginal: boolean('preserve_original').notNull().default(false),
   cropData: json('crop_data').$type<CropData>(),
   fromSheet: boolean('from_sheet').notNull().default(false),
+  // Which illustration prompt the card uses (lib/image-category.ts). Set by the
+  // classifier on first illustration, or by an admin; null means classify.
+  imageCategory: text('image_category').$type<ImageCategory>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

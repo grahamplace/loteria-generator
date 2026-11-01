@@ -45,6 +45,14 @@ vi.mock('@/lib/posthog-server', () => ({
 const { extractCrop } = vi.hoisted(() => ({ extractCrop: vi.fn(async (b: Buffer) => b) }));
 vi.mock('@/lib/crop-region', () => ({ extractCrop }));
 
+const { resolveImageCategory } = vi.hoisted(() => ({
+  resolveImageCategory: vi.fn(async (stored: string | null | undefined) => ({
+    category: stored ?? null,
+    classified: false,
+  })),
+}));
+vi.mock('@/lib/image-category-ai', () => ({ resolveImageCategory }));
+
 vi.mock('@/lib/inngest/client', () => ({
   inngest: {
     createFunction: (

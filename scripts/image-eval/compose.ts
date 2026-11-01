@@ -35,6 +35,8 @@ export interface EvalResults {
     stem: string;
     file: string;
     background: string;
+    /** Labeled image category from cases.json, passed to prompts that take one. */
+    category?: string | null;
     /** Tricky set: the admin's extra instructions for this card. */
     overlay?: string;
     /** Tricky set: the corrected production illustration, in photosDir. */
@@ -214,7 +216,7 @@ async function renderRow(
   const composites: sharp.OverlayOptions[] = [];
   const text: string[] = [
     `<text x="${PAD}" y="${PAD + 36}" font-family="${FONT}" font-size="30" font-weight="700" fill="${INK}">${esc(photo.stem)}</text>`,
-    `<text x="${width - PAD}" y="${PAD + 36}" text-anchor="end" font-family="${FONT}" font-size="20" fill="${MUTED}">${esc(`background: ${photo.background}`)}</text>`,
+    `<text x="${width - PAD}" y="${PAD + 36}" text-anchor="end" font-family="${FONT}" font-size="20" fill="${MUTED}">${esc(`background: ${photo.background}${photo.category ? ` · ${photo.category}` : ''}`)}</text>`,
     ...overlayLines.map(
       (l, i) =>
         `<text x="${PAD}" y="${PAD + ROW_TITLE_H + 8 + i * OVERLAY_LINE_H}" font-family="${FONT}" font-size="20" fill="#9b2c1f">${esc(l)}</text>`

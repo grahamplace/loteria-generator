@@ -69,6 +69,7 @@ beforeEach(() => {
     preserveOriginal: true,
     cropData: crop,
     fromSheet: false,
+    imageCategory: null,
     status: 'completed',
     errorMessage: null,
     errorDismissedAt: null,
