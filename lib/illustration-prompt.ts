@@ -66,8 +66,10 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
     - Add a subtle **aged paper texture** and light **ink grain/halftone speckling**, with a touch of **ink bleed** at edges.
     - **First decide whether the background carries meaning.** Ask: does the setting tell you what is happening in this photo? If the subject were lifted onto a blank field, would the story be lost?
       - **Background IS meaningful** — e.g. the wave and spray behind a wakeboarder, the mountains behind a hiking couple, the snow under a kid on a snowboard, the ocean behind a child on the beach. **Keep it and restyle it in the same Lotería style as the subject**: same bold ink outlines, same flat saturated color blocking, same limited tonal steps. Simplify it into a few iconic shapes — a stylized wave, a ridgeline of peaks, a band of surf — rather than reproducing every photographic detail. It is scenery reduced to an emblem, not a painted landscape.
-      - **Background is NOT meaningful** — e.g. a kitchen behind a hug, a couch behind a toddler, a studio backdrop, a parked car, a blank wall. **Drop it entirely** and place the subject over one of the two classic Lotería backgrounds below.
-      - When in doubt, drop it. A clean iconic card beats a cluttered one.
+      - **Background IS meaningful when the image is already a composed scene** — an illustration, cartoon, poster, or designed card where the setting was drawn on purpose: a living room with a TV and wall calendar, a storefront with signs, a street with landmarks, a stage with a marquee. Signs, readable text, landmarks, and props placed in the setting are part of the story. **Keep the whole scene**, including its walls, floor, and ground, and restyle it as above.
+      - **Background is NOT meaningful** — e.g. a kitchen behind a hug in a snapshot, a couch behind a toddler, a studio backdrop, a parked car, a plain blank wall. **Drop it entirely** and place the subject over one of the two classic Lotería backgrounds below.
+      - When in doubt about a casual photo, drop it. When in doubt about a composed scene, keep it.
+      - **Never do half of each.** Either the kept scene fills the whole card edge to edge (walls, floor, and sky included), or it is dropped completely. Do not keep a few pieces of a scene (a window, a calendar, a TV, a sign) floating over the sky gradient or a solid color.
     - **When the background is dropped, who is on the card decides which of the two classic Lotería backgrounds to use:**
       - **No people or animals → solid color.** A single flat field of ${background.name} (${background.hex}) filling the whole card: no gradient, no horizon, no scenery. This covers food and dishes, products, tools, clothing, and collections of objects, **even when they were photographed on a table, counter, or floor — drop that surface too**. Think of how El Barril (the barrel) or La Bota (the boot) sit over a solid color on traditional cards.
       - **People or animals → sky.** The classic Lotería sky: ${SKY_GRADIENT.top.name} (${SKY_GRADIENT.top.hex}) at the top, fading smoothly to ${SKY_GRADIENT.bottom.name} (${SKY_GRADIENT.bottom.hex}) at the bottom of the card. **No floor, ground, stage, rug, or horizon line**: the figures stand directly on the gradient, which runs uninterrupted behind and below them. At most a faint, soft shadow under the feet.
@@ -93,7 +95,7 @@ export function renderIllustrationPrompt(background: BackgroundColor): string {
       - If browns/tans are needed (wood, leather), keep them warm and slightly muted (burnt umber / tan), not photorealistic. **Skin follows the likeness rule above** — match the person's actual tone, warmed slightly toward this palette, never lightened or darkened to fit it.
 
     ## Negative prompt (do not include these in the image; for a text-only image, the main text is required and is not "typography" here):
-    photorealistic, 3D render, CGI, ultra-detailed texture, modern flat vector, crisp geometric logo style, anime, manga, glossy highlights, cinematic lighting, depth of field blur, HDR, heavy noise, neon palette, generic face, idealized or beautified face, symmetrical doll-like features, wrong person, altered facial features, changed skin tone, changed apparent age, blended or interchangeable faces, messy background, cluttered incidental background detail, photographic scenery pasted behind the subject, fake floor or ground band under people on a sky background, readable watermark, typography, captions, numbers, border, frame
+    photorealistic, 3D render, CGI, ultra-detailed texture, modern flat vector, crisp geometric logo style, anime, manga, glossy highlights, cinematic lighting, depth of field blur, HDR, heavy noise, neon palette, generic face, idealized or beautified face, symmetrical doll-like features, wrong person, altered facial features, changed skin tone, changed apparent age, blended or interchangeable faces, messy background, cluttered incidental background detail, photographic scenery pasted behind the subject, fake floor or ground band under people on a sky background, fragments of a room or street floating over the sky gradient, readable watermark, typography, captions, numbers, border, frame
     `;
 }
 
@@ -114,6 +116,7 @@ export function buildIllustrationPrompt(
   return `${base}
 
     ## Additional Instructions for this card (follow these even where they conflict with the above)
+    If these instructions ask for any part of a setting (a room, wall, street, storefront, sign, or landscape), treat the background as meaningful: keep the full scene filling the card edge to edge, not the classic Lotería background.
     ${trimmed}
     `;
 }

@@ -56,10 +56,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // objects: things that should land on a solid color (boots, ramen) plus
 // landmark/scene shots that shouldn't. Local only (gitignored): the photos'
 // licenses are unknown.
+// scenes: uploads that are already composed illustrations (rooms, storefronts,
+// signs). The whole scene should be kept, not dropped onto the sky. Local only
+// (gitignored): customer images.
 const PHOTO_SETS = {
   default: 'photos',
   tricky: 'photos-tricky',
   objects: 'photos-objects',
+  scenes: 'photos-scenes',
 } as const;
 const RUNS_DIR = join(__dirname, 'runs');
 
