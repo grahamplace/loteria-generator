@@ -1,3 +1,4 @@
+import { readableBoardWhere } from '@/lib/boards/readable-board';
 import { insertCardsWithinLimit } from '@/lib/boards/add-cards';
 import { deleteCardAndRenumber } from '@/lib/boards/delete-card';
 import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
@@ -41,13 +42,9 @@ export async function GET(
 
     const { boardId } = await params;
 
-    // Verify board ownership
+    // Owner, or the admin viewing as customer
     const board = await db.query.boards.findFirst({
-      where: and(
-        eq(boards.id, boardId),
-        eq(boards.userId, session.user.id),
-        isNull(boards.deletedAt)
-      ),
+      where: readableBoardWhere(boardId, session.user),
     });
 
     if (!board) {

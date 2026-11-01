@@ -1,5 +1,5 @@
 import { db, user, boards, cards } from '@/db';
-import { and, count, eq, desc, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, count, eq, desc, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -10,7 +10,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import { parseMetricsRange } from '@/lib/admin-metrics';
 import { DismissErrorButton } from './components/dismiss-error-button';
+import { MetricsSections } from './components/metrics-sections';
 
 const openError = and(eq(cards.status, 'error'), isNull(cards.errorDismissedAt));
 
@@ -58,24 +61,57 @@ async function getRecentErrors() {
 }
 
 async function getRecentSignups() {
-  const result = await db
-    .select({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      createdAt: user.createdAt,
-      boardCount: sql<number>`(select count(*) from boards where boards.user_id = "user"."id")`.as(
-        'board_count'
-      ),
-    })
+  const signups = await db
+    .select({ id: user.id, email: user.email, name: user.name, createdAt: user.createdAt })
     .from(user)
     .orderBy(desc(user.createdAt))
     .limit(10);
+  if (signups.length === 0) return [];
 
-  return result.map((u) => ({ ...u, boardCount: Number(u.boardCount) }));
+  const userBoards = await db
+    .select({
+      id: boards.id,
+      name: boards.name,
+      userId: boards.userId,
+      deletedAt: boards.deletedAt,
+      paid: isNotNull(boards.stripePaymentId),
+      cardCount: sql<number>`(select count(*) from cards where cards.board_id = ${boards.id})`,
+    })
+    .from(boards)
+    .where(
+      inArray(
+        boards.userId,
+        signups.map((u) => u.id)
+      )
+    )
+    .orderBy(desc(boards.updatedAt));
+
+  return signups.map((u) => {
+    const owned = userBoards.filter((b) => b.userId === u.id);
+    // Already newest-first; prefer a board the user hasn't deleted.
+    const latest = owned.find((b) => !b.deletedAt) ?? owned[0];
+    return {
+      ...u,
+      boardCount: owned.length,
+      paid: owned.some((b) => b.paid),
+      latestBoard: latest
+        ? {
+            id: latest.id,
+            name: latest.name,
+            cardCount: Number(latest.cardCount),
+            deleted: !!latest.deletedAt,
+          }
+        : null,
+    };
+  });
 }
 
-export default async function AdminOverview() {
+export default async function AdminOverview({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const range = parseMetricsRange((await searchParams).range);
   const [stats, recentErrors, recentSignups] = await Promise.all([
     getStats(),
     getRecentErrors(),
@@ -202,7 +238,10 @@ export default async function AdminOverview() {
                   <TableRow>
                     <TableHead>Email</TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>Boards</TableHead>
+                    <TableHead className="text-right">Boards</TableHead>
+                    <TableHead>Latest board</TableHead>
+                    <TableHead className="text-right">Cards</TableHead>
+                    <TableHead>Paid</TableHead>
                     <TableHead>Joined</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -215,7 +254,34 @@ export default async function AdminOverview() {
                         </Link>
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-xs">{u.name}</TableCell>
-                      <TableCell className="text-xs tabular-nums">{u.boardCount}</TableCell>
+                      <TableCell className="text-right text-xs tabular-nums">
+                        {u.boardCount}
+                      </TableCell>
+                      <TableCell className="max-w-48 truncate">
+                        {u.latestBoard ? (
+                          <Link
+                            href={`/admin/boards/${u.latestBoard.id}`}
+                            className="text-xs hover:underline"
+                          >
+                            {u.latestBoard.name}
+                            {u.latestBoard.deleted && (
+                              <span className="text-muted-foreground"> (deleted)</span>
+                            )}
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right text-xs tabular-nums">
+                        {u.latestBoard?.cardCount ?? '—'}
+                      </TableCell>
+                      <TableCell>
+                        {u.paid ? (
+                          <Badge variant="default">Paid</Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Not paid</span>
+                        )}
+                      </TableCell>
                       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                         {u.createdAt.toLocaleDateString()}
                       </TableCell>
@@ -227,6 +293,8 @@ export default async function AdminOverview() {
           )}
         </CardContent>
       </Card>
+
+      <MetricsSections range={range} />
     </div>
   );
 }

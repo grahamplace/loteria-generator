@@ -100,10 +100,10 @@ function BoardEditor({ boardId }: { boardId: string }) {
 
   useEffect(() => {
     if (board?.id === boardId) {
-      rememberBoard(boardId);
+      if (!board.viewingAsAdmin) rememberBoard(boardId);
       document.title = `${board.name} — Lotería Generator`;
     }
-  }, [boardId, board?.id, board?.name]);
+  }, [boardId, board?.id, board?.name, board?.viewingAsAdmin]);
 
   useEffect(() => {
     if (wasEditingName.current && !isEditingName) {
@@ -292,8 +292,26 @@ function BoardEditor({ boardId }: { boardId: string }) {
         </div>
       </header>
 
+      {board.viewingAsAdmin && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b border-secondary/40 bg-secondary/15 px-3 py-2 text-sm"
+        >
+          <span className="font-medium">Viewing a customer’s board as admin</span>
+          <a
+            href={`/admin/boards/${boardId}`}
+            className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+          >
+            Back to admin
+          </a>
+        </div>
+      )}
+
       <main className="flex-1 flex flex-col">
-        <OnboardingTrigger tour={TOUR_BOARD_ADD_PHOTO} enabled={cards.length === 0} />
+        <OnboardingTrigger
+          tour={TOUR_BOARD_ADD_PHOTO}
+          enabled={cards.length === 0 && !board.viewingAsAdmin}
+        />
         <OnboardingCompleteWatcher done={cards.length > 0} />
         <div className="mx-auto grid w-full max-w-[1400px] flex-1 gap-5 px-3 pt-3 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-6 md:pt-5 lg:grid-cols-[minmax(0,1fr)_19rem] lg:pb-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
           <div className="min-w-0 space-y-4">

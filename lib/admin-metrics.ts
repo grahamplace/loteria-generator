@@ -1,4 +1,4 @@
-// Pure helpers for the admin metrics page (app/(admin)/admin/metrics).
+// Pure helpers for the admin overview's metrics (app/(admin)/admin/components/metrics-sections.tsx).
 
 export const METRICS_RANGES = [
   { key: '7d', label: '7 days' },

@@ -2,7 +2,15 @@
 
 import { useEffect, useId, useRef, useState, type Ref, type RefObject } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronLeft, ChevronRight, Loader2, Maximize2, Palette, X } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Maximize2,
+  Palette,
+  X,
+} from 'lucide-react';
 import type { BoardThemeId } from '@/lib/themes/presets';
 import type { BoardDesign } from '@/hooks/use-board-design';
 import { BoardThemeGrid, ThemeThumbnail, useThemeName } from '@/components/board-theme-grid';
@@ -161,14 +169,19 @@ export function BoardDesignEditor({
   design,
   boardName,
   layout,
+  themesCollapsible = false,
 }: {
   design: BoardDesign;
   boardName: string;
   layout: DesignLayout;
+  /** Admin: show the theme tiles behind a toggle, closed at first. */
+  themesCollapsible?: boolean;
 }) {
   const t = useTranslations('Themes.Builder');
   const [customizeOpen, setCustomizeOpen] = useState(true);
+  const [themesOpen, setThemesOpen] = useState(!themesCollapsible);
   const themesHeadingId = useId();
+  const themesBodyId = useId();
   const [pending, setPending] = useState<BoardThemeId | null>(null);
 
   async function select(id: BoardThemeId) {
@@ -198,18 +211,46 @@ export function BoardDesignEditor({
         onChange={design.commitDesign}
       />
       <section aria-labelledby={themesHeadingId} className="space-y-3">
-        <div>
+        {themesCollapsible ? (
           <h3 id={themesHeadingId} className="text-sm font-semibold">
-            {t('themesHeading')}
+            <button
+              type="button"
+              aria-expanded={themesOpen}
+              aria-controls={themesBodyId}
+              onClick={() => setThemesOpen((open) => !open)}
+              className="-mx-2 flex min-h-11 touch-manipulation items-center gap-2 rounded-md px-2 hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              {t('themesHeading')}
+              <ChevronDown
+                aria-hidden="true"
+                className={cn(
+                  'size-4 shrink-0 transition-transform motion-reduce:transition-none',
+                  themesOpen && 'rotate-180'
+                )}
+              />
+            </button>
           </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">{t('themesHint')}</p>
-        </div>
-        <BoardThemeGrid
-          selected={design.selected}
-          pending={pending}
-          layout={layout === 'dialog' ? 'grid' : 'list'}
-          onSelect={(id) => void select(id)}
-        />
+        ) : (
+          <div>
+            <h3 id={themesHeadingId} className="text-sm font-semibold">
+              {t('themesHeading')}
+            </h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t('themesHint')}</p>
+          </div>
+        )}
+        {themesOpen && (
+          <div id={themesBodyId} className="space-y-3">
+            {themesCollapsible && (
+              <p className="text-xs text-muted-foreground">{t('themesHint')}</p>
+            )}
+            <BoardThemeGrid
+              selected={design.selected}
+              pending={pending}
+              layout={layout === 'dialog' ? 'grid' : 'list'}
+              onSelect={(id) => void select(id)}
+            />
+          </div>
+        )}
       </section>
     </fieldset>
   );
