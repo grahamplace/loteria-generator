@@ -163,3 +163,55 @@ describe('buildIllustrationPrompt', () => {
     expect(result).not.toContain('  Make the background flat blue.  ');
   });
 });
+
+describe('renderIllustrationPrompt with an image category', () => {
+  const SKY = `${SKY_GRADIENT.top.hex} → ${SKY_GRADIENT.bottom.hex}`;
+
+  it('drops the decision tree once the category is known', () => {
+    for (const category of ['text', 'object', 'subject', 'scene'] as const) {
+      const prompt = renderIllustrationPrompt(YELLOW, category);
+      expect(prompt).not.toContain('First decide whether the background carries meaning');
+      expect(prompt).not.toContain('Never put the sky behind an object card');
+    }
+  });
+
+  it('text: hand-letters the words over a solid color, with no faces or sky', () => {
+    const prompt = renderIllustrationPrompt(YELLOW, 'text');
+    expect(prompt).toContain('the text itself is the subject');
+    expect(prompt).toContain(YELLOW.hex);
+    expect(prompt).not.toContain(SKY);
+    expect(prompt).not.toContain('LIKENESS');
+  });
+
+  it('object: solid color, recognizable logos, no sky or faces', () => {
+    const prompt = renderIllustrationPrompt(YELLOW, 'object');
+    expect(prompt).toContain(`A single flat field of ${YELLOW.name} (${YELLOW.hex})`);
+    expect(prompt).toContain('A brand logo stays recognizable');
+    expect(prompt).toContain('Never use a sky or gradient');
+    expect(prompt).not.toContain(SKY);
+    expect(prompt).not.toContain('LIKENESS');
+  });
+
+  it('subject: people on the sky with no floor, and keeps the likeness rules', () => {
+    const prompt = renderIllustrationPrompt(YELLOW, 'subject');
+    expect(prompt).toContain(SKY);
+    expect(prompt).toContain('No floor, ground, stage, rug, or horizon line');
+    expect(prompt).toContain('LIKENESS IS THE SINGLE MOST IMPORTANT REQUIREMENT');
+    expect(prompt).not.toContain(`Solid background: ${YELLOW.name}`);
+  });
+
+  it('scene: keeps the whole setting edge to edge in its own colors, never the sky gradient', () => {
+    const prompt = renderIllustrationPrompt(YELLOW, 'scene');
+    expect(prompt).toContain('The kept scene fills the whole card edge to edge');
+    expect(prompt).toContain('a cream wall stays cream');
+    expect(prompt).toContain('never paint walls, ceilings, floors, counters, or building fronts');
+    expect(prompt).toContain('LIKENESS IS THE SINGLE MOST IMPORTANT REQUIREMENT');
+    expect(prompt).not.toContain(SKY);
+  });
+
+  it('buildIllustrationPrompt passes the category through', () => {
+    expect(buildIllustrationPrompt(null, YELLOW, 'scene')).toBe(
+      renderIllustrationPrompt(YELLOW, 'scene')
+    );
+  });
+});
