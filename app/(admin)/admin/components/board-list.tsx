@@ -47,7 +47,7 @@ function UnlockBadge({ paid, unlocked }: { paid: boolean; unlocked: boolean }) {
       aria-label={label}
       title={label}
       className={cn(
-        'inline-flex size-4 shrink-0 items-center justify-center rounded-full',
+        'relative z-10 inline-flex size-4 shrink-0 items-center justify-center rounded-full',
         paid ? 'bg-primary text-primary-foreground' : 'bg-accent text-accent-foreground'
       )}
     >
@@ -107,12 +107,12 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
               {filtered.map((board) => {
                 const genLimit = getGenerationLimit(board);
                 return (
-                  <TableRow key={board.id}>
+                  <TableRow key={board.id} className="relative focus-within:bg-muted/50">
                     <TableCell className="max-w-72 min-w-48 whitespace-normal">
                       <div className="flex min-w-0 items-center gap-1.5">
                         <Link
                           href={`/admin/boards/${board.id}`}
-                          className="min-w-0 truncate text-sm hover:underline"
+                          className="min-w-0 truncate text-sm after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-primary"
                         >
                           {board.name}
                         </Link>
@@ -125,7 +125,7 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
                       </div>
                       <Link
                         href={`/admin/users/${board.ownerId}`}
-                        className="mt-0.5 block truncate text-xs text-muted-foreground hover:underline"
+                        className="relative z-10 mt-0.5 block max-w-fit truncate text-xs text-muted-foreground hover:underline"
                       >
                         {board.ownerEmail}
                       </Link>
