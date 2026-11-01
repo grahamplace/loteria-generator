@@ -74,7 +74,7 @@ async function getRecentSignups() {
       name: boards.name,
       userId: boards.userId,
       deletedAt: boards.deletedAt,
-      paid: isNotNull(boards.stripePaymentId),
+      paid: sql<boolean>`${boards.stripePaymentId} is not null`,
       cardCount: sql<number>`(select count(*) from cards where cards.board_id = ${boards.id})`,
     })
     .from(boards)

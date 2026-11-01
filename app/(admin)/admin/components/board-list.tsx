@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { Lock, LockOpen } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import { BoardThemeBadge } from '@/components/board-theme-badge';
 import { boardBorderStyle, getTheme, type BoardStyleOptions } from '@/lib/themes/presets';
 import messages from '@/messages/en.json';
@@ -22,6 +22,8 @@ interface BoardRow {
   name: string;
   styleOptions: BoardStyleOptions | null;
   isUnlocked: boolean;
+  /** Unlocked through Stripe (admin unlocks don't count). */
+  paid: boolean;
   /** The owner deleted it; it stays listed here so it can be restored. */
   deleted: boolean;
   imageGenerationsUsed: number;
@@ -87,25 +89,22 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
                   <TableRow key={board.id}>
                     <TableCell className="max-w-72 min-w-48 whitespace-normal">
                       <div className="flex min-w-0 items-center gap-1.5">
-                        {board.isUnlocked ? (
-                          <LockOpen
-                            className="size-3.5 shrink-0 text-accent"
-                            aria-label="Unlocked"
-                            role="img"
-                          />
-                        ) : (
-                          <Lock
-                            className="size-3.5 shrink-0 text-muted-foreground"
-                            aria-label="Free"
-                            role="img"
-                          />
-                        )}
                         <Link
                           href={`/admin/boards/${board.id}`}
                           className="min-w-0 truncate text-sm hover:underline"
                         >
                           {board.name}
                         </Link>
+                        {board.paid && (
+                          <span
+                            role="img"
+                            aria-label="Paid"
+                            title="Paid"
+                            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                          >
+                            <DollarSign className="size-3" strokeWidth={3} aria-hidden="true" />
+                          </span>
+                        )}
                         {board.deleted && (
                           <Badge variant="destructive" className="shrink-0">
                             Deleted
