@@ -7,6 +7,14 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { boardChannel, boardChannelTopics, type CardUpdatedPayload } from '@/lib/inngest/channels';
 import { getAdminBoardRealtimeToken } from '@/app/actions/admin-board-realtime';
+import { IMAGE_CATEGORIES, type ImageCategory } from '@/lib/image-category';
+
+const CATEGORY_NAMES: Record<ImageCategory, string> = {
+  text: 'Text',
+  object: 'Object',
+  subject: 'People or animals',
+  scene: 'Scene',
+};
 
 type RegenerateState = 'idle' | 'loading' | 'sent' | 'error';
 
@@ -14,14 +22,18 @@ export function RegenerateButton({
   cardId,
   boardId,
   initialOverlay,
+  initialCategory,
 }: {
   cardId: string;
   boardId: string;
   initialOverlay?: string | null;
+  /** The card's stored image category; null means the classifier decides. */
+  initialCategory?: ImageCategory | null;
 }) {
   const router = useRouter();
   const [state, setState] = useState<RegenerateState>('idle');
   const [overlay, setOverlay] = useState(initialOverlay ?? '');
+  const [category, setCategory] = useState<ImageCategory | 'auto'>(initialCategory ?? 'auto');
 
   // Read inside the realtime effect without re-running it on every state
   // change, which would re-apply a stale delta.
@@ -66,7 +78,7 @@ export function RegenerateButton({
       const res = await fetch(`/api/admin/cards/${cardId}/regenerate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promptOverlay: overlay }),
+        body: JSON.stringify({ promptOverlay: overlay, imageCategory: category }),
       });
       if (!res.ok) throw new Error('Failed to trigger regeneration');
       setState('sent');
@@ -77,6 +89,25 @@ export function RegenerateButton({
 
   return (
     <div className="flex flex-col gap-2">
+      <label htmlFor={`category-${cardId}`} className="text-xs font-medium text-muted-foreground">
+        Card type
+      </label>
+      <select
+        id={`category-${cardId}`}
+        value={category}
+        onChange={(e) => {
+          setCategory(e.target.value as ImageCategory | 'auto');
+          if (state === 'sent' || state === 'error') setState('idle');
+        }}
+        className="h-9 w-full rounded-md border border-input bg-background px-2 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
+      >
+        <option value="auto">Auto (detect)</option>
+        {IMAGE_CATEGORIES.map((c) => (
+          <option key={c} value={c}>
+            {CATEGORY_NAMES[c]}
+          </option>
+        ))}
+      </select>
       <label htmlFor={`overlay-${cardId}`} className="text-xs font-medium text-muted-foreground">
         Extra instructions (optional)
       </label>

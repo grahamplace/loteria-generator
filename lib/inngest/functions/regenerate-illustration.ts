@@ -10,6 +10,7 @@ import { illustrationRegenerateRequested } from '../events';
 import { cardChannel, boardChannel } from '../channels';
 import { isSupportedUploadMime } from '@/lib/image-formats';
 import { buildIllustrationPrompt, ILLUSTRATION_MODEL } from '@/lib/illustration-prompt';
+import { resolveImageCategory } from '@/lib/image-category-ai';
 import { invalidateBoardPreview } from '@/lib/invalidate-board-preview';
 import { withAITrace } from '@/lib/ai-tracing';
 import { safetyIdentifier } from '@/lib/openai-safety';
@@ -94,11 +95,8 @@ export const regenerateIllustration = inngest.createFunction(
     const illustrationUrl = await step.run('generate-and-upload-illustration', async () => {
       const card = await db.query.cards.findFirst({
         where: eq(cards.id, cardId),
-        columns: { fromSheet: true },
+        columns: { fromSheet: true, imageCategory: true },
       });
-      const prompt = buildIllustrationPrompt(
-        withSheetOverlay(card?.fromSheet === true, promptOverlay)
-      );
       const { buffer, contentType } = await fetchBlob(originalImageUrl);
       if (!isSupportedUploadMime(contentType)) {
         throw new Error(
@@ -108,6 +106,19 @@ export const regenerateIllustration = inngest.createFunction(
       // Crop before AI, as generate-card-artwork does. The AI drawing is then
       // served as-is, so it must not stay marked preserveOriginal (below).
       const sourceBuffer = cropData ? await extractCrop(buffer, cropData) : buffer;
+      const { category, classified } = await resolveImageCategory(
+        card?.imageCategory,
+        sourceBuffer,
+        { userId, boardId, cardId }
+      );
+      if (classified) {
+        await db.update(cards).set({ imageCategory: category }).where(eq(cards.id, cardId));
+      }
+      const prompt = buildIllustrationPrompt(
+        withSheetOverlay(card?.fromSheet === true, promptOverlay),
+        undefined,
+        category
+      );
       const normalized = await normalizeImageForOpenAI(sourceBuffer);
       const imageFile = await toFile(normalized, 'image.png', { type: 'image/png' });
       const illustrationModel = ILLUSTRATION_MODEL;

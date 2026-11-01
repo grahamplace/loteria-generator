@@ -47,6 +47,7 @@ import { fileURLToPath } from 'node:url';
 import OpenAI, { toFile } from 'openai';
 import * as workingTreePrompt from '../../lib/illustration-prompt';
 import { normalizeImageForOpenAI } from '../../lib/image-normalize';
+import { isImageCategory } from '../../lib/image-category';
 import { compose, type EvalResults, type CallResult } from './compose';
 import type { TrickyPhoto } from './pull-tricky';
 import { judgeRun } from './judge';
@@ -204,6 +205,17 @@ async function main() {
     process.exit(1);
   }
 
+  // Labeled image category per photo (cases.json). A prompt that takes a
+  // category gets the label, so prompt quality is judged apart from the
+  // classifier; older prompts ignore it.
+  const caseNotes = JSON.parse(
+    await readFile(join(photosDir, 'cases.json'), 'utf8').catch(() => '{}')
+  ) as Record<string, { category?: unknown }>;
+  const categoryOf = (stem: string) => {
+    const category = caseNotes[stem]?.category;
+    return isImageCategory(category) ? category : null;
+  };
+
   const runDir = join(RUNS_DIR, timestamp());
   await mkdir(runDir, { recursive: true });
 
@@ -244,6 +256,7 @@ async function main() {
       stem,
       file,
       background: background.name,
+      category: categoryOf(stem),
       ...(meta && { overlay: meta.overlay, reference: meta.reference }),
     });
 
@@ -252,7 +265,7 @@ async function main() {
     // conditions.
     const calls = await Promise.all(
       columns.map(async ({ id, model, variant }): Promise<CallResult> => {
-        const prompt = variant.module.renderIllustrationPrompt(background);
+        const prompt = variant.module.renderIllustrationPrompt(background, categoryOf(stem));
         const start = performance.now();
         try {
           const image = await toFile(normalized, 'image.png', { type: 'image/png' });

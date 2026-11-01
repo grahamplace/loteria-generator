@@ -35,7 +35,8 @@
     "eval:images": "tsx --env-file=.env.local scripts/image-eval/run.ts",
     "eval:pull-tricky": "tsx --env-file=.env.local scripts/image-eval/pull-tricky.ts",
     "backfill:payments": "tsx scripts/metrics-backfill/payments.ts",
-    "backfill:exports": "tsx scripts/metrics-backfill/exports-posthog.ts"
+    "backfill:exports": "tsx scripts/metrics-backfill/exports-posthog.ts",
+    "eval:classify": "tsx --env-file=.env.local scripts/image-eval/classify.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
