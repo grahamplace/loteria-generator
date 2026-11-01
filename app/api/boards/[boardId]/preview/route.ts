@@ -1,3 +1,4 @@
+import { readableBoardWhere } from '@/lib/boards/readable-board';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
@@ -32,11 +33,7 @@ export async function GET(
     const { boardId } = await params;
 
     const board = await db.query.boards.findFirst({
-      where: and(
-        eq(boards.id, boardId),
-        eq(boards.userId, session.user.id),
-        isNull(boards.deletedAt)
-      ),
+      where: readableBoardWhere(boardId, session.user),
     });
 
     if (!board) {

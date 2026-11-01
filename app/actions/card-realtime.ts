@@ -2,6 +2,7 @@
 
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
+import { isAdminEmail } from '@/lib/admin';
 import { db, cards } from '@/db';
 import { and, eq } from 'drizzle-orm';
 import { getClientSubscriptionToken } from 'inngest/react';
@@ -15,7 +16,9 @@ export async function getCardRealtimeToken(cardId: string) {
   }
 
   const card = await db.query.cards.findFirst({
-    where: and(eq(cards.id, cardId), eq(cards.userId, session.user.id)),
+    where: isAdminEmail(session.user.email)
+      ? eq(cards.id, cardId)
+      : and(eq(cards.id, cardId), eq(cards.userId, session.user.id)),
   });
 
   if (!card) {

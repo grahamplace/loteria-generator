@@ -10,6 +10,8 @@ import { AdminBoardAppearance } from '../../components/admin-board-appearance';
 import { AdminBoardCardsGrid } from '../../components/admin-board-cards-grid';
 import { GenerationLimitForm } from '../../components/generation-limit-form';
 import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { getGenerationLimit } from '@/db/schema';
 import { isRetriableCard } from '@/lib/admin';
 import { describeBoardPayment } from '@/lib/admin-metrics';
@@ -99,6 +101,14 @@ export default async function AdminBoardDetailPage({
                   <Badge variant="destructive">Deleted by owner</Badge>
                   <RestoreBoardButton boardId={id} />
                 </>
+              )}
+              {!board.deletedAt && (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/boards/${id}`} target="_blank" rel="noopener">
+                    <ExternalLink className="size-3.5" aria-hidden="true" />
+                    View board as customer
+                  </Link>
+                </Button>
               )}
               <RetryFailedButton boardId={id} errorCount={errorCount} />
               {board.isUnlocked ? (

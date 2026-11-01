@@ -6,6 +6,7 @@ import { headers } from 'next/headers';
 import { db, boards, getGenerationLimit } from '@/db';
 import { eq, and, isNull } from 'drizzle-orm';
 import { updateBoardSchema } from '@/lib/validations';
+import { readableBoardWhere } from '@/lib/boards/readable-board';
 
 /**
  * GET /api/boards/[boardId] - Get a single board with its cards
@@ -26,11 +27,7 @@ export async function GET(
     const { boardId } = await params;
 
     const board = await db.query.boards.findFirst({
-      where: and(
-        eq(boards.id, boardId),
-        eq(boards.userId, session.user.id),
-        isNull(boards.deletedAt)
-      ),
+      where: readableBoardWhere(boardId, session.user),
       with: {
         cards: {
           orderBy: (cards, { asc }) => [asc(cards.number)],
@@ -47,7 +44,7 @@ export async function GET(
     const generationsRemaining = Math.max(0, generationLimit - board.imageGenerationsUsed);
 
     return NextResponse.json({
-      board,
+      board: { ...board, viewingAsAdmin: board.userId !== session.user.id },
       generationLimit,
       generationsRemaining,
     });

@@ -135,6 +135,8 @@ interface BoardWithCards extends Board {
     status: string;
     errorMessage: string | null;
   }>;
+  /** The admin is viewing someone else's board ("View as customer"). */
+  viewingAsAdmin?: boolean;
 }
 
 interface UseBoardReturn {

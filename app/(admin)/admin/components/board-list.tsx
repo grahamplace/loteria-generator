@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { DollarSign, LockOpen } from 'lucide-react';
 import { BoardThemeBadge } from '@/components/board-theme-badge';
 import { boardBorderStyle, getTheme, type BoardStyleOptions } from '@/lib/themes/presets';
 import messages from '@/messages/en.json';
@@ -21,16 +23,37 @@ interface BoardRow {
   name: string;
   styleOptions: BoardStyleOptions | null;
   isUnlocked: boolean;
+  /** Unlocked through Stripe (admin unlocks don't count). */
+  paid: boolean;
   /** The owner deleted it; it stays listed here so it can be restored. */
   deleted: boolean;
   imageGenerationsUsed: number;
   generationLimitOverride: number | null;
   cardCount: number;
   exportCount: number;
-  payment: string | null;
   ownerEmail: string;
   ownerId: string;
   updatedAt: string;
+}
+
+/** Red $ for paid through Stripe; green open lock for admin-created or hand-unlocked. */
+function UnlockBadge({ paid, unlocked }: { paid: boolean; unlocked: boolean }) {
+  if (!paid && !unlocked) return null;
+  const label = paid ? 'Paid' : 'Unlocked by admin';
+  const Icon = paid ? DollarSign : LockOpen;
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className={cn(
+        'relative z-10 inline-flex size-4 shrink-0 items-center justify-center rounded-full',
+        paid ? 'bg-primary text-primary-foreground' : 'bg-accent text-accent-foreground'
+      )}
+    >
+      <Icon className={paid ? 'size-3' : 'size-2.5'} strokeWidth={3} aria-hidden="true" />
+    </span>
+  );
 }
 
 export function ExportedCell({ count }: { count: number }) {
@@ -74,11 +97,8 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Theme</TableHead>
-                <TableHead>Owner</TableHead>
                 <TableHead>Cards</TableHead>
                 <TableHead>Generations</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Paid</TableHead>
                 <TableHead>Exported</TableHead>
                 <TableHead>Updated</TableHead>
               </TableRow>
@@ -87,10 +107,27 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
               {filtered.map((board) => {
                 const genLimit = getGenerationLimit(board);
                 return (
-                  <TableRow key={board.id}>
-                    <TableCell className="whitespace-nowrap">
-                      <Link href={`/admin/boards/${board.id}`} className="text-sm hover:underline">
-                        {board.name}
+                  <TableRow key={board.id} className="relative focus-within:bg-muted/50">
+                    <TableCell className="max-w-72 min-w-48 whitespace-normal">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <Link
+                          href={`/admin/boards/${board.id}`}
+                          className="min-w-0 truncate text-sm after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-primary"
+                        >
+                          {board.name}
+                        </Link>
+                        <UnlockBadge paid={board.paid} unlocked={board.isUnlocked} />
+                        {board.deleted && (
+                          <Badge variant="destructive" className="shrink-0">
+                            Deleted
+                          </Badge>
+                        )}
+                      </div>
+                      <Link
+                        href={`/admin/users/${board.ownerId}`}
+                        className="relative z-10 mt-0.5 block max-w-fit truncate text-xs text-muted-foreground hover:underline"
+                      >
+                        {board.ownerEmail}
                       </Link>
                     </TableCell>
                     <TableCell className="min-w-48 max-w-64 whitespace-normal">
@@ -106,30 +143,9 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
                         {board.styleOptions?.showTitle ? 'Title on' : 'Title off'}
                       </p>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Link
-                        href={`/admin/users/${board.ownerId}`}
-                        className="text-xs hover:underline"
-                      >
-                        {board.ownerEmail}
-                      </Link>
-                    </TableCell>
                     <TableCell className="text-sm tabular-nums">{board.cardCount}</TableCell>
                     <TableCell className="whitespace-nowrap text-sm tabular-nums">
                       {board.imageGenerationsUsed}/{genLimit}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {board.isUnlocked ? (
-                          <Badge variant="default">Unlocked</Badge>
-                        ) : (
-                          <Badge variant="secondary">Free</Badge>
-                        )}
-                        {board.deleted && <Badge variant="destructive">Deleted</Badge>}
-                      </div>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-xs tabular-nums">
-                      {board.payment ?? <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <ExportedCell count={board.exportCount} />
                     <TableCell className="whitespace-nowrap text-sm text-muted-foreground">

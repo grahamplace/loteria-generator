@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Loader2 } from 'lucide-react';
+import { ChevronDown, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { BoardStyleOptions, PhotoMode } from '@/lib/themes/presets';
 import type { LotteriaCard } from '@/lib/generate-boards';
 import { useBoardDesign, type BoardSettings } from '@/hooks/use-board-design';
@@ -41,6 +42,8 @@ export function BoardAppearance({
   const [titleError, setTitleError] = useState('');
   const [savingTitle, setSavingTitle] = useState(false);
   const titleSavingRef = useRef(false);
+  const [open, setOpen] = useState(false);
+  const bodyId = useId();
   const titleValue = titleDraft ?? boardName;
   const titleChanged = titleValue !== boardName;
 
@@ -76,85 +79,111 @@ export function BoardAppearance({
   }
 
   return (
-    <section
-      className="grid items-start gap-6 rounded-xl border border-border bg-card p-4 md:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]"
-      aria-label={t('title')}
-    >
-      <div className="min-w-0 space-y-5">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">{t('title')}</h2>
-          <DesignSaveStatus design={design} />
-        </div>
-        <div className="@container">
-          <BoardDesignEditor design={design} boardName={boardName} layout="dialog" />
-        </div>
-        <PhotoModeSwitch
-          photoMode={photoMode}
-          saving={photoModeSaving}
-          disabled={design.savingDesign}
-          onChange={(mode) => void design.save({ photoMode: mode })}
-        />
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void saveTitle(true);
-          }}
-          noValidate
-          className="max-w-xl"
-        >
-          <label htmlFor={titleId} className="mb-1.5 block text-sm font-medium">
-            {t('boardTitle')}
-          </label>
-          <div className="flex min-w-0 items-center gap-2">
-            <Input
-              ref={titleInput}
-              id={titleId}
-              name="boardTitle"
-              autoComplete="off"
-              value={titleValue}
-              readOnly={design.saving}
-              aria-invalid={!!titleError}
-              aria-describedby={titleError ? titleErrorId : undefined}
-              onBlur={() => {
-                if (titleChanged) void saveTitle();
-              }}
-              onChange={(event) => {
-                setTitleDraft(event.target.value);
-                setTitleError('');
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Escape' && !design.saving) {
-                  setTitleDraft(null);
-                  setTitleError('');
-                }
-              }}
-              className="h-11 flex-1 bg-background text-base"
+    <section className="rounded-xl border border-border bg-card p-4 md:p-5" aria-label={t('title')}>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-semibold">
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={bodyId}
+            onClick={() => setOpen((value) => !value)}
+            className="-mx-2 flex min-h-11 touch-manipulation items-center gap-2 rounded-md px-2 hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            {t('title')}
+            <ChevronDown
+              aria-hidden="true"
+              className={cn(
+                'size-4 shrink-0 transition-transform motion-reduce:transition-none',
+                open && 'rotate-180'
+              )}
             />
-            {(titleChanged || savingTitle) && (
-              <Button
-                type="submit"
-                variant="outline"
-                disabled={design.saving}
-                className="min-h-11 shrink-0 touch-manipulation"
-              >
-                {savingTitle && (
-                  <Loader2
-                    className="size-4 animate-spin motion-reduce:animate-none"
-                    aria-hidden="true"
-                  />
-                )}
-                {t('saveTitle')}
-              </Button>
-            )}
-          </div>
-          {titleError && (
-            <p id={titleErrorId} role="alert" className="mt-2 text-sm text-destructive">
-              {titleError}
-            </p>
-          )}
-        </form>
+          </button>
+        </h2>
+        <DesignSaveStatus design={design} />
       </div>
-      <BoardPreview styles={design.shownStyles} boardName={boardName} cards={cards} />
+      {open && (
+        <div
+          id={bodyId}
+          className="mt-5 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]"
+        >
+          <div className="min-w-0 space-y-5">
+            <div className="@container">
+              <BoardDesignEditor
+                design={design}
+                boardName={boardName}
+                layout="dialog"
+                themesCollapsible
+              />
+            </div>
+            <PhotoModeSwitch
+              photoMode={photoMode}
+              saving={photoModeSaving}
+              disabled={design.savingDesign}
+              onChange={(mode) => void design.save({ photoMode: mode })}
+            />
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void saveTitle(true);
+              }}
+              noValidate
+              className="max-w-xl"
+            >
+              <label htmlFor={titleId} className="mb-1.5 block text-sm font-medium">
+                {t('boardTitle')}
+              </label>
+              <div className="flex min-w-0 items-center gap-2">
+                <Input
+                  ref={titleInput}
+                  id={titleId}
+                  name="boardTitle"
+                  autoComplete="off"
+                  value={titleValue}
+                  readOnly={design.saving}
+                  aria-invalid={!!titleError}
+                  aria-describedby={titleError ? titleErrorId : undefined}
+                  onBlur={() => {
+                    if (titleChanged) void saveTitle();
+                  }}
+                  onChange={(event) => {
+                    setTitleDraft(event.target.value);
+                    setTitleError('');
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape' && !design.saving) {
+                      setTitleDraft(null);
+                      setTitleError('');
+                    }
+                  }}
+                  className="h-11 flex-1 bg-background text-base"
+                />
+                {(titleChanged || savingTitle) && (
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    disabled={design.saving}
+                    className="min-h-11 shrink-0 touch-manipulation"
+                  >
+                    {savingTitle && (
+                      <Loader2
+                        className="size-4 animate-spin motion-reduce:animate-none"
+                        aria-hidden="true"
+                      />
+                    )}
+                    {t('saveTitle')}
+                  </Button>
+                )}
+              </div>
+              {titleError && (
+                <p id={titleErrorId} role="alert" className="mt-2 text-sm text-destructive">
+                  {titleError}
+                </p>
+              )}
+            </form>
+          </div>
+          <BoardPreview styles={design.shownStyles} boardName={boardName} cards={cards} />
+        </div>
+      )}
     </section>
   );
 }
