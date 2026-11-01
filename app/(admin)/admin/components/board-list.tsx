@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { DollarSign } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { DollarSign, LockOpen } from 'lucide-react';
 import { BoardThemeBadge } from '@/components/board-theme-badge';
 import { boardBorderStyle, getTheme, type BoardStyleOptions } from '@/lib/themes/presets';
 import messages from '@/messages/en.json';
@@ -33,6 +34,26 @@ interface BoardRow {
   ownerEmail: string;
   ownerId: string;
   updatedAt: string;
+}
+
+/** Red $ for paid through Stripe; green open lock for admin-created or hand-unlocked. */
+function UnlockBadge({ paid, unlocked }: { paid: boolean; unlocked: boolean }) {
+  if (!paid && !unlocked) return null;
+  const label = paid ? 'Paid' : 'Unlocked by admin';
+  const Icon = paid ? DollarSign : LockOpen;
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className={cn(
+        'inline-flex size-4 shrink-0 items-center justify-center rounded-full',
+        paid ? 'bg-primary text-primary-foreground' : 'bg-accent text-accent-foreground'
+      )}
+    >
+      <Icon className={paid ? 'size-3' : 'size-2.5'} strokeWidth={3} aria-hidden="true" />
+    </span>
+  );
 }
 
 export function ExportedCell({ count }: { count: number }) {
@@ -95,16 +116,7 @@ export function BoardList({ boards }: { boards: BoardRow[] }) {
                         >
                           {board.name}
                         </Link>
-                        {board.paid && (
-                          <span
-                            role="img"
-                            aria-label="Paid"
-                            title="Paid"
-                            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                          >
-                            <DollarSign className="size-3" strokeWidth={3} aria-hidden="true" />
-                          </span>
-                        )}
+                        <UnlockBadge paid={board.paid} unlocked={board.isUnlocked} />
                         {board.deleted && (
                           <Badge variant="destructive" className="shrink-0">
                             Deleted
