@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import type { Card } from '@/db/schema';
+import { ADMIN_EXPORT_MAX_BYTES } from '@/lib/constants';
 
 const generateLoteriaSetPdf = vi.fn(async () => new Blob(['pdf']));
 
@@ -36,7 +37,7 @@ describe('AdminExportButton', () => {
     fireEvent.click(screen.getByRole('button', { name: /export/i }));
     await waitFor(() => expect(generateLoteriaSetPdf).toHaveBeenCalledTimes(1));
     const args = generateLoteriaSetPdf.mock.calls[0] as unknown[];
-    expect(args[5]).toEqual({ boardTitle: undefined });
+    expect(args[5]).toEqual({ boardTitle: undefined, maxBytes: ADMIN_EXPORT_MAX_BYTES });
   });
 
   it('uses the persisted title setting', async () => {
@@ -51,6 +52,6 @@ describe('AdminExportButton', () => {
     fireEvent.click(screen.getByRole('button', { name: /export/i }));
     await waitFor(() => expect(generateLoteriaSetPdf).toHaveBeenCalledTimes(1));
     const args = generateLoteriaSetPdf.mock.calls[0] as unknown[];
-    expect(args[5]).toEqual({ boardTitle: 'Boda de Ana' });
+    expect(args[5]).toEqual({ boardTitle: 'Boda de Ana', maxBytes: ADMIN_EXPORT_MAX_BYTES });
   });
 });
