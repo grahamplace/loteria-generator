@@ -23,6 +23,8 @@ export const MIN_EXPORT_CARD_COUNT = 16;
 export const DEFAULT_EXPORT_BOARD_COUNT = 50;
 export const MIN_EXPORT_BOARD_COUNT = 1;
 export const MAX_EXPORT_BOARD_COUNT = 100;
+/** Admin set exports must fit Etsy's 80 MB digital-file limit. */
+export const ADMIN_EXPORT_MAX_BYTES = 80_000_000;
 
 // Signup nudge lifecycle email + discount
 export const SIGNUP_NUDGE_COUPON_ID = 'signup-nudge-25';

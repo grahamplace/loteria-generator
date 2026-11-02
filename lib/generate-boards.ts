@@ -29,16 +29,13 @@ import {
   BOARD_TITLE_MAX_FONT_PX,
   BOARD_TITLE_MIN_FONT_PX,
 } from './board-layout';
+import { createJpegPageEncoder, PDF_PAGE_JPEG_QUALITY } from './pdf-page-budget';
 
 /**
- * JPEG quality (0–1) used when encoding each rendered page into the PDF.
- *
- * Each page is a 2550×3300 (300 DPI) canvas, so the per-page JPEG dominates the
- * exported file size. 0.80 keeps print quality visually indistinguishable from
- * higher settings at 300 DPI while keeping a full 64-page set comfortably under
- * 80 MB (≈0.92 produced ~118 MB; ≈0.80 produces ~70 MB).
+ * Bytes held back from a size budget: PDF structure, plus the caller sheet,
+ * which is vector text and lands after the budgeted image pages.
  */
-const PDF_PAGE_JPEG_QUALITY = 0.8;
+const PDF_BUDGET_OVERHEAD_BYTES = 1_000_000;
 
 export interface LotteriaCard {
   id: string;
@@ -624,6 +621,11 @@ export interface LoteriaSetPdfOptions {
   boardTitle?: string;
   sampleLabel?: string;
   cutInstruction?: string;
+  /**
+   * Keep the whole PDF under this many bytes by lowering page JPEG quality
+   * only as far as needed. Omit for the default quality on every page.
+   */
+  maxBytes?: number;
 }
 
 /**
@@ -646,6 +648,19 @@ export async function generateLoteriaSetPdf(
     : generateBoards(completed, clampBoardCount(boardCount));
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'in', format: 'letter' });
 
+  // Deck pages: 4 cards per page — 2×2 grid of 3"×5" cards — ordered by card number.
+  const processedCards = [...completed].sort((a, b) => a.number - b.number);
+  const cardsPerPage = 4;
+  const totalPages = Math.ceil(processedCards.length / cardsPerPage);
+
+  const encodePage = createJpegPageEncoder({
+    maxBytes:
+      options.maxBytes === undefined
+        ? undefined
+        : options.maxBytes * 0.97 - PDF_BUDGET_OVERHEAD_BYTES,
+    pageCount: boards.length + totalPages,
+  });
+
   // Generate the board pages
   for (let i = 0; i < boards.length; i++) {
     onProgress?.(`Generating board ${i + 1} of ${boards.length}…`);
@@ -657,25 +672,17 @@ export async function generateLoteriaSetPdf(
         ? [options.sampleLabel ?? 'Sample', options.boardTitle].filter(Boolean).join(' · ')
         : options.boardTitle
     );
-    const imgData = canvas.toDataURL('image/jpeg', PDF_PAGE_JPEG_QUALITY);
+    const imgData = encodePage((quality) => canvas.toDataURL('image/jpeg', quality));
     pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
   }
 
-  // Generate deck pages (4 cards per page — 2×2 grid of 3"×5" cards — ordered
-  // by card number)
-  const processedCards = cards
-    .filter((c) => !c.isProcessing && !c.error)
-    .sort((a, b) => a.number - b.number);
-
-  const cardsPerPage = 4;
-  const totalPages = Math.ceil(processedCards.length / cardsPerPage);
-
+  // Generate deck pages
   for (let i = 0; i < totalPages; i++) {
     onProgress?.(`Generating deck page ${i + 1} of ${totalPages}…`);
     pdf.addPage('letter', 'portrait');
     const pageCards = processedCards.slice(i * cardsPerPage, (i + 1) * cardsPerPage);
     const canvas = await renderDeckPageToCanvas(pageCards, styleOptions, options.cutInstruction);
-    const imgData = canvas.toDataURL('image/jpeg', PDF_PAGE_JPEG_QUALITY);
+    const imgData = encodePage((quality) => canvas.toDataURL('image/jpeg', quality));
     pdf.addImage(imgData, 'JPEG', 0, 0, 8.5, 11);
   }
 

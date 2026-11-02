@@ -12,7 +12,7 @@ import {
 } from '@/lib/generate-boards';
 import { adminCardImageSrc } from '@/lib/admin-card-image';
 import { BoardCountStepper } from '@/components/board-count-stepper';
-import { DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
+import { ADMIN_EXPORT_MAX_BYTES, DEFAULT_EXPORT_BOARD_COUNT } from '@/lib/constants';
 import type { Card } from '@/db/schema';
 import { recordBoardExport } from '@/lib/record-board-export';
 
@@ -71,7 +71,10 @@ export function AdminExportButton({
         // Keep the default caller-sheet labels — only the board count is overridden.
         undefined,
         boardCount,
-        { boardTitle: styleOptions?.showTitle ? boardName : undefined }
+        {
+          boardTitle: styleOptions?.showTitle ? boardName : undefined,
+          maxBytes: ADMIN_EXPORT_MAX_BYTES,
+        }
       );
 
       const url = URL.createObjectURL(pdfBlob);
