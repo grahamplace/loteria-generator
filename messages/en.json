@@ -388,7 +388,13 @@
       }
     },
     "CardGrid": {
-      "processing": "Processing…",
+      "progress": {
+        "reading": "Reading your photo…",
+        "sketching": "Sketching…",
+        "painting": "Painting…",
+        "finishing": "Finishing touches…",
+        "slow": "Taking a bit longer…"
+      },
       "generationFailed": "Generation failed",
       "deleteAndRetry": "Delete card & retry",
       "imageBlocked": "Image blocked",

@@ -394,7 +394,13 @@
       }
     },
     "CardGrid": {
-      "processing": "Procesando…",
+      "progress": {
+        "reading": "Analizando tu foto…",
+        "sketching": "Dibujando…",
+        "painting": "Pintando…",
+        "finishing": "Últimos detalles…",
+        "slow": "Tardando un poco más…"
+      },
       "generationFailed": "Falló la generación",
       "deleteAndRetry": "Eliminar carta y reintentar",
       "imageBlocked": "Imagen bloqueada",

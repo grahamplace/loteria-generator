@@ -72,6 +72,11 @@ export interface BoardCard {
   isProcessing?: boolean;
   /** The upload was detected as a sheet of cards and is being split. */
   isSplitting?: boolean;
+  /**
+   * When the server started processing (ms), for cards that were already
+   * processing at page load. Lets the progress estimate survive a refresh.
+   */
+  processingSince?: number;
 }
 
 interface UseBoardCardsReturn {
@@ -144,6 +149,8 @@ export function useBoardCards(
           imageVersion: new Date(card.updatedAt).getTime(),
           clientKey: card.id,
           isProcessing: card.status === 'processing',
+          processingSince:
+            card.status === 'processing' ? new Date(card.updatedAt).getTime() : undefined,
         }))
       );
     } catch (err) {
