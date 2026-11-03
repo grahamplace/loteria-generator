@@ -133,6 +133,7 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
   const t = useTranslations('BoardEditor.CardGrid');
   const tSheet = useTranslations('BoardEditor.SheetSplit');
   const blocked = generationErrorKind(card.error) === 'content_blocked';
+  const revealing = useRevealDelay(Boolean(card.isProcessing), Boolean(card.error));
 
   return (
     <>
@@ -158,11 +159,12 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
 
       {/* Image - portrait aspect ratio matching traditional Lotería cards (2:3) */}
       <div className="relative w-full aspect-[2/3] bg-muted overflow-hidden">
-        {card.isProcessing ? (
+        {card.isProcessing || revealing ? (
           <ProcessingProgress
             photo={card.illustration}
             since={card.processingSince}
             splittingLabel={card.isSplitting ? tSheet('splitting') : undefined}
+            complete={revealing && !card.isProcessing}
           />
         ) : card.error ? (
           <div className="w-full h-full flex flex-col items-center justify-center bg-destructive/10 gap-2 px-4">
@@ -207,6 +209,32 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
   );
 }
 
+/** How long the full bar shows before the finished card replaces it. */
+const REVEAL_DELAY_MS = 450;
+
+/**
+ * True for a moment after a card finishes processing successfully, so the
+ * progress bar can fill to 100% before the art appears. Set during render
+ * (not in an effect) so the finished image never flashes for a frame first.
+ */
+function useRevealDelay(isProcessing: boolean, hasError: boolean) {
+  const [prevProcessing, setPrevProcessing] = useState(isProcessing);
+  const [revealing, setRevealing] = useState(false);
+
+  if (isProcessing !== prevProcessing) {
+    setPrevProcessing(isProcessing);
+    setRevealing(prevProcessing && !isProcessing && !hasError);
+  }
+
+  useEffect(() => {
+    if (!revealing) return;
+    const id = setTimeout(() => setRevealing(false), REVEAL_DELAY_MS);
+    return () => clearTimeout(id);
+  }, [revealing]);
+
+  return revealing;
+}
+
 /**
  * Time-based progress for a card being illustrated. The job reports no real
  * progress, so the bar eases toward ~95% (see lib/processing-progress.ts) and
@@ -217,10 +245,13 @@ function ProcessingProgress({
   photo,
   since,
   splittingLabel,
+  complete = false,
 }: {
   photo: string;
   since?: number;
   splittingLabel?: string;
+  /** The card just finished: fill the bar before the art is revealed. */
+  complete?: boolean;
 }) {
   const t = useTranslations('BoardEditor.CardGrid.progress');
   // Fixed at mount: the component lives exactly as long as the card is
@@ -235,7 +266,7 @@ function ProcessingProgress({
   }, []);
 
   const elapsed = now - startedAt;
-  const progress = estimateProgress(elapsed);
+  const progress = complete ? 1 : estimateProgress(elapsed);
   const label = splittingLabel ?? t(processingStage(elapsed));
 
   return (
@@ -267,7 +298,9 @@ function ProcessingProgress({
           className="h-1.5 w-full overflow-hidden rounded-full bg-primary/15"
         >
           <div
-            className="h-full w-full origin-left rounded-full bg-primary transition-transform duration-1000 ease-linear motion-reduce:transition-none"
+            className={`h-full w-full origin-left rounded-full bg-primary transition-transform motion-reduce:transition-none ${
+              complete ? 'duration-300 ease-out' : 'duration-1000 ease-linear'
+            }`}
             style={{ transform: `scaleX(${progress})` }}
           />
         </div>

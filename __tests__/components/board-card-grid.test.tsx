@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { BoardCardGrid } from '@/components/board-card-grid';
 
 // Mock next-intl for BoardEditor.CardGrid and BoardEditor.CardEditModal namespaces
@@ -132,6 +132,36 @@ describe('BoardCardGrid', () => {
     expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
     const bar = screen.getByRole('progressbar', { name: 'Reading your photo…' });
     expect(Number(bar.getAttribute('aria-valuenow'))).toBeGreaterThan(0);
+  });
+
+  it('fills the progress bar before revealing a finished card', () => {
+    vi.useFakeTimers();
+    try {
+      const processing = [{ ...mockCards[0], isProcessing: true }];
+      const { rerender } = render(<BoardCardGrid {...defaultProps} cards={processing} />);
+
+      rerender(<BoardCardGrid {...defaultProps} cards={[{ ...mockCards[0] }]} />);
+      const bar = screen.getByRole('progressbar');
+      expect(bar.getAttribute('aria-valuenow')).toBe('100');
+      expect(screen.queryByAltText('El Sol')).not.toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      expect(screen.getByAltText('El Sol')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('shows a failed card right away, without filling the bar', () => {
+    const processing = [{ ...mockCards[0], isProcessing: true }];
+    const { rerender } = render(<BoardCardGrid {...defaultProps} cards={processing} />);
+
+    rerender(<BoardCardGrid {...defaultProps} cards={[{ ...mockCards[0], error: 'boom' }]} />);
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.getByText('Generation failed')).toBeInTheDocument();
   });
 
   it('should show error state', () => {
