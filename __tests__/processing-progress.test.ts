@@ -7,9 +7,13 @@ describe('estimateProgress', () => {
     expect(estimateProgress(-5_000)).toBe(estimateProgress(0));
   });
 
-  it('passes the halfway mark around the median generation time', () => {
-    expect(estimateProgress(60_000)).toBeGreaterThan(0.45);
-    expect(estimateProgress(60_000)).toBeLessThan(0.6);
+  it('is well past halfway when a typical card (~35s) lands', () => {
+    expect(estimateProgress(35_000)).toBeGreaterThan(0.6);
+    expect(estimateProgress(35_000)).toBeLessThan(0.8);
+  });
+
+  it('still has room left for slow cards (~90s)', () => {
+    expect(estimateProgress(90_000)).toBeLessThan(0.95);
   });
 
   it('keeps rising but never completes on its own', () => {
@@ -26,9 +30,9 @@ describe('estimateProgress', () => {
 describe('processingStage', () => {
   it('advances through the stages over time', () => {
     expect(processingStage(0)).toBe('reading');
-    expect(processingStage(20_000)).toBe('sketching');
-    expect(processingStage(60_000)).toBe('painting');
-    expect(processingStage(150_000)).toBe('finishing');
-    expect(processingStage(300_000)).toBe('slow');
+    expect(processingStage(8_000)).toBe('sketching');
+    expect(processingStage(20_000)).toBe('painting');
+    expect(processingStage(50_000)).toBe('finishing');
+    expect(processingStage(120_000)).toBe('slow');
   });
 });

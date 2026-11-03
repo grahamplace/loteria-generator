@@ -2,11 +2,12 @@
  * Estimated progress for a card while its illustration is generated.
  *
  * The job reports no real progress, so this is time-based. Calibrated on prod
- * cards (Nov 2026): median ~60s, p75 ~130s, p90 ~260s. The curve eases toward
- * MAX_PROGRESS and never reaches 100% on its own; the card simply swaps to the
- * finished art when the job completes.
+ * cards (Nov 2026): generations cluster at 10–50s (peak 20–40s) with a tail to
+ * ~100s. A typical card lands around 70%, a slow one around 90%. The curve
+ * eases toward MAX_PROGRESS and never reaches 100% on its own; the card swaps
+ * to the finished art when the job completes.
  */
-const TIME_CONSTANT_MS = 75_000;
+const TIME_CONSTANT_MS = 26_000;
 const MIN_PROGRESS = 0.03;
 const MAX_PROGRESS = 0.95;
 
@@ -19,10 +20,10 @@ export function estimateProgress(elapsedMs: number): number {
 export type ProcessingStage = 'reading' | 'sketching' | 'painting' | 'finishing' | 'slow';
 
 const STAGES: Array<[startMs: number, stage: ProcessingStage]> = [
-  [240_000, 'slow'],
-  [120_000, 'finishing'],
-  [45_000, 'painting'],
-  [15_000, 'sketching'],
+  [90_000, 'slow'],
+  [35_000, 'finishing'],
+  [15_000, 'painting'],
+  [5_000, 'sketching'],
   [0, 'reading'],
 ];
 
