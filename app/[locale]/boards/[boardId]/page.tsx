@@ -183,6 +183,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
       (card.originalImageUrl ? `/api/images/${boardId}/${card.id}/original` : undefined),
     isProcessing: card.isProcessing || card.status === 'processing',
     isSplitting: card.isSplitting,
+    processingSince: card.processingSince,
     error:
       card.status === 'error' ? card.errorMessage || t('toasts.errorProcessingCard') : undefined,
     isDefault: card.isDefault,

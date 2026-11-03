@@ -41,6 +41,7 @@ import { generationErrorKind } from '@/lib/generation-error';
 import { TOTAL_CARD_COUNT } from '@/lib/constants';
 import { useUnlockPriceDisplay } from '@/hooks/use-unlock-price';
 import { cardImageProps, CARD_GRID_THUMB_WIDTH } from '@/lib/card-image';
+import { estimateProgress, processingStage } from '@/lib/processing-progress';
 
 interface DisplayCard {
   id: string;
@@ -57,6 +58,8 @@ interface DisplayCard {
   originalImage?: string;
   isProcessing?: boolean;
   isSplitting?: boolean;
+  /** Server start time (ms) for cards already processing at page load. */
+  processingSince?: number;
   error?: string;
   isDefault?: boolean;
   promptOverlay?: string | null;
@@ -156,14 +159,11 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
       {/* Image - portrait aspect ratio matching traditional Lotería cards (2:3) */}
       <div className="relative w-full aspect-[2/3] bg-muted overflow-hidden">
         {card.isProcessing ? (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-            <div className="text-center">
-              <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">
-                {card.isSplitting ? tSheet('splitting') : t('processing')}
-              </p>
-            </div>
-          </div>
+          <ProcessingProgress
+            photo={card.illustration}
+            since={card.processingSince}
+            splittingLabel={card.isSplitting ? tSheet('splitting') : undefined}
+          />
         ) : card.error ? (
           <div className="w-full h-full flex flex-col items-center justify-center bg-destructive/10 gap-2 px-4">
             <AlertTriangle className="w-8 h-8 text-destructive/60" />
@@ -204,6 +204,75 @@ function CardContent({ card, isOverlay = false }: { card: DisplayCard; isOverlay
         )}
       </div>
     </>
+  );
+}
+
+/**
+ * Time-based progress for a card being illustrated. The job reports no real
+ * progress, so the bar eases toward ~95% (see lib/processing-progress.ts) and
+ * the card swaps to the finished art when it lands. The user's own photo sits
+ * faded behind it so the tile reads as "this one, in progress".
+ */
+function ProcessingProgress({
+  photo,
+  since,
+  splittingLabel,
+}: {
+  photo: string;
+  since?: number;
+  splittingLabel?: string;
+}) {
+  const t = useTranslations('BoardEditor.CardGrid.progress');
+  // Fixed at mount: the component lives exactly as long as the card is
+  // processing, and the clientKey keeps it mounted across the temp → server id swap.
+  const [startedAt] = useState(() => Math.min(since ?? Date.now(), Date.now()));
+  const [now, setNow] = useState(startedAt);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const elapsed = now - startedAt;
+  const progress = estimateProgress(elapsed);
+  const label = splittingLabel ?? t(processingStage(elapsed));
+
+  return (
+    <div className="relative w-full h-full bg-gradient-to-br from-primary/10 to-accent/10">
+      {photo && (
+        <Image
+          {...cardImageProps(photo, CARD_GRID_THUMB_WIDTH)}
+          alt=""
+          aria-hidden
+          fill
+          sizes="(max-width: 768px) 32vw, 200px"
+          className="object-cover opacity-40 blur-[2px] grayscale pointer-events-none"
+          draggable={false}
+        />
+      )}
+      <div className="absolute inset-x-2 bottom-2 rounded-md bg-[#f5f0e1]/90 px-2 py-1.5 shadow-sm sm:inset-x-3 sm:bottom-3 sm:px-2.5 sm:py-2">
+        <p
+          className="mb-1.5 text-center text-[11px] leading-tight font-medium text-foreground text-balance line-clamp-2 sm:text-xs"
+          aria-live="polite"
+        >
+          {label}
+        </p>
+        <div
+          role="progressbar"
+          aria-label={label}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress * 100)}
+          className="h-1.5 w-full overflow-hidden rounded-full bg-primary/15"
+        >
+          <div
+            className="h-full w-full origin-left rounded-full bg-primary transition-transform duration-1000 ease-linear motion-reduce:transition-none"
+            style={{ transform: `scaleX(${progress})` }}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 

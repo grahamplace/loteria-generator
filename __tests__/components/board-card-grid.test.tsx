@@ -8,7 +8,6 @@ vi.mock('next-intl', () => ({
   useTranslations: (namespace: string) => {
     const messages: Record<string, Record<string, string>> = {
       'BoardEditor.CardGrid': {
-        processing: 'Processing…',
         generationFailed: 'Generation failed',
         imageBlocked: 'Image blocked',
         openToUseOriginal: 'Open to use the original photo',
@@ -32,6 +31,9 @@ vi.mock('next-intl', () => ({
           'This will permanently delete this card. This action cannot be undone.',
         deleteDialogCancel: 'Cancel',
         deleteDialogConfirm: 'Delete',
+      },
+      'BoardEditor.CardGrid.progress': {
+        reading: 'Reading your photo…',
       },
       'BoardEditor.CardEditModal': {
         titleWithNumber: 'Edit card #{number}',
@@ -128,7 +130,8 @@ describe('BoardCardGrid', () => {
     const { container } = render(<BoardCardGrid {...defaultProps} cards={processingCards} />);
 
     expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
+    const bar = screen.getByRole('progressbar', { name: 'Reading your photo…' });
+    expect(Number(bar.getAttribute('aria-valuenow'))).toBeGreaterThan(0);
   });
 
   it('should show error state', () => {
