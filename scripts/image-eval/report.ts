@@ -91,7 +91,7 @@ function summaryPage(doc: jsPDF, results: EvalResults, judged: JudgeResults) {
   y = text(doc, 'Image eval: judged report', M, y, { size: 26, bold: true });
   y = text(
     doc,
-    `${results.startedAt.slice(0, 16).replace('T', ' ')} UTC · ${results.photosDir ?? 'photos'} · ${results.promptRefs ? `prompts ${results.promptRefs}` : 'working-tree prompt'} · judge ${judged.model} (effort ${judged.effort}, 2 passes per case with A/B swapped)`,
+    `${results.startedAt.slice(0, 16).replace('T', ' ')} UTC · ${results.photosDir ?? 'photos'} · ${results.promptRefs ? `prompts ${results.promptRefs}` : 'working-tree prompt'} · judge ${judged.model} (${(judged.passes ?? 2) === 1 ? '1 pass per case, A/B order randomized' : `effort ${judged.effort}, 2 passes per case with A/B swapped`})`,
     M,
     y + 4,
     { size: 11, color: MUTED, width: PAGE_W - M * 2 }
@@ -117,7 +117,7 @@ function summaryPage(doc: jsPDF, results: EvalResults, judged: JudgeResults) {
   y += 80;
   y = text(
     doc,
-    `${ok.length} cases judged${judged.cases.length - ok.length ? `, ${judged.cases.length - ok.length} failed` : ''}. A win needs both passes to agree; ${splits} case${splits === 1 ? '' : 's'} split and counted as ties. Judge cost: $${judged.usage.costUsd.toFixed(2)} (${judged.usage.inputTokens.toLocaleString()} in / ${judged.usage.outputTokens.toLocaleString()} out tokens).`,
+    `${ok.length} cases judged${judged.cases.length - ok.length ? `, ${judged.cases.length - ok.length} failed` : ''}.${(judged.passes ?? 2) === 1 ? '' : ` A win needs both passes to agree; ${splits} case${splits === 1 ? '' : 's'} split and counted as ties. Judge cost: $${judged.usage.costUsd.toFixed(2)} (${judged.usage.inputTokens.toLocaleString()} in / ${judged.usage.outputTokens.toLocaleString()} out tokens).`}`,
     M,
     y,
     { size: 11, color: MUTED, width: PAGE_W - M * 2 }
@@ -285,7 +285,11 @@ async function casePage(
   ty += 22;
   const reasonW = PAGE_W - M - tx;
   c.reasons.forEach((r, i) => {
-    ty = text(doc, `Pass ${i + 1}: ${r}`, tx, ty, { size: 9, color: MUTED, width: reasonW });
+    ty = text(doc, c.reasons.length > 1 ? `Pass ${i + 1}: ${r}` : r, tx, ty, {
+      size: 9,
+      color: MUTED,
+      width: reasonW,
+    });
     ty += 4;
   });
 
