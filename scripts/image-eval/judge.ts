@@ -1,39 +1,36 @@
 /**
- * LLM-as-judge for an image-eval run: for every photo, Claude compares the
- * baseline column's illustration with the candidate column's against the
- * original photo (and the corrected prod card, when there is one), scores both
- * on a fixed rubric, and picks a winner.
+ * Judging for an image-eval run, done by the coding agent session itself (no
+ * paid API calls). Two steps:
  *
- * Each case is judged twice with the images in swapped A/B positions, because
- * judges lean toward whichever image they see first. The verdict only counts
- * as a win when both passes agree; otherwise it's a tie. The judge is never
- * told which image is the baseline.
+ * 1. prepareJudging() writes <run>/judge/: one composite JPG per case
+ *    (ORIGINAL, optional REFERENCE, then IMAGE A and IMAGE B), an
+ *    instructions.md with the rubric and case notes, and key.json, which maps
+ *    A/B back to baseline/candidate. A/B order is random per case, so the
+ *    judge can't tell which side is the baseline without opening key.json.
+ * 2. The agent reads instructions.md and every composite, then writes
+ *    <run>/judge/verdicts.json. importJudging() validates it against the
+ *    schema and writes judgments.json, which report.ts turns into report.pdf.
  *
- * Writes judgments.json into the run directory. Judging is cheap next to
- * generating, so a run can be re-judged (new rubric, new notes) at any time
- * without regenerating images.
+ * Re-judging (new rubric, new notes) needs no image calls: prepare again,
+ * write new verdicts, import.
  */
 
-import { readFile, writeFile, readdir } from 'node:fs/promises';
+import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import Anthropic from '@anthropic-ai/sdk';
-import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import sharp from 'sharp';
 import { z } from 'zod/v4';
 import type { EvalResults } from './compose';
 
 const EVAL_DIR = dirname(fileURLToPath(import.meta.url));
 
-export const JUDGE_MODEL = 'claude-opus-5-5';
-// Judging likeness and small details rewards deliberate looking.
-const JUDGE_EFFORT = 'high';
-// Opus 5.5 list price, $ per million tokens; for the cost line in the report.
-const PRICE_IN = 4;
-const PRICE_OUT = 20;
-// Longest edge sent to the judge. Enough to see faces and lettering while
-// keeping each image around 1.5k tokens.
-const JUDGE_IMAGE_EDGE = 1024;
+export const JUDGE_MODEL = 'coding agent session';
+
+// Composite cell size. Big enough to judge faces and lettering once the
+// agent's image reader downscales the strip.
+const CELL_W = 640;
+const CELL_H = 960;
+const LABEL_H = 56;
 
 const imageJudgment = z.object({
   likeness: z
@@ -83,9 +80,9 @@ type ScoreKey = (typeof SCORE_KEYS)[number];
 
 export type SideResult = {
   column: string;
-  /** Mean of the two passes; null when the criterion didn't apply. */
+  /** Mean over passes; null when the criterion didn't apply. */
   scores: Record<ScoreKey, number | null>;
-  /** case_check from each pass (A/B order, then swapped). */
+  /** case_check from each pass. */
   caseCheck: ImageJudgment['case_check'][];
   matched: string[];
   missed: string[];
@@ -94,9 +91,8 @@ export type SideResult = {
 export type CaseJudgment = {
   photo: string;
   why: string | null;
-  /** Both passes agreed on a winner, or the case is a tie. */
   verdict: 'baseline' | 'candidate' | 'tie';
-  /** The passes disagreed (so the verdict was forced to tie). */
+  /** Passes disagreed (so the verdict was forced to tie). Always false with one pass. */
   split: boolean;
   reasons: string[];
   baseline: SideResult;
@@ -107,6 +103,8 @@ export type CaseJudgment = {
 export type JudgeResults = {
   model: string;
   effort: string;
+  /** Passes per case. Old API-judged runs used 2 (A/B swapped); missing means 2. */
+  passes?: number;
   baseline: string;
   candidate: string;
   startedAt: string;
@@ -140,34 +138,13 @@ async function readCaseNotes(photosDir: string): Promise<Record<string, { why?: 
   }
 }
 
-async function imageBlock(path: string): Promise<Anthropic.Beta.BetaImageBlockParam> {
-  const data = await sharp(path)
-    .rotate()
-    .resize(JUDGE_IMAGE_EDGE, JUDGE_IMAGE_EDGE, { fit: 'inside', withoutEnlargement: true })
-    .jpeg({ quality: 85 })
-    .toBuffer();
-  return {
-    type: 'image',
-    source: { type: 'base64', media_type: 'image/jpeg', data: data.toString('base64') },
-  };
-}
-
-function mean(values: (number | null)[]): number | null {
-  const nums = values.filter((v): v is number => v !== null);
-  return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
-}
-
-function side(column: string, first: ImageJudgment, second: ImageJudgment): SideResult {
+function side(column: string, j: ImageJudgment): SideResult {
   return {
     column,
-    scores: Object.fromEntries(SCORE_KEYS.map((k) => [k, mean([first[k], second[k]])])) as Record<
-      ScoreKey,
-      number | null
-    >,
-    caseCheck: [first.case_check, second.case_check],
-    // Notes come from the first pass only; the second pass mostly repeats them.
-    matched: first.matched,
-    missed: first.missed,
+    scores: Object.fromEntries(SCORE_KEYS.map((k) => [k, j[k]])) as Record<ScoreKey, number | null>,
+    caseCheck: [j.case_check],
+    matched: j.matched,
+    missed: j.missed,
   };
 }
 
@@ -186,10 +163,89 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
   return out;
 }
 
-export async function judgeRun(
+type Key = {
+  baseline: string;
+  candidate: string;
+  /** Per case: which column is shown as IMAGE A. */
+  cases: Record<string, { a: 'baseline' | 'candidate'; why: string | null }>;
+};
+
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function cell(path: string, label: string): Promise<sharp.OverlayOptions[]> {
+  const img = await sharp(path)
+    .rotate()
+    .resize(CELL_W, CELL_H, { fit: 'contain', background: '#ffffff' })
+    .toBuffer();
+  const tag = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${CELL_W}" height="${LABEL_H}"><rect width="100%" height="100%" fill="#222"/><text x="16" y="38" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="bold" fill="#fff">${esc(label)}</text></svg>`
+  );
+  return [
+    { input: tag, top: 0, left: 0 },
+    { input: img, top: LABEL_H, left: 0 },
+  ];
+}
+
+async function compositeCase(cells: [string, string][], out: string) {
+  const parts = await Promise.all(cells.map(([path, label]) => cell(path, label)));
+  await sharp({
+    create: {
+      width: CELL_W * cells.length,
+      height: CELL_H + LABEL_H,
+      channels: 3,
+      background: '#ffffff',
+    },
+  })
+    .composite(parts.flatMap((p, i) => p.map((o) => ({ ...o, left: (o.left ?? 0) + i * CELL_W }))))
+    .jpeg({ quality: 88 })
+    .toFile(out);
+}
+
+function instructions(
+  caseList: { stem: string; file: string; why: string | null; hasRef: boolean }[]
+) {
+  const schema = JSON.stringify(z.toJSONSchema(judgmentSchema), null, 2);
+  return `# Judge this image-eval run
+
+You are the judge. Read every composite in this folder and write \`verdicts.json\` here.
+Do not open \`key.json\` or the run's PNGs until you are done: their names reveal which side is the baseline.
+
+${SYSTEM}
+
+In each composite the panels are labeled: ORIGINAL PHOTO, then (when present) REFERENCE, then IMAGE A and IMAGE B.
+REFERENCE is an illustration of this photo the admin approved, made with extra instructions. It is one acceptable result, not the only one; don't mark an image down just for differing from it.
+Zoom in (crop the composite) when faces or lettering are too small to judge.
+
+## Output
+
+\`verdicts.json\` is one object keyed by case id, each value matching this JSON Schema:
+
+\`\`\`json
+${schema}
+\`\`\`
+
+Example: \`{ "03-la-familia": { "image_a": {…}, "image_b": {…}, "winner": "B", "reason": "…" } }\`
+
+When done, run: \`pnpm eval:images --judge-import <this run folder>\`
+
+## Cases (${caseList.length})
+
+${caseList
+  .map(
+    (c) =>
+      `- **${c.stem}** → \`${c.file}\`${c.hasRef ? ' (has REFERENCE)' : ''}\n  Case note: ${c.why?.replace(/\s+/g, ' ') ?? 'none. Use case_check "n/a".'}`
+  )
+  .join('\n')}
+`;
+}
+
+/** Step 1: write <run>/judge/ for the agent to judge. Returns its path. */
+export async function prepareJudging(
   runDir: string,
   opts: { baseline?: string; candidate?: string; concurrency?: number } = {}
-): Promise<JudgeResults> {
+): Promise<string> {
   const results = JSON.parse(await readFile(join(runDir, 'results.json'), 'utf8')) as EvalResults;
   const baseline = opts.baseline ?? results.models[0];
   const candidate = opts.candidate ?? results.models[1];
@@ -204,127 +260,100 @@ export async function judgeRun(
 
   const photosDir = join(EVAL_DIR, results.photosDir ?? 'photos');
   const notes = await readCaseNotes(photosDir);
-  const client = new Anthropic();
+  const judgeDir = join(runDir, 'judge');
+  await mkdir(judgeDir, { recursive: true });
+
+  // Skip photos dropped from the set since the run (an audit).
+  const present = new Set(await readdir(photosDir));
+  const outputOf = (stem: string, col: string) =>
+    results.calls.find((c) => c.photo === stem && c.model === col)?.output;
+  const photos = results.photos.filter(
+    (p) => present.has(p.file) && outputOf(p.stem, baseline) && outputOf(p.stem, candidate)
+  );
+
+  const key: Key = { baseline, candidate, cases: {} };
+  const caseList = await mapLimit(photos, opts.concurrency ?? 4, async (photo) => {
+    const why = notes[photo.stem]?.why ?? (photo.overlay ? noteFromOverlay(photo.overlay) : null);
+    const a = Math.random() < 0.5 ? 'baseline' : 'candidate';
+    key.cases[photo.stem] = { a, why };
+    const [first, second] = a === 'baseline' ? [baseline, candidate] : [candidate, baseline];
+    const file = `${photo.stem}.jpg`;
+    await compositeCase(
+      [
+        [join(photosDir, photo.file), 'ORIGINAL PHOTO'],
+        ...(photo.reference
+          ? [[join(photosDir, photo.reference), 'REFERENCE'] as [string, string]]
+          : []),
+        [join(runDir, outputOf(photo.stem, first)!), 'IMAGE A'],
+        [join(runDir, outputOf(photo.stem, second)!), 'IMAGE B'],
+      ],
+      join(judgeDir, file)
+    );
+    return { stem: photo.stem, file, why, hasRef: Boolean(photo.reference) };
+  });
+
+  await writeFile(join(judgeDir, 'key.json'), JSON.stringify(key, null, 2));
+  await writeFile(join(judgeDir, 'instructions.md'), instructions(caseList));
+  return judgeDir;
+}
+
+/** Step 2: validate <run>/judge/verdicts.json and write judgments.json. */
+export async function importJudging(runDir: string): Promise<JudgeResults> {
+  const judgeDir = join(runDir, 'judge');
+  const key = JSON.parse(await readFile(join(judgeDir, 'key.json'), 'utf8')) as Key;
+  const raw = JSON.parse(await readFile(join(judgeDir, 'verdicts.json'), 'utf8')) as Record<
+    string,
+    unknown
+  >;
+
   const judged: JudgeResults = {
     model: JUDGE_MODEL,
-    effort: JUDGE_EFFORT,
-    baseline,
-    candidate,
+    effort: '—',
+    passes: 1,
+    baseline: key.baseline,
+    candidate: key.candidate,
     startedAt: new Date().toISOString(),
     usage: { inputTokens: 0, outputTokens: 0, costUsd: 0 },
     cases: [],
   };
 
-  async function ask(content: Anthropic.Beta.BetaContentBlockParam[]): Promise<Judgment> {
-    const res = await client.beta.messages.parse({
-      model: JUDGE_MODEL,
-      max_tokens: 16000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      output_config: { effort: JUDGE_EFFORT, format: betaZodOutputFormat(judgmentSchema) },
-      system: SYSTEM,
-      messages: [{ role: 'user', content }],
+  const problems: string[] = [];
+  for (const [stem, { a, why }] of Object.entries(key.cases)) {
+    const parsed = judgmentSchema.safeParse(raw[stem]);
+    if (!parsed.success) {
+      problems.push(`${stem}: ${raw[stem] === undefined ? 'missing' : parsed.error.message}`);
+      continue;
+    }
+    const j: Judgment = parsed.data;
+    const [base, cand] = a === 'baseline' ? [j.image_a, j.image_b] : [j.image_b, j.image_a];
+    const winnerSide =
+      j.winner === 'tie'
+        ? 'tie'
+        : j.winner === 'A'
+          ? a
+          : a === 'baseline'
+            ? 'candidate'
+            : 'baseline';
+    judged.cases.push({
+      photo: stem,
+      why,
+      verdict: winnerSide,
+      split: false,
+      reasons: [j.reason],
+      baseline: side(key.baseline, base),
+      candidate: side(key.candidate, cand),
     });
-    judged.usage.inputTokens += res.usage.input_tokens;
-    judged.usage.outputTokens += res.usage.output_tokens;
-    if (res.stop_reason === 'refusal') throw new Error('Judge declined to evaluate this case');
-    if (!res.parsed_output)
-      throw new Error(`Judge returned no parseable verdict (${res.stop_reason})`);
-    return res.parsed_output;
+  }
+  for (const stem of Object.keys(raw)) {
+    if (!(stem in key.cases)) problems.push(`${stem}: not a case in key.json`);
+  }
+  if (problems.length) {
+    throw new Error(
+      `verdicts.json has problems; fix them and import again:\n  ${problems.join('\n  ')}`
+    );
   }
 
-  // Skip photos dropped from the set since the run (an audit).
-  const present = new Set(await readdir(photosDir));
-  const cases = results.photos.filter(
-    (p) =>
-      present.has(p.file) &&
-      [baseline, candidate].every((col) =>
-        results.calls.some((c) => c.photo === p.stem && c.model === col && c.output)
-      )
-  );
-  console.log(`Judging ${cases.length} cases with ${JUDGE_MODEL} (2 passes each)…`);
-
-  judged.cases = await mapLimit(cases, opts.concurrency ?? 4, async (photo) => {
-    const why = notes[photo.stem]?.why ?? (photo.overlay ? noteFromOverlay(photo.overlay) : null);
-    const outputOf = (col: string) =>
-      join(runDir, results.calls.find((c) => c.photo === photo.stem && c.model === col)!.output!);
-
-    const [original, reference, base, cand] = await Promise.all([
-      imageBlock(join(photosDir, photo.file)),
-      photo.reference ? imageBlock(join(photosDir, photo.reference)) : null,
-      imageBlock(outputOf(baseline)),
-      imageBlock(outputOf(candidate)),
-    ]);
-
-    const content = (
-      a: Anthropic.Beta.BetaImageBlockParam,
-      b: Anthropic.Beta.BetaImageBlockParam
-    ) => [
-      { type: 'text' as const, text: 'ORIGINAL PHOTO:' },
-      original,
-      ...(reference
-        ? [
-            {
-              type: 'text' as const,
-              text: 'REFERENCE: an illustration of this photo the admin approved, made with extra instructions. It is one acceptable result, not the only one; don’t mark an image down just for differing from it.',
-            },
-            reference,
-          ]
-        : []),
-      { type: 'text' as const, text: 'IMAGE A:' },
-      a,
-      { type: 'text' as const, text: 'IMAGE B:' },
-      b,
-      {
-        type: 'text' as const,
-        text: why
-          ? `CASE NOTE (why this photo is in the test set): ${why}`
-          : 'CASE NOTE: none. Use case_check "n/a".',
-      },
-    ];
-
-    try {
-      // Pass 1: A = baseline. Pass 2: A = candidate.
-      const [p1, p2] = await Promise.all([ask(content(base, cand)), ask(content(cand, base))]);
-      const w1 = p1.winner === 'A' ? 'baseline' : p1.winner === 'B' ? 'candidate' : 'tie';
-      const w2 = p2.winner === 'A' ? 'candidate' : p2.winner === 'B' ? 'baseline' : 'tie';
-      const verdict = w1 === w2 ? w1 : 'tie';
-      console.log(`  ${photo.stem}: ${verdict}${w1 !== w2 ? ` (split: ${w1} / ${w2})` : ''}`);
-      return {
-        photo: photo.stem,
-        why,
-        verdict,
-        split: w1 !== w2,
-        reasons: [p1.reason, p2.reason],
-        baseline: side(baseline, p1.image_a, p2.image_b),
-        candidate: side(candidate, p1.image_b, p2.image_a),
-      } satisfies CaseJudgment;
-    } catch (err) {
-      const error = err instanceof Error ? err.message : String(err);
-      console.warn(`  ${photo.stem}: judge failed: ${error}`);
-      const empty = (column: string): SideResult => ({
-        column,
-        scores: Object.fromEntries(SCORE_KEYS.map((k) => [k, null])) as Record<ScoreKey, null>,
-        caseCheck: [],
-        matched: [],
-        missed: [],
-      });
-      return {
-        photo: photo.stem,
-        why,
-        verdict: 'tie',
-        split: false,
-        reasons: [],
-        baseline: empty(baseline),
-        candidate: empty(candidate),
-        error,
-      } satisfies CaseJudgment;
-    }
-  });
-
   judged.finishedAt = new Date().toISOString();
-  judged.usage.costUsd =
-    (judged.usage.inputTokens * PRICE_IN + judged.usage.outputTokens * PRICE_OUT) / 1_000_000;
   await writeFile(join(runDir, 'judgments.json'), JSON.stringify(judged, null, 2));
   return judged;
 }

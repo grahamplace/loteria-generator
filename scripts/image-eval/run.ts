@@ -20,9 +20,12 @@
  *                       Default: the working tree's prompt.
  *   --set objects       use photos-objects/ (local only): objects vs scenes, for
  *                       the solid-color vs sky background choice.
- *   --judge             after generating, have Claude judge baseline vs
- *                       candidate and write report.pdf (needs ANTHROPIC_API_KEY)
- *   --judge-only <run>  judge an existing run, no image calls
+ *   --judge             after generating, write <run>/judge/ (composites +
+ *                       instructions.md) for the coding agent session to judge
+ *                       baseline vs candidate. No API calls.
+ *   --judge-only <run>  same, for an existing run
+ *   --judge-import <run> read <run>/judge/verdicts.json, write judgments.json
+ *                       and report.pdf
  *   --report <run>      rebuild report.pdf from saved judgments, no API calls
  *   --baseline <col>    column to treat as baseline (default: the first)
  *   --candidate <col>   column to treat as candidate (default: the second)
@@ -50,7 +53,7 @@ import { normalizeImageForOpenAI } from '../../lib/image-normalize';
 import { isImageCategory } from '../../lib/image-category';
 import { compose, type EvalResults, type CallResult } from './compose';
 import type { TrickyPhoto } from './pull-tricky';
-import { judgeRun } from './judge';
+import { prepareJudging, importJudging } from './judge';
 import { buildReport } from './report';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -130,6 +133,7 @@ async function main() {
       concurrency: { type: 'string' },
       judge: { type: 'boolean' },
       'judge-only': { type: 'string' },
+      'judge-import': { type: 'string' },
       report: { type: 'string' },
       baseline: { type: 'string' },
       candidate: { type: 'string' },
@@ -137,16 +141,26 @@ async function main() {
   });
 
   const judge = async (runDir: string) => {
-    const judged = await judgeRun(runDir, {
+    const dir = await prepareJudging(runDir, {
       baseline: values.baseline,
       candidate: values.candidate,
     });
-    const report = await buildReport(runDir);
-    const n = (v: string) => judged.cases.filter((c) => !c.error && c.verdict === v).length;
     console.log(
-      `\nJudge: candidate better ${n('candidate')}, baseline better ${n('baseline')}, tie ${n('tie')} · $${judged.usage.costUsd.toFixed(2)}\nReport: ${report}`
+      `\nJudging packet: ${dir}\nNext (coding agent): follow ${join(dir, 'instructions.md')}, ` +
+        `write verdicts.json, then run --judge-import ${runDir}`
     );
   };
+
+  if (values['judge-import']) {
+    const runDir = resolve(values['judge-import']);
+    const judged = await importJudging(runDir);
+    const report = await buildReport(runDir);
+    const n = (v: string) => judged.cases.filter((c) => c.verdict === v).length;
+    console.log(
+      `Judge: candidate better ${n('candidate')}, baseline better ${n('baseline')}, tie ${n('tie')}\nReport: ${report}`
+    );
+    return;
+  }
 
   if (values.report) {
     console.log(`Report: ${await buildReport(resolve(values.report))}`);
@@ -220,13 +234,17 @@ async function main() {
   await mkdir(runDir, { recursive: true });
 
   const variants = await loadPromptVariants(values['prompt-refs'], runDir);
-  const columns = models.flatMap((model) =>
-    variants.map((variant) => ({
-      id: variant.label ? `${model} · ${variant.label}` : model,
+  // `model@complexity` (e.g. gpt-image-2.6-flare@low) sets the Images 2.6
+  // `complexity` param: none | low | medium | high | xhigh | max.
+  const columns = models.flatMap((spec) => {
+    const [model, complexity] = spec.split('@');
+    return variants.map((variant) => ({
+      id: variant.label ? `${spec} · ${variant.label}` : spec,
       model,
+      complexity,
       variant,
-    }))
-  );
+    }));
+  });
   const concurrency = Math.max(1, Number(values.concurrency ?? 1) || 1);
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -264,7 +282,7 @@ async function main() {
     // so no repeats. A photo's columns run concurrently so they share network
     // conditions.
     const calls = await Promise.all(
-      columns.map(async ({ id, model, variant }): Promise<CallResult> => {
+      columns.map(async ({ id, model, complexity, variant }): Promise<CallResult> => {
         const prompt = variant.module.renderIllustrationPrompt(background, categoryOf(stem));
         const start = performance.now();
         try {
@@ -274,7 +292,8 @@ async function main() {
             image,
             prompt,
             size: OUTPUT_SIZE,
-          });
+            ...(complexity && { complexity }),
+          } as OpenAI.ImageEditParamsNonStreaming);
           const seconds = toSeconds(performance.now() - start);
           const b64 = res.data?.[0]?.b64_json;
           if (!b64) throw new Error('No image data in response');
