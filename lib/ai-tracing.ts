@@ -32,7 +32,9 @@ export function extractUsage(result: unknown): Usage {
 export async function withAITrace<T>(
   name: string,
   attributes: AISpanAttributes,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
+  /** Extra non-sensitive properties derived from the result (e.g. a score). */
+  describe?: (result: T) => Record<string, unknown>
 ): Promise<T> {
   const start = performance.now();
   let result: T | undefined;
@@ -44,7 +46,22 @@ export async function withAITrace<T>(
     error = err;
     throw err;
   } finally {
-    await captureGeneration(name, attributes, (performance.now() - start) / 1000, result, error);
+    let extra: Record<string, unknown> = {};
+    if (describe && error === undefined) {
+      try {
+        extra = describe(result as T);
+      } catch {
+        // Tracing must never fail the call.
+      }
+    }
+    await captureGeneration(
+      name,
+      attributes,
+      (performance.now() - start) / 1000,
+      result,
+      error,
+      extra
+    );
   }
 }
 
@@ -53,7 +70,8 @@ async function captureGeneration(
   { userId, boardId, cardId, model }: AISpanAttributes,
   latencySeconds: number,
   result: unknown,
-  error: unknown
+  error: unknown,
+  extra: Record<string, unknown> = {}
 ) {
   const posthog = getPostHogClient();
   if (!posthog) return;
@@ -79,6 +97,7 @@ async function captureGeneration(
         ...(typeof status === 'number' && { $ai_http_status: status }),
         board_id: boardId,
         card_id: cardId,
+        ...extra,
       },
     });
   } catch (err) {

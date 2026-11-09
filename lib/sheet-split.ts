@@ -9,9 +9,12 @@ export const SHEET_CARD_OVERLAY =
   'The input is a scanned lotería card. Illustrate only the picture. Do not reproduce the card border, the card number, or any printed title or caption text.';
 
 export const SHEET_DETECT_INSTRUCTIONS =
-  'True if this image shows MULTIPLE distinct lotería-style (or similar illustrated playing) cards laid out together — e.g. a printed sheet, a grid, a full deck, or a photo of several cards on a table. False for a single card, a regular photo, or a scene.';
+  'True if this image shows MULTIPLE distinct lotería-style (or similar illustrated playing) cards laid out together — e.g. a printed sheet, a grid, a full deck, or a photo of several cards on a table. ' +
+  'Also true for a lotería player board (tabla): one board divided into a grid of separate small pictures (often 4×4 or 5×5), even when it is held in a hand, photographed at an angle, or has no titles. ' +
+  'False for a single card with one picture, a regular photo, a scene, or a single illustration.';
 
 export const SHEET_EXTRACT_PROMPT = `This image contains multiple lotería cards. List every card in reading order (top-left to bottom-right).
+On a lotería player board (tabla), each grid cell is one card: list every cell, including edge cells partly hidden under the board's own frame (those are complete), and box the visible cell.
 For each card give:
 - row, col (1-based grid position)
 - title: the card's main printed title exactly as written (Spanish, primary line only; omit the card number and any smaller translated subtitle). null if no title is printed.

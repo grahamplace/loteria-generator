@@ -71,6 +71,32 @@ describe('withAITrace', () => {
     });
   });
 
+  it('adds properties described from the result', async () => {
+    await withAITrace(
+      'detect-sheet',
+      meta,
+      async () => 0.42,
+      (p) => ({ sheet_probability: p })
+    );
+    expect(captureImmediate.mock.calls[0][0]).toMatchObject({
+      properties: { $ai_span_name: 'detect-sheet', sheet_probability: 0.42 },
+    });
+  });
+
+  it('ignores a describe callback that throws', async () => {
+    await expect(
+      withAITrace(
+        'detect-sheet',
+        meta,
+        async () => 1,
+        () => {
+          throw new Error('bad');
+        }
+      )
+    ).resolves.toBe(1);
+    expect(captureImmediate).toHaveBeenCalledTimes(1);
+  });
+
   it('does not fail the AI call when PostHog is down', async () => {
     captureImmediate.mockRejectedValueOnce(new Error('network'));
     vi.spyOn(console, 'warn').mockImplementation(() => {});

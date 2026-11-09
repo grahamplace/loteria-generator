@@ -3,25 +3,29 @@
  * a box overlay plus the raw extraction for each.
  *
  * Usage:
- *   pnpm exec tsx --env-file=.env.local scripts/sheet-eval/run.ts <image...>
+ *   pnpm exec tsx --env-file=.env.local scripts/sheet-eval/run.ts [--detect-only] <image...>
  *
  * Outputs (gitignored): scripts/sheet-eval/runs/<UTC timestamp>/
  *   <name>-overlay.jpg  blue box = complete card, red = incomplete
  *   <name>.json         { file, isSheet, ms, extraction }
- * Prints one JSON line per image: { file, isSheet, ms, count, titles }.
+ * Prints one JSON line per image: { file, p, isSheet, ms, count, titles }.
+ * --detect-only skips card-finding (cheap: checks the detector alone).
  */
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { detectSheet, extractSheet, toSheetDataUrl } from '../../lib/sheet-split-ai';
+import { extractSheet, scoreSheet, toSheetDataUrl } from '../../lib/sheet-split-ai';
+import { SHEET_DETECT_THRESHOLD } from '../../lib/sheet-split';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const meta = { userId: 'eval', boardId: 'eval', cardId: 'eval' };
 
 async function main() {
-  const files = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const detectOnly = args.includes('--detect-only');
+  const files = args.filter((a) => a !== '--detect-only');
   if (files.length === 0) {
     console.error('Usage: tsx --env-file=.env.local scripts/sheet-eval/run.ts <image...>');
     process.exit(1);
@@ -41,8 +45,9 @@ async function main() {
       const t = Date.now();
       const buffer = await readFile(file);
       const dataUrl = await toSheetDataUrl(buffer);
-      const isSheet = await detectSheet(dataUrl, meta);
-      const extraction = isSheet ? await extractSheet(dataUrl, meta) : null;
+      const p = await scoreSheet(dataUrl, meta);
+      const isSheet = p !== null && p >= SHEET_DETECT_THRESHOLD;
+      const extraction = isSheet && !detectOnly ? await extractSheet(dataUrl, meta) : null;
       const ms = Date.now() - t;
 
       if (extraction) {
@@ -63,11 +68,12 @@ async function main() {
       }
       await writeFile(
         join(outDir, `${name}.json`),
-        JSON.stringify({ file: basename(file), isSheet, ms, extraction }, null, 2)
+        JSON.stringify({ file: basename(file), p, isSheet, ms, extraction }, null, 2)
       );
       console.log(
         JSON.stringify({
           file: basename(file),
+          p,
           isSheet,
           ms,
           count: extraction?.cards.length ?? 0,
