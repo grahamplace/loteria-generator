@@ -74,23 +74,19 @@ export async function uploadOriginalImage(
 }
 
 /**
- * Upload the full uploaded sheet to a deterministic path (kept next to the
- * card for admin debugging and so a retried split can re-read it).
+ * Upload crop #1 of a split sheet next to the card. It gets its own path, not
+ * original.png: blob reads go through a CDN cache, so overwriting original.png
+ * in place made later reads (label, illustration) see the stale full sheet.
+ * original.png keeps the full sheet for admin debugging and split retries.
  */
-export async function uploadSheetImage(
+export async function uploadSheetCropImage(
   userId: string,
   boardId: string,
   cardId: string,
-  file: Buffer,
-  contentType: string = 'image/png'
+  file: Buffer
 ): Promise<string> {
-  const path = `users/${userId}/boards/${boardId}/cards/${cardId}/sheet.png`;
-  return uploadImage(file, path, contentType);
-}
-
-/** URL of the sheet copy that sits next to a card's original.png. */
-export function sheetUrlFor(originalImageUrl: string): string {
-  return originalImageUrl.replace(/\/original\.png$/, '/sheet.png');
+  const path = `users/${userId}/boards/${boardId}/cards/${cardId}/sheet-crop.png`;
+  return uploadImage(file, path, 'image/png');
 }
 
 /**

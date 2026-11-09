@@ -12,6 +12,7 @@ vi.mock('@/lib/ai-tracing', () => ({
 import {
   SHEET_DETECT_TIMEOUT_MS,
   detectSheet,
+  scoreSheet,
   extractSheet,
   toSheetDataUrl,
 } from '@/lib/sheet-split-ai';
@@ -97,6 +98,16 @@ describe('detectSheet', () => {
     expect(await detectSheet('data:x', meta)).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('scoreSheet returns the raw probability', async () => {
+    fetchMock.mockResolvedValueOnce(okResponse(0.37));
+    await expect(scoreSheet('data:x', meta)).resolves.toBe(0.37);
+  });
+
+  it('scoreSheet returns null when every attempt fails', async () => {
+    fetchMock.mockResolvedValue(failResponse());
+    await expect(scoreSheet('data:x', meta)).resolves.toBeNull();
   });
 
   it('returns false when fetch throws every time', async () => {

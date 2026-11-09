@@ -7,8 +7,7 @@ const mocks = vi.hoisted(() => ({
   updates: [] as { table: unknown; values: Record<string, unknown> }[],
   fetchBlob: vi.fn(),
   uploadOriginalImage: vi.fn(),
-  uploadSheetImage: vi.fn(),
-  sheetUrlFor: (u: string) => u.replace(/\/original\.png$/, '/sheet.png'),
+  uploadSheetCropImage: vi.fn(),
   insertCardsWithinLimit: vi.fn(),
   deleteCardAndRenumber: vi.fn(),
 }));
@@ -37,8 +36,7 @@ vi.mock('@/db', () => {
 vi.mock('@/lib/blob', () => ({
   fetchBlob: mocks.fetchBlob,
   uploadOriginalImage: mocks.uploadOriginalImage,
-  uploadSheetImage: mocks.uploadSheetImage,
-  sheetUrlFor: mocks.sheetUrlFor,
+  uploadSheetCropImage: mocks.uploadSheetCropImage,
 }));
 vi.mock('@/lib/boards/add-cards', () => ({ insertCardsWithinLimit: mocks.insertCardsWithinLimit }));
 vi.mock('@/lib/boards/delete-card', () => ({ deleteCardAndRenumber: mocks.deleteCardAndRenumber }));
@@ -83,7 +81,9 @@ beforeEach(async () => {
     .toBuffer();
   mocks.fetchBlob.mockResolvedValue({ buffer: png, contentType: 'image/png' });
   mocks.uploadOriginalImage.mockImplementation(async (_u, _b, id) => `blob://${id}/original.png`);
-  mocks.uploadSheetImage.mockResolvedValue('blob://sheet-kept');
+  mocks.uploadSheetCropImage.mockImplementation(
+    async (_u, _b, id) => `blob://${id}/sheet-crop.png`
+  );
   mocks.boardFind.mockResolvedValue(boardRow());
   mocks.cardsFind.mockResolvedValue(existing(1));
   mocks.insertCardsWithinLimit.mockImplementation(async (_b, _u, rows: unknown[]) =>
@@ -109,7 +109,7 @@ describe('splitSheetCard', () => {
     ).toBe(true);
     expect(mocks.updates.some((u) => u.values.sheetCardsFound === 45)).toBe(true);
     expect(mocks.updates.find((u) => u.values.fromSheet === true)).toBeTruthy();
-    expect(mocks.uploadSheetImage).toHaveBeenCalledTimes(1);
+    expect(mocks.uploadSheetCropImage).toHaveBeenCalledTimes(1);
   });
 
   it('titles become labels', async () => {
@@ -158,7 +158,7 @@ describe('splitSheetCard', () => {
     const r = await splitSheetCard({ ...base, extraction: extraction([sheetCard(0, 'EL SOL')]) });
     expect(r).toEqual({ status: 'all-duplicates', foundCount: 1, skippedCount: 1 });
     expect(mocks.deleteCardAndRenumber).toHaveBeenCalledWith('b1', 'c1', 'u1');
-    expect(mocks.uploadSheetImage).not.toHaveBeenCalled();
+    expect(mocks.uploadSheetCropImage).not.toHaveBeenCalled();
   });
 
   it('returns no-slots when the board is full', async () => {
@@ -169,7 +169,7 @@ describe('splitSheetCard', () => {
       extraction: extraction([sheetCard(0, 'A'), sheetCard(1, 'B')]),
     });
     expect(r).toEqual({ status: 'no-slots' });
-    expect(mocks.uploadSheetImage).not.toHaveBeenCalled();
+    expect(mocks.uploadSheetCropImage).not.toHaveBeenCalled();
   });
 
   it('retries insert with smaller count', async () => {
@@ -189,34 +189,35 @@ describe('splitSheetCard', () => {
     expect(r.createdCount).toBe(3);
   });
 
-  it('retry reads the sheet copy when card is already fromSheet', async () => {
+  it('crop #1 gets its own URL and never overwrites the uploaded original', async () => {
+    const r = await splitSheetCard({
+      ...base,
+      extraction: extraction([sheetCard(0, 'A'), sheetCard(1, 'B')]),
+    });
+    if (r.status !== 'split') throw new Error('expected split');
+    // Same URL as the sheet would be served stale from the blob CDN cache.
+    expect(r.first.originalImageUrl).toBe('blob://c1/sheet-crop.png');
+    expect(r.first.originalImageUrl).not.toBe(base.originalImageUrl);
+    expect(mocks.uploadOriginalImage).not.toHaveBeenCalledWith(
+      'u1',
+      'b1',
+      'c1',
+      expect.anything(),
+      expect.anything()
+    );
+    expect(mocks.updates.find((u) => u.values.originalImageUrl)!.values).toMatchObject({
+      originalImageUrl: 'blob://c1/sheet-crop.png',
+      fromSheet: true,
+    });
+  });
+
+  it('a retried split still reads the uploaded original', async () => {
     mocks.cardsFind.mockResolvedValue([{ id: 'c1', label: '', fromSheet: true }]);
     await splitSheetCard({
       ...base,
       extraction: extraction([sheetCard(0, 'A'), sheetCard(1, 'B')]),
     });
-    expect(mocks.fetchBlob).toHaveBeenCalledWith('blob://c1/sheet.png');
-    expect(mocks.uploadSheetImage).not.toHaveBeenCalled();
-  });
-
-  it('marks card fromSheet before overwriting original', async () => {
-    const order: string[] = [];
-    mocks.uploadOriginalImage.mockImplementation(async (_u, _b, id) => {
-      order.push(`upload:${id}`);
-      return `blob://${id}/original.png`;
-    });
-    const orig = mocks.updates.push.bind(mocks.updates);
-    mocks.updates.push = (...items) => {
-      if (items[0].values.fromSheet === true && !('originalImageUrl' in items[0].values))
-        order.push('mark');
-      return orig(...items);
-    };
-    await splitSheetCard({
-      ...base,
-      extraction: extraction([sheetCard(0, 'A'), sheetCard(1, 'B')]),
-    });
-    expect(order.indexOf('mark')).toBeGreaterThanOrEqual(0);
-    expect(order.indexOf('mark')).toBeLessThan(order.indexOf('upload:c1'));
+    expect(mocks.fetchBlob).toHaveBeenCalledWith('blob://c1/original.png');
   });
 
   it('deletes inserted cards when a crop upload fails', async () => {
@@ -272,7 +273,7 @@ describe('splitSheetCard', () => {
       extraction: extraction([degenerate(0, 'A'), degenerate(1, 'B')]),
     });
     expect(r).toEqual({ status: 'no-slots' });
-    expect(mocks.uploadSheetImage).not.toHaveBeenCalled();
+    expect(mocks.uploadSheetCropImage).not.toHaveBeenCalled();
   });
 
   it('skips a later null region and backfills', async () => {

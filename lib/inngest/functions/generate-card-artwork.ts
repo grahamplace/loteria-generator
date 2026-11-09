@@ -172,7 +172,7 @@ export const generateCardArtwork = inngest.createFunction(
             console.error('split-sheet failed; continuing as a single card', { cardId, error });
             split = null;
             // The split may have got far enough to mark the card fromSheet and
-            // replace original.png with crop #1 and its title: follow the row.
+            // point it at crop #1 with its title: follow the row.
             const row = await step.run('reload-after-failed-split', async () => {
               const card = await db.query.cards.findFirst({
                 where: eq(cards.id, cardId),

@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 import { db, boards, cards, getGenerationLimit } from '@/db';
 import { eq } from 'drizzle-orm';
-import { fetchBlob, sheetUrlFor, uploadOriginalImage, uploadSheetImage } from '@/lib/blob';
+import { fetchBlob, uploadOriginalImage, uploadSheetCropImage } from '@/lib/blob';
 import { insertCardsWithinLimit } from '@/lib/boards/add-cards';
 import { deleteCardAndRenumber } from '@/lib/boards/delete-card';
 import { FREE_CARD_LIMIT, TOTAL_CARD_COUNT } from '@/lib/constants';
@@ -42,12 +42,9 @@ export async function splitSheetCard(a: {
   if (!board) return { status: 'no-slots' };
   const boardCards = await db.query.cards.findMany({ where: eq(cards.boardId, boardId) });
 
-  // A retried step finds original.png already overwritten by crop #1; the
-  // untouched sheet lives in the sheet copy once fromSheet has been set.
-  const alreadySplit = boardCards.find((c) => c.id === cardId)?.fromSheet === true;
-  const { buffer: sheetBuffer, contentType } = await fetchBlob(
-    alreadySplit ? sheetUrlFor(a.originalImageUrl) : a.originalImageUrl
-  );
+  // The uploaded original is never overwritten (crop #1 gets its own path),
+  // so a retried step reads the same sheet.
+  const { buffer: sheetBuffer } = await fetchBlob(a.originalImageUrl);
   const existingLabels = boardCards.filter((c) => c.id !== cardId).map((c) => c.label ?? '');
 
   const cardLimit = board.isUnlocked ? TOTAL_CARD_COUNT : FREE_CARD_LIMIT;
@@ -85,23 +82,8 @@ export async function splitSheetCard(a: {
   }
   if (crops.length === 0) return { status: 'no-slots' };
 
-  if (!alreadySplit) {
-    await uploadSheetImage(userId, boardId, cardId, sheetBuffer, contentType);
-    // Mark before original.png is overwritten so a retry reads the sheet copy.
-    await db
-      .update(cards)
-      .set({ fromSheet: true, updatedAt: new Date() })
-      .where(eq(cards.id, cardId));
-  }
-
   const [firstCrop, ...otherCrops] = crops;
-  const firstUrl = await uploadOriginalImage(
-    userId,
-    boardId,
-    cardId,
-    firstCrop.buffer,
-    'image/png'
-  );
+  const firstUrl = await uploadSheetCropImage(userId, boardId, cardId, firstCrop.buffer);
   const firstTitle = firstCrop.card.title;
   await db
     .update(cards)

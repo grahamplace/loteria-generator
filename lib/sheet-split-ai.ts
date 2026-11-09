@@ -67,18 +67,32 @@ async function decideOnce(imageDataUrl: string, userId: string): Promise<number 
   }
 }
 
-export async function detectSheet(imageDataUrl: string, meta: SheetMeta): Promise<boolean> {
+/**
+ * Probability (0..1) that the image is a sheet of cards, or null when every
+ * attempt failed. Traced with the score so misses can be diagnosed later.
+ */
+export async function scoreSheet(imageDataUrl: string, meta: SheetMeta): Promise<number | null> {
   try {
-    return await withAITrace('detect-sheet', { ...meta, model: SHEET_DETECT_MODEL }, async () => {
-      for (let attempt = 0; attempt < DETECT_ATTEMPTS; attempt++) {
-        const p = await decideOnce(imageDataUrl, meta.userId);
-        if (p !== null) return p >= SHEET_DETECT_THRESHOLD;
-      }
-      return false;
-    });
+    return await withAITrace(
+      'detect-sheet',
+      { ...meta, model: SHEET_DETECT_MODEL },
+      async () => {
+        for (let attempt = 0; attempt < DETECT_ATTEMPTS; attempt++) {
+          const p = await decideOnce(imageDataUrl, meta.userId);
+          if (p !== null) return p;
+        }
+        return null;
+      },
+      (p) => ({ sheet_probability: p, is_sheet: p !== null && p >= SHEET_DETECT_THRESHOLD })
+    );
   } catch {
-    return false;
+    return null;
   }
+}
+
+export async function detectSheet(imageDataUrl: string, meta: SheetMeta): Promise<boolean> {
+  const p = await scoreSheet(imageDataUrl, meta);
+  return p !== null && p >= SHEET_DETECT_THRESHOLD;
 }
 
 export async function extractSheet(
@@ -114,7 +128,10 @@ export async function extractSheet(
       );
       return parseSheetExtraction(res.output_text);
     });
-  } catch {
+  } catch (error) {
+    console.warn('extract-sheet: failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
