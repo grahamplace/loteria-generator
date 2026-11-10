@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useImperativeHandle, forwardRef } from 'react';
+import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { ImagePlus, Upload, Plus, Unlock } from 'lucide-react';
 import type { BoardStyleOptions } from '@/lib/themes/presets';
 import { toast } from 'sonner';
@@ -32,8 +32,11 @@ interface BoardActionBarProps {
   photoModeSaving: boolean;
   onPhotoModeChange: (mode: PhotoMode) => Promise<boolean>;
 }
+/** Which control opened the photo picker, for the signup → first-card funnel. */
+export type PhotoPickerSource = 'action_bar' | 'empty_state' | 'add_tile' | 'preview';
+
 export interface BoardActionBarRef {
-  triggerFileSelect: () => void;
+  triggerFileSelect: (source?: PhotoPickerSource) => void;
   /** Add photos dropped elsewhere on the page, e.g. onto the card grid. */
   dropFiles: (files: File[]) => void;
 }
@@ -60,10 +63,33 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
     const unlockPrice = useUnlockPriceDisplay();
     const inputRef = useRef<HTMLInputElement>(null);
     const [dragActive, setDragActive] = useState(false);
+    const pickerSourceRef = useRef<PhotoPickerSource>('action_bar');
+
+    function openPicker(source: PhotoPickerSource) {
+      pickerSourceRef.current = source;
+      posthog.capture('photo_picker_opened', { source, card_count: cardCount });
+      inputRef.current?.click();
+    }
+
+    // Closing the native picker without choosing fires `cancel` on the input
+    // (Chrome 113+, Firefox 91+, Safari 16.4+). Without it a cancelled picker is
+    // indistinguishable from a failed upload in analytics.
+    useEffect(() => {
+      const input = inputRef.current;
+      if (!input) return;
+      const onCancel = () =>
+        posthog.capture('photo_picker_cancelled', {
+          source: pickerSourceRef.current,
+          card_count: cardCount,
+        });
+      input.addEventListener('cancel', onCancel);
+      return () => input.removeEventListener('cancel', onCancel);
+    }, [cardCount]);
+
     useImperativeHandle(ref, () => ({
-      triggerFileSelect() {
+      triggerFileSelect(source = 'action_bar') {
         if (photoModeSaving) return;
-        if (cardCount < maxCards) inputRef.current?.click();
+        if (cardCount < maxCards) openPicker(source);
         else if (!isUnlocked) onUnlockRequired();
       },
       dropFiles(files) {
@@ -105,10 +131,25 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
         });
       if (valid.length > maxCards - cardCount && !isUnlocked) onUnlockRequired();
       const accepted = valid.slice(0, Math.max(0, maxCards - cardCount));
+      const unsupported = files.length - candidates.length;
+      const overLimit = valid.length - accepted.length;
+      if (unsupported || unreadable || oversized.length || overLimit) {
+        posthog.capture('upload_rejected', {
+          method,
+          selected: files.length,
+          accepted: accepted.length,
+          unsupported,
+          unreadable,
+          oversized: oversized.length,
+          over_limit: overLimit,
+          card_count: cardCount,
+        });
+      }
       if (accepted.length) {
         posthog.capture('photos_uploaded', {
           count: accepted.length,
           method,
+          source: method === 'picker' ? pickerSourceRef.current : undefined,
           theme: styleOptions?.presetId ?? 'classic',
           photo_mode: photoMode,
         });
@@ -166,7 +207,7 @@ export const BoardActionBar = forwardRef<BoardActionBarRef, BoardActionBarProps>
               ) : (
                 <Button
                   className="min-h-11 grow touch-manipulation transition-colors sm:grow-0"
-                  onClick={() => inputRef.current?.click()}
+                  onClick={() => openPicker('action_bar')}
                   disabled={photoModeSaving || cardCount >= maxCards}
                 >
                   <Upload className="mr-2 h-4 w-4" />
