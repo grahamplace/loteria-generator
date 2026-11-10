@@ -124,7 +124,9 @@ jobs:
 
   e2e:
     name: E2E
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, where Playwright 1.59 can't
+    # install Chromium's system deps. Unpin once Playwright supports 26.04.
+    runs-on: ubuntu-24.04
     needs: [lint, typecheck]
     steps:
       - name: Checkout
