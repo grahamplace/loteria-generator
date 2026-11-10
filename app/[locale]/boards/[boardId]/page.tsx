@@ -367,7 +367,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
                     onDeleteCard={deleteCard}
                     onUpdateLabel={updateCardLabel}
                     onReorderCards={reorderCards}
-                    onAddMore={() => actionBarRef.current?.triggerFileSelect()}
+                    onAddMore={() => actionBarRef.current?.triggerFileSelect('add_tile')}
                     onAddClassic={() => setDefaultsPickerOpen(true)}
                     illustrate={(pendingPhotoMode ?? board.photoMode) !== 'original'}
                     isLocked={!board.isUnlocked}
@@ -387,7 +387,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       <button
                         id={ANCHOR_UPLOAD}
-                        onClick={() => actionBarRef.current?.triggerFileSelect()}
+                        onClick={() => actionBarRef.current?.triggerFileSelect('empty_state')}
                         className="attention-bounce px-5 py-3 rounded-lg bg-primary text-white text-sm font-semibold flex items-center gap-2 shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       >
                         <Upload className="w-4 h-4" />
@@ -424,7 +424,7 @@ function BoardEditor({ boardId }: { boardId: string }) {
             canAddPhotos={
               pendingPhotoMode === null && (cards.length < cardLimit || !board.isUnlocked)
             }
-            onAddPhotos={() => actionBarRef.current?.triggerFileSelect()}
+            onAddPhotos={() => actionBarRef.current?.triggerFileSelect('preview')}
             onUnlock={() => openUnlockPrompt('preview')}
             onSaveDesign={updateBoard}
           />

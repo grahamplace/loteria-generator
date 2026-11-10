@@ -58,3 +58,37 @@ describe('BoardActionBar card limit', () => {
     expect(screen.queryByRole('button', { name: unlockLabel })).not.toBeInTheDocument();
   });
 });
+
+describe('BoardActionBar picker tracking', () => {
+  it('captures picker open and native cancel with the source', async () => {
+    const posthog = (await import('posthog-js')).default;
+    vi.mocked(posthog.capture).mockClear();
+    const { container } = render(
+      <BoardActionBar
+        cardCount={0}
+        maxCards={4}
+        isUnlocked={false}
+        onFilesSelected={vi.fn()}
+        processingCount={0}
+        photoMode="illustrated"
+        photoModeSaving={false}
+        onPhotoModeChange={vi.fn()}
+        onUnlockRequired={vi.fn()}
+        onOpenDefaults={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'choosePhotos' }));
+    expect(posthog.capture).toHaveBeenCalledWith('photo_picker_opened', {
+      source: 'action_bar',
+      card_count: 0,
+    });
+
+    const input = container.querySelector('input[type="file"]')!;
+    input.dispatchEvent(new Event('cancel'));
+    expect(posthog.capture).toHaveBeenCalledWith('photo_picker_cancelled', {
+      source: 'action_bar',
+      card_count: 0,
+    });
+  });
+});

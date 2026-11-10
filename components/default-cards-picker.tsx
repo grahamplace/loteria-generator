@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import posthog from 'posthog-js';
 import Image from 'next/image';
 import { Check, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -54,14 +55,24 @@ export function DefaultCardsPicker({
     });
   }
 
+  // Pairs with `default_cards_added` (server) to show who opens the picker and
+  // leaves without adding anything.
+  useEffect(() => {
+    if (open) posthog.capture('classic_picker_opened', { remaining_slots: remainingSlots });
+    // Only the open transition counts; slot changes while open are not a new view.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   function handleAdd() {
     if (selected.size === 0) return;
+    posthog.capture('classic_picker_closed', { outcome: 'added', selected: selected.size });
     onAdd(Array.from(selected));
     setSelected(new Set());
     onClose();
   }
 
   function handleClose() {
+    posthog.capture('classic_picker_closed', { outcome: 'dismissed', selected: selected.size });
     setSelected(new Set());
     onClose();
   }
