@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { LayoutGrid, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MOBILE_TOOLBAR_BUTTON } from './admin-toolbar';
 import {
   generatePreviewBoardsPdf,
   type BoardStyleOptions,
@@ -92,6 +93,7 @@ export function AdminPreviewBoardsButton({
     <Button
       size="sm"
       variant="outline"
+      className={MOBILE_TOOLBAR_BUTTON}
       onClick={handleGenerate}
       disabled={!canGenerate || isGenerating}
       title={canGenerate ? undefined : 'Need at least 1 completed card to preview'}

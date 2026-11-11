@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MOBILE_TOOLBAR_BUTTON } from './admin-toolbar';
 import {
   clampBoardCount,
   generateLoteriaSetPdf,
@@ -123,6 +124,7 @@ export function AdminExportButton({
       <Button
         size="sm"
         variant="outline"
+        className={MOBILE_TOOLBAR_BUTTON}
         onClick={handleExport}
         disabled={!canExport || isExporting}
         title={
