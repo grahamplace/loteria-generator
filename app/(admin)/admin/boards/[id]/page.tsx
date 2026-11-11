@@ -185,14 +185,6 @@ export default async function AdminBoardDetailPage({
               </div>
             )}
           </div>
-          {board.styleOptions && (
-            <div>
-              <p className="text-xs text-muted-foreground">Style Options</p>
-              <pre className="mt-1 overflow-x-auto rounded bg-muted p-2 text-xs">
-                {JSON.stringify(board.styleOptions, null, 2)}
-              </pre>
-            </div>
-          )}
         </CardContent>
       </Card>
 
