@@ -115,3 +115,25 @@ describe('AVIF uploads', () => {
     expect(meta.width).toBe(32);
   });
 });
+
+describe('oversized uploads', () => {
+  // OpenAI's images.edit rejects very large inputs with "Invalid input image
+  // file" even when the byte size is small (e.g. an 11339px flat logo).
+  it('caps the longest side at 2048px, keeping aspect ratio', async () => {
+    const input = await sharp({
+      create: { width: 6000, height: 3000, channels: 3, background: { r: 255, g: 255, b: 255 } },
+    })
+      .jpeg()
+      .toBuffer();
+
+    const meta = await sharp(await normalizeImageForOpenAI(input)).metadata();
+    expect(meta.width).toBe(2048);
+    expect(meta.height).toBe(1024);
+  });
+
+  it('never upscales small images', async () => {
+    const meta = await sharp(await normalizeImageForOpenAI(await makeRgbPng())).metadata();
+    expect(meta.width).toBe(32);
+    expect(meta.height).toBe(32);
+  });
+});
